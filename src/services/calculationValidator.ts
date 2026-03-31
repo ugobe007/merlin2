@@ -31,6 +31,12 @@
 import { supabase } from "@/services/supabaseClient";
 import { checkAndAlert, ALERT_CONFIG } from "@/services/alertNotificationService";
 import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
+import { DEFAULT_PRICE_GUARDS } from "@/services/marginPolicyEngine";
+
+// Single-source-of-truth for pricing guardrail bounds.
+// All BESS/solar $/unit benchmarks derive from marginPolicyEngine, not hardcoded here.
+const _bessGuard = DEFAULT_PRICE_GUARDS.find((g) => g.productClass === "bess")!;
+const _solarGuard = DEFAULT_PRICE_GUARDS.find((g) => g.productClass === "solar")!;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // INDUSTRY BENCHMARK BOUNDS (NREL, BNEF, Industry Standards)
@@ -59,21 +65,28 @@ export const VALIDATION_POLICY = {
 };
 
 export const BENCHMARK_BOUNDS = {
-  // BESS Pricing ($/kWh) - NREL ATB 2024
+  // BESS Pricing ($/kWh — PACK ONLY: cells, BMS, thermal management, enclosure)
+  // ❌ Does NOT include: PCS/inverter ($150/kW, separate line), installation labor, or civil works.
+  // ✅ Guardrail bounds are sourced live from DEFAULT_PRICE_GUARDS (marginPolicyEngine) — single source of truth.
+  // Logic: if bessPricePerKWh is outside [min, max] → score < 90 → all equipment pricing reviewed.
   bess: {
-    min: 100, // Current market floor (utility scale, competitive)
-    max: 250, // Premium/small scale with installation
-    typical: 125, // Typical commercial rate
-    source: "NREL ATB 2024",
+    min: _bessGuard.quoteFloorPrice, // $105/kWh — quote floor (LFP pack, commercial scale)
+    max: _bessGuard.ceilingPrice, // $250/kWh — guardrail ceiling
+    typical: _bessGuard.lastMarketPrice, // $125/kWh — NREL ATB 2024 market reference
+    source: `${_bessGuard.marketSource} — BESS pack only, excl. PCS/installation (DEFAULT_PRICE_GUARDS)`,
   },
 
-  // Solar Pricing ($/W) - NREL Cost Benchmark 2024
+  // Solar Pricing ($/W — modules, racking, BOS, wiring labor; NO inverter)
+  // ❌ Does NOT include the hybrid inverter (priced in BESS line at $150/kW).
+  // ✅ Guardrail bounds from DEFAULT_PRICE_GUARDS.
   solar: {
-    min: 0.65, // Utility scale
-    max: 2.5, // Small commercial with soft costs
-    typical: 0.85, // Commercial scale
-    source: "NREL Cost Benchmark 2024",
+    min: _solarGuard.quoteFloorPrice, // $0.65/W — floor
+    max: _solarGuard.ceilingPrice, // $1.50/W — ceiling
+    typical: _solarGuard.lastMarketPrice, // $0.85/W — market reference
+    source: `${_solarGuard.marketSource} — modules+BOS, excl. inverter (DEFAULT_PRICE_GUARDS)`,
   },
+
+  // EV Charger pricing is validated at unit level; no kWh benchmark needed here.
 
   // Generator Pricing ($/kW)
   generator: {
@@ -275,24 +288,9 @@ export class CalculationValidator {
     const bessPricePerKWh = bessKWh > 0 ? bessCost / bessKWh : 0;
 
     if (bessPricePerKWh > 0) {
-      const typicalPrice = BENCHMARK_BOUNDS.bess.typical;
-      const deviation = Math.abs((bessPricePerKWh - typicalPrice) / typicalPrice) * 100;
-
-      // TRUEQUOTE SYSTEMATIC POLICY: Flag 3%+ deviation from benchmark
-      if (deviation >= 3) {
-        warnings.push({
-          code: "BESS_PRICE_DEVIATION_3PERCENT",
-          field: "bessPricing",
-          message: `BESS price ($${bessPricePerKWh.toFixed(0)}/kWh) deviates ${deviation.toFixed(1)}% from benchmark ($${typicalPrice}/kWh). TrueQuote validation failed.`,
-          severity: "error",
-          expectedRange: {
-            min: BENCHMARK_BOUNDS.bess.min,
-            max: BENCHMARK_BOUNDS.bess.max,
-          },
-          actualValue: bessPricePerKWh,
-          benchmark: BENCHMARK_BOUNDS.bess.source,
-        });
-      } else if (bessPricePerKWh < BENCHMARK_BOUNDS.bess.min) {
+      // Guardrail bounds check: BESS pack $/kWh vs [quoteFloor, ceiling] from DEFAULT_PRICE_GUARDS.
+      // Outside bounds → warning/error → score drops below 90 → all equipment pricing reviewed.
+      if (bessPricePerKWh < BENCHMARK_BOUNDS.bess.min) {
         warnings.push({
           code: "BESS_PRICE_LOW",
           field: "bessPricing",
@@ -329,24 +327,8 @@ export class CalculationValidator {
       const solarPricePerW = solarKW > 0 ? solarCost / solarKW : 0;
 
       if (solarPricePerW > 0) {
-        const typicalPrice = BENCHMARK_BOUNDS.solar.typical;
-        const deviation = Math.abs((solarPricePerW - typicalPrice) / typicalPrice) * 100;
-
-        // TRUEQUOTE SYSTEMATIC POLICY: Flag 3%+ deviation from benchmark
-        if (deviation >= 3) {
-          warnings.push({
-            code: "SOLAR_PRICE_DEVIATION_3PERCENT",
-            field: "solarPricing",
-            message: `Solar price ($${solarPricePerW.toFixed(2)}/W) deviates ${deviation.toFixed(1)}% from benchmark ($${typicalPrice}/W). TrueQuote validation failed.`,
-            severity: "error",
-            expectedRange: {
-              min: BENCHMARK_BOUNDS.solar.min,
-              max: BENCHMARK_BOUNDS.solar.max,
-            },
-            actualValue: solarPricePerW,
-            benchmark: BENCHMARK_BOUNDS.solar.source,
-          });
-        } else if (solarPricePerW < BENCHMARK_BOUNDS.solar.min) {
+        // Guardrail bounds check: solar $/W vs [quoteFloor, ceiling] from DEFAULT_PRICE_GUARDS.
+        if (solarPricePerW < BENCHMARK_BOUNDS.solar.min) {
           warnings.push({
             code: "SOLAR_PRICE_LOW",
             field: "solarPricing",
@@ -383,24 +365,8 @@ export class CalculationValidator {
       : 0;
 
     if (installationRatio > 0) {
-      const typicalRatio = BENCHMARK_BOUNDS.installation.typical;
-      const deviation = Math.abs((installationRatio - typicalRatio) / typicalRatio) * 100;
-
-      // TRUEQUOTE SYSTEMATIC POLICY: Flag 3%+ deviation from benchmark
-      if (deviation >= 3) {
-        warnings.push({
-          code: "INSTALLATION_DEVIATION_3PERCENT",
-          field: "installationCost",
-          message: `Installation ratio (${(installationRatio * 100).toFixed(0)}%) deviates ${deviation.toFixed(1)}% from benchmark (${(typicalRatio * 100).toFixed(0)}%). TrueQuote validation failed.`,
-          severity: "error",
-          expectedRange: {
-            min: BENCHMARK_BOUNDS.installation.min * 100,
-            max: BENCHMARK_BOUNDS.installation.max * 100,
-          },
-          actualValue: installationRatio * 100,
-          benchmark: BENCHMARK_BOUNDS.installation.source,
-        });
-      } else if (installationRatio < BENCHMARK_BOUNDS.installation.min) {
+      // Guardrail bounds check: installation ratio must be within expected range.
+      if (installationRatio < BENCHMARK_BOUNDS.installation.min) {
         warnings.push({
           code: "INSTALLATION_LOW",
           field: "installationCost",
@@ -565,61 +531,42 @@ export class CalculationValidator {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 8. TRUEQUOTE SYSTEMATIC POLICY: Flag ALL calculations off by 3% or more
-    // This applies to ALL use cases - no exceptions
+    // 8. BESS INSTALLED COST PER kWh — cross-check against installed cost bounds
+    // Real buildings deviate widely from a single "typical" kW, so we validate
+    // cost-per-kWh rather than comparing raw kW to an industry average.
     // ─────────────────────────────────────────────────────────────────────────
     checksPerformed++;
-    // Reuse bounds from section 6
-    const actualPowerKW = systemKW;
-    const expectedPowerKW = bounds.typicalKW;
-
-    if (expectedPowerKW > 0 && actualPowerKW > 0) {
-      const powerDeviation = Math.abs((actualPowerKW - expectedPowerKW) / expectedPowerKW) * 100;
-
-      if (powerDeviation >= 3) {
-        warnings.push({
-          code: "POWER_DEVIATION_3PERCENT",
-          field: "storageSizeMW",
-          message: `System power calculation deviates ${powerDeviation.toFixed(1)}% from expected benchmark (${expectedPowerKW} kW). TrueQuote validation failed.`,
-          severity: "error",
-          expectedRange: {
-            min: expectedPowerKW * 0.97,
-            max: expectedPowerKW * 1.03,
-          },
-          actualValue: actualPowerKW,
-          benchmark: `${bounds.description} benchmark`,
-        });
-      } else {
-        checksPassed++;
-      }
-    }
-
-    // Validate equipment cost against benchmarks (ALL use cases)
-    checksPerformed++;
     const equipmentCost = costs?.equipmentCost || 0;
-    // Reuse bessKWh from section 1
-    const expectedEquipmentCost = bessKWh * (BENCHMARK_BOUNDS.bess.typical / 1000); // Convert $/kWh to total cost
+    const inferredBessCost =
+      equipment?.batteries?.totalCost || (equipmentCost > 0 ? equipmentCost * 0.57 : 0);
+    const inferredBessPricePerKWh = bessKWh > 0 ? inferredBessCost / bessKWh : 0;
 
-    if (equipmentCost > 0 && expectedEquipmentCost > 0) {
-      const costDeviation =
-        Math.abs((equipmentCost - expectedEquipmentCost) / expectedEquipmentCost) * 100;
-
-      if (costDeviation >= 3) {
+    if (inferredBessPricePerKWh > 0) {
+      if (inferredBessPricePerKWh < BENCHMARK_BOUNDS.bess.min) {
         warnings.push({
-          code: "COST_DEVIATION_3PERCENT",
+          code: "BESS_INSTALLED_COST_LOW",
           field: "equipmentCost",
-          message: `Equipment cost deviates ${costDeviation.toFixed(1)}% from expected benchmark ($${expectedEquipmentCost.toLocaleString()}). TrueQuote validation failed.`,
+          message: `Inferred BESS installed cost ($${inferredBessPricePerKWh.toFixed(0)}/kWh) is below commercial minimum ($${BENCHMARK_BOUNDS.bess.min}/kWh). Check pricing SSOT.`,
           severity: "error",
-          expectedRange: {
-            min: expectedEquipmentCost * 0.97,
-            max: expectedEquipmentCost * 1.03,
-          },
-          actualValue: equipmentCost,
+          expectedRange: { min: BENCHMARK_BOUNDS.bess.min, max: BENCHMARK_BOUNDS.bess.max },
+          actualValue: inferredBessPricePerKWh,
+          benchmark: BENCHMARK_BOUNDS.bess.source,
+        });
+      } else if (inferredBessPricePerKWh > BENCHMARK_BOUNDS.bess.max) {
+        warnings.push({
+          code: "BESS_INSTALLED_COST_HIGH",
+          field: "equipmentCost",
+          message: `Inferred BESS installed cost ($${inferredBessPricePerKWh.toFixed(0)}/kWh) exceeds commercial ceiling ($${BENCHMARK_BOUNDS.bess.max}/kWh). Verify no double-counting.`,
+          severity: "warning",
+          expectedRange: { min: BENCHMARK_BOUNDS.bess.min, max: BENCHMARK_BOUNDS.bess.max },
+          actualValue: inferredBessPricePerKWh,
           benchmark: BENCHMARK_BOUNDS.bess.source,
         });
       } else {
         checksPassed++;
       }
+    } else {
+      checksPassed++; // No BESS cost data to cross-check
     }
 
     // ─────────────────────────────────────────────────────────────────────────

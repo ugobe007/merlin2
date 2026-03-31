@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155" />
+    </marker>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #0f172a; }
+      .label { font: 700 18px Arial, sans-serif; fill: #0f172a; }
+      .text { font: 15px Arial, sans-serif; fill: #334155; }
+      .small { font: 13px Arial, sans-serif; fill: #475569; }
+      .box { rx: 18; ry: 18; stroke: #334155; stroke-width: 2; }
+      .arrow { stroke: #334155; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .dashed { stroke-dasharray: 8 6; }
+    </style>
+  </defs>
+
+  <rect width="1400" height="900" fill="#ffffff" />
+  <text x="700" y="48" text-anchor="middle" class="title">FIG. 1 — Financial Model Architecture</text>
+
+  <rect x="70" y="110" width="260" height="110" class="box" fill="#dbeafe" />
+  <text x="200" y="150" text-anchor="middle" class="label">Load Profile Inputs</text>
+  <text x="200" y="178" text-anchor="middle" class="text">Facility type library</text>
+  <text x="200" y="200" text-anchor="middle" class="text">Measured interval data</text>
+
+  <rect x="70" y="270" width="260" height="110" class="box" fill="#dcfce7" />
+  <text x="200" y="310" text-anchor="middle" class="label">Utility Rate Inputs</text>
+  <text x="200" y="338" text-anchor="middle" class="text">TOU prices · Demand charges</text>
+  <text x="200" y="360" text-anchor="middle" class="text">Seasonal schedules</text>
+
+  <rect x="70" y="430" width="260" height="110" class="box" fill="#fef3c7" />
+  <text x="200" y="470" text-anchor="middle" class="label">Asset Inputs</text>
+  <text x="200" y="498" text-anchor="middle" class="text">BESS size · Solar · Generator</text>
+  <text x="200" y="520" text-anchor="middle" class="text">Efficiency · Dispatch rules</text>
+
+  <rect x="430" y="220" width="300" height="220" class="box" fill="#e0e7ff" />
+  <text x="580" y="262" text-anchor="middle" class="label">Dispatch Simulation Engine</text>
+  <text x="580" y="295" text-anchor="middle" class="text">8,760-hour interval loop</text>
+  <text x="580" y="323" text-anchor="middle" class="text">Charge/discharge decisioning</text>
+  <text x="580" y="351" text-anchor="middle" class="text">State-of-charge updates</text>
+  <text x="580" y="379" text-anchor="middle" class="text">Savings and revenue tagging</text>
+
+  <rect x="820" y="135" width="300" height="150" class="box" fill="#fae8ff" />
+  <text x="970" y="175" text-anchor="middle" class="label">Financial Calculation Engine</text>
+  <text x="970" y="205" text-anchor="middle" class="text">Cash flow model</text>
+  <text x="970" y="230" text-anchor="middle" class="text">NPV · IRR · Payback · ROI</text>
+
+  <rect x="820" y="330" width="300" height="150" class="box" fill="#fee2e2" />
+  <text x="970" y="370" text-anchor="middle" class="label">Probabilistic Simulation Engine</text>
+  <text x="970" y="400" text-anchor="middle" class="text">Monte Carlo / Latin hypercube</text>
+  <text x="970" y="425" text-anchor="middle" class="text">P10 · P50 · P90 outputs</text>
+
+  <rect x="820" y="525" width="300" height="150" class="box" fill="#ecfccb" />
+  <text x="970" y="565" text-anchor="middle" class="label">Pricing and Margin Engine</text>
+  <text x="970" y="595" text-anchor="middle" class="text">Base cost → obtainable → sell price</text>
+  <text x="970" y="620" text-anchor="middle" class="text">Risk guards · review events</text>
+
+  <rect x="1170" y="300" width="170" height="180" class="box" fill="#f8fafc" />
+  <text x="1255" y="338" text-anchor="middle" class="label">Outputs</text>
+  <text x="1255" y="372" text-anchor="middle" class="text">Project pricing</text>
+  <text x="1255" y="398" text-anchor="middle" class="text">Bankability deck</text>
+  <text x="1255" y="424" text-anchor="middle" class="text">Underwriting case</text>
+  <text x="1255" y="450" text-anchor="middle" class="text">Financial report</text>
+
+  <path d="M330 165 L430 275" class="arrow" />
+  <path d="M330 325 L430 325" class="arrow" />
+  <path d="M330 485 L430 385" class="arrow" />
+  <path d="M730 290 L820 220" class="arrow" />
+  <path d="M730 330 L820 405" class="arrow" />
+  <path d="M970 480 L970 525" class="arrow" />
+  <path d="M1120 210 L1170 330" class="arrow" />
+  <path d="M1120 405 L1170 390" class="arrow" />
+  <path d="M1120 600 L1170 450" class="arrow" />
+
+  <path d="M1120 580 C1180 580, 1210 560, 1210 510" class="arrow dashed" />
+  <text x="1190" y="615" text-anchor="middle" class="small">Pricing policy may use</text>
+  <text x="1190" y="635" text-anchor="middle" class="small">selected scenarios or bands</text>
+</svg>

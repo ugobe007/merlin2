@@ -1,8 +1,6 @@
-/* eslint-disable no-console */
-
 /**
  * Pure Layer B Pricing Quote Runner
- * 
+ *
  * Takes Layer A output (load profile) and runs SSOT pricing calculator.
  * No React hooks, can run in Node scripts.
  */
@@ -29,7 +27,9 @@ function hashStable(obj: unknown): string {
   return `snap_${(h >>> 0).toString(16)}`;
 }
 
-export async function runPricingQuoteCore(layerA: ContractQuoteResult): Promise<PricingQuoteResult> {
+export async function runPricingQuoteCore(
+  layerA: ContractQuoteResult
+): Promise<PricingQuoteResult> {
   const warnings: string[] = [];
 
   // Extract sizing hints from Layer A
@@ -49,7 +49,8 @@ export async function runPricingQuoteCore(layerA: ContractQuoteResult): Promise<
 
   // Check for defaults being used (indicates incomplete inputs)
   if (pricingInputs.location === "unknown") warnings.push("⚠️ Location unknown (defaulted)");
-  if (pricingInputs.electricityRate === 0.12) warnings.push("ℹ️ Default electricity rate used (0.12 $/kWh)");
+  if (pricingInputs.electricityRate === 0.12)
+    warnings.push("ℹ️ Default electricity rate used (0.12 $/kWh)");
   if (pricingInputs.demandCharge === 15) warnings.push("ℹ️ Default demand charge used (15 $/kW)");
 
   const pricingSnapshotId = hashStable(pricingInputs);
@@ -66,7 +67,8 @@ export async function runPricingQuoteCore(layerA: ContractQuoteResult): Promise<
 
   // Sanity checks on pricing outputs
   if (!Number.isFinite(capexUSD) || capexUSD <= 0) warnings.push("⚠️ Capex is zero/invalid");
-  if (!Number.isFinite(annualSavingsUSD) || annualSavingsUSD <= 0) warnings.push("⚠️ Annual savings is zero/invalid");
+  if (!Number.isFinite(annualSavingsUSD) || annualSavingsUSD <= 0)
+    warnings.push("⚠️ Annual savings is zero/invalid");
   if (!Number.isFinite(roiYears) || roiYears <= 0) warnings.push("⚠️ ROI is zero/invalid");
   if (roiYears > 100) warnings.push("⚠️ ROI > 100 years (suspiciously high)");
 

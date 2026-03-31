@@ -1,12 +1,12 @@
 /**
  * MERLIN MEMORY — Persistent Data Store for Wizard V7
  * ====================================================
- * 
+ *
  * DESIGN PRINCIPLE:
  *   Steps are momentary. Memory is persistent.
  *   Each step reads what it needs, writes its output, then is forgotten.
  *   The wizard never "looks back" at step-specific rendering state.
- * 
+ *
  * WHAT GOES IN MEMORY:
  *   ✅ Location (ZIP, state, city, coordinates)
  *   ✅ Goals (user's energy objectives)
@@ -19,28 +19,28 @@
  *   ✅ Solar (irradiance, capacity factor, production)
  *   ✅ Financials (full calculator output: savings, ROI, NPV, IRR, degradation)
  *   ✅ Session (step history, timing, interaction counts)
- * 
+ *
  * WHAT DOES NOT GO IN MEMORY:
  *   ❌ UI state (which step is active, modal open/closed)
  *   ❌ Transient flags (locationConfirmed, goalsConfirmed, isBusy)
  *   ❌ Form field values mid-edit (draft text, partial inputs)
  *   ❌ Error messages, loading states, animation state
- * 
+ *
  * USAGE:
  *   import { merlinMemory } from '@/wizard/v7/memory/merlinMemory';
- *   
+ *
  *   // Write (from any step)
  *   merlinMemory.set('location', { zip: '89052', state: 'NV', ... });
- *   
+ *
  *   // Read (from any step)
  *   const loc = merlinMemory.get('location');
- *   
+ *
  *   // Subscribe (for React hook)
  *   const unsub = merlinMemory.subscribe('location', (value) => { ... });
- *   
+ *
  *   // Check if step data exists
  *   if (merlinMemory.has('industry')) { ... }
- * 
+ *
  * Created: Feb 11, 2026
  */
 
@@ -70,23 +70,7 @@ export type {
   MerlinMemorySlots,
 } from "./memoryTypes";
 
-import type {
-  MemorySlotKey,
-  MemoryLocation,
-  MemoryGoals,
-  MemoryIndustry,
-  MemoryBusiness,
-  MemoryProfile,
-  MemorySizing,
-  MemoryAddOns,
-  MemoryQuote,
-  MemoryWeather,
-  MemorySolar,
-  MemoryFinancials,
-  MemorySession,
-  MerlinMemorySlots,
-  TrueQuoteReport,
-} from "./memoryTypes";
+import type { MemorySlotKey, MerlinMemorySlots, TrueQuoteReport } from "./memoryTypes";
 
 // ============================================================================
 // MEMORY STORE (Singleton)
@@ -104,9 +88,13 @@ let _validatorLoading = false;
 function getValidator() {
   if (!_validatorMod && !_validatorLoading) {
     _validatorLoading = true;
-    import("./truequoteValidator").then(mod => {
-      _validatorMod = mod;
-    }).catch(() => { /* non-fatal */ });
+    import("./truequoteValidator")
+      .then((mod) => {
+        _validatorMod = mod;
+      })
+      .catch(() => {
+        /* non-fatal */
+      });
   }
   return _validatorMod;
 }
@@ -124,7 +112,9 @@ class MerlinMemoryStore {
   }
 
   /** Get the last TrueQuote validation report */
-  get lastReport() { return this._lastReport; }
+  get lastReport() {
+    return this._lastReport;
+  }
 
   // ── READ ──────────────────────────────────────────────────────────────────
 
@@ -173,12 +163,16 @@ class MerlinMemoryStore {
 
       // Log violations in dev mode
       if (import.meta.env.DEV && violations.length > 0) {
-        const errors = violations.filter(v => v.severity === "error");
-        const warnings = violations.filter(v => v.severity === "warning");
+        const errors = violations.filter((v) => v.severity === "error");
+        const warnings = violations.filter((v) => v.severity === "warning");
         if (errors.length > 0) {
-          devWarn(`[TrueQuote™] 🔴 ${errors.length} error(s) on ${key}:\n${mod.formatViolations(violations)}`);
+          devWarn(
+            `[TrueQuote™] 🔴 ${errors.length} error(s) on ${key}:\n${mod.formatViolations(violations)}`
+          );
         } else if (warnings.length > 0) {
-          devInfo(`[TrueQuote™] 🟡 ${warnings.length} warning(s) on ${key}:\n${mod.formatViolations(violations)}`);
+          devInfo(
+            `[TrueQuote™] 🟡 ${warnings.length} warning(s) on ${key}:\n${mod.formatViolations(violations)}`
+          );
         }
       }
     } catch {

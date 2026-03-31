@@ -935,8 +935,8 @@ export async function generateProfessionalModel(
   const unleveredIRR = calculateIRR(unleveredCashFlows);
   const leveredIRR = calculateIRR(leveredCashFlows);
 
-  // NPV at 8% discount rate
-  const npv = calculateNPV(unleveredCashFlows, 0.08);
+  // NPV at 6% discount rate
+  const npv = calculateNPV(unleveredCashFlows, 0.06);
 
   // DSCR metrics
   const dscrValues = debtSchedule
@@ -962,7 +962,7 @@ export async function generateProfessionalModel(
   let discountedPayback = config.projectLifeYears;
   let cumulativeDiscounted = -totalCapex + itcBenefit;
   for (let i = 1; i < unleveredCashFlows.length; i++) {
-    const discountedCF = unleveredCashFlows[i] / Math.pow(1.08, i);
+    const discountedCF = unleveredCashFlows[i] / Math.pow(1.06, i);
     cumulativeDiscounted += discountedCF;
     if (cumulativeDiscounted >= 0) {
       discountedPayback = i - cumulativeDiscounted / discountedCF;
@@ -992,7 +992,7 @@ export async function generateProfessionalModel(
     efficiency,
     config.annualDegradation,
     config.projectLifeYears,
-    0.08 // 8% discount rate
+    0.06 // 6% discount rate
   );
 
   const capacityFactorEffective = calculateEffectiveCapacityFactor(

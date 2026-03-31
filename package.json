@@ -47,6 +47,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e:all": "npm run test:playwright && npm run test:puppeteer",
+    "walk:d2": "npx tsx scripts/run-all-industry-walks.ts",
+    "walk:d2:headed": "npx tsx scripts/run-all-industry-walks.ts --headed",
     "test:playwright": "playwright test",
     "test:playwright:ui": "playwright test --ui",
     "test:playwright:debug": "playwright test --debug",

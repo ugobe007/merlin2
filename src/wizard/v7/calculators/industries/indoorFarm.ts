@@ -18,9 +18,9 @@ export const INDOOR_FARM_LOAD_V1_SSOT: CalculatorContract = {
     // Curated buttons: '1'/'2-4'/'5-8'/'9+' (NOT plain numbers for ranges)
     const LEVEL_MAP: Record<string, number> = {
       "1": 1,
-      "2-4": 3,   // midpoint of 2-4
-      "5-8": 6,   // midpoint of 5-8
-      "9+": 10,   // conservative estimate for 9+
+      "2-4": 3, // midpoint of 2-4
+      "5-8": 6, // midpoint of 5-8
+      "9+": 10, // conservative estimate for 9+
     };
     const rawLevels = inputs.growingLevels;
     const growingLevels =
@@ -54,10 +54,17 @@ export const INDOOR_FARM_LOAD_V1_SSOT: CalculatorContract = {
     );
 
     // ── Delegate to SSOT ───────────────────────────────────────────
-    const result = calculateUseCasePower("indoor-farm", {
-      growingAreaSqFt: effectiveGrowArea,
-      ledWattagePerSqFt,
-    });
+    const result = calculateUseCasePower(
+      "indoor-farm",
+      buildSSOTInput("indoor_farm", {
+        squareFootage: effectiveGrowArea,
+        wPerSqFt: ledWattagePerSqFt,
+        growingLevels,
+        lightingSystem,
+        lightSchedule,
+        farmType,
+      })
+    );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
     // ── TrueQuote kW contributor breakdown ─────────────────────────

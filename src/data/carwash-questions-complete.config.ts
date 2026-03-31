@@ -1,6 +1,6 @@
 /**
  * Complete Car Wash Questionnaire Configuration
- * 
+ *
  * All 27 questions with proper types, validations, and conditional logic
  * Production-ready implementation
  */
@@ -10,9 +10,20 @@
 
 export interface Question {
   id: string;
-  type: 'buttons' | 'auto_confirm' | 'slider' | 'number_input' | 'toggle' |
-        'conditional_buttons' | 'type_then_quantity' | 'existing_then_planned' |
-        'increment_box' | 'wheel' | 'multiselect' | 'hours_grid' | 'range_buttons';
+  type:
+    | "buttons"
+    | "auto_confirm"
+    | "slider"
+    | "number_input"
+    | "toggle"
+    | "conditional_buttons"
+    | "type_then_quantity"
+    | "existing_then_planned"
+    | "increment_box"
+    | "wheel"
+    | "multiselect"
+    | "hours_grid"
+    | "range_buttons";
   // Optional: range button config from database
   rangeConfig?: {
     ranges: Array<{ label: string; min: number; max: number | null }>;
@@ -20,7 +31,7 @@ export interface Question {
   };
   // Optional: field name for database mapping
   fieldName?: string;
-  section: 'facility' | 'operations' | 'equipment' | 'solar';
+  section: "facility" | "operations" | "equipment" | "solar";
   title: string;
   subtitle?: string;
   helpText?: string;
@@ -28,7 +39,7 @@ export interface Question {
   options?: Array<{
     value: string;
     label: string;
-    icon?: string | any;
+    icon?: string;
     description?: string;
     disabled?: boolean;
   }>;
@@ -38,36 +49,36 @@ export interface Question {
     step: number;
   };
   unit?: string;
-  suffix?: string;  // NEW: Suffix from database options (e.g., " kW", " sq ft")
-  smartDefault?: any;
+  suffix?: string; // NEW: Suffix from database options (e.g., " kW", " sq ft")
+  smartDefault?: unknown;
   validation?: {
     required: boolean;
     min?: number;
     max?: number;
-    customRule?: (value: any) => boolean | string;
+    customRule?: (value: unknown) => boolean | string;
   };
   conditionalLogic?: {
     dependsOn: string;
-    showIf: (value: any) => boolean;
-    modifyOptions?: (value: any) => any;
+    showIf: (value: unknown) => boolean;
+    modifyOptions?: (value: unknown) => unknown;
   };
   quantityOptions?: Array<{
     value: string;
     label: string;
-    icon?: string | any;
+    icon?: string;
     description?: string;
   }>;
   existingOptions?: Array<{
     value: string;
     label: string;
-    icon?: string | any;
+    icon?: string;
     description?: string;
     quantityRange?: { min: number; max: number; step: number };
   }>;
   plannedOptions?: Array<{
     value: string;
     label: string;
-    icon?: string | any;
+    icon?: string;
     description?: string;
   }>;
   impactsCalculations?: string[];
@@ -80,648 +91,603 @@ export const carWashQuestionsComplete: Question[] = [
   // SECTION 1: FACILITY DETAILS (Q1-Q6)
   // ============================================================================
   {
-    id: 'facilityType',
-    type: 'buttons',
-    section: 'facility',
-    title: 'What type of car wash facility?',
-    subtitle: 'Industry classification by how vehicle interacts with machinery',
+    id: "facilityType",
+    type: "buttons",
+    section: "facility",
+    title: "What type of car wash?",
     options: [
       {
-        value: 'express_tunnel',
-        label: 'Express Tunnel',
-        icon: '🚗',
-        description: 'High-speed conveyor, 80-180 feet',
+        value: "express_tunnel",
+        label: "Express Tunnel",
+        description: "High-speed conveyor, 80-180 feet",
       },
       {
-        value: 'mini_tunnel',
-        label: 'Mini-Tunnel',
-        icon: '🚙',
-        description: 'Shorter conveyor under 90 feet',
+        value: "flex_service",
+        label: "Flex / Full-Service",
+        description: "Interior + exterior, larger building 10-15K sqft",
       },
       {
-        value: 'in_bay_automatic',
-        label: 'In-Bay Automatic (IBA)',
-        icon: '🏪',
-        description: 'Vehicle stationary, machine moves over it',
+        value: "mini_tunnel",
+        label: "Mini-Tunnel",
+        description: "Shorter conveyor under 90 feet",
       },
       {
-        value: 'self_serve',
-        label: 'Self-Serve Bay',
-        icon: '💪',
-        description: 'Customer wand wash',
-      }
+        value: "in_bay_automatic",
+        label: "In-Bay Automatic (IBA)",
+        description: "Vehicle stationary, machine moves over it",
+      },
+      {
+        value: "self_serve",
+        label: "Self-Serve Bay",
+        description: "Customer wand wash",
+      },
     ],
-    smartDefault: 'express_tunnel',
+    smartDefault: "express_tunnel",
     validation: { required: true },
-    impactsCalculations: ['peakDemand', 'equipmentLoad']
+    impactsCalculations: ["peakDemand", "equipmentLoad"],
   },
   {
-    id: 'tunnelOrBayCount',
-    type: 'buttons',
-    section: 'facility',
-    title: 'Number of tunnels or bays?',
-    subtitle: 'Select how many wash lanes your facility has',
+    id: "tunnelOrBayCount",
+    type: "buttons",
+    section: "facility",
+    title: "Number of tunnels or bays?",
     options: [
-      { value: '1', label: '1', icon: '1️⃣', description: 'Single lane' },
-      { value: '2', label: '2', icon: '2️⃣', description: 'Two lanes' },
-      { value: '3', label: '3', icon: '3️⃣', description: 'Three lanes' },
-      { value: '4', label: '4', icon: '4️⃣', description: 'Four lanes' },
+      { value: "1", label: "1" },
+      { value: "2", label: "2" },
+      { value: "3", label: "3" },
+      { value: "4", label: "4" },
     ],
     conditionalLogic: {
-      dependsOn: 'facilityType',
+      dependsOn: "facilityType",
       showIf: () => true,
-      modifyOptions: (facilityType: string) => {
+      modifyOptions: (value: unknown) => {
+        const facilityType = value as string;
         // Self-serve can have more bays
-        if (facilityType === 'self_serve') {
+        if (facilityType === "self_serve") {
           return {
             options: [
-              { value: '2', label: '2', icon: '2️⃣', description: 'Two bays' },
-              { value: '4', label: '4', icon: '4️⃣', description: 'Four bays' },
-              { value: '6', label: '6', icon: '6️⃣', description: 'Six bays' },
-              { value: '8', label: '8', icon: '8️⃣', description: 'Eight bays' },
-            ]
+              { value: "2", label: "2" },
+              { value: "4", label: "4" },
+              { value: "6", label: "6" },
+              { value: "8", label: "8" },
+            ],
           };
         }
         return {};
-      }
+      },
     },
-    smartDefault: '1',
-    merlinTip: 'Express tunnels typically have 1-2 lanes • Self-serve locations average 4-6 bays',
+    smartDefault: "1",
+    merlinTip: "Express tunnels typically have 1-2 lanes • Self-serve locations average 4-6 bays",
     validation: { required: true },
-    impactsCalculations: ['capacity', 'equipmentLoad']
+    impactsCalculations: ["capacity", "equipmentLoad"],
   },
   {
-    id: 'operatingHours',
-    type: 'buttons',
-    section: 'facility',
-    title: 'Operating hours per day?',
-    subtitle: 'Hours open for business',
+    id: "operatingHours",
+    type: "buttons",
+    section: "facility",
+    title: "Operating hours per day?",
     options: [
-      { value: '8', label: '8', icon: '🕐', description: 'hrs/day' },
-      { value: '10', label: '10', icon: '🕐🕐', description: 'hrs/day' },
-      { value: '12', label: '12', icon: '🕐🕐🕐', description: 'hrs/day' },
-      { value: '14', label: '14', icon: '🕐🕐🕐🕐', description: 'hrs/day' },
-      { value: '16', label: '16', icon: '🕐🕐🕐🕐🕐', description: 'hrs/day' },
-      { value: '20', label: '20', icon: '🌗', description: 'hrs/day' },
-      { value: '24', label: '24/7', icon: '🌙', description: 'Always open' }
+      { value: "8", label: "8", description: "hrs/day" },
+      { value: "10", label: "10", description: "hrs/day" },
+      { value: "12", label: "12", description: "hrs/day" },
+      { value: "14", label: "14", description: "hrs/day" },
+      { value: "16", label: "16", description: "hrs/day" },
+      { value: "20", label: "20", description: "hrs/day" },
+      { value: "24", label: "24/7", description: "Always open" },
     ],
-    smartDefault: '12',
-    merlinTip: 'Most car washes operate 10-14 hours per day',
+    smartDefault: "12",
+    merlinTip: "Most car washes operate 10-14 hours per day",
     validation: { required: true },
-    impactsCalculations: ['annualConsumption', 'operatingCosts']
+    impactsCalculations: ["annualConsumption", "operatingCosts"],
   },
   {
-    id: 'daysPerWeek',
-    type: 'buttons',
-    section: 'facility',
-    title: 'Days open per week?',
-    subtitle: 'Typical operating days',
+    id: "daysPerWeek",
+    type: "buttons",
+    section: "facility",
+    title: "Days open per week?",
     options: [
-      { value: '5', label: '5', icon: '5️⃣', description: 'days' },
-      { value: '6', label: '6', icon: '6️⃣', description: 'days' },
-      { value: '7', label: '7', icon: '7️⃣', description: 'days' }
+      { value: "5", label: "5", description: "days" },
+      { value: "6", label: "6", description: "days" },
+      { value: "7", label: "7", description: "days" },
     ],
-    smartDefault: '7',
+    smartDefault: "7",
     validation: { required: true },
-    impactsCalculations: ['annualConsumption', 'operatingCosts']
+    impactsCalculations: ["annualConsumption", "operatingCosts"],
   },
   {
-    id: 'dailyVehicles',
-    type: 'slider',
-    section: 'facility',
-    title: 'Estimated average vehicles washed per day?',
-    subtitle: 'Daily throughput helps us understand your energy demand patterns',
-    helpText: 'Using 3min cycle × 12hrs = 240 max/day typical',
+    id: "dailyVehicles",
+    type: "slider",
+    section: "facility",
+    title: "Estimated daily vehicles washed?",
     range: { min: 0, max: 350, step: 1 },
     smartDefault: 150,
-    unit: ' vehicles/day',
-    merlinTip: 'Express tunnels: 150-300/day • Mini tunnels: 50-150/day • Self-serve: 20-100/day',
+    unit: " vehicles/day",
+    merlinTip: "Express tunnels: 150–300/day typical",
     validation: { required: true, min: 0, max: 350 },
-    impactsCalculations: ['waterUsage', 'revenueProjection']
+    impactsCalculations: ["waterUsage", "revenueProjection"],
   },
   {
-    id: 'naturalGasLine',
-    type: 'buttons',
-    section: 'facility',
-    title: 'Do you have an existing natural gas line?',
-    subtitle: 'Affects water heating and generator fuel options',
+    id: "naturalGasLine",
+    type: "buttons",
+    section: "facility",
+    title: "Natural gas line?",
     options: [
-      { value: 'yes', label: 'Yes', icon: '✅' },
-      { value: 'no', label: 'No', icon: '❌' },
-      { value: 'unknown', label: 'Not Sure / Unknown', icon: '❓' }
+      { value: "yes", label: "Yes" },
+      { value: "no", label: "No" },
+      { value: "unknown", label: "Not Sure" },
     ],
-    smartDefault: 'unknown',
+    smartDefault: "unknown",
     validation: { required: true },
-    impactsCalculations: ['heatingOptions', 'operatingCosts']
+    impactsCalculations: ["heatingOptions", "operatingCosts"],
   },
   // ============================================================================
   // SECTION 2: EQUIPMENT (Q7-Q15)
   // ============================================================================
   {
-    id: 'waterHeaterType',
-    type: 'conditional_buttons',
-    section: 'equipment',
-    title: 'Water heating system?',
-    subtitle: 'Electric water heaters add significant peak demand (50-150 kW)',
+    id: "waterHeaterType",
+    type: "conditional_buttons",
+    section: "equipment",
+    title: "Water heating system?",
+    subtitle: "Electric water heaters add significant peak demand (50-150 kW)",
     options: [
       {
-        value: 'electric',
-        label: 'Electric',
-        icon: '⚡',
-        description: '10-30 kW continuous load',
+        value: "electric",
+        label: "Electric",
+        description: "10-30 kW continuous load",
       },
       {
-        value: 'natural_gas',
-        label: 'Natural Gas',
-        icon: '🔥',
-        description: 'Lower electric demand',
+        value: "natural_gas",
+        label: "Natural Gas",
+        description: "Lower electric demand",
       },
       {
-        value: 'propane',
-        label: 'Propane',
-        icon: '⛽',
-        description: 'For off-grid locations',
+        value: "propane",
+        label: "Propane",
+        description: "For off-grid locations",
       },
       {
-        value: 'cold_water',
-        label: 'Cold Water Only',
-        icon: '❄️',
-        description: 'No heating needed',
-      }
+        value: "cold_water",
+        label: "Cold Water Only",
+        description: "No heating needed",
+      },
     ],
     conditionalLogic: {
-      dependsOn: 'naturalGasLine',
+      dependsOn: "naturalGasLine",
       showIf: () => true,
-      modifyOptions: (gasLine: string) => {
-        if (gasLine === 'yes') {
+      modifyOptions: (value: unknown) => {
+        const gasLine = value as string;
+        if (gasLine === "yes") {
           return {
-            enabledOptions: ['natural_gas'],
-            disabledOptions: ['electric', 'propane', 'cold_water']
+            enabledOptions: ["natural_gas"],
+            disabledOptions: ["electric", "propane", "cold_water"],
           };
         } else {
           return {
-            enabledOptions: ['electric', 'propane', 'cold_water'],
-            disabledOptions: ['natural_gas']
+            enabledOptions: ["electric", "propane", "cold_water"],
+            disabledOptions: ["natural_gas"],
           };
         }
-      }
+      },
     },
-    smartDefault: 'natural_gas',
+    smartDefault: "natural_gas",
     validation: { required: true },
-    impactsCalculations: ['peakDemand', 'heatingLoad']
+    impactsCalculations: ["peakDemand", "heatingLoad"],
   },
   {
-    id: 'pumpConfiguration',
-    type: 'type_then_quantity',
-    section: 'equipment',
-    title: 'Water pump configuration?',
-    subtitle: 'High-pressure pumps save 20-40% energy vs constant speed',
-    merlinTip: '🚨 CRITICAL: High-pressure pumps are 20-30% of your electric bill!',
+    id: "pumpConfiguration",
+    type: "type_then_quantity",
+    section: "equipment",
+    title: "Water pump configuration?",
+    subtitle: "High-pressure pumps save 20-40% energy vs constant speed",
+    merlinTip: "High-pressure pumps are 20-30% of your electric bill.",
     options: [
       {
-        value: 'standard',
-        label: 'Standard Pressure',
-        icon: '💧',
-        description: '5-10 HP pumps'
+        value: "standard",
+        label: "Standard Pressure",
+        description: "5-10 HP pumps",
       },
       {
-        value: 'high_pressure',
-        label: 'High Pressure',
-        icon: '💦',
-        description: '15-25 HP pumps'
+        value: "high_pressure",
+        label: "High Pressure",
+        description: "15-25 HP pumps",
       },
       {
-        value: 'multiple',
-        label: 'Multiple Pumps',
-        icon: '🔄',
-        description: 'Staged system'
+        value: "multiple",
+        label: "Multiple Pumps",
+        description: "Staged system",
       },
       {
-        value: 'vfd',
-        label: 'Variable Speed (VFD)',
-        icon: '⚙️',
-        description: 'Energy efficient'
-      }
+        value: "vfd",
+        label: "Variable Speed (VFD)",
+        description: "Energy efficient",
+      },
     ],
     quantityOptions: [
-      { value: '1-2', label: '1-2 Pumps', icon: '💧', description: '15-30 HP total' },
-      { value: '3-4', label: '3-4 Pumps', icon: '💧💧', description: '45-80 HP total' },
-      { value: '5-6', label: '5-6 Pumps', icon: '💦', description: '100-150 HP total' },
-      { value: '7+', label: '7+ Pumps', icon: '🌊', description: '150+ HP total' }
+      { value: "1-2", label: "1-2 Pumps", description: "15-30 HP total" },
+      { value: "3-4", label: "3-4 Pumps", description: "45-80 HP total" },
+      { value: "5-6", label: "5-6 Pumps", description: "100-150 HP total" },
+      { value: "7+", label: "7+ Pumps", description: "150+ HP total" },
     ],
-    smartDefault: 'standard',
+    smartDefault: "standard",
     validation: { required: true },
-    impactsCalculations: ['pumpLoad', 'peakDemand']
+    impactsCalculations: ["pumpLoad", "peakDemand"],
   },
   {
-    id: 'waterReclamation',
-    type: 'buttons',
-    section: 'equipment',
-    title: 'Water reclamation system?',
-    subtitle: 'Reclaim systems add pump load but reduce water costs',
+    id: "waterReclamation",
+    type: "buttons",
+    section: "equipment",
+    title: "Water reclamation system?",
+    subtitle: "Reclaim systems add pump load but reduce water costs",
     options: [
       {
-        value: 'none',
-        label: 'No Reclaim',
-        icon: '❌',
-        description: 'Fresh water only'
+        value: "none",
+        label: "No Reclaim",
+        description: "Fresh water only",
       },
       {
-        value: 'partial',
-        label: 'Partial Reclaim',
-        icon: '♻️',
-        description: '30-60% recycled'
+        value: "partial",
+        label: "Partial Reclaim",
+        description: "30-60% recycled",
       },
       {
-        value: 'full',
-        label: 'Full Reclaim',
-        icon: '🔄',
-        description: '70-85% recycled'
+        value: "full",
+        label: "Full Reclaim",
+        description: "70-85% recycled",
       },
       {
-        value: 'advanced',
-        label: 'Advanced Treatment',
-        icon: '✨',
-        description: '90%+ recycled'
-      }
+        value: "advanced",
+        label: "Advanced Treatment",
+        description: "90%+ recycled",
+      },
     ],
-    smartDefault: 'partial',
+    smartDefault: "partial",
     validation: { required: true },
-    impactsCalculations: ['waterUsage', 'pumpLoad']
+    impactsCalculations: ["waterUsage", "pumpLoad"],
   },
   {
-    id: 'dryerConfiguration',
-    type: 'type_then_quantity',
-    section: 'equipment',
-    title: 'Vehicle dryer configuration?',
-    subtitle: 'Heated dryers are largest power consumers',
-    merlinTip: '🚨 CRITICAL: Dryers account for 40-50% of your total electric bill!',
+    id: "dryerConfiguration",
+    type: "type_then_quantity",
+    section: "equipment",
+    title: "Vehicle dryer configuration?",
+    subtitle: "Heated dryers are largest power consumers",
+    merlinTip: "Dryers account for 40-50% of your total electric bill.",
     options: [
       {
-        value: 'blowers',
-        label: 'Blowers Only',
-        icon: '💨',
-        description: '20-40 HP'
+        value: "blowers",
+        label: "Blowers Only",
+        description: "20-40 HP",
       },
       {
-        value: 'heated',
-        label: 'Heated Dryers',
-        icon: '♨️',
-        description: 'Adds 30-50 kW'
+        value: "heated",
+        label: "Heated Dryers",
+        description: "Adds 30-50 kW",
       },
       {
-        value: 'hybrid',
-        label: 'Hybrid System',
-        icon: '🔥',
-        description: 'Seasonal heating'
+        value: "hybrid",
+        label: "Hybrid System",
+        description: "Seasonal heating",
       },
       {
-        value: 'none',
-        label: 'No Dryers',
-        icon: '❌',
-        description: 'Air dry only'
-      }
+        value: "none",
+        label: "No Dryers",
+        description: "Air dry only",
+      },
     ],
     quantityOptions: [
-      { value: 'standard', label: 'Standard', icon: '💨', description: '4 blowers' },
-      { value: 'premium', label: 'Premium', icon: '💨💨', description: '6+ blowers' },
-      { value: 'heated', label: 'Heated', icon: '♨️', description: 'Heated dryers' },
-      { value: 'none', label: 'None', icon: '❌', description: 'Air dry' }
+      { value: "standard", label: "Standard", description: "4 blowers" },
+      { value: "premium", label: "Premium", description: "6+ blowers" },
+      { value: "heated", label: "Heated", description: "Heated dryers" },
+      { value: "none", label: "None", description: "Air dry" },
     ],
-    smartDefault: 'blowers',
+    smartDefault: "blowers",
     validation: { required: true },
-    impactsCalculations: ['dryerLoad', 'peakDemand']
+    impactsCalculations: ["dryerLoad", "peakDemand"],
   },
   {
-    id: 'vacuumStations',
-    type: 'increment_box',
-    section: 'equipment',
-    title: 'Free-standing Vacuum stations?',
-    subtitle: 'Self-service vacuum islands. Each vacuum is 3-5 HP (2-4 kW)',
+    id: "vacuumStations",
+    type: "increment_box",
+    section: "equipment",
+    title: "Free-standing Vacuum stations?",
+    subtitle: "Self-service vacuum islands. Each vacuum is 3-5 HP (2-4 kW)",
     range: { min: 0, max: 32, step: 4 },
     smartDefault: 8,
-    unit: ' stations',
+    unit: " stations",
     validation: { required: true, min: 0, max: 32 },
-    impactsCalculations: ['vacuumLoad', 'peakDemand']
+    impactsCalculations: ["vacuumLoad", "peakDemand"],
   },
   {
-    id: 'evCharging',
-    type: 'existing_then_planned',
-    section: 'equipment',
-    title: 'EV Charging Infrastructure?',
-    subtitle: 'Tells us about your current setup. You can add EV charging to your quote in the results step.',
-    existingOptions: [
-      { value: 'none', label: 'No EV Chargers on site', icon: '❌' },
-      {
-        value: 'level2',
-        label: 'Level 2 Chargers',
-        icon: '🔌',
-        description: '7-19 kW each',
-        quantityRange: { min: 0, max: 8, step: 2 }
-      },
-      {
-        value: 'dcfast',
-        label: 'DC Fast Chargers',
-        icon: '⚡',
-        description: '50-150 kW each',
-        quantityRange: { min: 0, max: 4, step: 1 }
-      }
+    id: "evCharging",
+    type: "increment_box",
+    section: "equipment",
+    title: "EV Charging Infrastructure?",
+    subtitle: "How many EV chargers are currently installed on site?",
+    range: { min: 0, max: 10, step: 1 },
+    smartDefault: 0,
+    unit: " chargers",
+    validation: { required: false, min: 0, max: 10 },
+    impactsCalculations: ["evLoad", "futureExpansion"],
+  },
+  {
+    id: "evChargingType",
+    type: "buttons",
+    section: "equipment",
+    title: "What type of EV chargers?",
+    subtitle: "Level 2 chargers for daily use; DC Fast for quick top-ups",
+    options: [
+      { value: "level2", label: "Level 2", description: "7–22 kW each" },
+      { value: "dcfast", label: "DC Fast", description: "50–150 kW each" },
+      { value: "both", label: "Both", description: "Mixed fleet" },
     ],
-    plannedOptions: [
-      {
-        value: 'no_plans',
-        label: 'No Plans',
-        icon: '❌',
-        description: 'Roof solar only'
-      },
-      {
-        value: 'level2_only',
-        label: 'Level 2 Only',
-        icon: '🔌',
-        description: '7-11 kW per port'
-      },
-      {
-        value: 'dcfast',
-        label: 'DC Fast Charging',
-        icon: '⚡',
-        description: '50-150 kW per port'
-      },
-      {
-        value: 'both',
-        label: 'Level 2 + DCFC',
-        icon: '🚗',
-        description: 'Full coverage'
-      }
-    ],
+    smartDefault: "level2",
+    conditionalLogic: {
+      dependsOn: "evCharging",
+      showIf: (val: unknown) => (typeof val === "number" ? val > 0 : Number(val) > 0),
+    },
     validation: { required: false },
-    impactsCalculations: ['evLoad', 'futureExpansion']
+    impactsCalculations: ["evLoad"],
   },
   // ============================================================================
   // SECTION 3: ADDITIONAL EQUIPMENT (Q13-Q19)
   // ============================================================================
   {
-    id: 'paymentKiosks',
-    type: 'increment_box',
-    section: 'equipment',
-    title: 'Payment kiosks?',
-    subtitle: 'Entry stations with touchscreens and card readers',
+    id: "paymentKiosks",
+    type: "increment_box",
+    section: "equipment",
+    title: "Payment kiosks?",
     range: { min: 0, max: 10, step: 1 },
     smartDefault: 2,
-    unit: ' kiosks',
-    helpText: 'Each kiosk: ~0.5 kW',
+    unit: " kiosks",
     validation: { required: true, min: 0, max: 10 },
-    impactsCalculations: ['facilitiesLoad']
+    impactsCalculations: ["facilitiesLoad"],
   },
   {
-    id: 'conveyorMotorSize',
-    type: 'buttons',
-    section: 'equipment',
-    title: 'Conveyor motor size?',
-    subtitle: 'Main drive motor for tunnel conveyor',
+    id: "conveyorMotorSize",
+    type: "buttons",
+    section: "equipment",
+    title: "Conveyor motor size?",
+    subtitle: "Main drive motor for tunnel conveyor",
     options: [
-      { value: '5', label: '5 HP', icon: '⚙️', description: '3.7 kW' },
-      { value: '10', label: '10 HP', icon: '⚙️', description: '7.5 kW' },
-      { value: '15', label: '15 HP', icon: '⚙️', description: '11.2 kW' }
+      { value: "5", label: "5 HP", description: "3.7 kW" },
+      { value: "10", label: "10 HP", description: "7.5 kW" },
+      { value: "15", label: "15 HP", description: "11.2 kW" },
     ],
-    smartDefault: '10',
+    smartDefault: "10",
     conditionalLogic: {
-      dependsOn: 'facilityType',
-      showIf: (type) => type === 'express_tunnel' || type === 'mini_tunnel',
+      dependsOn: "facilityType",
+      showIf: (type) => type === "express_tunnel" || type === "mini_tunnel",
     },
     validation: { required: true },
-    impactsCalculations: ['conveyorLoad']
+    impactsCalculations: ["conveyorLoad"],
   },
   {
-    id: 'brushMotorCount',
-    type: 'increment_box',
-    section: 'equipment',
-    title: 'Brush motor count?',
-    subtitle: 'Wrap-around, top, side brushes, tire shiners',
+    id: "brushMotorCount",
+    type: "increment_box",
+    section: "equipment",
+    title: "Brush motor count?",
+    subtitle: "Wrap-around, top, side brushes, tire shiners",
     range: { min: 0, max: 20, step: 1 },
     smartDefault: 15,
-    unit: ' motors',
-    helpText: 'Typical: 10-20 motors per tunnel, 2-5 HP each (3 HP average)',
+    unit: " motors",
+    helpText: "Typical: 10-20 motors per tunnel, 2-5 HP each (3 HP average)",
     validation: { required: true, min: 0, max: 20 },
-    impactsCalculations: ['brushLoad', 'mechanicalLoad']
+    impactsCalculations: ["brushLoad", "mechanicalLoad"],
   },
   {
-    id: 'blowerCount',
-    type: 'increment_box',
-    section: 'equipment',
-    title: 'Number of blowers?',
-    subtitle: 'Individual blower units',
-    range: { min: 0, max: 20, step: 1 },
-    smartDefault: 10,
-    unit: ' blowers',
-    helpText: '10-15 HP each',
-    merlinTip: '🚨 CRITICAL: Dryers account for 40-50% of your total electric bill!',
-    validation: { required: true, min: 0, max: 20 },
-    impactsCalculations: ['blowerLoad', 'peakDemand']
-  },
-  {
-    id: 'heatedDryers',
-    type: 'toggle',
-    section: 'equipment',
-    title: 'Heated dryers?',
-    subtitle: 'Electric heating elements (adds 30-50 kW)',
-    conditionalLogic: {
-      dependsOn: 'blowerCount',
-      showIf: (count) => count > 0,
-    },
-    smartDefault: false,
-    validation: { required: false },
-    impactsCalculations: ['heatingLoad', 'peakDemand']
-  },
-  {
-    id: 'centralVacuumHP',
-    type: 'slider',
-    section: 'equipment',
-    title: 'Central vacuum turbine HP?',
-    subtitle: 'Industrial vacuum system for self-service stations',
+    id: "centralVacuumHP",
+    type: "slider",
+    section: "equipment",
+    title: "Central vacuum turbine HP?",
+    subtitle: "Industrial vacuum system for self-service stations",
     range: { min: 20, max: 50, step: 5 },
     smartDefault: 30,
-    unit: ' HP',
-    helpText: '20 HP = 15 kW, 50 HP = 37 kW',
+    unit: " HP",
+    helpText: "20 HP = 15 kW, 50 HP = 37 kW",
     validation: { required: true, min: 20, max: 50 },
-    impactsCalculations: ['vacuumLoad']
+    impactsCalculations: ["vacuumLoad"],
   },
   {
-    id: 'highPressurePumpCount',
-    type: 'increment_box',
-    section: 'equipment',
-    title: 'High-pressure pump count?',
-    subtitle: 'Dedicated HP pumps for arches and undercarriage',
+    id: "highPressurePumpCount",
+    type: "increment_box",
+    section: "equipment",
+    title: "High-pressure pump count?",
+    subtitle: "Dedicated HP pumps for arches and undercarriage",
     range: { min: 1, max: 10, step: 1 },
     smartDefault: 3,
-    unit: ' pumps',
-    helpText: '15 HP average each',
-    merlinTip: '🚨 CRITICAL: High-pressure pumps are 20-30% of your electric bill!',
+    unit: " pumps",
+    helpText: "15 HP average each",
     validation: { required: true, min: 1, max: 10 },
-    impactsCalculations: ['pumpLoad', 'peakDemand']
+    impactsCalculations: ["pumpLoad", "peakDemand"],
   },
   {
-    id: 'roSystemPump',
-    type: 'buttons',
-    section: 'equipment',
-    title: 'RO (Reverse Osmosis) system pump?',
-    subtitle: 'For spot-free rinse water',
+    id: "roSystemPump",
+    type: "buttons",
+    section: "equipment",
+    title: "RO (Reverse Osmosis) system pump?",
+    subtitle: "For spot-free rinse water",
     options: [
-      { value: 'none', label: 'None', icon: '❌', description: '0 kW' },
-      { value: 'small', label: 'Small (5 HP)', icon: '💧', description: '3.7 kW' },
-      { value: 'medium', label: 'Medium (10 HP)', icon: '💧', description: '7.5 kW' },
-      { value: 'large', label: 'Large (15 HP)', icon: '💦', description: '11.2 kW' }
+      { value: "none", label: "None", description: "0 kW" },
+      { value: "small", label: "Small (5 HP)", description: "3.7 kW" },
+      { value: "medium", label: "Medium (10 HP)", description: "7.5 kW" },
+      { value: "large", label: "Large (15 HP)", description: "11.2 kW" },
     ],
-    smartDefault: 'small',
+    smartDefault: "small",
     validation: { required: true },
-    impactsCalculations: ['pumpLoad']
+    impactsCalculations: ["pumpLoad"],
   },
   // ============================================================================
   // SECTION 4: FACILITIES & SOLAR (Q20-Q27)
   // ============================================================================
   {
-    id: 'airCompressor',
-    type: 'buttons',
-    section: 'equipment',
-    title: 'Air compressor size?',
-    subtitle: 'For foaming soap and pneumatic equipment',
+    id: "airCompressor",
+    type: "buttons",
+    section: "equipment",
+    title: "Air compressor size?",
+    subtitle: "For foaming soap and pneumatic equipment",
     options: [
-      { value: '5', label: '5 HP', icon: '💨', description: '3.7 kW' },
-      { value: '10', label: '10 HP', icon: '💨', description: '7.5 kW' },
-      { value: '15', label: '15 HP', icon: '💨', description: '11.2 kW' }
+      { value: "5", label: "5 HP", description: "3.7 kW" },
+      { value: "10", label: "10 HP", description: "7.5 kW" },
+      { value: "15", label: "15 HP", description: "11.2 kW" },
     ],
-    smartDefault: '10',
+    smartDefault: "10",
     validation: { required: true },
-    impactsCalculations: ['compressorLoad']
+    impactsCalculations: ["compressorLoad"],
   },
   {
-    id: 'tunnelLighting',
-    type: 'buttons',
-    section: 'equipment',
-    title: 'Tunnel lighting?',
-    subtitle: 'Interior wash tunnel illumination',
+    id: "tunnelLighting",
+    type: "buttons",
+    section: "equipment",
+    title: "Tunnel lighting?",
+    subtitle: "Interior wash tunnel illumination",
     options: [
-      { value: 'basic', label: 'Basic LED', icon: '💡', description: '5 kW' },
-      { value: 'enhanced', label: 'Enhanced LED', icon: '💡', description: '8 kW' },
-      { value: 'premium', label: 'Premium + Effects', icon: '✨', description: '15 kW' }
+      { value: "basic", label: "Basic LED", description: "5 kW" },
+      { value: "enhanced", label: "Enhanced LED", description: "8 kW" },
+      { value: "premium", label: "Premium + Effects", description: "15 kW" },
     ],
-    smartDefault: 'enhanced',
+    smartDefault: "enhanced",
     validation: { required: true },
-    impactsCalculations: ['lightingLoad']
+    impactsCalculations: ["lightingLoad"],
   },
   {
-    id: 'exteriorSignage',
-    type: 'buttons',
-    section: 'equipment',
-    title: 'Exterior signage?',
-    subtitle: 'Illuminated brand signs and pricing displays',
+    id: "exteriorSignage",
+    type: "buttons",
+    section: "equipment",
+    title: "Exterior signage?",
+    subtitle: "Illuminated brand signs and pricing displays",
     options: [
-      { value: 'basic', label: 'Basic', icon: '🪧', description: '5 kW' },
-      { value: 'premium', label: 'Premium', icon: '🪧', description: '10 kW' },
-      { value: 'signature', label: 'Signature', icon: '🌟', description: '20 kW' }
+      { value: "basic", label: "Basic", description: "5 kW" },
+      { value: "premium", label: "Premium", description: "10 kW" },
+      { value: "signature", label: "Signature", description: "20 kW" },
     ],
-    smartDefault: 'premium',
+    smartDefault: "premium",
     validation: { required: true },
-    impactsCalculations: ['lightingLoad']
+    impactsCalculations: ["lightingLoad"],
   },
   {
-    id: 'officeFacilities',
-    type: 'multiselect',
-    section: 'equipment',
-    title: 'Office facilities?',
-    subtitle: 'Select all that apply',
+    id: "officeFacilities",
+    type: "multiselect",
+    section: "equipment",
+    title: "Office facilities?",
+    subtitle: "Select all that apply",
     options: [
-      { value: 'office', label: 'Office', icon: '🏢', description: '2 kW' },
-      { value: 'break_room', label: 'Break Room', icon: '☕', description: '3 kW' },
-      { value: 'bathrooms', label: 'Bathrooms', icon: '🚻', description: '1 kW' },
-      { value: 'security', label: 'Security Cameras', icon: '📹', description: '0.5 kW' }
+      { value: "office", label: "Office" },
+      { value: "break_room", label: "Break Room" },
+      { value: "bathrooms", label: "Bathrooms" },
+      { value: "security", label: "Security Cameras" },
     ],
     smartDefault: [],
     validation: { required: false },
-    impactsCalculations: ['facilitiesLoad']
+    impactsCalculations: ["facilitiesLoad"],
   },
   {
-    id: 'totalSiteArea',
-    type: 'slider',
-    section: 'solar',
-    title: 'Total site area?',
-    subtitle: 'Total property size including parking and vacuum areas',
+    id: "totalSiteArea",
+    type: "slider",
+    section: "solar",
+    title: "Total site area?",
+    subtitle: "Total property size including parking and vacuum areas",
     range: { min: 0, max: 75000, step: 1000 },
     smartDefault: 15000,
-    unit: ' sq ft',
+    unit: " sq ft",
     validation: { required: true, min: 0, max: 75000 },
-    impactsCalculations: ['siteLayout']
+    impactsCalculations: ["siteLayout"],
   },
   {
-    id: 'roofArea',
-    type: 'slider',
-    section: 'solar',
-    title: 'Available roof area for solar panels?',
-      subtitle: 'Total roof space (we\'ll calculate usable area)',
-    range: { min: 0, max: 25000, step: 100 },
-    smartDefault: 5000,
-    unit: ' sq ft',
-    helpText: 'Solar preview will appear below after entering',
-    validation: { required: true, min: 0, max: 25000 },
-    impactsCalculations: ['roofSolar', 'solarCapacity']
+    id: "roofArea",
+    type: "slider",
+    section: "solar",
+    title: "Available roof area for solar panels?",
+    subtitle: "Building roof space only — not the full property",
+    range: { min: 0, max: 25000, step: 500 },
+    smartDefault: 6500,
+    unit: " sq ft",
+    helpText:
+      "Express tunnel: 4,500–8,000 sq ft. Flex/full-service: 10,000–15,000 sq ft. Includes building, mechanical room, and customer lounge. Vacuum canopy and carport areas are counted separately below.",
+    validation: { required: false, min: 0, max: 25000 },
+    impactsCalculations: ["roofSolar", "solarCapacity"],
   },
   {
-    id: 'carportInterest',
-    type: 'buttons',
-    section: 'solar',
-    title: 'Interested in solar carports over vacuum areas?',
-    subtitle: 'Solar carports provide customer shade while generating power',
+    id: "roofType",
+    type: "buttons",
+    section: "solar",
+    title: "What is your building's roof construction?",
+    subtitle: "Roof type determines how much of the roof area can hold solar panels",
     options: [
       {
-        value: 'yes',
-        label: 'Yes, Interested',
-        icon: '🏗️',
-        description: 'Provides shade + solar'
+        value: "opaque",
+        label: "Metal / Concrete",
+        description: "Standard opaque roof — best solar economics (70% usable)",
       },
       {
-        value: 'learn_more',
-        label: 'Tell Me More',
-        description: 'Want to learn benefits'
+        value: "mixed",
+        label: "Mixed (Some Skylights)",
+        description: "Partial skylights or polycarbonate strips (55% usable)",
       },
       {
-        value: 'no',
-        label: 'No Thanks',
-        description: 'Roof solar only'
-      }
+        value: "polycarbonate",
+        label: "Heavy Polycarbonate",
+        description: "Tommy's / Quick Quack daylight-roof style (40% usable)",
+      },
     ],
-    smartDefault: 'learn_more',
+    smartDefault: "opaque",
+    validation: { required: false },
+    impactsCalculations: ["roofSolar", "solarCapacity"],
+  },
+  {
+    id: "carportInterest",
+    type: "buttons",
+    section: "solar",
+    title: "Interested in solar carports over vacuum areas?",
+    subtitle: "Solar carports provide customer shade while generating power",
+    options: [
+      {
+        value: "yes",
+        label: "Yes, Interested",
+        description: "Provides shade + solar",
+      },
+      {
+        value: "learn_more",
+        label: "Tell Me More",
+        description: "Want to learn benefits",
+      },
+      {
+        value: "no",
+        label: "No Thanks",
+        description: "Roof solar only",
+      },
+    ],
+    smartDefault: "learn_more",
     validation: { required: true },
-    impactsCalculations: ['carportSolar', 'solarCapacity']
-  }
+    impactsCalculations: ["carportSolar", "solarCapacity"],
+  },
 ];
 
 // Export section metadata
 export const carWashSections = [
   {
-    id: 'facility',
-    title: 'Facility Details',
-    description: 'Basic information about your car wash',
-    icon: '🏢',
-    questions: carWashQuestionsComplete.filter(q => q.section === 'facility')
+    id: "facility",
+    title: "Facility Details",
+    description: "Basic information about your car wash",
+    icon: "🏢",
+    questions: carWashQuestionsComplete.filter((q) => q.section === "facility"),
   },
   {
-    id: 'operations',
-    title: 'Operations',
-    description: 'Operating hours and throughput',
-    icon: '⏰',
-    questions: carWashQuestionsComplete.filter(q => q.section === 'operations')
+    id: "operations",
+    title: "Operations",
+    description: "Operating hours and throughput",
+    icon: "⏰",
+    questions: carWashQuestionsComplete.filter((q) => q.section === "operations"),
   },
   {
-    id: 'equipment',
-    title: 'Equipment',
-    description: 'Machinery and systems',
-    icon: '⚙️',
-    questions: carWashQuestionsComplete.filter(q => q.section === 'equipment')
+    id: "equipment",
+    title: "Equipment",
+    description: "Machinery and systems",
+    icon: "⚙️",
+    questions: carWashQuestionsComplete.filter((q) => q.section === "equipment"),
   },
   {
-    id: 'solar',
-    title: 'Solar Potential',
-    description: 'Site characteristics for solar',
-    icon: '☀️',
-    questions: carWashQuestionsComplete.filter(q => q.section === 'solar')
-  }
+    id: "solar",
+    title: "Solar Potential",
+    description: "Site characteristics for solar",
+    icon: "☀️",
+    questions: carWashQuestionsComplete.filter((q) => q.section === "solar"),
+  },
 ];

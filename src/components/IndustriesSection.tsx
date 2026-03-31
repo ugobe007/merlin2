@@ -3,15 +3,13 @@
    Matches reference: "Begin with your industry" layout */
 
 import { useState } from "react";
-import { ArrowRight } from "lucide-react";
-
-const WIZARD_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/merlin-wizard_11d2b1f0.png";
 
 const industries = [
   {
     id: "hotels",
     label: "Hotels",
-    description: "Reduce utility costs, add resilience, and turn a large recurring energy expense into a clearer project decision with real ROI and savings data.",
+    description:
+      "Reduce utility costs, add resilience, and turn a large recurring energy expense into a clearer project decision with real ROI and savings data.",
     systemSize: "1.2 MW / 4.8 MWh",
     annualSavings: "$412K",
     payback: "2.3 yrs",
@@ -20,7 +18,8 @@ const industries = [
   {
     id: "carwash",
     label: "Car Wash",
-    description: "High daytime energy loads make car wash facilities ideal candidates for solar + storage. Fast payback, strong IRR.",
+    description:
+      "High daytime energy loads make car wash facilities ideal candidates for solar + storage. Fast payback, strong IRR.",
     systemSize: "150 kW / 600 kWh",
     annualSavings: "$68K",
     payback: "3.8 yrs",
@@ -29,7 +28,8 @@ const industries = [
   {
     id: "ev",
     label: "EV Charging",
-    description: "Battery storage paired with EV charging stations dramatically reduces demand spikes and utility costs.",
+    description:
+      "Battery storage paired with EV charging stations dramatically reduces demand spikes and utility costs.",
     systemSize: "300 kW / 1.2 MWh",
     annualSavings: "$145K",
     payback: "4.2 yrs",
@@ -38,7 +38,8 @@ const industries = [
   {
     id: "manufacturing",
     label: "Manufacturing",
-    description: "Large roof and land footprints plus consistent load profiles make manufacturing a top-tier solar candidate.",
+    description:
+      "Large roof and land footprints plus consistent load profiles make manufacturing a top-tier solar candidate.",
     systemSize: "2.5 MW / 10 MWh",
     annualSavings: "$680K",
     payback: "5.1 yrs",
@@ -47,7 +48,8 @@ const industries = [
   {
     id: "multifamily",
     label: "Multifamily",
-    description: "Community solar and shared storage models unlock savings for multifamily properties of all sizes.",
+    description:
+      "Community solar and shared storage models unlock savings for multifamily properties of all sizes.",
     systemSize: "400 kW / 1.6 MWh",
     annualSavings: "$112K",
     payback: "5.8 yrs",
@@ -56,7 +58,8 @@ const industries = [
   {
     id: "datacenters",
     label: "Data Centers",
-    description: "24/7 load profiles and sustainability mandates are driving aggressive energy investment in data centers.",
+    description:
+      "24/7 load profiles and sustainability mandates are driving aggressive energy investment in data centers.",
     systemSize: "5 MW / 20 MWh",
     annualSavings: "$1.4M",
     payback: "6.5 yrs",
@@ -71,7 +74,6 @@ export default function IndustriesSection() {
   return (
     <section id="industries" className="py-28 bg-[#060D1F]">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
-
         {/* Header */}
         <div className="mb-10">
           <h2
@@ -80,8 +82,12 @@ export default function IndustriesSection() {
           >
             Begin with your industry
           </h2>
-          <p className="text-slate-400 text-base max-w-2xl" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
-            Merlin supports 22 industries. The homepage surfaces the highest-interest paths first so users can quickly see themselves in the platform.
+          <p
+            className="text-slate-400 text-base max-w-2xl"
+            style={{ fontFamily: "'Nunito Sans', sans-serif" }}
+          >
+            Merlin supports 22 industries. The homepage surfaces the highest-interest paths first so
+            users can quickly see themselves in the platform.
           </p>
         </div>
 
@@ -117,7 +123,10 @@ export default function IndustriesSection() {
               >
                 {active.label}
               </h3>
-              <p className="text-slate-400 text-base leading-relaxed mb-6 max-w-md" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
+              <p
+                className="text-slate-400 text-base leading-relaxed mb-6 max-w-md"
+                style={{ fontFamily: "'Nunito Sans', sans-serif" }}
+              >
                 {active.description}
               </p>
               <a

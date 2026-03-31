@@ -623,7 +623,7 @@ export async function generateWordDocument(quoteData: QuotePreviewData): Promise
   const allInPerKWh = Math.round(equipmentTotal / (batteryMWh * 1000));
 
   // NPV @ 8% discount rate (10-year horizon)
-  const discountRate = 0.08;
+  const discountRate = 0.06;
   let npv10yr = -equipmentTotal;
   for (let t = 1; t <= 10; t++) {
     npv10yr += annualSavings / Math.pow(1 + discountRate, t);

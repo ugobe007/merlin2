@@ -49,7 +49,7 @@ export function buildV7ExportData(state: WizardV7State): QuoteExportData {
   // Sizing: prefer equipment breakdown, then freeze, then load profile
   const bessKW = quote.bessKW ?? (freeze?.powerMW ? freeze.powerMW * 1000 : quote.peakLoadKW) ?? 0;
   const bessKWh = quote.bessKWh ?? (freeze?.mwh ? freeze.mwh * 1000 : 0);
-  const durationHours = quote.durationHours ?? freeze?.hours ?? 4;
+  const durationHours = quote.durationHours ?? freeze?.hours ?? 2;
   const storageMW = bessKW / 1000;
   const storageMWh = bessKWh > 0 ? bessKWh / 1000 : storageMW * durationHours;
 
@@ -185,9 +185,9 @@ export function buildV7ExportData(state: WizardV7State): QuoteExportData {
           creditAmount: quote.metadata.itcDetails.creditAmount,
           baseRate: quote.metadata.itcDetails.baseRate,
           prevailingWageBonus: quote.metadata.itcDetails.qualifications?.prevailingWage ? 0.24 : 0,
-          energyCommunityBonus: quote.metadata.itcDetails.qualifications?.energyCommunity ? 0.10 : 0,
-          domesticContentBonus: quote.metadata.itcDetails.qualifications?.domesticContent ? 0.10 : 0,
-          lowIncomeBonus: quote.metadata.itcDetails.qualifications?.lowIncome ? 0.10 : 0,
+          energyCommunityBonus: quote.metadata.itcDetails.qualifications?.energyCommunity ? 0.1 : 0,
+          domesticContentBonus: quote.metadata.itcDetails.qualifications?.domesticContent ? 0.1 : 0,
+          lowIncomeBonus: quote.metadata.itcDetails.qualifications?.lowIncome ? 0.1 : 0,
           source: quote.metadata.itcDetails.source,
         }
       : undefined,
@@ -199,7 +199,8 @@ export function buildV7ExportData(state: WizardV7State): QuoteExportData {
           touArbitrageSavings: quote.metadata.advancedAnalysis.hourlySimulation.touArbitrageSavings,
           peakShavingSavings: quote.metadata.advancedAnalysis.hourlySimulation.peakShavingSavings,
           demandChargeSavings: quote.metadata.advancedAnalysis.hourlySimulation.demandChargeSavings,
-          solarSelfConsumptionSavings: quote.metadata.advancedAnalysis.hourlySimulation.solarSelfConsumptionSavings,
+          solarSelfConsumptionSavings:
+            quote.metadata.advancedAnalysis.hourlySimulation.solarSelfConsumptionSavings,
           equivalentCycles: quote.metadata.advancedAnalysis.hourlySimulation.equivalentCycles,
           capacityFactor: quote.metadata.advancedAnalysis.hourlySimulation.capacityFactor,
           source: quote.metadata.advancedAnalysis.hourlySimulation.source,
@@ -218,7 +219,8 @@ export function buildV7ExportData(state: WizardV7State): QuoteExportData {
           paybackP10: quote.metadata.advancedAnalysis.riskAnalysis.paybackP10,
           paybackP50: quote.metadata.advancedAnalysis.riskAnalysis.paybackP50,
           paybackP90: quote.metadata.advancedAnalysis.riskAnalysis.paybackP90,
-          probabilityPositiveNPV: quote.metadata.advancedAnalysis.riskAnalysis.probabilityPositiveNPV,
+          probabilityPositiveNPV:
+            quote.metadata.advancedAnalysis.riskAnalysis.probabilityPositiveNPV,
           valueAtRisk95: quote.metadata.advancedAnalysis.riskAnalysis.valueAtRisk95,
           source: quote.metadata.advancedAnalysis.riskAnalysis.source,
         }

@@ -268,7 +268,7 @@ export function useMerlinData(state?: any): MerlinData {
     // ── Sizing (Memory → State fallback) ────────────────────────────────
     const bessKWh = memSizing?.bessKWh ?? state?.quote?.bessKWh ?? 0;
     const bessKW = memSizing?.bessKW ?? state?.quote?.bessKW ?? 0;
-    const durationHours = memSizing?.durationHours ?? state?.quote?.durationHours ?? 4;
+    const durationHours = memSizing?.durationHours ?? state?.quote?.durationHours ?? 2;
 
     // ── Add-ons (Memory → State fallback) ───────────────────────────────
     const addOns = memAddOns
@@ -473,7 +473,7 @@ export function getProQuoteSeed(): {
 
   return {
     storageSizeMW: (sizing?.bessKW ?? 0) / 1000,
-    durationHours: sizing?.durationHours ?? 4,
+    durationHours: sizing?.durationHours ?? 2,
     solarMW: (addOns?.solarKW ?? sizing?.solarKW ?? 0) / 1000,
     generatorMW: (addOns?.generatorKW ?? sizing?.generatorKW ?? 0) / 1000,
     generatorFuelType: addOns?.generatorFuelType ?? "natural-gas",

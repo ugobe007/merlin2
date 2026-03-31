@@ -27,49 +27,49 @@ import { calculateSystemCosts, EQUIPMENT_UNIT_COSTS } from "@/services/pricingSe
 // ============================================================================
 const TIER_CONFIG = {
   0: {
-    // ESSENTIAL
-    name: "ESSENTIAL",
-    tagline: "Core system, right-sized",
+    // STARTER
+    name: "STARTER",
+    tagline: "Fast payback, solid foundation",
     headlineClass: "headline-starter",
-    cardBorder: "border-slate-700/60",
+    cardBorder: "border-slate-700/50",
     cardBg: "bg-gradient-to-b from-slate-900 to-slate-950",
     cardHover: "card-starter",
     accentColor: "text-emerald-400",
     chipBg: "bg-white/5 border-white/10",
     chipText: "text-slate-300",
     buttonClass:
-      "text-emerald-400 bg-transparent border-emerald-500 hover:bg-emerald-500/10 font-bold",
+      "text-emerald-400 bg-transparent border-emerald-500/70 hover:bg-emerald-500/10 font-bold",
     metricBg: "bg-white/5",
   },
   1: {
-    // OPTIMIZED
-    name: "OPTIMIZED",
-    tagline: "Most popular configuration",
+    // RECOMMENDED
+    name: "Recommended",
+    tagline: "Best ROI · Most popular",
     headlineClass: "headline-perfect",
-    cardBorder: "border-emerald-500/35",
-    cardBg: "bg-gradient-to-b from-emerald-950/40 via-slate-900 to-slate-950",
-    cardHover: "card-perfect",
-    accentColor: "text-emerald-400",
-    chipBg: "bg-emerald-500/10 border-emerald-500/30",
-    chipText: "text-emerald-200",
+    cardBorder: "border-emerald-400/70",
+    cardBg: "bg-gradient-to-b from-emerald-900/70 via-slate-900/90 to-slate-950",
+    cardHover: "card-perfect card-recommended",
+    accentColor: "text-emerald-300",
+    chipBg: "bg-emerald-500/15 border-emerald-400/50",
+    chipText: "text-emerald-100",
     buttonClass:
-      "text-emerald-400 bg-transparent border-emerald-500 hover:bg-emerald-500/10 font-bold",
+      "text-emerald-300 bg-transparent border-emerald-400 hover:bg-emerald-500/15 font-bold",
     metricBg: "bg-emerald-500/10",
   },
   2: {
-    // PREMIUM
-    name: "PREMIUM",
-    tagline: "Maximum performance",
+    // COMPLETE
+    name: "Complete",
+    tagline: "Maximum resilience & coverage",
     headlineClass: "headline-beast",
-    cardBorder: "border-slate-700/60",
-    cardBg: "bg-gradient-to-b from-slate-900 to-slate-950",
+    cardBorder: "border-amber-500/50",
+    cardBg: "bg-gradient-to-b from-amber-950/40 via-slate-900 to-slate-950",
     cardHover: "card-beast",
     accentColor: "text-amber-400",
-    chipBg: "bg-white/5 border-white/10",
-    chipText: "text-slate-300",
+    chipBg: "bg-amber-500/10 border-amber-500/30",
+    chipText: "text-amber-200",
     buttonClass:
-      "text-emerald-400 bg-transparent border-emerald-500 hover:bg-emerald-500/10 font-bold",
-    metricBg: "bg-white/5",
+      "text-amber-400 bg-transparent border-amber-500/70 hover:bg-amber-500/10 font-bold",
+    metricBg: "bg-amber-500/10",
   },
 } as const;
 
@@ -81,119 +81,98 @@ const customStyles = `
   .card-starter, .card-perfect, .card-beast {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  
+
   .card-starter:hover {
     transform: translateY(-3px);
     box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.18);
   }
-  
   .card-starter:active {
     transform: translateY(-1px) scale(0.99);
-    box-shadow: 0 10px 20px -10px rgba(16, 185, 129, 0.25);
   }
-  
+
   .card-perfect:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.22);
+    transform: translateY(-5px);
+    box-shadow: 0 0 0 2px rgba(52,211,153,0.6), 0 35px 70px -12px rgba(52,211,153,0.5);
+    animation: none;
   }
-  
   .card-perfect:active {
-    transform: translateY(-1px) scale(0.99);
-    box-shadow: 0 10px 20px -10px rgba(16, 185, 129, 0.28);
+    transform: translateY(-2px) scale(0.99);
   }
-  
+
   .card-beast:hover {
     transform: translateY(-3px);
-    box-shadow: 0 20px 40px -15px rgba(249, 115, 22, 0.18);
+    box-shadow: 0 20px 40px -15px rgba(245, 158, 11, 0.28);
   }
-  
   .card-beast:active {
     transform: translateY(-1px) scale(0.99);
-    box-shadow: 0 10px 20px -10px rgba(249, 115, 22, 0.25);
   }
-  
-  /* SELECTED STATE GLOW — static, no pulse */
+
+  /* BEST VALUE — persistent breathing glow */
+  @keyframes recommendedGlow {
+    0%, 100% {
+      box-shadow: 0 0 0 2px rgba(52,211,153,0.25), 0 20px 50px -12px rgba(52,211,153,0.25);
+    }
+    50% {
+      box-shadow: 0 0 0 2px rgba(52,211,153,0.55), 0 28px 65px -12px rgba(52,211,153,0.42);
+    }
+  }
+  .card-recommended {
+    animation: recommendedGlow 2.8s ease-in-out infinite;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* SELECTED STATE — override any animation */
   .card-selected {
-    box-shadow: 0 0 28px 0px rgba(16, 185, 129, 0.22);
+    box-shadow: 0 0 0 2px rgba(52,211,153,0.6), 0 0 40px 0px rgba(52,211,153,0.25) !important;
+    animation: none !important;
   }
-  
-  /* CHECKMARK ANIMATION — gentle fade in */
-  .checkmark-appear {
-    animation: checkmarkFade 0.25s ease-out;
-  }
-  
+
+  /* CHECKMARK ANIMATION */
+  .checkmark-appear { animation: checkmarkFade 0.25s ease-out; }
   @keyframes checkmarkFade {
-    0% { transform: scale(0.7); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    0%   { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1);   opacity: 1; }
   }
-  
-  /* SAVINGS NUMBER — simple fade in */
+
+  /* SAVINGS NUMBER */
   @keyframes savingsFade {
-    0% { opacity: 0; }
+    0%   { opacity: 0; }
     100% { opacity: 1; }
   }
-  
-  .savings-number {
-    animation: savingsFade 0.4s ease-out;
-  }
-  
+  .savings-number { animation: savingsFade 0.4s ease-out; }
+
   /* STARTER */
   .headline-starter {
     background: linear-gradient(135deg, #3ECF8E 0%, #2aad70 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
-  
-  /* OPTIMIZED */
+  /* BEST VALUE */
   .headline-perfect {
-    background: linear-gradient(135deg, #3ECF8E 0%, #3ECF8E 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: linear-gradient(135deg, #6ee7b7 0%, #34d399 45%, #059669 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
-  
-  /* PREMIUM */
+  /* MAX POWER */
   .headline-beast {
-    background: linear-gradient(135deg, #F59E0B 0%, #d97706 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 55%, #d97706 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
-  
-  /* Savings glow effects */
-  .savings-glow-starter {
-    text-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
-  }
-  
-  .savings-glow-perfect {
-    text-shadow: 0 0 20px rgba(168, 85, 247, 0.25);
-  }
-  
-  .savings-glow-beast {
-    text-shadow: 0 0 20px rgba(249, 115, 22, 0.2);
-  }
-  
-  /* Equipment chip styling - PROMINENT */
+
+  /* Savings glow */
+  .savings-glow-starter { text-shadow: 0 0 20px rgba(16,185,129,0.2); }
+  .savings-glow-perfect { text-shadow: 0 0 28px rgba(52,211,153,0.4); }
+  .savings-glow-beast   { text-shadow: 0 0 20px rgba(245,158,11,0.25); }
+
+  /* Equipment chips */
   .equipment-chip {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-    border-width: 2px !important;
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 12px; border-radius: 10px;
+    font-size: 12px; font-weight: 700;
+    white-space: nowrap; border-width: 2px !important;
   }
-  
-  .equipment-chip span:first-child {
-    font-size: 16px;
-  }
-  
-  .recommended-glow {
-    opacity: 0.85;
-  }
+  .equipment-chip span:first-child { font-size: 15px; }
+
+  .recommended-glow { opacity: 1; }
 `;
 
 // ============================================================================
@@ -208,6 +187,105 @@ function formatCurrency(value: number): string {
     return `$${(value / 1_000).toFixed(0)}K`;
   }
   return `$${value.toFixed(0)}`;
+}
+
+// ============================================================================
+// GOAL RANKINGS PANEL
+// ============================================================================
+
+type TierTuple = [
+  import("../wizardState").QuoteTier,
+  import("../wizardState").QuoteTier,
+  import("../wizardState").QuoteTier,
+];
+
+interface GoalRankingsPanelProps {
+  tiers: TierTuple;
+}
+
+const GOALS = [
+  { id: "cost", label: "Cost Reduction", icon: "💰", desc: "Bill savings vs. baseline" },
+  { id: "resilience", label: "Resilience", icon: "🛡️", desc: "Backup duration at peak load" },
+  { id: "solar", label: "Sustainability", icon: "☀️", desc: "Solar offset of facility load" },
+  { id: "revenue", label: "Revenue Generation", icon: "📈", desc: "EV charging income stream" },
+  { id: "demand", label: "Demand Management", icon: "⚡", desc: "Peak demand shaving capacity" },
+  {
+    id: "independence",
+    label: "Grid Independence",
+    icon: "🔌",
+    desc: "Combined solar + storage coverage",
+  },
+] as const;
+
+function GoalRankingsPanel({ tiers }: GoalRankingsPanelProps) {
+  // Use recommended (index 1) tier for scoring
+  const rec = tiers[1];
+  const peak = Math.max(rec.bessKW, 1);
+
+  function score(goalId: string): number {
+    switch (goalId) {
+      case "cost":
+        return Math.min(
+          100,
+          Math.round((rec.annualSavings / Math.max(rec.grossCost, 1)) * 100 * 5)
+        );
+      case "resilience":
+        return Math.min(100, Math.round((rec.bessKWh / (peak * 4)) * 100));
+      case "solar":
+        return rec.solarKW > 0 ? Math.min(100, Math.round((rec.solarKW / peak) * 100)) : 0;
+      case "revenue":
+        return rec.evChargerKW > 0
+          ? Math.min(100, Math.round((rec.evChargerKW / peak) * 80 + 20))
+          : 0;
+      case "demand":
+        return Math.min(100, Math.round((rec.bessKW / peak) * 80 + 20));
+      case "independence":
+        return Math.min(100, Math.round(((rec.solarKW + rec.bessKW * 0.5) / peak) * 80));
+      default:
+        return 50;
+    }
+  }
+
+  const scored = GOALS.map((g) => ({ ...g, pct: score(g.id) })).sort((a, b) => b.pct - a.pct);
+
+  return (
+    <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 mx-2 md:mx-4">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+          What Merlin Optimized For
+        </span>
+        <span className="text-[10px] text-slate-600">— based on your Recommended tier</span>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
+        {scored.map((g, i) => (
+          <div key={g.id} className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">{g.icon}</span>
+                <span className="text-[11px] font-semibold text-slate-300">{g.label}</span>
+                {i === 0 && (
+                  <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded px-1 py-0.5">
+                    Top
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] font-bold text-slate-200 tabular-nums">{g.pct}%</span>
+            </div>
+            <div className="h-1 rounded-full bg-slate-800 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${g.pct}%`,
+                  background: g.pct >= 75 ? "#3ECF8E" : g.pct >= 45 ? "#F59E0B" : "#64748b",
+                }}
+              />
+            </div>
+            <span className="text-[9px] text-slate-600 leading-tight">{g.desc}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // ============================================================================
@@ -258,14 +336,15 @@ export default function Step4V8({ state, actions }: Props) {
 
       if (e.key === "ArrowLeft") {
         e.preventDefault();
-        if (selectedTierIndex === null || selectedTierIndex === 0) {
-          actions.selectTier(0);
+        // Skip STARTER (0) — only navigate between 1 and 2
+        if (selectedTierIndex === null || selectedTierIndex <= 1) {
+          actions.selectTier(1);
         } else {
           actions.selectTier((selectedTierIndex - 1) as 0 | 1 | 2);
         }
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        if (selectedTierIndex === null || selectedTierIndex === 2) {
+        if (selectedTierIndex === null || selectedTierIndex >= 2) {
           actions.selectTier(2);
         } else {
           actions.selectTier((selectedTierIndex + 1) as 0 | 1 | 2);
@@ -275,13 +354,10 @@ export default function Step4V8({ state, actions }: Props) {
         actions.goToStep(6);
       } else if (e.key === "1") {
         e.preventDefault();
-        actions.selectTier(0);
+        actions.selectTier(1); // Recommended
       } else if (e.key === "2") {
         e.preventDefault();
-        actions.selectTier(1);
-      } else if (e.key === "3") {
-        e.preventDefault();
-        actions.selectTier(2);
+        actions.selectTier(2); // Complete
       }
     };
 
@@ -296,7 +372,7 @@ export default function Step4V8({ state, actions }: Props) {
     "Calculating equipment costs...",
     "Applying ITC tax credits...",
     "Running 25-year financial model...",
-    "Generating 3 optimized tiers...",
+    "Generating 2 optimized configurations...",
   ];
   const loadingStepCount = loadingSteps.length;
 
@@ -358,7 +434,7 @@ export default function Step4V8({ state, actions }: Props) {
 
         {/* Main message */}
         <h3 className="text-xl font-semibold text-white mb-2">Generating Your MagicFit Options</h3>
-        <p className="text-slate-400 mb-8">Building 3 optimized configurations for your facility</p>
+        <p className="text-slate-400 mb-8">Building 2 optimized configurations for your facility</p>
 
         {/* Progress bar */}
         <div className="w-full space-y-3">
@@ -424,10 +500,43 @@ export default function Step4V8({ state, actions }: Props) {
       {/* Inject custom styles */}
       <style dangerouslySetInnerHTML={{ __html: customStyles }} />
 
+      {/* Mobile sticky selected-tier summary bar */}
+      {selectedTierIndex !== null &&
+        tiers &&
+        (() => {
+          const sel = tiers[selectedTierIndex];
+          const cfg = TIER_CONFIG[selectedTierIndex];
+          return (
+            <div
+              className="sticky top-0 z-30 lg:hidden -mx-4 px-4 py-2.5 backdrop-blur-md border-b border-white/[0.07]"
+              style={{ background: "rgba(10,16,38,0.92)" }}
+            >
+              <div className="flex items-center justify-between max-w-sm mx-auto">
+                <span className={`text-xs font-bold uppercase tracking-wider ${cfg.accentColor}`}>
+                  {cfg.name}
+                </span>
+                <span className="text-sm font-extrabold text-white">
+                  {formatCurrency(sel.netCost)}
+                </span>
+                <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Selected
+                </span>
+              </div>
+            </div>
+          );
+        })()}
+
       {/* Header */}
       <div className="text-center">
         <p className="text-emerald-500/60 uppercase tracking-[0.3em] text-xs font-medium mb-3">
-          MagicFit™ — 3 Configurations
+          MagicFit™ — 2 Configurations
         </p>
         <h1
           className="text-2xl md:text-3xl font-bold text-white mb-3"
@@ -438,7 +547,7 @@ export default function Step4V8({ state, actions }: Props) {
         <p className="text-slate-400 text-sm max-w-2xl mx-auto">
           {selectedTierIndex === null
             ? "Each configuration is sized to your facility profile. Select one to continue."
-            : "Selection confirmed. Review the details and click \"See your quote\" to proceed."}
+            : 'Selection confirmed. Review the details and click "See your quote" to proceed.'}
         </p>
         {selectedTierIndex === null && (
           <div className="mt-3 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg inline-block">
@@ -471,10 +580,15 @@ export default function Step4V8({ state, actions }: Props) {
         )}
       </div>
 
-      {/* Cards Grid - Horizontal layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 w-full px-2 md:px-4">
+      {/* Goal Rankings - context before choices */}
+      <GoalRankingsPanel tiers={tiers} />
+
+      {/* Cards Grid — 2 options: Recommended + Complete (Starter reserved for future) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 w-full px-2 md:px-4 max-w-4xl mx-auto">
         {tiers.map((tier, index) => {
           const tierIndex = index as 0 | 1 | 2;
+          // 2-tier policy — Starter reserved for future release
+          if (tierIndex === 0) return null;
           const config = TIER_CONFIG[tierIndex];
           const isSelected = selectedTierIndex === tierIndex;
           const isPerfectFit = tierIndex === 1;
@@ -483,7 +597,6 @@ export default function Step4V8({ state, actions }: Props) {
           const totalInvestment = tier.grossCost;
           const federalITC = tier.itcAmount;
           const netCost = tier.netCost;
-          const twentyFiveYearProfit = tier.annualSavings * 25 - netCost;
           const tenYearROI = tier.roi10Year;
 
           return (
@@ -496,7 +609,6 @@ export default function Step4V8({ state, actions }: Props) {
                 relative rounded-2xl overflow-hidden cursor-pointer
                 ${config.cardBg} border-2 ${config.cardHover}
                 ${isSelected ? "border-emerald-500/60 card-selected" : config.cardBorder}
-                ${isPerfectFit && !isSelected ? "shadow-[0_0_30px_-10px_rgba(168,85,247,0.2)]" : ""}
                 transition-all duration-300
               `}
             >
@@ -523,10 +635,10 @@ export default function Step4V8({ state, actions }: Props) {
               {/* BEST VALUE Banner (Perfect Fit only) */}
               {isPerfectFit && (
                 <>
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500/70 recommended-glow" />
+                  <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400" />
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
-                    <div className="bg-emerald-600 text-white px-4 py-1.5 rounded-b-lg text-[10px] font-bold tracking-wider shadow-sm">
-                      RECOMMENDED
+                    <div className="bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 px-5 py-1.5 rounded-b-lg text-[11px] font-black tracking-[0.15em] shadow-lg">
+                      ⭐ RECOMMENDED
                     </div>
                   </div>
                 </>
@@ -543,7 +655,7 @@ export default function Step4V8({ state, actions }: Props) {
                     {config.name}
                   </h2>
                   <p
-                    className={`text-xs uppercase tracking-widest mt-1 ${isPerfectFit ? "text-purple-300/50" : "text-slate-500"}`}
+                    className={`text-xs uppercase tracking-widest mt-1 ${isPerfectFit ? "text-emerald-300/90" : "text-slate-500"}`}
                   >
                     {config.tagline}
                   </p>
@@ -552,7 +664,7 @@ export default function Step4V8({ state, actions }: Props) {
                 {/* HERO: Annual Savings - Responsive sizing */}
                 <div className="text-center py-2 md:py-3">
                   <p
-                    className={`text-[10px] uppercase tracking-widest mb-1 ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
+                    className={`text-[10px] uppercase tracking-widest mb-1 ${isPerfectFit ? "text-emerald-400/50" : "text-slate-500"}`}
                   >
                     Annual Savings
                   </p>
@@ -567,7 +679,7 @@ export default function Step4V8({ state, actions }: Props) {
                 {/* Equipment Strip */}
                 <div className="mb-3">
                   <p
-                    className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
+                    className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-emerald-400/50" : "text-slate-500"}`}
                   >
                     System Configuration
                   </p>
@@ -577,11 +689,33 @@ export default function Step4V8({ state, actions }: Props) {
                       <span>🔋</span>
                       <span className={config.chipText}>
                         {tier.bessKWh >= 1000
-                          ? `${Math.round(tier.bessKWh / 1000)} MWh`
-                          : `${Math.round(tier.bessKWh)} kWh`}{" "}
-                        BESS
+                          ? `${(tier.bessKWh / 1000).toFixed(1)} MWh`
+                          : `${Math.round(tier.bessKWh)} kWh`}
+                        {` / ${tier.durationHours ?? 2}hr`}
                       </span>
                     </div>
+
+                    {/* Hybrid coverage badge — shows effective coverage beyond 2h spec */}
+                    {tier.hybridCoverage && tier.hybridCoverage.strategy !== "bess_only" && (
+                      <div
+                        className={`equipment-chip ${config.chipBg} border border-emerald-500/30`}
+                      >
+                        <span>
+                          {tier.hybridCoverage.strategy === "full_hybrid"
+                            ? "⚡"
+                            : tier.hybridCoverage.strategy === "solar_boost"
+                              ? "☀️"
+                              : "🔌"}
+                        </span>
+                        <span className={`${config.chipText} text-emerald-400`}>
+                          {tier.hybridCoverage.strategy === "full_hybrid"
+                            ? `Hybrid · ${tier.hybridCoverage.dailyPeakCoverageHours}h daily peaks · 24h outage`
+                            : tier.hybridCoverage.strategy === "solar_boost"
+                              ? `Solar recharge · ${tier.hybridCoverage.dailyPeakCoverageHours}h daily peaks`
+                              : `Gen bridge · 24h outage`}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Solar */}
                     {tier.solarKW >= 1 && (
@@ -617,19 +751,45 @@ export default function Step4V8({ state, actions }: Props) {
 
               {/* Financial Summary - Responsive padding and spacing */}
               <div
-                className={`border-t p-3 md:p-4 ${isPerfectFit ? "bg-slate-950/60 border-purple-500/20" : "bg-slate-950/80 border-slate-800"}`}
+                className={`border-t p-3 md:p-4 ${isPerfectFit ? "bg-slate-950/60 border-emerald-400/35" : "bg-slate-950/80 border-slate-800"}`}
               >
                 <p
-                  className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-purple-400/50" : "text-slate-500"}`}
+                  className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-emerald-400/50" : "text-slate-500"}`}
                 >
                   Financial Summary
                 </p>
 
                 <div className="space-y-1.5 text-xs md:text-sm mb-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500">Total Investment</span>
+                    <span className="text-slate-500 flex items-center gap-1">
+                      Merlin Procurement Cost
+                      <span
+                        title="AI-optimized equipment pricing vs. traditional EPC markup. Calibrated to NREL ATB 2024."
+                        className="cursor-help opacity-40 hover:opacity-70 text-[10px]"
+                      >
+                        ⓘ
+                      </span>
+                    </span>
                     <span className="text-slate-300 font-medium">
                       {formatCurrency(totalInvestment)}
+                    </span>
+                  </div>
+                  {(tier.installationLaborCost ?? 0) > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500">+ Installation &amp; Labor</span>
+                      <span className="text-slate-400 font-medium">
+                        {formatCurrency(tier.installationLaborCost ?? 0)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">
+                      {(tier.installationLaborCost ?? 0) > 0
+                        ? "= Total Project Cost"
+                        : "Total Project Cost"}
+                    </span>
+                    <span className="text-slate-200 font-medium">
+                      {formatCurrency(tier.totalProjectCost ?? totalInvestment)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -639,7 +799,7 @@ export default function Step4V8({ state, actions }: Props) {
                     </span>
                   </div>
                   <div
-                    className={`h-px my-2 ${isPerfectFit ? "bg-purple-500/20" : "bg-white/5"}`}
+                    className={`h-px my-2 ${isPerfectFit ? "bg-emerald-500/20" : "bg-white/5"}`}
                   />
                   <div className="flex justify-between items-center font-semibold">
                     <span className="text-white">Net Cost</span>
@@ -651,6 +811,32 @@ export default function Step4V8({ state, actions }: Props) {
                     </span>
                   </div>
                 </div>
+
+                {/* Merlin vs Traditional EPC savings */}
+                {(() => {
+                  // Base on gross total project cost (EPC quotes pre-ITC, includes install)
+                  const epcBase = tier.totalProjectCost ?? totalInvestment;
+                  const epcNetLow = Math.round((epcBase * 1.35 * 0.7) / 1000);
+                  const epcNetHigh = Math.round((epcBase * 1.6 * 0.7) / 1000);
+                  const epcNetMid = epcBase * 1.475 * 0.7;
+                  const savingsPct = Math.round(((epcNetMid - netCost) / epcNetMid) * 100);
+                  return (
+                    <div className="mt-1 mb-3 px-3 py-2 rounded-lg bg-emerald-500/[0.06] border border-emerald-500/20 flex items-center justify-between text-xs">
+                      <div className="leading-snug">
+                        <p className="text-slate-400 font-medium">vs. Traditional EPC</p>
+                        <p className="text-slate-500 text-[10px]">
+                          est. ${epcNetLow}K–${epcNetHigh}K after ITC
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-emerald-400 font-bold text-sm">
+                          {savingsPct > 0 ? savingsPct : 0}% less
+                        </p>
+                        <p className="text-slate-500 text-[10px]">Merlin advantage</p>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* ROI Metrics - Responsive grid */}
                 <div className="grid grid-cols-3 gap-1.5 md:gap-2 mb-3">
@@ -672,13 +858,95 @@ export default function Step4V8({ state, actions }: Props) {
                   </div>
                   <div className={`text-center p-1.5 md:p-2 rounded-lg ${config.metricBg}`}>
                     <p className="text-[9px] md:text-[10px] text-slate-500 uppercase tracking-wider mb-1">
-                      25-Yr Gain
+                      25-Yr NPV
                     </p>
-                    <p className={`text-base md:text-lg font-bold ${config.accentColor}`}>
-                      {formatCurrency(twentyFiveYearProfit)}
+                    <p
+                      className={`text-base md:text-lg font-bold ${tier.npv >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                    >
+                      {formatCurrency(tier.npv)}
                     </p>
                   </div>
                 </div>
+
+                {/* EPC / full cost stack CTA */}
+                <div className="mb-3 text-center">
+                  <p className="text-[11px] text-slate-500">
+                    EPC or contractor?{" "}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedCostBreakdown(
+                          expandedCostBreakdown === tierIndex ? null : tierIndex
+                        );
+                      }}
+                      className="text-slate-400 underline underline-offset-2 hover:text-slate-200 transition-colors"
+                    >
+                      See full cost stack →
+                    </button>
+                  </p>
+                </div>
+
+                {/* ROI Guardrail notice */}
+                {tier.guardrail?.applied && (
+                  <div
+                    className="mb-3 flex items-start gap-2 px-3 py-2.5 rounded-lg text-[11px] leading-snug"
+                    style={{
+                      background: "rgba(245, 158, 11, 0.07)",
+                      border: "1px solid rgba(245, 158, 11, 0.28)",
+                    }}
+                  >
+                    <span className="text-amber-400 mt-0.5 shrink-0">⚡</span>
+                    <div>
+                      <span className="font-semibold text-amber-300">ROI Optimized</span>
+                      <span className="text-slate-400 ml-1">
+                        {" "}
+                        — payback improved from{" "}
+                        <span className="text-amber-300">
+                          {Math.round(tier.guardrail.originalPaybackYears)} yrs
+                        </span>{" "}
+                        to{" "}
+                        <span className="text-emerald-400">{tier.paybackYears.toFixed(1)} yrs</span>
+                        .{" "}
+                        {tier.guardrail.removedComponents.some((c) => c.startsWith("BESS"))
+                          ? "BESS right-sized for this location's economics."
+                          : "Generator moved to resilience scope (see quote details)."}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {tier.guardrail &&
+                  !tier.guardrail.applied &&
+                  tier.guardrail.originalPaybackYears > 7 && (
+                    <div
+                      className="mb-3 flex items-start gap-2 px-3 py-2.5 rounded-lg text-[11px] leading-snug"
+                      style={{
+                        background: "rgba(245, 158, 11, 0.07)",
+                        border: "1px solid rgba(245, 158, 11, 0.28)",
+                      }}
+                    >
+                      <span className="text-amber-400 mt-0.5 shrink-0">⚡</span>
+                      <div className="text-slate-400">
+                        <span className="font-semibold text-amber-300">Extended payback</span> —{" "}
+                        {tier.guardrail.originalPaybackYears.toFixed(0)}-yr est. at this location's
+                        rates.{" "}
+                        {tier.solarKW > 0
+                          ? "Increase solar capacity in Step 3.5 or verify demand charges with your utility to improve ROI."
+                          : "Add solar in Step 3.5 to improve ROI."}
+                        {tier.generatorKW > 0 && (
+                          <span className="block mt-1 text-slate-500">
+                            💡 Generator ($
+                            {Math.round((tier as { generatorKW: number }).generatorKW / 100) * 100 >
+                            0
+                              ? "included"
+                              : ""}
+                            {tier.generatorKW} kW) adds resilience but extends payback — it doesn't
+                            generate direct savings. Remove it in Step 3.5 to reduce net cost.
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                 {/* V4.5 Cost Breakdown - Expandable */}
                 <button
@@ -690,7 +958,7 @@ export default function Step4V8({ state, actions }: Props) {
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2 mb-2 rounded-lg transition-all ${
                     isPerfectFit
-                      ? "bg-purple-500/10 hover:bg-purple-500/15"
+                      ? "bg-emerald-500/10 hover:bg-emerald-500/15"
                       : "bg-white/5 hover:bg-white/8"
                   }`}
                 >
@@ -714,6 +982,7 @@ export default function Step4V8({ state, actions }: Props) {
                       bessKW: tier.bessKW,
                       bessKWh: tier.bessKWh,
                       generatorKW: tier.generatorKW,
+                      generatorFuelType: tier.generatorFuelType ?? "diesel",
                       level2Chargers: state.level2Chargers || 0,
                       dcfcChargers: state.dcfcChargers || 0,
                       hpcChargers: state.hpcChargers || 0,
@@ -723,7 +992,7 @@ export default function Step4V8({ state, actions }: Props) {
                       <div
                         className={`mb-3 p-3 rounded-lg space-y-2 text-xs ${
                           isPerfectFit
-                            ? "bg-purple-950/30 border border-purple-500/20"
+                            ? "bg-emerald-950/30 border border-emerald-500/20"
                             : "bg-slate-900/50 border border-slate-700/30"
                         }`}
                       >
@@ -785,13 +1054,13 @@ export default function Step4V8({ state, actions }: Props) {
                           </div>
                         </div>
 
-                        {/* Site Work & Soft Costs */}
+                        {/* Engineering & Permits */}
                         <div className="pb-2 border-b border-slate-700/50">
                           <p className="text-[11px] uppercase tracking-wider text-emerald-400 mb-1.5 font-bold">
-                            Site Work & Soft Costs
+                            Engineering &amp; Permits
                           </p>
                           <div className="flex justify-between items-center text-slate-300">
-                            <span>Site Engineering & Construction</span>
+                            <span>Engineering, Permits &amp; Monitoring</span>
                             <span className="font-medium">
                               {formatCurrency(v45Costs.siteEngineering)}
                             </span>
@@ -804,37 +1073,29 @@ export default function Step4V8({ state, actions }: Props) {
                           </div>
                         </div>
 
+                        {/* Installation & Field Labor — Additional Costs */}
+                        <div className="pb-2 border-b border-slate-700/50">
+                          <p className="text-[11px] uppercase tracking-wider text-amber-400 mb-1 font-bold">
+                            Installation &amp; Field Labor
+                          </p>
+                          <p className="text-[10px] text-slate-500 mb-1.5 italic">
+                            Additional Costs — billed separately, not included in equipment quote
+                          </p>
+                          <div className="flex justify-between items-center text-slate-400">
+                            <span>Foundation, Trenching, Conduit &amp; Commissioning</span>
+                            <span className="font-medium">
+                              {formatCurrency(v45Costs.installationLaborCost)}
+                            </span>
+                          </div>
+                        </div>
+
                         {/* Merlin AI Services */}
                         <div className="pb-2 border-b border-slate-700/50">
                           <p className="text-[11px] uppercase tracking-wider text-emerald-400 mb-1.5 font-bold">
                             Merlin AI Services
                           </p>
-                          <div className="flex justify-between items-center text-slate-300">
-                            <span>◈ Design Intelligence</span>
-                            <span className="font-medium">
-                              {formatCurrency(v45Costs.merlinFees.designIntelligence)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-slate-300">
-                            <span>Procurement & Sourcing</span>
-                            <span className="font-medium">
-                              {formatCurrency(v45Costs.merlinFees.procurementSourcing)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-slate-300">
-                            <span>PM & Construction Oversight</span>
-                            <span className="font-medium">
-                              {formatCurrency(v45Costs.merlinFees.pmConstruction)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-slate-300">
-                            <span>Incentive Filing</span>
-                            <span className="font-medium">
-                              {formatCurrency(v45Costs.merlinFees.incentiveFiling)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-slate-200 font-semibold mt-1.5 pt-1.5 border-t border-slate-700/30">
-                            <span>Total Merlin Fee</span>
+                          <div className="flex justify-between items-center text-slate-200 font-semibold">
+                            <span>&#9672; Design, Procurement &amp; Software</span>
                             <span>{formatCurrency(v45Costs.merlinFees.totalFee)}</span>
                           </div>
                         </div>
@@ -858,13 +1119,14 @@ export default function Step4V8({ state, actions }: Props) {
                         {/* Pricing Notes */}
                         <div
                           className={`p-2 rounded text-[10px] ${
-                            isPerfectFit ? "bg-purple-900/20" : "bg-slate-800/50"
+                            isPerfectFit ? "bg-emerald-900/20" : "bg-slate-800/50"
                           }`}
                         >
                           <p className="text-slate-400 leading-relaxed">
-                            <span className="font-semibold text-slate-300">V4.5 Pricing:</span> NREL
-                            ATB 2024, tiered margin (20%→14%→13%), 7.5% contingency, honest
-                            reserves. Payback {tier.paybackYears.toFixed(1)}yr includes all costs.
+                            <span className="font-semibold text-slate-300">Equipment Quote:</span>{" "}
+                            NREL ATB 2024 pricing, 7.5% contingency, Merlin AI services included.
+                            Installation labor billed separately. Payback{" "}
+                            {tier.paybackYears.toFixed(1)}yr based on total project cost after ITC.
                           </p>
                         </div>
                       </div>
@@ -903,7 +1165,6 @@ export default function Step4V8({ state, actions }: Props) {
           );
         })}
       </div>
-
     </div>
   );
 }

@@ -1,27 +1,27 @@
 /**
  * useWizardNavigation.ts
- * 
+ *
  * Op1e-4 Extraction (Feb 22, 2026)
- * 
+ *
  * RESPONSIBILITIES:
  * - Step-to-step navigation (goToStep, nextStep)
  * - Gate validation (can user proceed to target step?)
  * - Minimal location hydration (ZIP → LocationCard when needed)
  * - Step requirement enforcement (prevent invalid state transitions)
- * 
+ *
  * EXTRACTED FROM: useWizardV7.ts (lines 698-865, 1640-1781, 2087-2099)
  * EXTRACTED LINES: ~323 lines
- * 
+ *
  * ARCHITECTURE:
  * - Helper functions for location validation
  * - stepCanProceed: Monotonic gate enforcement
  * - goToStep: Main navigation with gate checks + template loading
  * - nextStep: Simple sequencing in 6-step flow
- * 
+ *
  * ✅ Op1e-4 Complete: Navigation logic fully extracted (Feb 22, 2026)
  */
 
-import type { WizardState, WizardStep, Intent, LocationCard, Step3Template } from "./useWizardV7";
+import type { WizardState, WizardStep, Intent, LocationCard } from "./useWizardV7";
 import * as api from "../api/wizardAPI";
 
 /* ============================================================
@@ -153,10 +153,13 @@ export function buildMinimalLocationFromZip(state: WizardState): LocationCard | 
 /**
  * Monotonic gate validation: Check if step requirements are satisfied.
  * Used by goToStep to enforce forward-only progression with valid state.
- * 
+ *
  * Exported for use in gates computation (useWizardV7).
  */
-export function stepCanProceed(state: WizardState, step: WizardStep): { ok: boolean; reason?: string } {
+export function stepCanProceed(
+  state: WizardState,
+  step: WizardStep
+): { ok: boolean; reason?: string } {
   if (step === "location") {
     // Check for valid ZIP (5+ digits) OR location object with address
     // Business name and address are OPTIONAL - ZIP alone is sufficient

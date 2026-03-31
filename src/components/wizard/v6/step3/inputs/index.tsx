@@ -171,7 +171,7 @@ export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
             {/* Label - tighter */}
             <span
               className={cn(
-                "text-xs font-medium text-center leading-tight",
+                "text-sm font-medium text-center leading-tight",
                 isSelected ? "text-white" : "text-slate-300 group-hover:text-slate-200"
               )}
             >
@@ -182,7 +182,7 @@ export const PanelButtonGroup: React.FC<PanelButtonGroupProps> = ({
             {option.description && (
               <span
                 className={cn(
-                  "text-[10px] text-slate-500 text-center mt-0.5 line-clamp-1 transition-opacity",
+                  "text-xs text-slate-500 text-center mt-0.5 line-clamp-1 transition-opacity",
                   isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                 )}
               >
@@ -250,7 +250,7 @@ export const ToggleButtons: React.FC<ToggleButtonsProps> = ({
             </div>
             <span
               className={cn(
-                "font-medium text-sm",
+                "font-semibold text-base",
                 isSelected ? (val ? "text-white" : "text-slate-300") : "text-slate-400"
               )}
             >
@@ -305,7 +305,7 @@ export const SliderWithButtons: React.FC<SliderWithButtonsProps> = ({
       <div className="flex justify-center">
         <div
           className={cn(
-            "px-3 py-1.5 rounded-lg font-semibold text-base",
+            "px-4 py-2 rounded-lg font-bold text-xl",
             `bg-gradient-to-br ${scheme.primaryGradient}/20 border border-violet-500/30`,
             "text-white"
           )}
@@ -482,7 +482,7 @@ export const CheckboxGrid: React.FC<CheckboxGridProps> = ({
         )}
 
         {/* Label */}
-        <span className={cn("text-xs font-medium", isSelected ? "text-white" : "text-slate-300")}>
+        <span className={cn("text-sm font-medium", isSelected ? "text-white" : "text-slate-300")}>
           {option.label}
         </span>
       </button>
@@ -557,7 +557,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
             placeholder={placeholder}
             disabled={useEstimate}
             className={cn(
-              "w-full px-3 py-2.5 rounded-xl text-base font-medium transition-all border",
+              "w-full px-3 py-2.5 rounded-xl text-lg font-semibold transition-all border",
               "focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-slate-900",
               useEstimate
                 ? "bg-white/5 border-white/10 text-slate-500"
@@ -731,7 +731,7 @@ export const RangeButtonGroup: React.FC<RangeButtonGroupProps> = ({
               {/* Range label */}
               <span
                 className={cn(
-                  "text-sm font-semibold",
+                  "text-base font-bold",
                   isSelected ? "text-white" : "text-slate-300 group-hover:text-slate-200"
                 )}
               >

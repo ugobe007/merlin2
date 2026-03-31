@@ -281,22 +281,22 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
     emerald: "0F7544", // Dark green — readable on white, print-friendly
     emeraldLight: "10B981", // Emerald-500 accent
     emeraldBg: "F0FDF4", // Very light green bg for tables (emerald-50)
-    navy: "1E293B", // Primary text (slate-800)
-    dark: "334155", // Secondary text (slate-700)
-    body: "475569", // Body text (slate-600)
-    muted: "64748B", // Muted/caption text (slate-500)
+    navy: "1A1F36", // Primary text
+    dark: "2D3748", // Secondary text
+    body: "4A5568", // Body text
+    muted: "718096", // Muted/caption text
     border: "CBD5E1", // Table borders (slate-300)
-    headerBg: "E0F2FE", // Light blue header bg for tables (sky-100) - print-friendly
-    headerText: "0C4A6E", // Dark blue text on light bg (sky-900)
+    headerBg: "1E293B", // Dark header bg for tables (matches panelDark)
+    headerText: "FFFFFF", // White text on dark bg
     highlight: "F0FDF4", // Highlight rows (emerald-50)
     amber: "D97706",
     red: "DC2626",
-    // ── Light panels (print-friendly replacements for dark panels) ──
-    panelDark: "DBEAFE", // Light blue panel (blue-100) - replaces dark slate
-    panelDarkAlt: "BFDBFE", // Slightly darker blue (blue-200)
-    lightGrey: "F8FAFC", // Very light grey (slate-50)
-    lightGreyDark: "F1F5F9", // Light grey (slate-100)
-    gold: "CA8A04", // Gold accent for TrueQuote badge (yellow-600)
+    // ── Dark panels (Merlin dark theme) ──
+    panelDark: "1E293B", // Tailwind slate-800 — wizard Step 1 panel color
+    panelDarkAlt: "334155", // Tailwind slate-700 — subtle contrast
+    lightGrey: "F1F5F9", // Light grey sub-panel
+    lightGreyDark: "E2E8F0", // Slightly darker grey
+    gold: "D4A017", // Gold accent for TrueQuote badge
   };
 
   // ── Helper: decode base64 string to Uint8Array for ImageRun ──────
@@ -528,7 +528,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
               }),
               new TextRun({ text: "  ", size: 14 }),
               new TextRun({ text: "MERLIN", size: 36, bold: true, color: C.headerText }),
-              new TextRun({ text: " ENERGY SOLUTIONS", size: 20, color: C.navy }),
+              new TextRun({ text: " ENERGY SOLUTIONS", size: 20, color: "94A3B8" }),
             ],
           }),
           // Title: Battery Energy Storage System

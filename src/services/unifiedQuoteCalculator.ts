@@ -523,7 +523,7 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
   // Estimate base annual revenue (savings) for degradation impact
   const baseAnnualRevenue =
     electricityRate * storageSizeMW * 1000 * durationHours * cyclesPerYear * 0.5; // 50% arbitrage
-  const discountRate = 0.08;
+  const discountRate = 0.06;
 
   // Calculate NPV with and without degradation
   let noDegradationNPV = 0;
@@ -950,7 +950,7 @@ export async function calculateQuote(input: QuoteInput): Promise<QuoteResult> {
       methodology: CURRENT_BENCHMARK_VERSION.methodology,
       sources: benchmarkSources,
       assumptions: {
-        discountRate: 0.08, // 8% per NREL StoreFAST
+        discountRate: 0.06, // 6% per NREL StoreFAST commercial default
         projectLifeYears: 25, // Standard BESS project life
         degradationRate: (100 - year25CapacityPct) / projectYears / 100, // DYNAMIC: Actual degradation rate
         itcRate: itcResult.totalRate, // DYNAMIC: ITC rate from IRA 2022 calculator

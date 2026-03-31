@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1f2937" />
+    </marker>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #0f172a; }
+      .label { font: 700 20px Arial, sans-serif; fill: #0f172a; }
+      .text { font: 15px Arial, sans-serif; fill: #334155; }
+      .small { font: 13px Arial, sans-serif; fill: #475569; }
+      .box { rx: 18; ry: 18; stroke: #1f2937; stroke-width: 2.5; }
+      .arrow { stroke: #1f2937; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1400" height="900" fill="#ffffff" />
+  <text x="700" y="48" text-anchor="middle" class="title">FIG. 4 — Pricing Engine Layers Diagram</text>
+
+  <rect x="250" y="130" width="900" height="150" class="box" fill="#dbeafe" />
+  <text x="700" y="180" text-anchor="middle" class="label">Layer A — Market or Benchmark Cost</text>
+  <text x="700" y="215" text-anchor="middle" class="text">Source-traceable baseline cost · external market truth · auditable inputs</text>
+
+  <rect x="250" y="355" width="900" height="150" class="box" fill="#fef3c7" />
+  <text x="700" y="405" text-anchor="middle" class="label">Layer B — Obtainable Commercial Reality</text>
+  <text x="700" y="440" text-anchor="middle" class="text">Procurement buffer · regional adjustments · risk and complexity modifiers</text>
+
+  <rect x="250" y="580" width="900" height="150" class="box" fill="#dcfce7" />
+  <text x="700" y="630" text-anchor="middle" class="label">Layer C — Final Sell Price</text>
+  <text x="700" y="665" text-anchor="middle" class="text">Customer-visible price · controlled margin policy · quoted commercial output</text>
+
+  <rect x="70" y="360" width="130" height="140" class="box" fill="#fae8ff" />
+  <text x="135" y="404" text-anchor="middle" class="label">Side</text>
+  <text x="135" y="432" text-anchor="middle" class="label">Inputs</text>
+  <text x="135" y="464" text-anchor="middle" class="small">Deal size</text>
+  <text x="135" y="486" text-anchor="middle" class="small">Product class</text>
+  <text x="135" y="508" text-anchor="middle" class="small">Risk level</text>
+
+  <rect x="1190" y="300" width="150" height="140" class="box" fill="#fee2e2" />
+  <text x="1265" y="345" text-anchor="middle" class="label">Controls</text>
+  <text x="1265" y="380" text-anchor="middle" class="small">Review events</text>
+  <text x="1265" y="402" text-anchor="middle" class="small">Floor / ceiling</text>
+  <text x="1265" y="424" text-anchor="middle" class="small">Human escalation</text>
+
+  <rect x="1190" y="540" width="150" height="120" class="box" fill="#f8fafc" />
+  <text x="1265" y="585" text-anchor="middle" class="label">Outputs</text>
+  <text x="1265" y="617" text-anchor="middle" class="small">Sell price</text>
+  <text x="1265" y="639" text-anchor="middle" class="small">Audit record</text>
+
+  <path d="M700 280 L700 355" class="arrow" />
+  <path d="M700 505 L700 580" class="arrow" />
+  <path d="M200 430 L250 430" class="arrow" />
+  <path d="M1150 430 L1190 370" class="arrow" />
+  <path d="M1150 655 L1190 600" class="arrow" />
+
+  <text x="700" y="790" text-anchor="middle" class="small">Separation of layers preserves auditability, drift detection, and controlled commercialization.</text>
+</svg>

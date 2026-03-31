@@ -594,18 +594,22 @@ export class UseCaseService {
       
       // ALSO deduplicate by question_text (semantic duplicates - Jan 19, 2026 fix)
       // This catches cases like "buildingSqFt" vs "squareFeet" both asking same question
+      // Updated: normalize text by stripping punctuation and extra whitespace for fuzzy match
+      const normalizeText = (t: string) =>
+        t.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ');
+
       const seenTexts = new Map<string, any>();
       for (const [fieldName, q] of seenFields.entries()) {
-        const text = (q.question_text || '').toLowerCase().trim();
+        const text = normalizeText(q.question_text || '');
         if (!text) {
           seenTexts.set(fieldName, q); // Keep questions without text
           continue;
         }
         
-        // Check if we've seen this text before
+        // Check if we've seen this text before (normalized match)
         let isDupe = false;
         for (const [existingField, existingQ] of seenTexts.entries()) {
-          const existingText = (existingQ.question_text || '').toLowerCase().trim();
+          const existingText = normalizeText(existingQ.question_text || '');
           if (existingText === text) {
             // Keep the one with lower display_order
             if ((q.display_order ?? 999) < (existingQ.display_order ?? 999)) {
