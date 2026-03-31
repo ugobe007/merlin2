@@ -1,6 +1,6 @@
 /**
  * Complete TrueQuote Engine
- * 
+ *
  * Comprehensive energy calculations for car wash facilities
  * Calculates: Equipment loads, peak demand, solar capacity, BESS sizing
  */
@@ -125,7 +125,7 @@ const CONSTANTS = {
     HEATED_DRYER_BONUS: 40, // kW
     VACUUM_STATION: 3,
     PAYMENT_KIOSK: 0.5,
-    DOSING_PUMP: 0.5
+    DOSING_PUMP: 0.5,
   },
   // Load Factors
   LOAD_FACTOR: 0.7, // Average vs peak
@@ -138,7 +138,7 @@ const CONSTANTS = {
   // Operating Assumptions
   DEFAULT_OPERATING_HOURS: 12,
   DEFAULT_DAYS_PER_WEEK: 7,
-  WEEKS_PER_YEAR: 52
+  WEEKS_PER_YEAR: 52,
 };
 
 // ============================================================================
@@ -156,8 +156,8 @@ export function calculateCompleteQuote(answers: Record<string, any>): CompleteQu
 
   // Combined Economics
   const totalSystemCost =
-    (solarSystem.totalSolarKW * 1000 * CONSTANTS.SOLAR_COST_PER_W) +
-    (bessSystem.batteryCapacityKWh * CONSTANTS.BESS_COST_PER_KWH);
+    solarSystem.totalSolarKW * 1000 * CONSTANTS.SOLAR_COST_PER_W +
+    bessSystem.batteryCapacityKWh * CONSTANTS.BESS_COST_PER_KWH;
 
   const totalAnnualSavings = solarSystem.annualSavings + bessSystem.annualSavings;
   const totalTenYearSavings = totalAnnualSavings * 10;
@@ -165,10 +165,10 @@ export function calculateCompleteQuote(answers: Record<string, any>): CompleteQu
   const roi = (totalTenYearSavings - totalSystemCost) / totalSystemCost;
 
   return {
-    version: '2.1.0',
+    version: "2.1.0",
     timestamp: new Date().toISOString(),
-    industry: 'car_wash',
-    facilityType: answers.facilityType || 'unknown',
+    industry: "car_wash",
+    facilityType: answers.facilityType || "unknown",
     inputs: answers,
     energyProfile,
     solarSystem,
@@ -177,7 +177,7 @@ export function calculateCompleteQuote(answers: Record<string, any>): CompleteQu
     totalAnnualSavings,
     totalTenYearSavings,
     combinedPayback,
-    roi
+    roi,
   };
 }
 
@@ -194,7 +194,8 @@ export function calculateEnergyProfile(answers: Record<string, any>): EnergyProf
   const loadFactor = averageDemand / peakDemand;
 
   // Operating hours
-  const operatingHours = parseInt(String(answers.operatingHours)) || CONSTANTS.DEFAULT_OPERATING_HOURS;
+  const operatingHours =
+    parseInt(String(answers.operatingHours)) || CONSTANTS.DEFAULT_OPERATING_HOURS;
   const daysPerWeek = parseInt(String(answers.daysPerWeek)) || CONSTANTS.DEFAULT_DAYS_PER_WEEK;
   const annualOperatingHours = operatingHours * daysPerWeek * CONSTANTS.WEEKS_PER_YEAR;
 
@@ -212,7 +213,7 @@ export function calculateEnergyProfile(answers: Record<string, any>): EnergyProf
     annualConsumption,
     operatingHours,
     daysPerWeek,
-    annualOperatingHours
+    annualOperatingHours,
   };
 }
 
@@ -222,53 +223,80 @@ export function calculateEnergyProfile(answers: Record<string, any>): EnergyProf
 export function calculateEquipmentLoads(answers: Record<string, any>): EquipmentLoads {
   const { HP_TO_KW, EQUIPMENT } = CONSTANTS;
 
+  // Derive blower count + heated flag from dryerConfiguration (schema question)
+  // Falls back to legacy answers.blowerCount / answers.heatedDryers if present
+  const dryerConfig = String(answers.dryerConfiguration || "blowers");
+  const resolvedBlowerCount =
+    answers.blowerCount != null
+      ? parseInt(String(answers.blowerCount))
+      : dryerConfig === "blowers"
+        ? 6
+        : dryerConfig === "heated"
+          ? 4
+          : dryerConfig === "hybrid"
+            ? 5
+            : dryerConfig === "none"
+              ? 0
+              : 10;
+  const resolvedHeatedDryers =
+    answers.heatedDryers != null
+      ? Boolean(answers.heatedDryers)
+      : dryerConfig === "heated" || dryerConfig === "hybrid";
+
+  // Derive kW-per-pump from pumpConfiguration (schema question)
+  const pumpConfig = String(answers.pumpConfiguration || "standard");
+  const pumpKWEach =
+    pumpConfig === "vfd"
+      ? EQUIPMENT.HIGH_PRESSURE_PUMP * HP_TO_KW * 0.75
+      : pumpConfig === "high_pressure"
+        ? EQUIPMENT.HIGH_PRESSURE_PUMP * HP_TO_KW
+        : pumpConfig === "multiple"
+          ? EQUIPMENT.HIGH_PRESSURE_PUMP * HP_TO_KW * 0.85
+          : EQUIPMENT.HIGH_PRESSURE_PUMP * HP_TO_KW * 0.67; // standard 10HP
+
   return {
     // High-Pressure Pumps (20-30% of total load)
-    highPressurePumps:
-      (parseInt(String(answers.highPressurePumpCount)) || 3) * EQUIPMENT.HIGH_PRESSURE_PUMP * HP_TO_KW,
+    highPressurePumps: (parseInt(String(answers.highPressurePumpCount)) || 3) * pumpKWEach,
 
     // RO Pump
     roPump: getRoPumpLoad(answers.roSystemPump),
 
     // Water Heater (only electric)
-    waterHeater: answers.waterHeaterType === 'electric' ? 50 : 0,
+    waterHeater: answers.waterHeaterType === "electric" ? 50 : 0,
 
     // Reclaim Pumps
     reclaimPumps: getReclaimPumpLoad(answers.waterReclamation),
 
     // Conveyor
-    conveyor: answers.conveyorMotorSize ? 
-      parseInt(String(answers.conveyorMotorSize)) * HP_TO_KW : 0,
+    conveyor: answers.conveyorMotorSize
+      ? parseInt(String(answers.conveyorMotorSize)) * HP_TO_KW
+      : 0,
 
     // Brush Motors
-    brushMotors: 
+    brushMotors:
       (parseInt(String(answers.brushMotorCount)) || 15) * EQUIPMENT.BRUSH_MOTOR * HP_TO_KW,
 
-    // Blowers (40-50% of total load!)
-    blowers: 
-      (parseInt(String(answers.blowerCount)) || 10) * EQUIPMENT.BLOWER * HP_TO_KW,
+    // Blowers (40-50% of total load!) — derived from dryerConfiguration
+    blowers: resolvedBlowerCount * EQUIPMENT.BLOWER * HP_TO_KW,
 
-    // Heated Dryers (additional load)
-    heatedDryers: answers.heatedDryers ? EQUIPMENT.HEATED_DRYER_BONUS : 0,
+    // Heated Dryers (additional load) — derived from dryerConfiguration
+    heatedDryers: resolvedHeatedDryers ? EQUIPMENT.HEATED_DRYER_BONUS : 0,
 
     // Central Vacuum
-    centralVacuum: 
-      (parseInt(String(answers.centralVacuumHP)) || 30) * HP_TO_KW,
+    centralVacuum: (parseInt(String(answers.centralVacuumHP)) || 30) * HP_TO_KW,
 
     // Vacuum Stations
-    vacuumStations: 
+    vacuumStations:
       (parseInt(String(answers.vacuumStations)) || 8) * EQUIPMENT.VACUUM_STATION * HP_TO_KW,
 
     // Air Compressor
-    airCompressor: 
-      (parseInt(String(answers.airCompressor)) || 10) * HP_TO_KW,
+    airCompressor: (parseInt(String(answers.airCompressor)) || 10) * HP_TO_KW,
 
     // Dosing Pumps (estimate)
     dosingPumps: 5 * EQUIPMENT.DOSING_PUMP,
 
     // Payment Kiosks
-    paymentKiosks: 
-      (parseInt(String(answers.paymentKiosks)) || 2) * EQUIPMENT.PAYMENT_KIOSK,
+    paymentKiosks: (parseInt(String(answers.paymentKiosks)) || 2) * EQUIPMENT.PAYMENT_KIOSK,
 
     // Tunnel Lighting
     tunnelLighting: getLightingLoad(answers.tunnelLighting),
@@ -283,7 +311,7 @@ export function calculateEquipmentLoads(answers: Record<string, any>): Equipment
     securityCameras: 0.5,
 
     // EV Charging
-    evCharging: getEVChargingLoad(answers.evCharging)
+    evCharging: getEVChargingLoad(answers.evCharging),
   };
 }
 
@@ -292,38 +320,38 @@ export function calculateEquipmentLoads(answers: Record<string, any>): Equipment
 // ============================================================================
 function getRoPumpLoad(size: string): number {
   const loads: Record<string, number> = {
-    'none': 0,
-    'small': 3.7,
-    'medium': 7.5,
-    'large': 11.2
+    none: 0,
+    small: 3.7,
+    medium: 7.5,
+    large: 11.2,
   };
   return loads[size] || 3.7;
 }
 
 function getReclaimPumpLoad(system: string): number {
   const loads: Record<string, number> = {
-    'none': 0,
-    'partial': 7.5,
-    'full': 15,
-    'advanced': 22.5
+    none: 0,
+    partial: 7.5,
+    full: 15,
+    advanced: 22.5,
   };
   return loads[system] || 0;
 }
 
 function getLightingLoad(type: string): number {
   const loads: Record<string, number> = {
-    'basic': 5,
-    'enhanced': 8,
-    'premium': 15
+    basic: 5,
+    enhanced: 8,
+    premium: 15,
   };
   return loads[type] || 8;
 }
 
 function getSignageLoad(type: string): number {
   const loads: Record<string, number> = {
-    'basic': 5,
-    'premium': 10,
-    'signature': 20
+    basic: 5,
+    premium: 10,
+    signature: 20,
   };
   return loads[type] || 10;
 }
@@ -331,10 +359,10 @@ function getSignageLoad(type: string): number {
 function getOfficeFacilitiesLoad(facilities: string[]): number {
   if (!Array.isArray(facilities)) return 0;
   const loads: Record<string, number> = {
-    'office': 2,
-    'break_room': 3,
-    'bathrooms': 1,
-    'security': 0.5
+    office: 2,
+    break_room: 3,
+    bathrooms: 1,
+    security: 0.5,
   };
   return facilities.reduce((sum, facility) => sum + (loads[facility] || 0), 0);
 }
@@ -359,7 +387,7 @@ export function calculateSolarSystem(
     SOLAR_DENSITY,
     ANNUAL_GENERATION_FACTOR,
     ELECTRICITY_RATE,
-    SOLAR_COST_PER_W
+    SOLAR_COST_PER_W,
   } = CONSTANTS;
 
   // Roof
@@ -368,8 +396,8 @@ export function calculateSolarSystem(
   const roofSolarKW = roofUsableArea * SOLAR_DENSITY;
 
   // Carport
-  const includeCarport = answers.carportInterest === 'yes';
-  const carportArea = includeCarport ? (parseFloat(String(answers.carportArea)) || 0) : 0;
+  const includeCarport = answers.carportInterest === "yes";
+  const carportArea = includeCarport ? parseFloat(String(answers.carportArea)) || 0 : 0;
   const carportUsableArea = carportArea * CARPORT_USABLE_FACTOR;
   const carportSolarKW = carportUsableArea * SOLAR_DENSITY;
 
@@ -379,11 +407,11 @@ export function calculateSolarSystem(
 
   // System Size Category
   const getSystemSize = (kw: number): string => {
-    if (kw < 50) return 'Small';
-    if (kw < 100) return 'Medium';
-    if (kw < 250) return 'Large';
-    if (kw < 500) return 'Extra Large';
-    return 'Industrial';
+    if (kw < 50) return "Small";
+    if (kw < 100) return "Medium";
+    if (kw < 250) return "Large";
+    if (kw < 500) return "Extra Large";
+    return "Industrial";
   };
 
   // Economics
@@ -408,7 +436,7 @@ export function calculateSolarSystem(
     monthlySavings,
     annualSavings,
     tenYearSavings,
-    simplePayback
+    simplePayback,
   };
 }
 
@@ -440,7 +468,7 @@ export function calculateBESSSystem(
   const demandChargeReduction = peakShaving * DEMAND_CHARGE * 12; // Annual
 
   // Energy Arbitrage (charge from solar, discharge during peak)
-  const dailyArbitrage = (batteryCapacityKWh * 0.9) * ELECTRICITY_RATE; // 90% efficiency
+  const dailyArbitrage = batteryCapacityKWh * 0.9 * ELECTRICITY_RATE; // 90% efficiency
   const annualArbitrage = dailyArbitrage * 250; // 250 operating days
 
   // Total Savings
@@ -454,7 +482,7 @@ export function calculateBESSSystem(
     batteryPowerKW,
     demandChargeReduction,
     annualSavings,
-    tenYearSavings
+    tenYearSavings,
   };
 }
 
@@ -466,5 +494,5 @@ export default {
   calculateEnergyProfile,
   calculateEquipmentLoads,
   calculateSolarSystem,
-  calculateBESSSystem
+  calculateBESSSystem,
 };

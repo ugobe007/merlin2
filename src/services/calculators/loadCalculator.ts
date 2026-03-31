@@ -285,10 +285,28 @@ function calculateCarWashLoad(
   totalKW += washKW;
   breakdown.push({ category: "Wash Equipment", kW: washKW, percentage: 0 });
 
-  // Drying - based on blower count
-  const blowerCount = parseInt(useCaseData.blowerCount || useCaseData.dryerCount || "4") || 4;
-  const blowerType = useCaseData.blowerType || useCaseData.dryerType || "standard";
-  const blowerMultiplier = blowerType === "premium" || blowerCount >= 6 ? 1.5 : 1;
+  // Drying - derive from dryerConfiguration (schema) or legacy blowerCount
+  const dryerConfig = String(useCaseData.dryerConfiguration || "blowers");
+  const blowerCount =
+    useCaseData.blowerCount != null
+      ? parseInt(String(useCaseData.blowerCount))
+      : dryerConfig === "blowers"
+        ? 6
+        : dryerConfig === "heated"
+          ? 4
+          : dryerConfig === "hybrid"
+            ? 5
+            : dryerConfig === "none"
+              ? 0
+              : parseInt(useCaseData.dryerCount || "4") || 4;
+  const isHeated =
+    useCaseData.heatedDryers != null
+      ? Boolean(useCaseData.heatedDryers)
+      : dryerConfig === "heated" || dryerConfig === "hybrid";
+  const blowerType =
+    useCaseData.blowerType || useCaseData.dryerType || (isHeated ? "heated" : "standard");
+  const blowerMultiplier =
+    blowerType === "premium" || blowerType === "heated" || blowerCount >= 6 ? 1.5 : 1;
   const dryingKW = blowerCount * EQUIPMENT_KW.blowerMotor * blowerMultiplier;
   totalKW += dryingKW;
   breakdown.push({ category: "Drying System", kW: dryingKW, percentage: 0 });
