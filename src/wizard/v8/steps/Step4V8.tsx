@@ -297,12 +297,58 @@ interface Props {
   actions: WizardActions;
 }
 
+// ── State-level incentive lookup (quantifiable programs only) ────────────────
+// Estimates are conservative midpoints based on current program rates.
+// CA SGIP: ~$200/kWh  |  NY NYSERDA: ~$150/kWh  |  MA SMART: ~$1,200/kW AC
+// NJ: ~$100/kWh  |  IL SREC: ~$1,000/kW  |  OR ETF: ~$100/kWh  |  CO Xcel: ~$500/kW
+const STATE_INCENTIVES: Record<
+  string,
+  { label: string; estimate: (bessKWh: number, solarKW: number) => number; note: string }
+> = {
+  CA: {
+    label: "SGIP — CA Battery Storage Rebate",
+    estimate: (kWh) => Math.round(kWh * 200),
+    note: "Est. ~$200/kWh; subject to CPUC program availability",
+  },
+  NY: {
+    label: "NYSERDA — NY Clean Energy Storage",
+    estimate: (kWh) => Math.round(kWh * 150),
+    note: "Est. ~$150/kWh; varies by utility zone",
+  },
+  MA: {
+    label: "SMART Program — MA Solar Incentive",
+    estimate: (_, kW) => Math.round(kW * 1200),
+    note: "Est. ~$1,200/kW AC; 10-yr incentive stream NPV",
+  },
+  NJ: {
+    label: "NJ Clean Energy Incentive",
+    estimate: (kWh) => Math.round(kWh * 100),
+    note: "Est. ~$100/kWh; JCP&L / PSE&G zones",
+  },
+  IL: {
+    label: "Illinois Shines — SREC",
+    estimate: (_, kW) => Math.round(kW * 1000),
+    note: "Est. ~$1,000/kW; varies by REC batch",
+  },
+  OR: {
+    label: "Energy Trust of Oregon Rebate",
+    estimate: (kWh) => Math.round(kWh * 100),
+    note: "Est. ~$100/kWh battery storage rebate",
+  },
+  CO: {
+    label: "Xcel Energy — Renewable Rebate",
+    estimate: (_, kW) => Math.round(kW * 500),
+    note: "Est. ~$500/kW; subject to program year cap",
+  },
+};
+
 export default function Step4V8({ state, actions }: Props) {
   const { tiers, tiersStatus, selectedTierIndex } = state;
   const [loadingStep, setLoadingStep] = React.useState(0);
   const [progress, setProgress] = React.useState(0);
   const [selectionConfirmation, setSelectionConfirmation] = React.useState<string | null>(null);
   const [expandedCostBreakdown, setExpandedCostBreakdown] = React.useState<number | null>(null);
+  const [expandedITCTier, setExpandedITCTier] = React.useState<number | null>(null);
 
   // Log only when tiersStatus changes, not on every render
   React.useEffect(() => {
@@ -792,12 +838,97 @@ export default function Step4V8({ state, actions }: Props) {
                       {formatCurrency(tier.totalProjectCost ?? totalInvestment)}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-emerald-500">Federal ITC (30%)</span>
-                    <span className="text-emerald-400 font-medium">
-                      −{formatCurrency(federalITC)}
-                    </span>
+                  {/* Federal ITC line with expandable basis breakdown */}
+                  <div>
+                    <div className="flex justify-between items-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedITCTier(expandedITCTier === tierIndex ? null : tierIndex);
+                        }}
+                        className="flex items-center gap-1 text-emerald-500 hover:text-emerald-400 transition-colors text-left"
+                      >
+                        <span>Federal ITC (30%)</span>
+                        <Info className="w-3 h-3 opacity-60" />
+                        {expandedITCTier === tierIndex ? (
+                          <ChevronUp className="w-3 h-3 opacity-50" />
+                        ) : (
+                          <ChevronDown className="w-3 h-3 opacity-50" />
+                        )}
+                      </button>
+                      <span className="text-emerald-400 font-medium">
+                        −{formatCurrency(federalITC)}
+                      </span>
+                    </div>
+
+                    {/* ITC Basis Breakdown — expands on click */}
+                    {expandedITCTier === tierIndex && tier.itcBasisBreakdown && (
+                      <div
+                        className="mt-2 mb-1 rounded-lg border border-emerald-500/20 bg-emerald-500/[0.04] p-3 text-[11px] space-y-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <p className="text-emerald-400/70 uppercase tracking-widest text-[9px] mb-2 font-semibold">
+                          ITC-Eligible Basis (§48 / IRA 2022)
+                        </p>
+                        {tier.itcBasisBreakdown.solarEligible > 0 && (
+                          <div className="flex justify-between text-slate-400">
+                            <span>☀️ Solar equipment &amp; labor</span>
+                            <span>{formatCurrency(tier.itcBasisBreakdown.solarEligible)}</span>
+                          </div>
+                        )}
+                        {tier.itcBasisBreakdown.bessEligible > 0 && (
+                          <div className="flex justify-between text-slate-400">
+                            <span>🔋 Battery storage (BESS)</span>
+                            <span>{formatCurrency(tier.itcBasisBreakdown.bessEligible)}</span>
+                          </div>
+                        )}
+                        {tier.itcBasisBreakdown.siteEligible > 0 && (
+                          <div className="flex justify-between text-slate-400">
+                            <span>🔧 Site engineering &amp; labor (prorated)</span>
+                            <span>{formatCurrency(tier.itcBasisBreakdown.siteEligible)}</span>
+                          </div>
+                        )}
+                        <div className="border-t border-emerald-500/15 pt-1 mt-1 flex justify-between text-slate-300 font-medium">
+                          <span>Eligible basis</span>
+                          <span>{formatCurrency(tier.itcBasisBreakdown.totalEligible)}</span>
+                        </div>
+                        <div className="flex justify-between text-emerald-400 font-semibold">
+                          <span>× 30% Federal ITC</span>
+                          <span>= {formatCurrency(federalITC)}</span>
+                        </div>
+                        {(tier.itcBasisBreakdown.generatorCost > 0 ||
+                          tier.itcBasisBreakdown.evChargingCost > 0) && (
+                          <p className="text-slate-600 text-[9px] mt-2 leading-relaxed">
+                            Excluded: generators
+                            {tier.itcBasisBreakdown.evChargingCost > 0 ? ", EV infrastructure" : ""}{" "}
+                            — not eligible per §48
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
+
+                  {/* State incentive line items (quantifiable programs only) */}
+                  {(() => {
+                    const stateCode = state.location?.state?.toUpperCase() ?? "";
+                    const program = STATE_INCENTIVES[stateCode];
+                    if (!program) return null;
+                    const amount = program.estimate(tier.bessKWh, tier.solarKW);
+                    if (amount <= 0) return null;
+                    return (
+                      <div className="flex justify-between items-center" title={program.note}>
+                        <span className="flex items-center gap-1 text-emerald-500">
+                          {program.label}
+                          <span className="text-[9px] text-slate-600 uppercase tracking-wide">
+                            est.
+                          </span>
+                        </span>
+                        <span className="text-emerald-400 font-medium">
+                          −{formatCurrency(amount)}
+                        </span>
+                      </div>
+                    );
+                  })()}
                   <div
                     className={`h-px my-2 ${isPerfectFit ? "bg-emerald-500/20" : "bg-white/5"}`}
                   />
