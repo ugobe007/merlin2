@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="960" viewBox="0 0 1400 960">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1f2937" />
+    </marker>
+    <style>
+      .title { font: 700 30px Arial, sans-serif; fill: #0f172a; }
+      .label { font: 700 18px Arial, sans-serif; fill: #0f172a; }
+      .text { font: 14px Arial, sans-serif; fill: #334155; }
+      .small { font: 13px Arial, sans-serif; fill: #475569; }
+      .box { rx: 18; ry: 18; stroke: #1f2937; stroke-width: 2.5; }
+      .arrow { stroke: #1f2937; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1400" height="960" fill="#ffffff" />
+  <text x="700" y="48" text-anchor="middle" class="title">FIG. 3 — Monte Carlo Simulation Flowchart</text>
+
+  <rect x="120" y="120" width="300" height="220" class="box" fill="#dbeafe" />
+  <text x="270" y="160" text-anchor="middle" class="label">Define uncertain variables</text>
+  <text x="270" y="194" text-anchor="middle" class="text">Electricity escalation</text>
+  <text x="270" y="220" text-anchor="middle" class="text">Battery degradation</text>
+  <text x="270" y="246" text-anchor="middle" class="text">Equipment cost</text>
+  <text x="270" y="272" text-anchor="middle" class="text">Demand-charge changes</text>
+  <text x="270" y="298" text-anchor="middle" class="text">ITC / incentive qualification</text>
+
+  <rect x="520" y="120" width="360" height="220" class="box" fill="#dcfce7" />
+  <text x="700" y="160" text-anchor="middle" class="label">Sample iteration inputs</text>
+  <text x="700" y="194" text-anchor="middle" class="text">Random, stratified, or Latin hypercube sampling</text>
+  <text x="700" y="220" text-anchor="middle" class="text">Apply correlations and discrete events</text>
+  <text x="700" y="246" text-anchor="middle" class="text">Generate one scenario vector</text>
+
+  <rect x="980" y="120" width="290" height="220" class="box" fill="#fef3c7" />
+  <text x="1125" y="160" text-anchor="middle" class="label">Recalculate metrics</text>
+  <text x="1125" y="194" text-anchor="middle" class="text">NPV</text>
+  <text x="1125" y="220" text-anchor="middle" class="text">IRR</text>
+  <text x="1125" y="246" text-anchor="middle" class="text">Payback</text>
+  <text x="1125" y="272" text-anchor="middle" class="text">Cash flow path</text>
+
+  <rect x="520" y="430" width="360" height="120" class="box" fill="#e0e7ff" />
+  <text x="700" y="475" text-anchor="middle" class="label">Store iteration result</text>
+  <text x="700" y="502" text-anchor="middle" class="text">Append scenario outputs to result arrays</text>
+
+  <polygon points="700,700 850,620 700,540 550,620" fill="#fae8ff" stroke="#1f2937" stroke-width="2.5" />
+  <text x="700" y="615" text-anchor="middle" class="label">More iterations?</text>
+
+  <rect x="980" y="560" width="300" height="160" class="box" fill="#fee2e2" />
+  <text x="1130" y="602" text-anchor="middle" class="label">Aggregate output distributions</text>
+  <text x="1130" y="632" text-anchor="middle" class="text">Sort results and compute percentiles</text>
+  <text x="1130" y="658" text-anchor="middle" class="text">P10 · P50 · P90 · VaR · sensitivity</text>
+
+  <rect x="980" y="780" width="300" height="100" class="box" fill="#ecfccb" />
+  <text x="1130" y="825" text-anchor="middle" class="label">Presentation outputs</text>
+  <text x="1130" y="852" text-anchor="middle" class="text">Bankability report or quote appendix</text>
+
+  <path d="M420 230 L520 230" class="arrow" />
+  <path d="M880 230 L980 230" class="arrow" />
+  <path d="M1125 340 L1125 430 L880 430" class="arrow" />
+  <path d="M700 340 L700 430" class="arrow" />
+  <path d="M700 550 L700 540" class="arrow" />
+  <path d="M850 620 L980 620" class="arrow" />
+  <path d="M1130 720 L1130 780" class="arrow" />
+  <path d="M550 620 C290 620, 290 230, 520 230" class="arrow" />
+
+  <text x="870" y="605" class="text">No</text>
+  <text x="300" y="585" class="small">Yes — repeat sampling and recalculation</text>
+</svg>
