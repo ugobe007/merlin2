@@ -31,6 +31,9 @@ import {
   Mail,
   ClipboardList,
   ChevronDown,
+  ChevronUp,
+  Landmark,
+  ExternalLink,
 } from "lucide-react";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import TrueQuoteFinancialModal from "@/components/wizard/v7/shared/TrueQuoteFinancialModal";
@@ -48,6 +51,11 @@ import { formatCurrency } from "@/services/internationalService";
 import { getRecommendedInstallers, type RecommendedInstaller } from "@/services/installerService";
 import { panelCount } from "@/services/solarPanelSelectionService";
 import BessSpecSheet from "@/components/BessSpecSheet";
+import {
+  getMatchedFinancingOptions,
+  calcMonthlyPayment,
+  type FinancingOption,
+} from "@/services/financingOptionsService";
 
 // Removed unused DARK color constants
 
@@ -259,6 +267,7 @@ export default function Step5V8({ state, actions }: Props) {
   const [installers, setInstallers] = useState<RecommendedInstaller[]>([]);
   const [loadingInstallers, setLoadingInstallers] = useState(false);
   const [showTechSpecs, setShowTechSpecs] = useState(false);
+  const [expandedFinancingId, setExpandedFinancingId] = useState<string | null>(null);
 
   // ── LEAD CAPTURE GATE ────────────────────────────────────────────
   const [showLeadGate, setShowLeadGate] = useState(false);
@@ -1424,6 +1433,233 @@ export default function Step5V8({ state, actions }: Props) {
           </div>
         </div>
       </div>
+
+      {/* ================================================================
+          FINANCING & FUNDING OPTIONS
+      ================================================================ */}
+      {(() => {
+        const netCost = tier?.netCost ?? 0;
+        if (netCost < 10000) return null;
+        const options = getMatchedFinancingOptions({
+          netCostDollars: netCost,
+          stateCode: location?.state,
+          industrySlug: industry ?? undefined,
+        });
+        if (options.length === 0) return null;
+
+        return (
+          <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/[0.03] p-4 sm:p-5">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                <Landmark className="w-3.5 h-3.5 text-indigo-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-slate-100 tracking-tight">
+                  Financing &amp; Funding Options
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {options.length} programs matched to your{" "}
+                  {location?.state ? `${location.state} ` : ""}project
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] text-slate-600 uppercase tracking-wider">
+                  Net project cost
+                </div>
+                <div className="text-sm font-bold text-slate-300">{fmt$(netCost, countryCode)}</div>
+              </div>
+            </div>
+
+            {/* Monthly payment context strip */}
+            <div className="mb-4 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+              <span className="text-slate-400 font-medium">If financed after ITC:</span>
+              {[
+                { label: "20yr @ 6.5%", rate: 6.5, term: 20 },
+                { label: "15yr @ 7%", rate: 7, term: 15 },
+                { label: "10yr @ 8%", rate: 8, term: 10 },
+              ].map(({ label, rate, term }) => (
+                <span key={label}>
+                  <span className="text-slate-500">{label} → </span>
+                  <span className="text-indigo-300 font-semibold tabular-nums">
+                    {fmt$(calcMonthlyPayment(netCost, rate, term), countryCode)}/mo
+                  </span>
+                </span>
+              ))}
+            </div>
+
+            {/* Program cards */}
+            <div className="space-y-2">
+              {options.slice(0, 8).map((opt: FinancingOption) => {
+                const isExpanded = expandedFinancingId === opt.id;
+                const monthlyPmt = opt.rateForCalc
+                  ? calcMonthlyPayment(netCost, opt.rateForCalc, opt.termYearsForCalc)
+                  : null;
+
+                return (
+                  <div
+                    key={opt.id}
+                    className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden transition-all"
+                  >
+                    {/* Card header row — always visible */}
+                    <button
+                      onClick={() => setExpandedFinancingId(isExpanded ? null : opt.id)}
+                      className="w-full px-3 py-2.5 flex items-center gap-2 text-left hover:bg-white/[0.03] transition-colors"
+                    >
+                      {/* Type badge */}
+                      <span
+                        className={`shrink-0 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${opt.typeBadge}`}
+                      >
+                        {opt.typeLabel}
+                      </span>
+
+                      {/* Provider + program */}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold text-slate-200 truncate">
+                          {opt.provider}
+                        </div>
+                        <div className="text-[10px] text-slate-500 truncate">{opt.programName}</div>
+                      </div>
+
+                      {/* Quick stats */}
+                      <div className="shrink-0 text-right hidden sm:block">
+                        <div className="text-xs font-bold text-slate-300 tabular-nums">
+                          {opt.rateDisplay}
+                        </div>
+                        <div className="text-[10px] text-slate-600">{opt.termDisplay}</div>
+                      </div>
+
+                      {/* Monthly est or $0 down */}
+                      <div className="shrink-0 text-right ml-2">
+                        {opt.fullyCovered ? (
+                          <span className="text-xs font-bold text-teal-400">$0 down</span>
+                        ) : monthlyPmt ? (
+                          <span className="text-xs font-bold text-indigo-300 tabular-nums">
+                            {fmt$(monthlyPmt, countryCode)}/mo
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-600">varies</span>
+                        )}
+                      </div>
+
+                      {isExpanded ? (
+                        <ChevronUp className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                      )}
+                    </button>
+
+                    {/* Expanded detail */}
+                    {isExpanded && (
+                      <div className="px-3 pb-3 pt-1 border-t border-white/[0.04] space-y-3">
+                        {/* Rate/term/size row */}
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div className="rounded-lg bg-white/[0.03] px-2 py-1.5">
+                            <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-0.5">
+                              Rate
+                            </div>
+                            <div className="text-xs font-bold text-slate-200">
+                              {opt.rateDisplay}
+                            </div>
+                          </div>
+                          <div className="rounded-lg bg-white/[0.03] px-2 py-1.5">
+                            <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-0.5">
+                              Term
+                            </div>
+                            <div className="text-xs font-bold text-slate-200">
+                              {opt.termDisplay}
+                            </div>
+                          </div>
+                          <div className="rounded-lg bg-white/[0.03] px-2 py-1.5">
+                            <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-0.5">
+                              Min size
+                            </div>
+                            <div className="text-xs font-bold text-slate-200">
+                              ${opt.minProjectSizeK}K
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Monthly payment detail */}
+                        {monthlyPmt && (
+                          <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-indigo-500/[0.06] border border-indigo-500/15">
+                            <span className="text-xs text-slate-400">
+                              Est. monthly payment at {opt.rateForCalc}% / {opt.termYearsForCalc}{" "}
+                              yrs
+                            </span>
+                            <span className="text-sm font-bold text-indigo-300 tabular-nums">
+                              {fmt$(monthlyPmt, countryCode)}/mo
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Requirements */}
+                        <div>
+                          <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-1">
+                            Requirements
+                          </div>
+                          <ul className="space-y-0.5">
+                            {opt.requirements.map((req) => (
+                              <li
+                                key={req}
+                                className="flex items-start gap-1.5 text-[11px] text-slate-400"
+                              >
+                                <span className="text-slate-600 mt-0.5 shrink-0">·</span>
+                                {req}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {/* Highlights */}
+                        <div>
+                          <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-1">
+                            Key benefits
+                          </div>
+                          <ul className="space-y-0.5">
+                            {opt.highlights.map((h) => (
+                              <li
+                                key={h}
+                                className="flex items-start gap-1.5 text-[11px] text-slate-300"
+                              >
+                                <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
+                                {h}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {/* Note */}
+                        {opt.note && (
+                          <p className="text-[10px] text-slate-600 italic">{opt.note}</p>
+                        )}
+
+                        {/* CTA */}
+                        <a
+                          href={opt.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/20 hover:border-indigo-500/40 transition-all"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {opt.ctaLabel}
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="mt-3 text-[10px] text-slate-700 leading-relaxed">
+              Monthly payment estimates are illustrative. Actual terms vary by lender,
+              creditworthiness, and project details. Programs subject to availability and
+              eligibility. Consult a financial advisor before committing.
+            </p>
+          </div>
+        );
+      })()}
 
       {/* ================================================================
           RECOMMENDED INSTALLERS
