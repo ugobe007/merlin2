@@ -277,24 +277,22 @@ body {
 /* ==================== TEXT LEGIBILITY MOBILE ==================== */
 
 @media (max-width: 767px) {
-  /* Headings: Slightly smaller on mobile */
-  h1 {
+  /* Wizard step headings: Slightly smaller on mobile (scoped to avoid affecting hero/homepage) */
+  [data-merlin="hud"] h1 {
     font-size: 24px !important;
   }
-  h2 {
+  [data-merlin="hud"] h2 {
     font-size: 20px !important;
   }
-  h3 {
+  [data-merlin="hud"] h3 {
     font-size: 18px !important;
   }
-  h4 {
+  [data-merlin="hud"] h4 {
     font-size: 16px !important;
   }
 
-  /* Body text: Maintain 16px (don't scale down) */
-  p,
-  div,
-  span {
+  /* Body paragraphs: Maintain 16px (p only — div/span removed to avoid overriding Tailwind utilities) */
+  [data-merlin="hud"] p {
     font-size: 16px;
   }
 
@@ -429,13 +427,13 @@ a,
     justify-content: space-between;
   }
 
-  /* Step 4: Hero savings text - Scale down on mobile */
-  .text-6xl {
+  /* Step 4: Hero savings text - Scale down on mobile (scoped to wizard only) */
+  [data-merlin="hud"] .text-6xl {
     font-size: 2.5rem !important; /* 40px instead of 60px */
     line-height: 1.1 !important;
   }
 
-  .text-7xl {
+  [data-merlin="hud"] .text-7xl {
     font-size: 3rem !important; /* 48px instead of 72px */
     line-height: 1.1 !important;
   }
@@ -483,7 +481,7 @@ a,
 
   /* Add scroll hint shadow */
   .overflow-x-auto::after {
-    content: '';
+    content: "";
     position: absolute;
     right: 0;
     top: 0;
