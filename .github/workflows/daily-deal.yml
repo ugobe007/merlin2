@@ -66,8 +66,8 @@ jobs:
           # Discord
           DISCORD_DAILY_DEAL_WEBHOOK_URL: ${{ secrets.DISCORD_DAILY_DEAL_WEBHOOK_URL }}
           DISCORD_LEAD_WEBHOOK_URL: ${{ secrets.DISCORD_LEAD_WEBHOOK_URL }}
-          # MCP server (Railway) — defaults to production URL if not set
-          MERLIN_MCP_URL: ${{ secrets.MERLIN_MCP_URL }}
+          # MCP server (Railway) — hardcoded production URL; never empty
+          MERLIN_MCP_URL: https://merlin-mcp-agent-production.up.railway.app/mcp
           # Dry-run flag
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
         run: npx tsx agents/daily-deal.ts
