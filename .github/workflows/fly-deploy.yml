@@ -52,19 +52,28 @@ jobs:
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
+      # IMPORTANT: The Dockerfile uses --mount=type=secret (not ARG) so all
+      # VITE_ vars MUST be passed as --build-secret, not --build-arg.
+      # Matching scripts/deploy.sh exactly.
       - name: Deploy
         run: |
-          flyctl deploy --remote-only \
-            --build-arg CACHEBUST=$(date +%s) \
-            --build-arg VITE_SUPABASE_URL="$VITE_SUPABASE_URL" \
-            --build-arg VITE_SUPABASE_ANON_KEY="$VITE_SUPABASE_ANON_KEY" \
-            --build-arg VITE_STRIPE_PUBLISHABLE_KEY="$VITE_STRIPE_PUBLISHABLE_KEY" \
-            --build-arg VITE_RESEND_API_KEY="$VITE_RESEND_API_KEY" \
-            --build-arg VITE_OPENAI_API_KEY="$VITE_OPENAI_API_KEY"
+          flyctl deploy -a merlin2 --remote-only \
+            --build-arg "CACHEBUST=$(date +%s)" \
+            --build-secret "VITE_SUPABASE_URL=${VITE_SUPABASE_URL}" \
+            --build-secret "VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}" \
+            --build-secret "VITE_OPENAI_API_KEY=${VITE_OPENAI_API_KEY}" \
+            --build-secret "VITE_ENABLE_AI_ANALYSIS=${VITE_ENABLE_AI_ANALYSIS}" \
+            --build-secret "VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}" \
+            --build-secret "VITE_NREL_API_KEY=${VITE_NREL_API_KEY}" \
+            --build-secret "VITE_VISUAL_CROSSING_API_KEY=${VITE_VISUAL_CROSSING_API_KEY}" \
+            --build-secret "VITE_RESEND_API_KEY=${VITE_RESEND_API_KEY}"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
-          VITE_RESEND_API_KEY: ${{ secrets.VITE_RESEND_API_KEY }}
           VITE_OPENAI_API_KEY: ${{ secrets.VITE_OPENAI_API_KEY }}
+          VITE_ENABLE_AI_ANALYSIS: ${{ secrets.VITE_ENABLE_AI_ANALYSIS }}
+          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
+          VITE_NREL_API_KEY: ${{ secrets.VITE_NREL_API_KEY }}
+          VITE_VISUAL_CROSSING_API_KEY: ${{ secrets.VITE_VISUAL_CROSSING_API_KEY }}
+          VITE_RESEND_API_KEY: ${{ secrets.VITE_RESEND_API_KEY }}
