@@ -44,11 +44,13 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
   process.exit(1);
 }
 
-// Scopes needed:
-//   openid + profile + email → identify the user
-//   w_member_social           → post as personal profile
-//   w_organization_social     → post as company page (112979004)
-const SCOPES = 'openid profile email w_member_social w_organization_social';
+// Scopes:
+//   openid + profile + email → identify the user (always approved)
+//   w_member_social           → post as personal profile (always approved)
+//
+//   w_organization_social is NOT included here because LinkedIn requires
+//   manual app approval before it can be requested. See instructions below.
+const SCOPES = 'openid profile email w_member_social';
 
 const authUrl =
   `https://www.linkedin.com/oauth/v2/authorization` +
