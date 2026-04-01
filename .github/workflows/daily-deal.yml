@@ -1,0 +1,83 @@
+name: Daily Deal — LinkedIn & Discord Post
+
+on:
+  schedule:
+    # 9:00 AM Pacific (17:00 UTC) every weekday Mon–Fri
+    - cron: '0 17 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (skip actual Discord/LinkedIn posts)'
+        required: false
+        default: 'false'
+
+jobs:
+  daily-deal:
+    name: Generate & Post Daily Deal
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify required secrets
+        run: |
+          missing=()
+          [[ -z "$LINKEDIN_ACCESS_TOKEN" ]]    && missing+=("LINKEDIN_ACCESS_TOKEN")
+          [[ -z "$LINKEDIN_PERSON_URN" ]]      && missing+=("LINKEDIN_PERSON_URN")
+          [[ -z "$SUPABASE_URL" ]]             && missing+=("SUPABASE_URL")
+          [[ -z "$SUPABASE_SERVICE_ROLE_KEY" ]] && missing+=("SUPABASE_SERVICE_ROLE_KEY")
+
+          if [[ ${#missing[@]} -gt 0 ]]; then
+            echo "::error::Missing required GitHub secrets: ${missing[*]}"
+            echo "Add them at: Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+
+          # Warn (don't fail) if Discord webhook missing
+          if [[ -z "$DISCORD_DAILY_DEAL_WEBHOOK_URL" ]]; then
+            echo "::warning::DISCORD_DAILY_DEAL_WEBHOOK_URL not set — Discord posts will be skipped"
+          fi
+        env:
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DISCORD_DAILY_DEAL_WEBHOOK_URL: ${{ secrets.DISCORD_DAILY_DEAL_WEBHOOK_URL }}
+
+      - name: Run Daily Deal Agent
+        env:
+          # Supabase
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # LinkedIn
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+          # Discord
+          DISCORD_DAILY_DEAL_WEBHOOK_URL: ${{ secrets.DISCORD_DAILY_DEAL_WEBHOOK_URL }}
+          DISCORD_LEAD_WEBHOOK_URL: ${{ secrets.DISCORD_LEAD_WEBHOOK_URL }}
+          # MCP server (Railway) — defaults to production URL if not set
+          MERLIN_MCP_URL: ${{ secrets.MERLIN_MCP_URL }}
+          # Dry-run flag
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+        run: npx tsx agents/daily-deal.ts
+
+      - name: Upload deal output on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-deal-failure-${{ github.run_id }}
+          path: |
+            agents/_reports/
+            agents/_change_log.json
+          retention-days: 7

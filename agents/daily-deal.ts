@@ -418,6 +418,12 @@ function buildDiscordPayload(deal: DealProfile, quote: MCPQuoteResult, dateStr: 
 // ─────────────────────────────────────────────────────────────
 
 async function postToDiscord(payload: object): Promise<string | null> {
+  if (process.env.DRY_RUN === 'true') {
+    console.log('   🔵 [DRY RUN] Discord post skipped — payload logged to console');
+    console.log(JSON.stringify(payload, null, 2));
+    return 'dry-run-discord';
+  }
+
   // Prefer a dedicated daily-deal webhook; fall back to lead webhook
   const webhookUrl = process.env.DISCORD_DAILY_DEAL_WEBHOOK_URL
     ?? process.env.DISCORD_LEAD_WEBHOOK_URL;
@@ -483,16 +489,25 @@ function generateLinkedInPost(deal: DealProfile, quote: MCPQuoteResult, _dateStr
 }
 
 async function postToLinkedIn(postText: string): Promise<string | null> {
-  const accessToken = process.env.LINKEDIN_ACCESS_TOKEN;
-  const personUrn = process.env.LINKEDIN_PERSON_URN; // e.g. 'urn:li:person:ABC123'
+  if (process.env.DRY_RUN === 'true') {
+    console.log('   🔵 [DRY RUN] LinkedIn post skipped — copy logged below:');
+    console.log(postText);
+    return 'dry-run-linkedin';
+  }
 
-  if (!accessToken || !personUrn) {
-    console.warn('   ⚠️  LinkedIn not configured (LINKEDIN_ACCESS_TOKEN / LINKEDIN_PERSON_URN not set)');
+  const accessToken = process.env.LINKEDIN_ACCESS_TOKEN;
+  // LINKEDIN_ORG_URN  → posts to Merlin Energy company page (e.g. urn:li:organization:12345)
+  // LINKEDIN_PERSON_URN → posts to personal profile (e.g. urn:li:person:ABC123)
+  // Set LINKEDIN_ORG_URN (+ token with w_organization_social scope) to post as the company.
+  const authorUrn = process.env.LINKEDIN_ORG_URN ?? process.env.LINKEDIN_PERSON_URN;
+
+  if (!accessToken || !authorUrn) {
+    console.warn('   ⚠️  LinkedIn not configured — set LINKEDIN_ACCESS_TOKEN + LINKEDIN_ORG_URN (company page) or LINKEDIN_PERSON_URN (personal profile)');
     return null;
   }
 
   const body = {
-    author: personUrn,
+    author: authorUrn,
     lifecycleState: 'PUBLISHED',
     specificContent: {
       'com.linkedin.ugc.ShareContent': {
