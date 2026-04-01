@@ -41,14 +41,46 @@ app.use('/api/telemetry', telemetryRouter);
 app.use('/api/quote', quoteRouter);
 app.use('/api', demoRouter);
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    service: 'merlin-api', 
-    endpoints: ['/api/places', '/api/location', '/api/templates', '/api/telemetry', '/api/quote', '/api/send-demo-request'] 
+// Health check — used by smoke tests and uptime monitors
+app.get('/api/health', async (req, res) => {
+  const checks = {};
+  let allOk = true;
+
+  // Check Google Maps key is configured
+  checks.googleMaps = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY
+    ? 'configured'
+    : 'missing';
+
+  // Check Supabase is configured and reachable
+  const sbUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+  const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+  if (!sbUrl || sbUrl.includes('placeholder')) {
+    checks.supabase = 'misconfigured — placeholder URL detected';
+    allOk = false;
+  } else {
+    try {
+      const resp = await fetch(`${sbUrl}/rest/v1/`, {
+        headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` },
+        signal: AbortSignal.timeout(4000),
+      });
+      checks.supabase = resp.ok || resp.status === 404 ? 'reachable' : `error-${resp.status}`;
+    } catch (e) {
+      checks.supabase = `unreachable: ${e.message}`;
+      allOk = false;
+    }
+  }
+
+  res.status(allOk ? 200 : 503).json({
+    status: allOk ? 'ok' : 'degraded',
+    service: 'merlin-api',
+    checks,
+    uptime: Math.round(process.uptime()),
+    ts: new Date().toISOString(),
   });
 });
+
+// Legacy health path (keep for Railway/Fly health checks)
+app.get('/health', (_req, res) => res.redirect('/api/health'));
 
 // Start server
 app.listen(PORT, () => {

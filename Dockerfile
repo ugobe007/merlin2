@@ -25,9 +25,10 @@ COPY . .
 # Clear any existing build artifacts
 RUN rm -rf dist node_modules/.vite
 
-# Build the app — all VITE_ keys are injected from Fly.io secrets at build time
-# via Docker BuildKit secret mounts. They are never stored in image layers.
-# Secrets are declared in fly.toml [build.secrets] and accessed here read-only.
+# Build the app — VITE_ keys are injected from build secrets at build time.
+# Secrets are passed via `fly deploy --build-secret KEY=VALUE` (see scripts/deploy.sh).
+# They are written to .env.production (which Vite reads natively) then built.
+# The .env.production file is NOT copied to the final image (multi-stage build).
 RUN --mount=type=secret,id=VITE_SUPABASE_URL \
     --mount=type=secret,id=VITE_SUPABASE_ANON_KEY \
     --mount=type=secret,id=VITE_RESEND_API_KEY \
@@ -36,15 +37,29 @@ RUN --mount=type=secret,id=VITE_SUPABASE_URL \
     --mount=type=secret,id=VITE_GOOGLE_MAPS_API_KEY \
     --mount=type=secret,id=VITE_NREL_API_KEY \
     --mount=type=secret,id=VITE_VISUAL_CROSSING_API_KEY \
-    VITE_SUPABASE_URL=$(cat /run/secrets/VITE_SUPABASE_URL 2>/dev/null || echo '') \
-    VITE_SUPABASE_ANON_KEY=$(cat /run/secrets/VITE_SUPABASE_ANON_KEY 2>/dev/null || echo '') \
-    VITE_RESEND_API_KEY=$(cat /run/secrets/VITE_RESEND_API_KEY 2>/dev/null || echo '') \
-    VITE_OPENAI_API_KEY=$(cat /run/secrets/VITE_OPENAI_API_KEY 2>/dev/null || echo '') \
-    VITE_ENABLE_AI_ANALYSIS=$(cat /run/secrets/VITE_ENABLE_AI_ANALYSIS 2>/dev/null || echo 'false') \
-    VITE_GOOGLE_MAPS_API_KEY=$(cat /run/secrets/VITE_GOOGLE_MAPS_API_KEY 2>/dev/null || echo '') \
-    VITE_NREL_API_KEY=$(cat /run/secrets/VITE_NREL_API_KEY 2>/dev/null || echo '') \
-    VITE_VISUAL_CROSSING_API_KEY=$(cat /run/secrets/VITE_VISUAL_CROSSING_API_KEY 2>/dev/null || echo '') \
-    npm run build:prod
+    sh -c '\
+      rm -f .env.production; \
+      for KEY in VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY VITE_RESEND_API_KEY \
+                 VITE_OPENAI_API_KEY VITE_ENABLE_AI_ANALYSIS VITE_GOOGLE_MAPS_API_KEY \
+                 VITE_NREL_API_KEY VITE_VISUAL_CROSSING_API_KEY; do \
+        VAL=$(cat "/run/secrets/$KEY" 2>/dev/null); \
+        [ -n "$VAL" ] && printf "%s=%s\n" "$KEY" "$VAL" >> .env.production; \
+      done; \
+      echo "--- .env.production written ---"; \
+      cat .env.production | sed "s/=.*/=<set>/"; \
+      SUPA_VAL=$(grep "^VITE_SUPABASE_URL=" .env.production | cut -d= -f2-); \
+      if [ -z "$SUPA_VAL" ]; then \
+        echo "❌ BUILD ABORTED: VITE_SUPABASE_URL secret is missing."; \
+        echo "   Pass it with: fly deploy --build-secret VITE_SUPABASE_URL=..."; \
+        exit 1; \
+      fi; \
+      if echo "$SUPA_VAL" | grep -q "placeholder.supabase.co"; then \
+        echo "❌ BUILD ABORTED: VITE_SUPABASE_URL contains placeholder URL."; \
+        exit 1; \
+      fi; \
+      echo "✅ VITE_SUPABASE_URL verified: ${SUPA_VAL}"; \
+      npm run build:prod; \
+    '
 
 # Production stage - Multi-service (nginx + Node.js API)
 FROM node:20-alpine
