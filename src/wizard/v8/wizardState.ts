@@ -841,7 +841,13 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
       // When navigating back to before Step 4 (quote tiers), reset tiersStatus
       // so tiers are rebuilt with fresh data when the user moves forward again.
       // This prevents stale quotes if the user modifies profile/add-on data.
-      const resetTiers = prev < 4 ? { tiersStatus: "idle" as const, tiers: [] } : {};
+      const resetTiers =
+        prev < 4
+          ? {
+              tiersStatus: "idle" as const,
+              tiers: [] as unknown as [QuoteTier, QuoteTier, QuoteTier],
+            }
+          : {};
       return { ...state, step: prev, ...resetTiers };
     }
 

@@ -1,0 +1,294 @@
+{
+  "@context": {
+    "@vocab": "https://merlin.energy/ontology/energy#",
+    "schema": "https://schema.org/",
+    "qudt": "http://qudt.org/schema/qudt/",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "merlin": "https://merlin.energy/ontology/",
+    "nrel": "https://atb.nrel.gov/ontology/"
+  },
+  "@graph": [
+    {
+      "@id": "merlin:EnergyDomainOntology",
+      "@type": "owl:Ontology",
+      "rdfs:label": "Merlin Energy Domain Ontology",
+      "rdfs:comment": "Formal ontology of energy storage, generation, and financial concepts used in Merlin's TrueQuote™ engine",
+      "owl:versionInfo": "1.0.0",
+      "merlin:effectiveDate": "2026-03-31"
+    },
+
+    {
+      "@id": "merlin:BatteryEnergyStorageSystem",
+      "@type": "owl:Class",
+      "rdfs:label": "Battery Energy Storage System (BESS)",
+      "rdfs:comment": "An electrochemical system that stores electrical energy and releases it on demand. The core product Merlin sizes and quotes.",
+      "merlin:canonicalAbbreviation": "BESS",
+      "merlin:keyProperties": [
+        "storageSizeMW",
+        "durationHours",
+        "batteryChemistry",
+        "roundTripEfficiency",
+        "cycleLife",
+        "calendarLife",
+        "degradationRate"
+      ],
+      "merlin:authorativeSource": "nrel:StoreFAST",
+      "merlin:merlinService": "src/services/unifiedQuoteCalculator.ts"
+    },
+
+    {
+      "@id": "merlin:BatteryChemistry",
+      "@type": "owl:Class",
+      "rdfs:label": "Battery Chemistry",
+      "rdfs:comment": "The electrochemical composition of a battery cell, determining performance characteristics",
+      "merlin:subClasses": [
+        {
+          "@id": "merlin:LFP",
+          "rdfs:label": "Lithium Iron Phosphate",
+          "merlin:abbreviation": "LFP",
+          "merlin:roundTripEfficiency": 0.92,
+          "merlin:cycleLifeYears": 15,
+          "merlin:safetyRating": "high",
+          "merlin:preferredApplications": ["commercial", "utility-scale", "long-duration"]
+        },
+        {
+          "@id": "merlin:NMC",
+          "rdfs:label": "Nickel Manganese Cobalt",
+          "merlin:abbreviation": "NMC",
+          "merlin:roundTripEfficiency": 0.95,
+          "merlin:cycleLifeYears": 10,
+          "merlin:safetyRating": "medium",
+          "merlin:preferredApplications": ["high-power", "frequency-regulation"]
+        },
+        {
+          "@id": "merlin:LFMP",
+          "rdfs:label": "Lithium Iron Manganese Phosphate",
+          "merlin:abbreviation": "LFMP",
+          "merlin:roundTripEfficiency": 0.93,
+          "merlin:cycleLifeYears": 18,
+          "merlin:safetyRating": "high",
+          "merlin:preferredApplications": ["long-duration", "commercial", "island-mode"]
+        }
+      ]
+    },
+
+    {
+      "@id": "merlin:SolarPhotovoltaic",
+      "@type": "owl:Class",
+      "rdfs:label": "Solar Photovoltaic System",
+      "rdfs:comment": "A system that converts sunlight to electricity using photovoltaic cells. Often paired with BESS.",
+      "merlin:canonicalAbbreviation": "PV",
+      "merlin:keyProperties": [
+        "solarMW",
+        "panelEfficiency",
+        "systemLoss",
+        "azimuth",
+        "tilt",
+        "annualProductionKwh"
+      ],
+      "merlin:sizingTool": "PVWatts",
+      "merlin:authorativeSource": "nrel:PVWatts",
+      "merlin:merlinService": "src/services/solarSizingService.ts"
+    },
+
+    {
+      "@id": "merlin:UtilityRate",
+      "@type": "owl:Class",
+      "rdfs:label": "Utility Rate Structure",
+      "rdfs:comment": "The pricing structure applied by a utility to commercial electricity consumption",
+      "merlin:subClasses": [
+        {
+          "@id": "merlin:FlatRate",
+          "rdfs:label": "Flat Rate",
+          "rdfs:comment": "Constant $/kWh regardless of time of use"
+        },
+        {
+          "@id": "merlin:TimeOfUseRate",
+          "rdfs:label": "Time of Use (TOU) Rate",
+          "rdfs:comment": "$/kWh varies by time of day and season",
+          "merlin:abbreviation": "TOU",
+          "merlin:periods": ["peak", "off-peak", "super-off-peak", "mid-peak"]
+        },
+        {
+          "@id": "merlin:DemandCharge",
+          "rdfs:label": "Demand Charge",
+          "rdfs:comment": "$/kW charge based on peak power demand in billing period. Primary savings driver for BESS.",
+          "merlin:unit": "$/kW/month",
+          "merlin:typicalRange": [5, 40],
+          "merlin:bssOpportunity": "peak-shaving"
+        }
+      ],
+      "merlin:merlinService": "src/services/utilityRateService.ts",
+      "merlin:dataSource": "OpenEI Utility Rate Database"
+    },
+
+    {
+      "@id": "merlin:UseCaseApplication",
+      "@type": "owl:Class",
+      "rdfs:label": "BESS Use Case Application",
+      "rdfs:comment": "The economic or operational application for which a BESS is deployed",
+      "merlin:instances": [
+        {
+          "@id": "merlin:PeakShaving",
+          "rdfs:label": "Peak Shaving",
+          "rdfs:comment": "Reducing peak demand to lower demand charges",
+          "merlin:primarySavingsDriver": "demand-charges",
+          "merlin:typicalROIYears": [3, 7],
+          "merlin:bestIndustries": ["manufacturing", "hotel", "data-center"]
+        },
+        {
+          "@id": "merlin:DemandChargeReduction",
+          "rdfs:label": "Demand Charge Reduction",
+          "rdfs:comment": "Systematically reducing the peak demand registered each billing period",
+          "merlin:primarySavingsDriver": "demand-charges",
+          "merlin:overlap": ["PeakShaving"]
+        },
+        {
+          "@id": "merlin:TOUArbitrage",
+          "rdfs:label": "Time-of-Use Arbitrage",
+          "rdfs:comment": "Charging during low-rate periods, discharging during high-rate periods",
+          "merlin:primarySavingsDriver": "energy-cost",
+          "merlin:requiresRateStructure": "TOU",
+          "merlin:typicalROIYears": [5, 10]
+        },
+        {
+          "@id": "merlin:BackupPower",
+          "rdfs:label": "Backup Power / Resilience",
+          "rdfs:comment": "Providing power during grid outages. Primary value: business continuity.",
+          "merlin:primaryValue": "resilience",
+          "merlin:savingsDriver": "avoided-outage-costs",
+          "merlin:bestIndustries": ["hospital", "data-center", "manufacturing"]
+        },
+        {
+          "@id": "merlin:SolarSelfConsumption",
+          "rdfs:label": "Solar Self-Consumption",
+          "rdfs:comment": "Storing excess solar generation for use during non-solar hours",
+          "merlin:requires": "solar-system",
+          "merlin:primarySavingsDriver": "energy-cost",
+          "merlin:typicalROIYears": [6, 12]
+        }
+      ]
+    },
+
+    {
+      "@id": "merlin:FinancialMetric",
+      "@type": "owl:Class",
+      "rdfs:label": "Financial Performance Metric",
+      "rdfs:comment": "A quantitative measure of a BESS investment's financial performance",
+      "merlin:instances": [
+        {
+          "@id": "merlin:NPV",
+          "rdfs:label": "Net Present Value",
+          "merlin:abbreviation": "NPV",
+          "merlin:unit": "USD",
+          "merlin:formula": "Sum of discounted cash flows over project life",
+          "merlin:positiveIsGood": true,
+          "merlin:merlinCalculatedBy": "centralizedCalculations.ts",
+          "merlin:projectionHorizonYears": 25
+        },
+        {
+          "@id": "merlin:IRR",
+          "rdfs:label": "Internal Rate of Return",
+          "merlin:abbreviation": "IRR",
+          "merlin:unit": "percent",
+          "merlin:formula": "Discount rate that makes NPV = 0",
+          "merlin:positiveIsGood": true,
+          "merlin:benchmarkRate": "10% (typical WACC for commercial projects)"
+        },
+        {
+          "@id": "merlin:SimplePayback",
+          "rdfs:label": "Simple Payback Period",
+          "merlin:abbreviation": "paybackYears",
+          "merlin:unit": "years",
+          "merlin:formula": "Total installed cost / Annual savings",
+          "merlin:lowerIsGood": true,
+          "merlin:typicalRange": [3, 12]
+        },
+        {
+          "@id": "merlin:LCOE",
+          "rdfs:label": "Levelized Cost of Energy",
+          "merlin:abbreviation": "LCOE",
+          "merlin:unit": "$/kWh",
+          "merlin:formula": "Total life-cycle cost / Total lifetime energy throughput",
+          "merlin:lowerIsGood": true,
+          "merlin:merlinBenchmark": "$0.05-0.15/kWh for commercial BESS"
+        },
+        {
+          "@id": "merlin:ITC",
+          "rdfs:label": "Investment Tax Credit",
+          "merlin:abbreviation": "ITC",
+          "merlin:unit": "percent of installed cost",
+          "merlin:currentRate": 0.30,
+          "merlin:bonusForWageRequirements": 0.30,
+          "merlin:legalBasis": "Inflation Reduction Act 2022, Section 48E",
+          "merlin:merlinService": "src/services/itcCalculator.ts",
+          "merlin:mustBeUpdatedWith": "IRS guidance changes"
+        }
+      ]
+    },
+
+    {
+      "@id": "merlin:LoadProfile",
+      "@type": "owl:Class",
+      "rdfs:label": "Load Profile",
+      "rdfs:comment": "The pattern of electrical power consumption over time for a facility",
+      "merlin:keyProperties": [
+        "peakDemandKw",
+        "averageLoadKw",
+        "loadFactor",
+        "operatingHoursPerDay",
+        "seasonalVariation",
+        "weekendVsWeekday"
+      ],
+      "merlin:sources": ["AMI meter data", "utility bills", "industry benchmarks"],
+      "merlin:merlinService": "src/services/industryPowerProfilesService.ts",
+      "merlin:8760Analysis": "src/services/hourly8760AnalysisService.ts"
+    },
+
+    {
+      "@id": "merlin:GridInfrastructure",
+      "@type": "owl:Class",
+      "rdfs:label": "Grid Infrastructure",
+      "rdfs:comment": "The electrical grid components relevant to BESS interconnection",
+      "merlin:instances": [
+        {
+          "@id": "merlin:POI",
+          "rdfs:label": "Point of Interconnection",
+          "rdfs:comment": "Where the customer's system connects to the utility grid"
+        },
+        {
+          "@id": "merlin:GridCapacity",
+          "rdfs:label": "Available Grid Capacity",
+          "rdfs:comment": "The additional load the grid can support at a location"
+        },
+        {
+          "@id": "merlin:ISOMarket",
+          "rdfs:label": "Independent System Operator Market",
+          "rdfs:comment": "Wholesale electricity markets where BESS can provide grid services",
+          "merlin:instances": ["CAISO", "PJM", "ERCOT", "NYISO", "ISO-NE", "MISO", "SPP"]
+        }
+      ]
+    },
+
+    {
+      "@id": "merlin:TrueQuoteEngine",
+      "@type": "owl:Class",
+      "rdfs:label": "TrueQuote™ Engine",
+      "rdfs:comment": "Merlin's proprietary BESS sizing and financial analysis algorithm. The canonical calculation engine.",
+      "merlin:variableCount": 47,
+      "merlin:accuracyTarget": 0.95,
+      "merlin:benchmarkSources": [
+        "NREL ATB 2024",
+        "NREL StoreFAST",
+        "DOE/Sandia",
+        "EIA Commercial Rates",
+        "OpenEI Tariff Database"
+      ],
+      "merlin:canonicalFile": "src/services/unifiedQuoteCalculator.ts",
+      "merlin:policyProtection": "POLICY-001 SSOT — Cannot be duplicated or bypassed",
+      "merlin:version": "2.0.0"
+    }
+  ]
+}

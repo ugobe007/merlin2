@@ -8,16 +8,15 @@ import { Menu, X } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
 import { AboutMerlinModal } from "@/components/modals/AboutMerlinModal";
 
-const WIZARD_URL  = "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/merlin-wizard_11d2b1f0.png";
-const SHIELD_GOLD = "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/shield-gold_53d77804.png";
-const SHIELD_BLUE = "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/shield-blue_6e564263.png";
+const WIZARD_URL =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/merlin-wizard_11d2b1f0.png";
 
 export default function Navbar() {
-  const [scrolled,    setScrolled]    = useState(false);
-  const [mobileOpen,  setMobileOpen]  = useState(false);
-  const [showAuth,    setShowAuth]    = useState(false);
-  const [authMode,    setAuthMode]    = useState<"login" | "signup">("login");
-  const [showAbout,   setShowAbout]   = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -25,16 +24,27 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  const openSignIn  = () => { setAuthMode("login");  setShowAuth(true); setMobileOpen(false); };
-  const openSignUp  = () => { setAuthMode("signup"); setShowAuth(true); setMobileOpen(false); };
-  const openAbout   = () => { setShowAbout(true);  setMobileOpen(false); };
+  const openSignIn = () => {
+    setAuthMode("login");
+    setShowAuth(true);
+    setMobileOpen(false);
+  };
+  const openSignUp = () => {
+    setAuthMode("signup");
+    setShowAuth(true);
+    setMobileOpen(false);
+  };
+  const openAbout = () => {
+    setShowAbout(true);
+    setMobileOpen(false);
+  };
 
   const navLinks = [
-    { label: "Products",      href: "#products"   },
-    { label: "Industries",    href: "#industries" },
-    { label: "Platform",      href: "#platform"   },
-    { label: "How It Works",  href: "#workflow"   },
-    { label: "Pricing",       href: "/pricing"    },
+    { label: "Products", href: "#products" },
+    { label: "Industries", href: "#industries" },
+    { label: "Platform", href: "#platform" },
+    { label: "How It Works", href: "#workflow" },
+    { label: "Pricing", href: "/pricing" },
   ];
 
   return (
@@ -48,15 +58,24 @@ export default function Navbar() {
       >
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
           <div className="flex items-center justify-between h-16">
-
             {/* Logo */}
             <a href="/" className="flex items-center gap-2.5 group">
-              <img src={WIZARD_URL} alt="Merlin wizard icon" className="w-8 h-8 object-contain rounded-full" />
+              <img
+                src={WIZARD_URL}
+                alt="Merlin wizard icon"
+                className="w-8 h-8 object-contain rounded-full"
+              />
               <div className="flex flex-col leading-none">
-                <span className="text-white font-bold text-lg tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                <span
+                  className="text-white font-bold text-lg tracking-tight"
+                  style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                >
                   Merlin
                 </span>
-                <span className="text-[9px] text-slate-500 font-medium tracking-[0.2em] uppercase" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                <span
+                  className="text-[9px] text-slate-500 font-medium tracking-[0.2em] uppercase"
+                  style={{ fontFamily: "'Manrope', sans-serif" }}
+                >
                   Energy
                 </span>
               </div>
@@ -85,15 +104,6 @@ export default function Navbar() {
 
             {/* Right nav — desktop */}
             <div className="hidden lg:flex items-center gap-2">
-              {/* ProQuote */}
-              <a
-                href="/proquote"
-                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-400/80 hover:text-blue-300 border border-blue-500/20 hover:border-blue-500/40 rounded-lg transition-all duration-200"
-                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
-                <img src={SHIELD_BLUE} alt="" className="w-3.5 h-3.5 object-contain" />
-                ProQuote
-              </a>
               {/* Sign In */}
               <button
                 onClick={openSignIn}
@@ -110,19 +120,13 @@ export default function Navbar() {
               >
                 Sign Up
               </button>
-              {/* Start a TrueQuote */}
-              <a
-                href="/wizard"
-                className="btn-glow flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-yellow-600/20 border border-yellow-500/30 hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-200"
-                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
-                <img src={SHIELD_GOLD} alt="" className="w-4 h-4 object-contain" />
-                Start a TrueQuote
-              </a>
             </div>
 
             {/* Mobile toggle */}
-            <button className="lg:hidden p-2 text-slate-400 hover:text-white" onClick={() => setMobileOpen(!mobileOpen)}>
+            <button
+              className="lg:hidden p-2 text-slate-400 hover:text-white"
+              onClick={() => setMobileOpen(!mobileOpen)}
+            >
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
@@ -150,11 +154,11 @@ export default function Navbar() {
               About
             </button>
             <div className="pt-4 flex flex-col gap-3">
-              <a href="/proquote" className="flex items-center gap-2 text-sm text-blue-400 font-medium" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                <img src={SHIELD_BLUE} alt="" className="w-4 h-4 object-contain" />
-                ProQuote
-              </a>
-              <button onClick={openSignIn} className="text-left text-sm text-slate-400 font-medium" style={{ fontFamily: "'Manrope', sans-serif" }}>
+              <button
+                onClick={openSignIn}
+                className="text-left text-sm text-slate-400 font-medium"
+                style={{ fontFamily: "'Manrope', sans-serif" }}
+              >
                 Sign In
               </button>
               <button
@@ -164,13 +168,6 @@ export default function Navbar() {
               >
                 Sign Up
               </button>
-              <a
-                href="/wizard"
-                className="btn-glow px-4 py-2.5 rounded-lg text-sm font-semibold text-white bg-yellow-600/20 border border-yellow-500/30 text-center"
-                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
-                Start a TrueQuote →
-              </a>
             </div>
           </div>
         )}
@@ -188,7 +185,10 @@ export default function Navbar() {
       <AboutMerlinModal
         isOpen={showAbout}
         onClose={() => setShowAbout(false)}
-        onStartQuote={() => { setShowAbout(false); window.location.href = "/wizard"; }}
+        onStartQuote={() => {
+          setShowAbout(false);
+          window.location.href = "/wizard";
+        }}
       />
     </>
   );
