@@ -26,6 +26,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { z } from 'zod';
 import express from 'express';
 import 'dotenv/config';
+import { validateApiKey, trackUsage, createApiKey, getUsageStats } from './commerce.js';
 
 // ============================================================
 // TOOL SCHEMAS
@@ -83,6 +84,18 @@ const ProposalSchema = z.object({
 const BenchmarkLookupSchema = z.object({
   category: z.enum(['bess-cost', 'solar-cost', 'utility-rates', 'roi-by-industry', 'market-size']).describe('Category of benchmark data'),
   industry: z.string().optional().describe('Specific industry for industry-specific benchmarks'),
+});
+
+const RegisterAgentSchema = z.object({
+  agentName: z.string().min(2).describe('Your AI agent or company name'),
+  email: z.string().email().describe('Contact email — used for billing and quota alerts'),
+  plan: z.enum(['free', 'starter', 'pro']).default('free').describe(
+    'Access tier: free=10 quotes/mo, starter=100/mo ($49), pro=1000/mo ($199)'
+  ),
+});
+
+const CheckUsageSchema = z.object({
+  apiKey: z.string().describe('Your mk_live_... API key to check quota for'),
 });
 
 // ============================================================
@@ -158,68 +171,142 @@ SMB VERTICALS (Lead Gen):
 // TOOL IMPLEMENTATIONS
 // ============================================================
 
+// Interface for the /api/quote response shape
+interface TierResult {
+  label: string;
+  equipment: { solarKW: number; bessKW: number; bessKWh: number; durationHrs: number; generatorKW: number };
+  costs: { totalInvestment: number; federalITC: number; netInvestment: number };
+  savings: { netAnnualSavings: number; demandChargeSavings: number; solarSavings: number };
+  roi: { paybackYears: number; npv25Year: number; year1ROI: number };
+}
+
 async function generateQuote(input: z.infer<typeof QuoteInputSchema>) {
-  // In production, this would call the actual Merlin API
-  // For the MCP server, we calculate with the canonical algorithm
+  const { industry, peakDemandKw, monthlyBillDollars, zipCode, primaryUseCase, hasSolar, solarMW } = input;
+  const apiBase = process.env.MERLIN_API_URL || 'https://merlinenergy.net';
+  const startMs = Date.now();
 
-  const { industry, peakDemandKw, monthlyBillDollars, zipCode, primaryUseCase, hasSolar } = input;
-
-  // Canonical TrueQuote™ estimation (simplified for MCP — full version in unifiedQuoteCalculator.ts)
-  const industryDemandFactor: Record<string, number> = {
-    'car-wash': 0.55, 'hotel': 0.40, 'data-center': 0.90, 'ev-charging': 0.60,
-    'restaurant': 0.30, 'office': 0.35, 'warehouse': 0.25, 'manufacturing': 0.55,
-    'university': 0.40, 'hospital': 0.85, 'agriculture': 0.20, 'retail': 0.30,
+  // Map MCP primaryUseCase → quote engine bessApplication
+  const applicationMap: Record<string, string> = {
+    'peak-shaving':              'peak_shaving',
+    'backup-power':              'resilience',
+    'TOU-arbitrage':             'arbitrage',
+    'solar-self-consumption':    'peak_shaving',
+    'demand-charge-reduction':   'peak_shaving',
   };
 
-  const factor = industryDemandFactor[industry] ?? 0.35;
-  const recommendedSizeMW = (peakDemandKw * factor) / 1000;
-  const roundedSizeMW = Math.ceil(recommendedSizeMW * 4) / 4; // round to nearest 0.25 MW
-  const durationHours = primaryUseCase === 'backup-power' ? 8 : 4;
+  // Map MCP industry slugs → quote engine industry keys
+  const industryMap: Record<string, string> = {
+    'car-wash':      'car_wash',
+    'data-center':   'data_center',
+    'ev-charging':   'ev_charging',
+    'hotel':         'hotel',
+    'restaurant':    'restaurant',
+    'office':        'office',
+    'warehouse':     'warehouse',
+    'manufacturing': 'manufacturing',
+    'university':    'university',
+    'hospital':      'healthcare',
+    'agriculture':   'default',
+    'retail':        'retail',
+  };
 
-  // Cost estimates (NREL StoreFAST 2024 benchmarks)
-  const bessCapexPerKwh = 350; // $/kWh — 2024 commercial BESS
-  const systemCapacityKwh = roundedSizeMW * 1000 * durationHours;
-  const totalCostDollars = systemCapacityKwh * bessCapexPerKwh * 1.35; // + BOS/install
+  // Estimate electricity rate from monthly bill + peak demand
+  // kWh ≈ peakKW × 0.40 load factor × 730 hours/month
+  const estimatedKwhPerMonth = peakDemandKw * 0.40 * 730;
+  const estimatedElecRate = estimatedKwhPerMonth > 0
+    ? Math.min(0.35, Math.max(0.08, monthlyBillDollars / estimatedKwhPerMonth))
+    : 0.12;
 
-  const itcCredit = totalCostDollars * 0.30;
-  const netCostDollars = totalCostDollars - itcCredit;
+  const body: Record<string, unknown> = {
+    industry:        industryMap[industry] ?? industry,
+    location:        zipCode,
+    peakLoadKW:      peakDemandKw,
+    bessApplication: applicationMap[primaryUseCase] ?? 'peak_shaving',
+    electricityRate: Math.round(estimatedElecRate * 1000) / 1000,
+  };
 
-  // Savings estimate based on monthly bill
-  const demandSavingsPercent = 0.20; // 15-25% typical demand charge reduction
-  const annualBill = monthlyBillDollars * 12;
-  const annualSavingsDollars = annualBill * demandSavingsPercent;
-
-  const paybackYears = netCostDollars / annualSavingsDollars;
-
-  // NPV at 7% discount rate, 25-year horizon
-  const discountRate = 0.07;
-  const escalationRate = 0.035; // 3.5% utility rate escalation
-  let npv = -netCostDollars;
-  for (let year = 1; year <= 25; year++) {
-    npv += annualSavingsDollars * Math.pow(1 + escalationRate, year) / Math.pow(1 + discountRate, year);
+  if (hasSolar && solarMW) {
+    body.solarKW = Math.round(solarMW * 1000);
   }
 
-  const co2AvoidedTons = (systemCapacityKwh * 250) / 1000; // ~250 cycles/year, ~1kg CO2/kWh avoided
+  const response = await fetch(`${apiBase}/api/quote`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer mcp-internal',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Quote API returned HTTP ${response.status}. Is merlinenergy.net reachable?`);
+  }
+
+  const data = await response.json() as {
+    ok: boolean;
+    location: { formattedAddress: string; stateCode: string };
+    solar: { peakSunHours: number; source: string };
+    tiers: { starter: TierResult; recommended: TierResult; complete: TierResult };
+    meta: { computeMs: number };
+  };
+
+  if (!data.ok) throw new Error('Quote engine returned an error response');
+
+  const rec = data.tiers.recommended;
+  const st  = data.tiers.starter;
+  const com = data.tiers.complete;
 
   return {
+    source:     'LIVE — Merlin TrueQuote™ v4.5 (NREL PVWatts v8)',
+    location:   data.location.formattedAddress,
+    solar: {
+      peakSunHours: data.solar.peakSunHours,
+      source:       data.solar.source,
+    },
     recommendation: {
-      systemSizeMW: roundedSizeMW,
-      durationHours,
+      systemSizeMW:    rec.equipment.bessKW / 1000,
+      systemKW:        rec.equipment.bessKW,
+      systemKWh:       rec.equipment.bessKWh,
+      durationHours:   rec.equipment.durationHrs,
+      solarKW:         rec.equipment.solarKW,
+      generatorKW:     rec.equipment.generatorKW,
       batteryChemistry: 'LFP (Lithium Iron Phosphate)',
       primaryUseCase,
     },
     financials: {
-      totalInstalledCost: Math.round(totalCostDollars),
-      itcCredit: Math.round(itcCredit),
-      netCostAfterITC: Math.round(netCostDollars),
-      annualSavings: Math.round(annualSavingsDollars),
-      simplePayback: Math.round(paybackYears * 10) / 10,
-      npv25Year: Math.round(npv),
-      irrEstimate: `${Math.round((annualSavingsDollars / netCostDollars) * 100)}%`,
-      co2AvoidedTonsPerYear: Math.round(co2AvoidedTons),
+      totalInstalledCost: rec.costs.totalInvestment,
+      itcCredit:          rec.costs.federalITC,
+      netCostAfterITC:    rec.costs.netInvestment,
+      annualSavings:      rec.savings.netAnnualSavings,
+      demandChargeSavings: rec.savings.demandChargeSavings,
+      solarSavings:       rec.savings.solarSavings,
+      simplePayback:      rec.roi.paybackYears,
+      npv25Year:          rec.roi.npv25Year,
+      year1ROI:           `${rec.roi.year1ROI}%`,
     },
-    disclaimer: '±15% accuracy. Based on NREL ATB 2024 benchmarks. Full analysis via Merlin Pro at merlinpro.energy',
-    nextStep: `Visit merlinpro.energy or call our sales team for a full TrueQuote™ analysis with your actual utility rate data for ${zipCode}.`,
+    allTiers: {
+      starter: {
+        size:         `${st.equipment.bessKW}kW / ${st.equipment.bessKWh}kWh`,
+        netCost:      st.costs.netInvestment,
+        annualSavings: st.savings.netAnnualSavings,
+        paybackYears:  st.roi.paybackYears,
+      },
+      recommended: {
+        size:         `${rec.equipment.bessKW}kW / ${rec.equipment.bessKWh}kWh`,
+        netCost:      rec.costs.netInvestment,
+        annualSavings: rec.savings.netAnnualSavings,
+        paybackYears:  rec.roi.paybackYears,
+      },
+      complete: {
+        size:         `${com.equipment.bessKW}kW / ${com.equipment.bessKWh}kWh`,
+        netCost:      com.costs.netInvestment,
+        annualSavings: com.savings.netAnnualSavings,
+        paybackYears:  com.roi.paybackYears,
+      },
+    },
+    computeMs:  Date.now() - startMs,
+    disclaimer: 'Live TrueQuote™ v4.5. Powered by NREL PVWatts v8 + NREL ATB 2024. Accuracy ±15%.',
+    nextStep:   `Full site analysis with actual utility rate data: merlinpro.energy`,
   };
 }
 
@@ -581,6 +668,78 @@ Run your own TrueQuote™ in 5 minutes → merlinpro.energy
   }
 );
 
+server.tool(
+  'register_agent',
+  'Register your AI agent with Merlin to get an API key for calling TrueQuote™. Free tier = 10 quotes/month. Returns a key — save it immediately, it is shown once.',
+  RegisterAgentSchema.shape,
+  async (input) => {
+    try {
+      const result = await createApiKey({
+        ownerName: input.agentName,
+        ownerEmail: input.email,
+        plan: input.plan ?? 'free',
+      });
+      return {
+        content: [{
+          type: 'text' as const,
+          text: JSON.stringify({
+            success: true,
+            apiKey: result.rawKey,
+            keyPrefix: result.keyPrefix,
+            plan: result.plan,
+            monthlyQuota: result.monthlyQuota,
+            warning: '⚠️  Save this key immediately — it will NOT be shown again.',
+            httpUsage: `Authorization: Bearer ${result.rawKey}`,
+            upgrade: result.upgradePath,
+          }, null, 2),
+        }],
+      };
+    } catch (err) {
+      return {
+        content: [{ type: 'text' as const, text: `Registration error: ${String(err)}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+server.tool(
+  'check_usage',
+  'Check how many TrueQuote™ API calls you have used this month and your remaining quota.',
+  CheckUsageSchema.shape,
+  async ({ apiKey }) => {
+    try {
+      const stats = await getUsageStats(apiKey);
+      if (!stats) {
+        return {
+          content: [{ type: 'text' as const, text: 'Invalid API key or key not found. Register at merlinpro.energy/api-keys' }],
+          isError: true,
+        };
+      }
+      return {
+        content: [{
+          type: 'text' as const,
+          text: JSON.stringify({
+            plan:            stats.plan,
+            monthlyPrice:    stats.monthlyPrice === 0 ? 'Free' : `$${stats.monthlyPrice}/month`,
+            usageThisMonth:  stats.usageThisMonth,
+            quota:           stats.quota,
+            remainingCalls:  stats.remainingCalls,
+            percentUsed:     `${stats.percentUsed}%`,
+            recentCalls:     stats.recentCalls.slice(0, 5),
+            upgrade:         stats.upgradeUrl,
+          }, null, 2),
+        }],
+      };
+    } catch (err) {
+      return {
+        content: [{ type: 'text' as const, text: `Error fetching usage: ${String(err)}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
 // --- RESOURCES ---
 
 server.resource(
@@ -702,16 +861,62 @@ async function main() {
     app.use(express.json());
 
     app.post('/mcp', async (req, res) => {
+      const startMs = Date.now();
+      let keyId: string | null = null;
+
+      // ── API key auth ───────────────────────────────────────────────────
+      const rawKey = ((req.headers.authorization as string) || '')
+        .replace(/^Bearer\s+/i, '').trim();
+
+      if (rawKey) {
+        const { key, error } = await validateApiKey(rawKey);
+        if (!key) {
+          res.status(401).json({
+            error:   error ?? 'Invalid API key',
+            code:    'INVALID_API_KEY',
+            register: 'Get a free key at merlinpro.energy/api-keys',
+          });
+          return;
+        }
+        keyId = key.id;
+      } else if (process.env.REQUIRE_API_KEY === 'true') {
+        res.status(401).json({
+          error:    'API key required. Include: Authorization: Bearer mk_live_...',
+          code:     'MISSING_API_KEY',
+          register: 'Register free at merlinpro.energy/api-keys or use the register_agent MCP tool',
+        });
+        return;
+      }
+
+      // ── Capture tool name for usage log ────────────────────────────────
+      const toolName = (req.body as { params?: { name?: string } })?.params?.name ?? 'unknown';
+
+      // ── Dispatch to MCP transport ───────────────────────────────────────
       const srv = createServer();
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
       });
       await srv.connect(transport);
       await transport.handleRequest(req, res, req.body);
+
+      // ── Track usage after response ──────────────────────────────────────
+      if (keyId) {
+        const body = req.body as { params?: { arguments?: { industry?: string; zipCode?: string } } };
+        await trackUsage(keyId, toolName, {
+          industry:   body?.params?.arguments?.industry,
+          location:   body?.params?.arguments?.zipCode,
+          responseMs: Date.now() - startMs,
+        });
+      }
     });
 
     app.get('/health', (_req, res) => {
-      res.json({ status: 'ok', server: 'merlin-mcp-agent', version: '1.0.0' });
+      res.json({
+        status:  'ok',
+        server:  'merlin-mcp-agent',
+        version: '1.0.0',
+        auth:    process.env.REQUIRE_API_KEY === 'true' ? 'required' : 'optional',
+      });
     });
 
     // Discord Interactions Endpoint — handles verification ping + slash command routing
