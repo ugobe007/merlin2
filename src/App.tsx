@@ -47,6 +47,7 @@ const ElCarWashLanding = lazy(() => import("./pages/ElCarWashLanding"));
 const OpportunitiesDashboard = lazy(() => import("./pages/OpportunitiesDashboard"));
 const BuildRFPPage = lazy(() => import("./pages/BuildRFPPage"));
 const UploadQuotePage = lazy(() => import("./pages/UploadQuotePage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 // const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage")); // TEMP DISABLED
 import { trackPageView } from "./services/analyticsService";
 
@@ -362,6 +363,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <SupportFAQ standalone />
+      </Suspense>
+    );
+  }
+
+  // Access via /privacy or /privacy-policy - Privacy Policy (required for LinkedIn API)
+  if (pathname === "/privacy" || pathname === "/privacy-policy") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <PrivacyPolicyPage />
       </Suspense>
     );
   }

@@ -163,7 +163,7 @@ export default function Home() {
                   { label: "Sign In", href: "/account" },
                   { label: "Sign Up", href: "/wizard" },
                   { label: "My Account", href: "/account" },
-                  { label: "Privacy", href: "#" },
+                  { label: "Privacy", href: "/privacy" },
                   { label: "Terms", href: "#" },
                 ].map((l) => (
                   <li key={l.label}>
