@@ -1,0 +1,70 @@
+{
+  "name": "@merlinpro/mcp-agent",
+  "version": "1.0.0",
+  "description": "AI-powered BESS quoting & energy sales intelligence MCP server. Generate TrueQuote™ estimates, qualify leads, compare competitors, and produce proposals — in seconds.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "merlin-mcp": "dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "energy",
+    "bess",
+    "battery-storage",
+    "battery-energy-storage",
+    "solar",
+    "quoting",
+    "sales-agent",
+    "truequote",
+    "demand-charge",
+    "nrel",
+    "eia",
+    "clean-energy",
+    "commercial-energy",
+    "ai-sales",
+    "lead-qualification",
+    "proposal-generator"
+  ],
+  "homepage": "https://merlinpro.energy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ugobe007/merlin-mcp-agent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ugobe007/merlin-mcp-agent/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Merlin Energy",
+    "email": "dev@merlinpro.energy",
+    "url": "https://merlinpro.energy"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "@types/express": "^5.0.6",
+    "discord.js": "^14.26.0",
+    "dotenv": "^16.4.1",
+    "express": "^5.2.1",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.28.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
+}

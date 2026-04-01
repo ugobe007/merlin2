@@ -491,6 +491,96 @@ server.tool(
   }
 );
 
+server.tool(
+  'get_daily_deal',
+  "Get today's featured industry BESS deal — a pre-calculated TrueQuote for a rotating industry vertical. Returns the deal data plus a ready-to-post LinkedIn post copy.",
+  {
+    date: z.string().optional().describe('ISO date (YYYY-MM-DD) — defaults to today'),
+  },
+  async ({ date }) => {
+    const targetDate = date ?? new Date().toISOString().split('T')[0];
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.VITE_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      return { content: [{ type: 'text' as const, text: 'Supabase not configured on this server.' }], isError: true };
+    }
+
+    try {
+      const res = await fetch(
+        `${supabaseUrl}/rest/v1/daily_deals?deal_date=eq.${targetDate}&order=id.desc&limit=1`,
+        { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
+      );
+      const rows = await res.json() as Record<string, unknown>[];
+
+      if (!rows.length) {
+        return { content: [{ type: 'text' as const, text: `No daily deal found for ${targetDate}. Run agents/daily-deal.ts to generate one.` }] };
+      }
+
+      const deal = rows[0];
+      const emoji: Record<string, string> = {
+        'car-wash': '🚗', 'hotel': '🏨', 'data-center': '🖥️', 'hospital': '🏥',
+        'manufacturing': '🏭', 'restaurant': '🍔', 'grocery': '🛒', 'office': '🏢',
+        'ev-charging': '⚡', 'warehouse': '📦', 'school': '🎓', 'cannabis': '🌿',
+        'fitness-center': '💪', 'cold-storage': '🧊', 'brewery': '🍺', 'laundry': '👕',
+        'parking': '🅿️', 'retail': '🛍️',
+      };
+      const e = emoji[deal.industry_id as string] ?? '⚡';
+      const gross = deal.gross_cost_dollars as number;
+      const net = deal.net_cost_dollars as number;
+      const savings = deal.annual_savings as number;
+      const payback = deal.payback_years as number;
+      const npv = deal.npv_25yr as number;
+      const itc = gross - net;
+
+      const fmt = (n: number) => n >= 1000000 ? `$${(n/1000000).toFixed(1)}M` : `$${(n/1000).toFixed(0)}K`;
+
+      const linkedInPost = (deal.linkedin_post as string | null) ??
+`${e} Today's BESS Deal of the Day: ${deal.industry_label}
+
+${deal.tagline ?? ''}
+
+${deal.market_hook ?? ''}
+
+📊 The numbers:
+• System: ${deal.system_size_mw} MW · ${deal.duration_hours}h storage
+• Gross cost: ${fmt(gross)} → ${fmt(net)} after ITC
+• Annual savings: ${fmt(savings)}
+• Payback: ${payback} years
+• 25yr NPV: ${fmt(npv)}
+
+Every day we feature a new industry. Every quote is calculated live using NREL data, DOE frameworks, and real utility rates.
+
+Run your own TrueQuote™ in 5 minutes → merlinpro.energy
+
+#EnergyStorage #BESS #CleanEnergy #${(deal.industry_label as string).replace(/[^A-Za-z]/g, '')} #MerlinEnergy`;
+
+      return {
+        content: [{
+          type: 'text' as const,
+          text: JSON.stringify({
+            date: targetDate,
+            industry: deal.industry_label,
+            emoji: e,
+            tagline: deal.tagline,
+            system: `${deal.system_size_mw} MW · ${deal.duration_hours}h`,
+            grossCost: fmt(gross),
+            netCost: fmt(net),
+            itcCredit: fmt(itc),
+            annualSavings: fmt(savings),
+            paybackYears: payback,
+            npv25yr: fmt(npv),
+            discordMessageId: deal.discord_message_id,
+            linkedInPost,
+          }, null, 2),
+        }],
+      };
+    } catch (err) {
+      return { content: [{ type: 'text' as const, text: `Error: ${String(err)}` }], isError: true };
+    }
+  }
+);
+
 // --- RESOURCES ---
 
 server.resource(

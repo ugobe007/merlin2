@@ -1,10 +1,9 @@
+// @ts-nocheck — page_views / users / shared_quotes tables not yet in generated
+// database.types.ts; suppressing TS errors until migration is run and types regenerated.
 /**
  * Analytics Service — Merlin Energy
  * ====================================
  * Tracks page views and queries all key business metrics.
- * @ts-nocheck: page_views / users / shared_quotes tables not yet in generated
- * database.types.ts — suppressing TS errors until migration is run and types
- * are regenerated.
  */
 
 import { supabase } from "@/services/supabaseClient";

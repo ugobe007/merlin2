@@ -1,0 +1,31 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["node"],
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "include": [
+    "src/**/*",
+    "agents/**/*",
+    "scripts/**/*",
+    "discord/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/components/wizard/legacy/**",
+    "src/components/wizard/backup/**",
+    "src/components/wizard/_deprecated/**",
+    "src/components/archive_legacy_nov_2025",
+    "src/hooks/useSmartWizardV2.ts",
+    "backup_archive"
+  ]
+}

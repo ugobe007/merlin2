@@ -1,0 +1,603 @@
+openapi: 3.1.0
+info:
+  title: Merlin Energy Platform API
+  version: 1.0.0
+  description: |
+    The Merlin Partner API provides programmatic access to TrueQuote™ 
+    battery storage sizing and ROI analysis.
+    
+    ## Authentication
+    All endpoints require a Bearer token. Obtain tokens via /auth/token.
+    
+    ## Rate Limits
+    - Starter: 100 requests/hour
+    - Professional: 500 requests/hour
+    - Enterprise: 5000 requests/hour
+    
+    ## Versioning
+    This is v1. Breaking changes will be in v2+. Non-breaking additions are backwards compatible.
+    
+    ## Source Authority
+    All calculations use the Merlin TrueQuote™ engine backed by NREL ATB 2024 benchmarks.
+    See benchmarkVersion field in all responses for audit trail.
+    
+  contact:
+    name: Merlin API Support
+    email: api@merlinpro.energy
+    url: https://docs.merlinpro.energy
+  termsOfService: https://merlinpro.energy/terms
+  license:
+    name: Commercial License
+    url: https://merlinpro.energy/api-license
+
+servers:
+  - url: https://api.merlinpro.energy/v1
+    description: Production
+  - url: https://api-staging.merlinpro.energy/v1
+    description: Staging
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: quotes
+    description: TrueQuote™ generation and retrieval
+  - name: leads
+    description: Lead capture and routing
+  - name: industries
+    description: Industry profiles and benchmarks
+  - name: auth
+    description: Authentication and key management
+  - name: webhooks
+    description: Webhook management
+  - name: health
+    description: API health and status
+
+paths:
+  /auth/token:
+    post:
+      tags: [auth]
+      summary: Get API access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [apiKey, apiSecret]
+              properties:
+                apiKey:
+                  type: string
+                  description: Your Merlin Partner API Key
+                apiSecret:
+                  type: string
+                  description: Your Merlin Partner API Secret
+      responses:
+        '200':
+          description: JWT access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  expiresIn:
+                    type: integer
+                    description: Token expiry in seconds
+                  tokenType:
+                    type: string
+                    example: Bearer
+
+  /quotes:
+    post:
+      tags: [quotes]
+      summary: Generate a TrueQuote™ BESS analysis
+      description: |
+        Generates a complete BESS sizing and ROI analysis using the 
+        TrueQuote™ engine. All results are backed by NREL ATB 2024 
+        benchmark data.
+        
+        **Policy:** [POLICY-001] All calculations route through unifiedQuoteCalculator.ts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteInput'
+            examples:
+              hotelExample:
+                summary: Hotel demand charge reduction
+                value:
+                  industry: hotel
+                  peakDemandKw: 500
+                  monthlyBillDollars: 25000
+                  zipCode: "89101"
+                  primaryUseCase: peak-shaving
+                  hasSolar: false
+      responses:
+        '200':
+          description: TrueQuote™ analysis result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteOutput'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+    
+    get:
+      tags: [quotes]
+      summary: List quotes for your account
+      parameters:
+        - name: industry
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated list of quotes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QuoteOutput'
+                  nextCursor:
+                    type: string
+                  total:
+                    type: integer
+
+  /quotes/{quoteId}:
+    get:
+      tags: [quotes]
+      summary: Get a specific quote by ID
+      parameters:
+        - name: quoteId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Quote details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteOutput'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /quotes/{quoteId}/proposal:
+    get:
+      tags: [quotes]
+      summary: Generate a formatted proposal document from a quote
+      parameters:
+        - name: quoteId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [pdf, docx, json]
+            default: json
+      responses:
+        '200':
+          description: Formatted proposal
+
+  /leads:
+    post:
+      tags: [leads]
+      summary: Submit a captured lead
+      description: |
+        Captures a qualified lead from your integration. 
+        Leads are routed to Merlin's installer network within 24 hours.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeadInput'
+      responses:
+        '201':
+          description: Lead captured successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeadOutput'
+
+  /industries:
+    get:
+      tags: [industries]
+      summary: List all supported industry verticals
+      responses:
+        '200':
+          description: List of supported industries with metadata
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IndustryProfile'
+
+  /industries/{industrySlug}/benchmarks:
+    get:
+      tags: [industries]
+      summary: Get ROI benchmarks for a specific industry
+      parameters:
+        - name: industrySlug
+          in: path
+          required: true
+          schema:
+            type: string
+            example: hotel
+      responses:
+        '200':
+          description: Industry benchmarks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndustryBenchmarks'
+
+  /webhooks:
+    get:
+      tags: [webhooks]
+      summary: List your webhook endpoints
+      responses:
+        '200':
+          description: List of webhooks
+    post:
+      tags: [webhooks]
+      summary: Register a new webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookInput'
+      responses:
+        '201':
+          description: Webhook created
+
+  /webhooks/{webhookId}:
+    delete:
+      tags: [webhooks]
+      summary: Delete a webhook
+      parameters:
+        - name: webhookId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+
+  /health:
+    get:
+      tags: [health]
+      summary: API health check
+      security: []
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  version:
+                    type: string
+                  benchmarkVersion:
+                    type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    QuoteInput:
+      type: object
+      required: [industry, peakDemandKw, monthlyBillDollars, zipCode]
+      properties:
+        industry:
+          type: string
+          enum: [car-wash, hotel, data-center, ev-charging, restaurant, office, warehouse, manufacturing, university, hospital, agriculture, retail]
+          description: Industry vertical
+        peakDemandKw:
+          type: number
+          minimum: 50
+          maximum: 50000
+          description: Peak electrical demand in kW
+        monthlyBillDollars:
+          type: number
+          minimum: 100
+          description: Average monthly utility bill in USD
+        zipCode:
+          type: string
+          pattern: '^\d{5}$'
+          description: 5-digit US ZIP code
+        primaryUseCase:
+          type: string
+          enum: [peak-shaving, backup-power, TOU-arbitrage, solar-self-consumption, demand-charge-reduction]
+          default: peak-shaving
+        hasSolar:
+          type: boolean
+          default: false
+        solarMW:
+          type: number
+          description: Existing solar in MW (if hasSolar is true)
+        durationHoursOverride:
+          type: number
+          enum: [1, 2, 4, 6, 8]
+          description: Override default system duration
+        webhookUrl:
+          type: string
+          format: uri
+          description: URL to receive quote results asynchronously
+
+    QuoteOutput:
+      type: object
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        benchmarkVersion:
+          type: string
+          description: Version of NREL/benchmark data used (audit trail)
+        input:
+          $ref: '#/components/schemas/QuoteInput'
+        recommendation:
+          type: object
+          properties:
+            systemSizeMW:
+              type: number
+            systemSizeKwh:
+              type: number
+            durationHours:
+              type: number
+            batteryChemistry:
+              type: string
+            primaryUseCase:
+              type: string
+        financials:
+          type: object
+          properties:
+            totalInstalledCostDollars:
+              type: number
+            itcCreditDollars:
+              type: number
+            netCostAfterITCDollars:
+              type: number
+            annualSavingsDollars:
+              type: number
+            simplePaybackYears:
+              type: number
+            npv25YearDollars:
+              type: number
+            irrPercent:
+              type: number
+            lcoePerKwh:
+              type: number
+            co2AvoidedTonsPerYear:
+              type: number
+        confidence:
+          type: object
+          properties:
+            score:
+              type: integer
+              minimum: 0
+              maximum: 100
+            uncertaintyBand:
+              type: string
+              example: "±15%"
+            limitingFactors:
+              type: array
+              items:
+                type: string
+        sources:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              url:
+                type: string
+
+    LeadInput:
+      type: object
+      required: [industry, contact, quoteId]
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+        industry:
+          type: string
+        contact:
+          type: object
+          required: [name, email]
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+              format: email
+            phone:
+              type: string
+            company:
+              type: string
+        projectTimeline:
+          type: string
+          enum: [immediate, 3-months, 6-months, 12-months, exploring]
+        additionalNotes:
+          type: string
+
+    LeadOutput:
+      type: object
+      properties:
+        leadId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [captured, qualified, routed]
+        estimatedContactTime:
+          type: string
+          description: "SLA: within 24 business hours"
+        leadValue:
+          type: number
+          description: Credit applied to your account
+
+    IndustryProfile:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        leadValue:
+          type: number
+        avgProjectSizeDollars:
+          type: number
+        status:
+          type: string
+          enum: [active, planned]
+
+    IndustryBenchmarks:
+      type: object
+      properties:
+        industry:
+          type: string
+        paybackRange:
+          type: string
+        annualSavingsRange:
+          type: string
+        primarySavingsDriver:
+          type: string
+        typicalSystemSize:
+          type: string
+        source:
+          type: string
+
+    WebhookInput:
+      type: object
+      required: [url, events]
+      properties:
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+            enum: [quote.created, lead.captured, lead.routed, health.alert]
+        secret:
+          type: string
+          description: Optional HMAC secret for webhook signature verification
+
+  responses:
+    ValidationError:
+      description: Invalid request data
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    message:
+                      type: string
+
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Unauthorized
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+
+    RateLimit:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Rate limit exceeded
+              retryAfter:
+                type: integer

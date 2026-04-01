@@ -1,0 +1,300 @@
+{
+  "@context": {
+    "@vocab": "https://merlin.energy/ontology/technical#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "merlin": "https://merlin.energy/ontology/"
+  },
+  "@graph": [
+    {
+      "@id": "merlin:TechnicalDomainOntology",
+      "@type": "owl:Ontology",
+      "rdfs:label": "Merlin Technical Architecture Ontology",
+      "rdfs:comment": "Formal ontology of Merlin's technical architecture, patterns, and code organization. Required reading for all LLMs before modifying Merlin code.",
+      "owl:versionInfo": "1.0.0"
+    },
+
+    {
+      "@id": "merlin:TechStack",
+      "@type": "owl:Class",
+      "rdfs:label": "Technology Stack",
+      "merlin:frontend": {
+        "framework": "React 18",
+        "language": "TypeScript 5",
+        "bundler": "Vite",
+        "styling": "Tailwind CSS",
+        "routing": "React Router v6",
+        "stateManagement": "React Context + hooks",
+        "testing": ["Vitest", "Playwright", "Puppeteer"]
+      },
+      "merlin:backend": {
+        "runtime": "Node.js",
+        "framework": "Express",
+        "database": "Supabase (PostgreSQL)",
+        "auth": "Supabase Auth",
+        "fileStorage": "Supabase Storage",
+        "deployment": ["Fly.io", "Vercel (frontend)"]
+      },
+      "merlin:external": {
+        "ai": "OpenAI GPT-4",
+        "payments": "Stripe",
+        "maps": "Google Places API",
+        "solar": "NREL PVWatts API",
+        "weather": "OpenWeather API",
+        "email": "Resend / SendGrid"
+      }
+    },
+
+    {
+      "@id": "merlin:ArchitecturePattern",
+      "@type": "owl:Class",
+      "rdfs:label": "Architecture Patterns",
+      "merlin:mandatoryPatterns": [
+        {
+          "@id": "merlin:SSOT",
+          "rdfs:label": "Single Source of Truth",
+          "merlin:description": "All calculations route through unifiedQuoteCalculator.ts",
+          "merlin:canonicalFile": "src/services/unifiedQuoteCalculator.ts",
+          "merlin:policyRef": "POLICY-001",
+          "merlin:enforcement": "Hard rule — no exceptions"
+        },
+        {
+          "@id": "merlin:ServiceLayerSeparation",
+          "rdfs:label": "Service/Component Separation",
+          "merlin:description": "Components render only. Business logic lives in services/.",
+          "merlin:policyRef": "POLICY-007",
+          "merlin:allowedInComponents": ["useState", "useEffect", "event handlers", "JSX rendering"],
+          "merlin:notAllowedInComponents": ["business logic", "calculations", "API calls (use hooks)", "data transformations"]
+        },
+        {
+          "@id": "merlin:FeatureGating",
+          "rdfs:label": "Feature Gating",
+          "merlin:description": "All new features behind feature flags in featureGatingService.ts",
+          "merlin:canonicalFile": "src/services/featureGatingService.ts",
+          "merlin:policyRef": "POLICY-009"
+        },
+        {
+          "@id": "merlin:AuditTrail",
+          "rdfs:label": "Calculation Audit Trail",
+          "merlin:description": "Every calculation result carries a benchmarkVersion and calculatedAt timestamp",
+          "merlin:canonicalFile": "src/services/benchmarkSources.ts"
+        }
+      ]
+    },
+
+    {
+      "@id": "merlin:FileOrganization",
+      "@type": "owl:Class",
+      "rdfs:label": "File Organization Schema",
+      "merlin:directories": [
+        {
+          "path": "src/services/",
+          "purpose": "All business logic. Industry profiles, calculation engines, external API clients.",
+          "namingPattern": "[domain]Service.ts or [domain]Profile.ts",
+          "importedBy": ["hooks", "server routes", "scripts"],
+          "mustNot": ["import React", "contain JSX", "reference DOM"]
+        },
+        {
+          "path": "src/components/",
+          "purpose": "Pure UI rendering components. Stateless where possible.",
+          "namingPattern": "PascalCase.tsx",
+          "importedBy": ["pages", "wizard", "other components"],
+          "mustNot": ["contain business logic", "call services directly (use hooks)"]
+        },
+        {
+          "path": "src/hooks/",
+          "purpose": "React hooks that connect UI to services. State management.",
+          "namingPattern": "use[Name].ts",
+          "bridgesBetween": ["components", "services"]
+        },
+        {
+          "path": "src/wizard/",
+          "purpose": "Multi-step quote wizard. Current version: V8.",
+          "currentVersion": "WizardV8",
+          "deprecatedVersions": ["WizardV6", "WizardV7"]
+        },
+        {
+          "path": "src/pages/",
+          "purpose": "Route-level page components. One per URL.",
+          "namingPattern": "[PageName]Page.tsx or index.tsx in subfolder"
+        },
+        {
+          "path": "src/api/",
+          "purpose": "Public-facing API definitions and routing (NEW)",
+          "status": "new"
+        },
+        {
+          "path": "server/",
+          "purpose": "Backend Express server. API routes, auth middleware.",
+          "entry": "server/index.js",
+          "routes": "server/routes/"
+        },
+        {
+          "path": "ontology/",
+          "purpose": "Formal ontological libraries for LLM training and system knowledge",
+          "status": "new"
+        },
+        {
+          "path": ".merlin-meta/",
+          "purpose": "Constitutional documents, canonical elements, LLM guides",
+          "status": "new",
+          "accessLevel": "read-freely, modify-with-extreme-care"
+        },
+        {
+          "path": "mcp-server/",
+          "purpose": "MCP (Model Context Protocol) sales agent server",
+          "status": "new"
+        },
+        {
+          "path": "agents/",
+          "purpose": "Autonomous AI agent scripts for daily operations",
+          "status": "new"
+        }
+      ]
+    },
+
+    {
+      "@id": "merlin:CodingConventions",
+      "@type": "owl:Class",
+      "rdfs:label": "Coding Conventions",
+      "merlin:typescriptRules": {
+        "strict": true,
+        "noAny": true,
+        "explicitReturnTypes": "required for exported functions",
+        "nullHandling": "use optional chaining (?.) and nullish coalescing (??)",
+        "asyncPattern": "async/await preferred over .then() chains",
+        "errorHandling": "try/catch in service functions, proper error types"
+      },
+      "merlin:importConventions": {
+        "absolutePaths": "use @/ alias for src/ imports",
+        "ordering": ["external libraries", "internal services", "components", "types"],
+        "noCircularDeps": true
+      },
+      "merlin:commentingStandards": {
+        "publicFunctions": "JSDoc required",
+        "complexLogic": "inline comments required",
+        "businessRules": "comment with policy reference e.g. // [POLICY-001] Routes through SSOT"
+      }
+    },
+
+    {
+      "@id": "merlin:ServiceRegistry",
+      "@type": "owl:Class",
+      "rdfs:label": "Service Registry",
+      "rdfs:comment": "Canonical catalog of all Merlin services, their status, and relationships",
+      "merlin:coreServices": [
+        {
+          "file": "unifiedQuoteCalculator.ts",
+          "status": "active",
+          "role": "SSOT calculation engine",
+          "dependsOn": ["centralizedCalculations.ts", "equipmentCalculations.ts", "benchmarkSources.ts"],
+          "protectionLevel": 3
+        },
+        {
+          "file": "pricingServiceV45.ts",
+          "status": "active",
+          "role": "Primary pricing logic v4.5",
+          "protectionLevel": 3
+        },
+        {
+          "file": "benchmarkSources.ts",
+          "status": "active",
+          "role": "Authoritative source citations for all numbers",
+          "protectionLevel": 3
+        },
+        {
+          "file": "featureGatingService.ts",
+          "status": "active",
+          "role": "Feature flag control",
+          "protectionLevel": 2
+        },
+        {
+          "file": "wizardAIAgentV2.ts",
+          "status": "active",
+          "role": "AI assistance within wizard flow",
+          "protectionLevel": 2
+        },
+        {
+          "file": "openAIService.ts",
+          "status": "active",
+          "role": "OpenAI API client",
+          "protectionLevel": 2
+        },
+        {
+          "file": "analyticsService.ts",
+          "status": "active",
+          "role": "Usage tracking and reporting",
+          "protectionLevel": 1
+        }
+      ],
+      "merlin:deprecatedServices": [
+        { "file": "wizardAIAgent.ts", "replacedBy": "wizardAIAgentV2.ts" },
+        { "file": "stripeService.ts.disabled", "status": "disabled" }
+      ]
+    },
+
+    {
+      "@id": "merlin:TestingStrategy",
+      "@type": "owl:Class",
+      "rdfs:label": "Testing Strategy",
+      "merlin:testLevels": [
+        {
+          "level": "unit",
+          "framework": "Vitest",
+          "location": "src/services/__tests__/",
+          "target": "80% service coverage"
+        },
+        {
+          "level": "integration",
+          "framework": "Vitest",
+          "location": "src/__tests__/",
+          "target": "key data flows"
+        },
+        {
+          "level": "e2e",
+          "framework": "Playwright",
+          "location": "tests/",
+          "target": "all wizard flows pass"
+        },
+        {
+          "level": "validation",
+          "framework": "custom",
+          "command": "npm run truequote:validate",
+          "target": "TrueQuote accuracy ≥ 95%"
+        }
+      ]
+    },
+
+    {
+      "@id": "merlin:DeploymentTopology",
+      "@type": "owl:Class",
+      "rdfs:label": "Deployment Topology",
+      "merlin:environments": [
+        {
+          "name": "production",
+          "frontend": "Vercel",
+          "backend": "Fly.io",
+          "database": "Supabase (production project)",
+          "url": "merlinpro.energy"
+        },
+        {
+          "name": "staging",
+          "frontend": "Vercel preview",
+          "backend": "Fly.io staging",
+          "database": "Supabase (staging project)"
+        },
+        {
+          "name": "development",
+          "command": "npm run dev",
+          "port": 5184,
+          "database": "Supabase (dev project or local)"
+        }
+      ],
+      "merlin:cicd": {
+        "platform": "GitHub Actions",
+        "triggers": ["push to main", "pull request"],
+        "gates": ["typecheck", "lint", "test", "build"]
+      }
+    }
+  ]
+}

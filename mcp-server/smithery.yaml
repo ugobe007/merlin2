@@ -1,0 +1,60 @@
+# Smithery MCP Server Configuration
+# https://smithery.ai — publish at: https://smithery.ai/new
+# This file describes how to run the Merlin Energy MCP server
+# so Smithery (and compatible registries) can auto-configure it.
+
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    title: Merlin Energy MCP Configuration
+    description: >
+      Required credentials and endpoints for the Merlin Energy BESS quoting
+      and sales intelligence MCP server.
+    properties:
+      openaiApiKey:
+        type: string
+        title: OpenAI API Key
+        description: >
+          Your OpenAI API key (sk-...). Required for AI-enhanced proposal
+          generation and executive pitch formatting.
+      supabaseUrl:
+        type: string
+        title: Supabase Project URL
+        description: >
+          Your Merlin Energy Supabase URL (e.g. https://xxxx.supabase.co).
+          Required for live usage analytics and lead tracking.
+      supabaseServiceRoleKey:
+        type: string
+        title: Supabase Service Role Key
+        description: >
+          Supabase service role key (eyJ...). Required for writing lead and
+          quote records.
+      resendApiKey:
+        type: string
+        title: Resend API Key (optional)
+        description: >
+          Resend API key for sending proposal emails. Optional — proposals
+          will still generate without it.
+      apiUrl:
+        type: string
+        title: Merlin API URL (optional)
+        description: >
+          Your deployed Merlin Partner API base URL
+          (e.g. https://api.merlinpro.energy). Optional — enables live
+          BESS quote enrichment.
+    required:
+      - openaiApiKey
+    additionalProperties: false
+  commandFunction: |-
+    (config) => ({
+      command: "node",
+      args: ["dist/index.js"],
+      env: {
+        OPENAI_API_KEY:              config.openaiApiKey            ?? "",
+        SUPABASE_URL:                config.supabaseUrl             ?? "",
+        SUPABASE_SERVICE_ROLE_KEY:   config.supabaseServiceRoleKey  ?? "",
+        RESEND_API_KEY:              config.resendApiKey            ?? "",
+        API_URL:                     config.apiUrl                  ?? ""
+      }
+    })
