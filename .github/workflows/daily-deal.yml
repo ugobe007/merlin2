@@ -63,6 +63,7 @@ jobs:
           # LinkedIn
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
+          LINKEDIN_ORG_URN: ${{ secrets.LINKEDIN_ORG_URN }}
           # Discord
           DISCORD_DAILY_DEAL_WEBHOOK_URL: ${{ secrets.DISCORD_DAILY_DEAL_WEBHOOK_URL }}
           DISCORD_LEAD_WEBHOOK_URL: ${{ secrets.DISCORD_LEAD_WEBHOOK_URL }}
