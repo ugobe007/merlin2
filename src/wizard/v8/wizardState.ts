@@ -174,6 +174,12 @@ export interface LocationIntel {
   solarGrade: SolarGrade; // "B+"
   solarFeasible: boolean; // computed: grade >= B-  (THRESHOLD B-)
   peakSunHours: number; // 4.9
+  // Google Solar API — actual rooftop data for this address (April 2026)
+  // Fires in parallel with utility/solar/weather on ZIP entry.
+  // Used to pre-populate solarPhysicalCapKW before user enters roof area in Step 3.
+  googleSolarRoofSqFt?: number; // Actual usable rooftop area (m² × 10.764 × usable%)
+  googleSolarPeakSunHours?: number; // Location-specific daily PSH from Google's irradiance model
+  googleSolarStatus?: "fetching" | "ready" | "unavailable"; // API call state
   // Climate (from fetchWeather)
   weatherRisk: string; // "Low" | "Moderate" | "High" | or raw risk string
   weatherProfile: string; // "Hot & Dry"
