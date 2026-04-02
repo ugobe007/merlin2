@@ -45,12 +45,10 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
 }
 
 // Scopes:
-//   openid + profile + email → identify the user (always approved)
-//   w_member_social           → post as personal profile (always approved)
-//
-//   w_organization_social is NOT included here because LinkedIn requires
-//   manual app approval before it can be requested. See instructions below.
-const SCOPES = 'openid profile email w_member_social';
+//   openid + profile + email    → identify the user
+//   w_member_social             → post as personal profile
+//   w_organization_social       → post as Merlin Energy company page (approved ✅)
+const SCOPES = 'openid profile email w_member_social w_organization_social';
 
 const authUrl =
   `https://www.linkedin.com/oauth/v2/authorization` +
