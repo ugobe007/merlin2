@@ -148,6 +148,9 @@ export async function processQuote(
     industry: request.facility.industry,
     useCaseData: request.facility.useCaseData,
     goals: request.goals,
+    // Vendor DB pricing — overrides SSOT constant when vendor products approved
+    vendorPricePerKwh: vendorPricing.bessPricePerKwh,
+    vendorPricePerKw: vendorPricing.bessPricePerKw,
   });
   if (import.meta.env.DEV)
     console.log("🔋 BESS:", bessResult.powerKW, "kW /", bessResult.energyKWh, "kWh");
@@ -408,10 +411,69 @@ export async function processQuote(
     const baseCost = opt.financials.totalInvestment;
     try {
       const marginResult = applyMarginPolicy({
-        lineItems: [], // Could be extended with equipment breakdown
+        lineItems: [
+          {
+            sku: `BESS-${bessResult.chemistry}-${bessResult.energyKWh}kWh`,
+            category: "bess" as const,
+            description: `BESS ${bessResult.powerKW}kW / ${bessResult.energyKWh}kWh ${bessResult.chemistry}`,
+            baseCost: bessResult.estimatedCost,
+            quantity: bessResult.energyKWh,
+            unitCost: bessResult.costPerKwh,
+            unit: "kWh",
+            costSource: vendorPricing.bessSource,
+          },
+          ...(solarResult.capacityKW > 0
+            ? [
+                {
+                  sku: `SOLAR-${solarResult.type}-${solarResult.capacityKW}kW`,
+                  category: "solar" as const,
+                  description: `Solar PV ${solarResult.capacityKW}kW ${solarResult.type}`,
+                  baseCost: solarResult.estimatedCost,
+                  quantity: solarResult.capacityKW * 1000, // Watts
+                  unitCost: solarResult.costPerWatt,
+                  unit: "W",
+                  costSource: vendorPricing.solarSource,
+                },
+              ]
+            : []),
+          ...(generatorResult.capacityKW > 0
+            ? [
+                {
+                  sku: `GEN-${generatorResult.capacityKW}kW`,
+                  category: "generator" as const,
+                  description: `Generator ${generatorResult.capacityKW}kW`,
+                  baseCost: generatorResult.estimatedCost,
+                  quantity: generatorResult.capacityKW,
+                  unitCost: generatorResult.estimatedCost / Math.max(generatorResult.capacityKW, 1),
+                  unit: "kW",
+                  costSource: "SSOT market reference",
+                },
+              ]
+            : []),
+          ...(evResult.totalChargers > 0
+            ? [
+                {
+                  sku: `EV-${evResult.totalChargers}x`,
+                  category: "ev_charger" as const,
+                  description: `EV Chargers (${evResult.totalChargers} units, ${evResult.totalPowerKW}kW)`,
+                  baseCost: evResult.estimatedCost,
+                  quantity: evResult.totalChargers,
+                  unitCost: evResult.estimatedCost / Math.max(evResult.totalChargers, 1),
+                  unit: "unit",
+                  costSource: "SSOT market reference",
+                },
+              ]
+            : []),
+        ],
         totalBaseCost: baseCost,
         riskLevel: "standard",
         customerSegment: "direct",
+        // Quote units: enables $/kWh and $/W floor+ceiling guards
+        quoteUnits: {
+          bess: bessResult.energyKWh,
+          ...(solarResult.capacityKW > 0 ? { solar: solarResult.capacityKW * 1000 } : {}),
+          ...(generatorResult.capacityKW > 0 ? { generator: generatorResult.capacityKW } : {}),
+        },
       });
       opt.marginRender = toMarginRenderEnvelope(marginResult);
       if (import.meta.env.DEV)
