@@ -186,7 +186,8 @@ export default function VendorAdminDashboard() {
     setPlatformSaving((p) => ({ ...p, [platform]: true }));
     setPlatformStatus((p) => ({ ...p, [platform]: null }));
     try {
-      const { error } = await supabase.from("solar_sizing_platform_keys").upsert(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from("solar_sizing_platform_keys").upsert(
         {
           platform,
           api_key: key,
@@ -214,7 +215,8 @@ export default function VendorAdminDashboard() {
   const handleDeletePlatformKey = async (platform: SolarSizingPlatform) => {
     if (!confirm(`Remove API key for ${PLATFORM_DISPLAY_NAMES[platform]}?`)) return;
     try {
-      await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
         .from("solar_sizing_platform_keys")
         .delete()
         .eq("platform", platform)
@@ -421,6 +423,50 @@ export default function VendorAdminDashboard() {
               Enter API keys for each platform to enable live design imports. Keys are stored
               encrypted in Supabase and never exposed in logs or client-side code.
             </p>
+          </div>
+
+          {/* Google Solar — built-in default, uses existing Maps key */}
+          <div className="bg-[#1a1c23] border border-[#3ECF8E]/30 rounded-2xl p-5 mb-4">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 bg-[#3ECF8E]" />
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-white">Google Solar API</span>
+                    <span className="text-xs px-2 py-0.5 bg-[#3ECF8E]/15 text-[#3ECF8E] rounded-full">
+                      Default
+                    </span>
+                    <span className="text-xs px-2 py-0.5 bg-blue-500/15 text-blue-400 rounded-full">
+                      Built-in
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Uses your existing{" "}
+                    <code className="text-slate-300">VITE_GOOGLE_MAPS_API_KEY</code> — no separate
+                    key needed. Provides real rooftop area, sun hours, and production estimates per
+                    address.
+                  </p>
+                  <p className="text-xs text-amber-400/80 mt-1">
+                    ⚡ Enable <strong>Solar API</strong> in Google Cloud Console → APIs &amp;
+                    Services → Enable APIs. Uses the same key already in your{" "}
+                    <code className="text-slate-300">.env</code> and deployed to Fly.io.
+                  </p>
+                </div>
+              </div>
+              <a
+                href="https://developers.google.com/maps/documentation/solar"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-slate-400 hover:text-[#3ECF8E] transition-colors flex-shrink-0"
+              >
+                Docs <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+              <CheckCircle className="w-3.5 h-3.5 text-[#3ECF8E]" />
+              Auto-runs on every US quote — refines sun hours &amp; roof area constraint using
+              actual building data
+            </div>
           </div>
 
           <div className="grid gap-4">
