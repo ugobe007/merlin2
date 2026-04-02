@@ -18,42 +18,54 @@
  */
 
 import 'dotenv/config';
-import { Client as McpClient } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { createClient } from '@supabase/supabase-js';
 
 // ─────────────────────────────────────────────────────────────
-// MCP CLIENT — calls the live Railway MCP server
+// MCP CLIENT — calls the live Railway MCP server via plain fetch
+// No SDK required — Railway speaks JSON-RPC over HTTP POST
 // ─────────────────────────────────────────────────────────────
 
-// Railway MCP server — hardcoded production URL
-// Override only via MERLIN_MCP_URL env var (must be a full https:// URL)
-const MCP_URL = (() => {
-  const raw = (process.env.MERLIN_MCP_URL ?? '').trim();
-  if (raw.startsWith('http')) return raw;
-  return 'https://merlin-mcp-agent-production.up.railway.app/mcp';
-})();
-
-let _mcp: McpClient | null = null;
-
-async function getMcp(): Promise<McpClient> {
-  if (_mcp) return _mcp;
-  _mcp = new McpClient({ name: 'merlin-daily-deal', version: '1.0.0' });
-  const transport = new StreamableHTTPClientTransport(new URL(MCP_URL));
-  await _mcp.connect(transport);
-  return _mcp;
-}
+const RAILWAY_MCP = 'https://merlin-mcp-agent-production.up.railway.app/mcp';
 
 async function callTool(name: string, args: Record<string, unknown>): Promise<unknown> {
-  try {
-    const mcp = await getMcp();
-    const result = await mcp.callTool({ name, arguments: args });
-    const text = (result.content as Array<{ type: string; text: string }>)?.[0]?.text;
-    return text ? JSON.parse(text) : result;
-  } catch (err) {
-    _mcp = null;
-    throw err;
+  const res = await fetch(RAILWAY_MCP, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/event-stream',
+    },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'tools/call',
+      params: { name, arguments: args },
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`MCP call failed: ${res.status} ${err.slice(0, 200)}`);
   }
+
+  // Railway may return SSE (text/event-stream) or plain JSON
+  const contentType = res.headers.get('content-type') ?? '';
+  let body: string;
+
+  if (contentType.includes('text/event-stream')) {
+    // Read SSE stream and grab the first data: line
+    body = await res.text();
+    const dataLine = body.split('\n').find(l => l.startsWith('data:'));
+    if (!dataLine) throw new Error('MCP SSE response had no data line');
+    body = dataLine.slice(5).trim();
+  } else {
+    body = await res.text();
+  }
+
+  const json = JSON.parse(body) as { result?: { content?: Array<{ type: string; text: string }> }; error?: { message: string } };
+  if (json.error) throw new Error(`MCP error: ${json.error.message}`);
+
+  const text = json.result?.content?.[0]?.text;
+  return text ? JSON.parse(text) : json.result;
 }
 
 // ─────────────────────────────────────────────────────────────
