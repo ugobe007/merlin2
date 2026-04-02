@@ -35,6 +35,12 @@ export interface SolarCalculationInput {
    * Leave undefined to use the SSOT/DB constant (backward compatible).
    */
   vendorPricePerWatt?: number;
+  /**
+   * Actual rooftop area available from Google Solar API (sqft).
+   * When provided, replaces the industry-estimate roof area cap so the
+   * roof-constraint logic uses real building data instead of a generic estimate.
+   */
+  maxRoofAreaSqFt?: number;
 }
 
 export interface SolarCalculationResult {
@@ -545,7 +551,11 @@ function calculateSolarInternal(
   let availableRoofSqFt: number;
   let roofSource: string;
 
-  if (explicitRoofArea !== null) {
+  if (input.maxRoofAreaSqFt && input.maxRoofAreaSqFt > 0) {
+    // Google Solar API measured roof area — highest accuracy, takes priority
+    availableRoofSqFt = input.maxRoofAreaSqFt * constants.USABLE_ROOF_PERCENT;
+    roofSource = `Google Solar API (${input.maxRoofAreaSqFt.toFixed(0)} sqft measured × ${constants.USABLE_ROOF_PERCENT * 100}% usable)`;
+  } else if (explicitRoofArea !== null) {
     // User provided explicit roof area - apply usable percentage
     availableRoofSqFt = explicitRoofArea * constants.USABLE_ROOF_PERCENT;
     roofSource = `explicit roof (${explicitRoofArea} × ${constants.USABLE_ROOF_PERCENT * 100}% usable)`;

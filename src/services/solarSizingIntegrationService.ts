@@ -38,6 +38,176 @@
  */
 
 import { supabase, isSupabaseConfigured } from "./supabaseClient";
+import { geocodeLocation } from "./geocodingService";
+
+// ============================================================================
+// GOOGLE SOLAR API  (uses existing VITE_GOOGLE_MAPS_API_KEY)
+// Solar API must be enabled in Google Cloud Console for the same key.
+// Docs: https://developers.google.com/maps/documentation/solar
+// ============================================================================
+
+const GOOGLE_MAPS_API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) ?? "";
+const GOOGLE_SOLAR_ENDPOINT = "https://solar.googleapis.com/v1";
+
+/**
+ * Typical residential/commercial panel specs assumed when Google Solar doesn't
+ * specify a model — used for panel count → kW conversion.
+ */
+const GOOGLE_SOLAR_DEFAULT_PANEL_W = 400; // Wp — standard 400W panel
+
+/** Raw shape of a Google Solar API buildingInsights response */
+interface GoogleSolarBuildingInsights {
+  name: string;
+  center: { latitude: number; longitude: number };
+  imageryQuality: string;
+  solarPotential: {
+    maxArrayPanelsCount: number;
+    maxArrayAreaMeters2: number;
+    maxSunshineHoursPerYear: number;
+    carbonOffsetFactorKgPerMwh: number;
+    wholeRoofStats: {
+      areaMeters2: number;
+      groundAreaMeters2: number;
+    };
+    solarPanelConfigs: Array<{
+      panelsCount: number;
+      yearlyEnergyDcKwh: number;
+    }>;
+  };
+}
+
+/**
+ * Parse a Google Solar API buildingInsights response into SolarDesignImport.
+ * Picks the config closest to 80% of max panels (typical commercial target).
+ */
+function parseGoogleSolar(
+  data: GoogleSolarBuildingInsights,
+  address?: string
+): Partial<SolarDesignImport> {
+  const sp = data.solarPotential;
+  const configs = sp.solarPanelConfigs ?? [];
+
+  // Pick the config at ~80% of max panels — practical commercial target
+  const targetPanels = Math.round(sp.maxArrayPanelsCount * 0.8);
+  const bestConfig =
+    configs.find((c) => c.panelsCount <= targetPanels) ??
+    configs[Math.floor(configs.length * 0.8)] ??
+    configs[configs.length - 1];
+
+  const panelCount = bestConfig?.panelsCount ?? sp.maxArrayPanelsCount;
+  const systemKw = (panelCount * GOOGLE_SOLAR_DEFAULT_PANEL_W) / 1000;
+  const annualKwh = bestConfig?.yearlyEnergyDcKwh;
+  const roofAreaSqFt = sp.maxArrayAreaMeters2 * 10.764; // m² → sqft
+  const sunHoursPerYear = sp.maxSunshineHoursPerYear;
+
+  return {
+    platformProjectId: data.name,
+    address,
+    lat: data.center.latitude,
+    lon: data.center.longitude,
+    systemSizeDC_kW: systemKw,
+    numberOfPanels: panelCount,
+    panelWattage: GOOGLE_SOLAR_DEFAULT_PANEL_W,
+    roofAreaUsedSqFt: roofAreaSqFt,
+    annualProductionKWh: annualKwh,
+    // Derive effective daily sun hours from annual production ÷ system size ÷ 365
+    specificYieldKwh_per_kWp: annualKwh && systemKw ? annualKwh / systemKw : sunHoursPerYear / 365,
+  };
+}
+
+/**
+ * Fetch Google Solar building insights for a given lat/lng.
+ * Returns a SolarDesignImport or null if the API call fails or key is missing.
+ *
+ * The VITE_GOOGLE_MAPS_API_KEY must have the **Solar API** product enabled:
+ *   Google Cloud Console → APIs & Services → Enable → Solar API
+ */
+export async function fetchFromGoogleSolar(
+  lat: number,
+  lng: number,
+  address?: string
+): Promise<SolarDesignImport | null> {
+  if (!GOOGLE_MAPS_API_KEY) {
+    console.warn("⚠️ Google Solar: VITE_GOOGLE_MAPS_API_KEY not set");
+    return null;
+  }
+
+  try {
+    const params = new URLSearchParams({
+      "location.latitude": String(lat),
+      "location.longitude": String(lng),
+      requiredQuality: "LOW", // LOW accepts any imagery quality — HIGH may 404 in some regions
+      key: GOOGLE_MAPS_API_KEY,
+    });
+
+    const res = await fetch(
+      `${GOOGLE_SOLAR_ENDPOINT}/buildingInsights:findClosest?${params.toString()}`
+    );
+
+    if (res.status === 404) {
+      // No solar data for this location (rural, canopy coverage, etc.)
+      console.info("ℹ️ Google Solar: no building data found for", lat, lng);
+      return null;
+    }
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => res.statusText);
+      // 403 → Solar API not enabled on the key — log clearly
+      if (res.status === 403) {
+        console.warn(
+          "⚠️ Google Solar API: 403 Forbidden — enable 'Solar API' in Google Cloud Console for VITE_GOOGLE_MAPS_API_KEY",
+          errBody
+        );
+      } else {
+        console.error(`❌ Google Solar API: ${res.status}`, errBody);
+      }
+      return null;
+    }
+
+    const data = (await res.json()) as GoogleSolarBuildingInsights;
+    const partial = parseGoogleSolar(data, address);
+
+    return {
+      platform: "aurora_solar" as SolarSizingPlatform, // reuse closest type; tagged via platformProjectId
+      platformProjectId: `google_solar:${data.name}`,
+      importedAt: new Date().toISOString(),
+      systemSizeDC_kW: 0,
+      ...partial,
+      rawPayload: data,
+    } as SolarDesignImport;
+  } catch (err) {
+    console.error("❌ Google Solar fetch failed:", err);
+    return null;
+  }
+}
+
+/**
+ * Geocode a US ZIP code then fetch Google Solar building insights.
+ * Returns null if geocoding fails or solar data unavailable.
+ */
+export async function fetchGoogleSolarByZip(
+  zipCode: string,
+  state?: string
+): Promise<SolarDesignImport | null> {
+  const query = state ? `${zipCode}, ${state}` : zipCode;
+  const geo = await geocodeLocation(query);
+  if (!geo) {
+    console.warn("⚠️ Google Solar: could not geocode", query);
+    return null;
+  }
+  return fetchFromGoogleSolar(geo.lat, geo.lon, geo.formattedAddress);
+}
+
+/**
+ * Check if the Google Solar API is accessible (key exists + Solar API enabled).
+ * Returns true on success, false on 403/missing key.
+ */
+export async function isGoogleSolarEnabled(): Promise<boolean> {
+  if (!GOOGLE_MAPS_API_KEY) return false;
+  // Use a known-good coordinate (Mountain View, CA — Google HQ)
+  const res = await fetchFromGoogleSolar(37.422, -122.0841);
+  return res !== null;
+}
 
 // ============================================================================
 // PLATFORM IDENTIFIERS
@@ -481,7 +651,7 @@ export async function saveImportedDesign(
   if (!isSupabaseConfigured()) return null;
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("imported_solar_designs")
       .insert({
         platform: design.platform,
@@ -547,7 +717,7 @@ export async function getPlatformApiKey(platform: SolarSizingPlatform): Promise<
   if (!isSupabaseConfigured()) return null;
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("solar_sizing_platform_keys")
       .select("api_key, is_active")
       .eq("platform", platform)
@@ -568,13 +738,13 @@ export async function getConfiguredPlatforms(): Promise<SolarSizingPlatform[]> {
   if (!isSupabaseConfigured()) return [];
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("solar_sizing_platform_keys")
       .select("platform")
       .eq("is_active", true);
 
     if (error || !data) return [];
-    return data.map((row) => row.platform as SolarSizingPlatform);
+    return data.map((row: { platform: string }) => row.platform as SolarSizingPlatform);
   } catch {
     return [];
   }

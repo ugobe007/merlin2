@@ -52,6 +52,11 @@ import { toMarginRenderEnvelope } from "./marginRenderEnvelopeAdapter";
 // Resolves live solar $/W and BESS $/kWh from approved vendor_products
 import { resolveVendorPricing } from "./vendorProductPricingBridge";
 
+// Google Solar API (April 2026)
+// Default solar sizing source — uses existing VITE_GOOGLE_MAPS_API_KEY
+// Requires "Solar API" enabled in Google Cloud Console
+import { fetchGoogleSolarByZip } from "./solarSizingIntegrationService";
+
 // Version
 const ENGINE_VERSION = "2.0.0";
 
@@ -95,6 +100,37 @@ export async function processQuote(
   }
 
   // ─────────────────────────────────────────────────────────────
+  // STEP 0.5: Google Solar API — actual rooftop solar potential
+  // Uses the existing VITE_GOOGLE_MAPS_API_KEY (Solar API must be
+  // enabled in Google Cloud Console).  Graceful no-op if unavailable.
+  // Provides: precise sun hours, roof area, production estimate.
+  // ─────────────────────────────────────────────────────────────
+  let googleSolarData: Awaited<ReturnType<typeof fetchGoogleSolarByZip>> = null;
+  if (request.location.zipCode && request.location.country === "US") {
+    googleSolarData = await fetchGoogleSolarByZip(request.location.zipCode, request.location.state);
+    if (import.meta.env.DEV) {
+      if (googleSolarData) {
+        console.log(
+          "🛰️  Google Solar: rooftop data loaded",
+          `${googleSolarData.systemSizeDC_kW.toFixed(1)} kW max,`,
+          `${googleSolarData.roofAreaUsedSqFt?.toFixed(0)} sqft,`,
+          `${googleSolarData.annualProductionKWh?.toFixed(0)} kWh/yr`
+        );
+      } else {
+        console.log(
+          "🛰️  Google Solar: unavailable (Solar API not enabled or no coverage) — using STATE_SUN_HOURS fallback"
+        );
+      }
+    }
+  }
+
+  // Derive effective daily peak sun hours from Google Solar data if available
+  // specificYieldKwh_per_kWp ≈ annual sun hours / 365 ≈ daily peak sun hours
+  const googleDailySunHours = googleSolarData?.specificYieldKwh_per_kWp
+    ? googleSolarData.specificYieldKwh_per_kWp / 365
+    : null;
+
+  // ─────────────────────────────────────────────────────────────
   // STEP 1: Calculate Load
   // ─────────────────────────────────────────────────────────────
   const loadResult = calculateLoad({
@@ -119,7 +155,9 @@ export async function processQuote(
   // ─────────────────────────────────────────────────────────────
   // STEP 3: Calculate Solar
   // ─────────────────────────────────────────────────────────────
-  const sunHours = STATE_SUN_HOURS[request.location.state] || 5.0;
+  // Google Solar sun hours take precedence over static state table when available
+  const stateSunHours = STATE_SUN_HOURS[request.location.state] || 5.0;
+  const sunHours = googleDailySunHours ?? stateSunHours;
   const solarResult = calculateSolar({
     peakDemandKW: loadResult.peakDemandKW,
     annualConsumptionKWh: loadResult.annualConsumptionKWh,
@@ -131,6 +169,10 @@ export async function processQuote(
     customSizeKw: request.preferences.solar.customSizeKw,
     // Vendor DB pricing — overrides SSOT constant when vendor products approved
     vendorPricePerWatt: vendorPricing.solarPricePerWatt,
+    // Google Solar roof area constraint — overrides generic industry estimate
+    ...(googleSolarData?.roofAreaUsedSqFt
+      ? { maxRoofAreaSqFt: googleSolarData.roofAreaUsedSqFt }
+      : {}),
   });
   if (import.meta.env.DEV) {
     console.log(
