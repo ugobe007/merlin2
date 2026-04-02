@@ -50,6 +50,7 @@ const UploadQuotePage = lazy(() => import("./pages/UploadQuotePage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 // const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage")); // TEMP DISABLED
 import { trackPageView } from "./services/analyticsService";
+import { syncApprovedVendorProducts } from "./services/vendorPricingIntegrationService";
 
 // Test calculations temporarily disabled for production build
 // import { testCalculations } from './utils/testCalculations';
@@ -151,6 +152,11 @@ function App() {
   useEffect(() => {
     trackPageView(pathname).catch(() => {});
   }, [pathname]);
+
+  // Sync vendor pricing to equipment_pricing once on app mount (silent — no UI impact)
+  useEffect(() => {
+    syncApprovedVendorProducts().catch(() => {});
+  }, []);
 
   // Keyboard shortcut: Ctrl+Shift+A for admin access
   useEffect(() => {
