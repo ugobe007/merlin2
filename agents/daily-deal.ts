@@ -801,7 +801,9 @@ async function postToX(thread: string[]): Promise<string | null> {
 async function emailLinkedInPost(postText: string, subject: string): Promise<boolean> {
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
-  const recipient = process.env.LINKEDIN_EMAIL_TO ?? 'ugobe07@gmail.com';
+  const primaryRecipient = process.env.LINKEDIN_EMAIL_TO ?? 'ugobe07@gmail.com';
+  const ccRecipient = process.env.ALERT_EMAIL_CC ?? 'vkapila2004@gmail.com';
+  const recipient = `${primaryRecipient}, ${ccRecipient}`;
 
   if (!smtpUser || !smtpPass) {
     console.warn('   ⚠️  Email not configured (set SMTP_USER + SMTP_PASS) — printing post to console instead:');
@@ -847,7 +849,7 @@ ${postText}
       text: `LinkedIn Post Ready — copy and paste to Merlin Energy page:\n\n${postText}`,
       html: htmlBody,
     });
-    console.log(`   📧 LinkedIn post emailed to ${recipient}`);
+    console.log(`   📧 Email sent to: ${recipient}`);
     return true;
   } catch (err) {
     console.error('   ❌ Email send failed:', (err as Error).message);
