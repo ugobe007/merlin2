@@ -398,6 +398,49 @@ const ZIP_STATE: Record<string, string> = {
 };
 function zipToState(zip: string): string { return ZIP_STATE[zip] ?? 'US'; }
 
+/**
+ * Global energy stories — curious, human, surprising.
+ * One of these rotates into every LinkedIn post and Discord embed.
+ * Not about selling. About being worth following.
+ */
+const WORLD_FACTS: string[] = [
+  '🌍 The entire island of El Hierro in Spain\'s Canary Islands runs on 100% renewable energy — a mix of wind and pumped hydro. When the wind blows hard, they pump water uphill. When it\'s calm, they let it fall back down through turbines. Engineering as patience.',
+  '☀️ The Ouarzazate Solar Power Station in Morocco — one of the largest concentrated solar plants on earth — powers over 1 million homes and exports electricity north into Europe. It sits in the Sahara, which receives more solar energy in 6 hours than humanity uses in a year.',
+  '🌋 Iceland heats 90% of its homes with geothermal energy pulled directly from volcanic rock beneath the island. Their average household heating bill is a fraction of what comparable Nordic countries pay. The volcano is the utility.',
+  '💧 Norway generates 98% of its electricity from hydropower — and exports the surplus to Germany, the Netherlands, and the UK via undersea cables. When European wind drops, Norway\'s fjords are the backup battery.',
+  '🏘️ In 2014, the village of Dharnai in Bihar, India became the first village in the country to run entirely on solar power — ending 30 years of energy poverty without a single grid connection. The villagers now sell excess power back to neighboring towns.',
+  '🌬️ Denmark generates more electricity from wind than its citizens consume — regularly hitting 100%+ wind penetration. On the windiest days, they export power to Sweden and Germany at negative prices, paying neighbors to take it.',
+  '🏔️ Bhutan is one of the only carbon-negative countries on earth. It generates far more clean hydropower than it needs, exports the surplus to India, and uses the revenue to fund free healthcare and education. Its constitution requires 60% forest cover — forever.',
+  '🌊 Tidal turbines installed in the Bay of Fundy, Canada — where tides swing 16 meters, the highest in the world — generate predictable, clockwork electricity twice a day, every day, regardless of weather. The ocean is more reliable than the sun.',
+  '⚡ South Australia, once notorious for blackouts, installed the Tesla Hornsdale Power Reserve in 2017 — the world\'s largest lithium-ion battery at the time. It responded to grid frequency events 100× faster than traditional gas peakers and saved the state $150M in its first two years.',
+  '🚢 The MS Roald Amundsen — a Norwegian expedition ship — is the world\'s first hybrid electric cruise vessel capable of sailing through Arctic ice on battery power alone, in complete silence, without disturbing wildlife.',
+  '🌿 Rwanda produces biogas from methane naturally released by Lake Kivu — a deep volcanic lake — and pipes it to homes and industries nearby. The lake holds enough dissolved gas to power the country for decades. They\'re essentially mining an underground swamp.',
+  '🏗️ The Three Gorges Dam in China produces more electricity annually than any structure ever built by humans — 88.2 billion kWh in 2020 alone. That\'s enough to power New York City for 8 years straight.',
+  '🐄 In rural India, thousands of villages run on biogas produced from cow dung collected in community digesters. A single family\'s three cows can produce enough gas for cooking and lighting — replacing kerosene, cutting indoor air pollution, and leaving rich fertilizer as a byproduct.',
+  '🌞 The Cochin International Airport in Kerala, India was the world\'s first airport to run entirely on solar power — 46,000 panels on the roof and surrounding land. It became carbon-neutral in 2015 and now earns money selling surplus power back to the grid.',
+  '🏝️ The Tokelau Islands in the South Pacific — population 1,500, middle of the ocean — became the first nation in the world to run 100% on solar and coconut oil biodiesel. They ripped out their diesel generators in 2012 and never looked back.',
+  '🌬️ Inner Mongolia in China hosts the world\'s largest single wind farm — Gansu Wind Farm — a cluster of turbines so vast it can be seen from space. On a good day it generates more power than some small countries consume in a week.',
+  '🔋 In 2017, the German Energiewende produced so much wind and solar on a sunny spring Sunday that electricity prices went negative for several hours. Power companies literally paid industrial customers to use electricity so the grid wouldn\'t destabilize.',
+  '🌡️ Kenya derives over 75% of its electricity from geothermal, hydro, and wind — one of the cleanest electricity mixes on the continent. The Olkaria Geothermal Plant in the Rift Valley has been running since 1981 and keeps expanding. Turns out sitting on a continental rift is a competitive advantage.',
+  '🌊 Portugal ran on 100% renewable electricity — wind, solar, and hydro — for six consecutive days in 2016. No coal, no gas, no nuclear. The lights stayed on. They\'ve been pushing the record further ever since.',
+  '🚆 Piezoelectric tiles installed under turnstiles at Tokyo\'s Shibuya train station generate electricity from footsteps — 400,000 commuters per day compress the tiles, and the energy lights the station\'s displays. The commute literally powers the commute.',
+  '☀️ The Atacama Desert in Chile has the highest solar irradiance measured anywhere on earth — panels there produce 50% more electricity per year than the same panel installed in Germany. Chile is now building solar plants to export hydrogen to Asia.',
+  '🏙️ Masdar City in Abu Dhabi was designed from scratch as a zero-carbon, zero-waste city in the middle of the desert. It runs on rooftop solar, wind towers that cool streets without AC, and a driverless electric pod transit system operating entirely underground.',
+  '🐟 Off the coast of Scotland, tidal stream turbines anchored to the seabed spin silently in the current of the Pentland Firth — one of the fastest tidal channels on earth. Marine biologists report fish schooling around the turbine bases. The reef effect was not planned.',
+  '💡 Bangladesh has installed over 6 million solar home systems in rural areas — more off-grid solar installations than any other country. Villages that had no electricity 15 years ago now charge phones, run small businesses, and have evening study hours for children.',
+  '🌏 Costa Rica ran on 100% renewable electricity for over 300 days in 2019 — mostly hydro, with wind and geothermal filling gaps. They\'ve been powered almost entirely by renewables since 2014. Population: 5 million. Deforestation reversed. Tourists doubled.',
+  '⛽ Uruguay transformed its electricity grid from 27% renewable to 95% renewable in just 10 years — without nuclear, without massive subsidies, and while keeping prices lower than the regional average. The government just removed the monopoly and let wind developers compete.',
+  '🌅 Floating solar panels installed on reservoirs in India\'s Rajasthan state do two useful things simultaneously: they generate electricity AND they reduce evaporation from the reservoir below by up to 30%. One installation. Two problems solved.',
+  '🏔️ Nepal\'s micro-hydro program has brought electricity to hundreds of mountain villages unreachable by the national grid — using small rivers, bamboo pipes, and turbines small enough to carry on foot up a Himalayan trail. Energy infrastructure that fits in a backpack.',
+  '🔆 Saudi Arabia — historically 100% fossil fuels — is now building Al-Ula Solar, one of the largest solar projects on earth, in a region that gets 9+ hours of full sun daily. Even oil states are reading the same math everyone else is.',
+  '🌿 The small Pacific island nation of Tonga generates electricity from coconut shells. The shells are gasified in a small reactor, the gas runs a generator, and the ash becomes fertilizer. Nothing is wasted. The entire energy system fits inside a shipping container.',
+];
+
+/** Pick a world fact by day-of-year so it rotates daily */
+function pickWorldFact(dayOfYear: number): string {
+  return WORLD_FACTS[dayOfYear % WORLD_FACTS.length];
+}
+
 // ─────────────────────────────────────────────────────────────
 // DEAL SELECTION
 // ─────────────────────────────────────────────────────────────
@@ -436,6 +479,10 @@ function buildDiscordPayload(deal: DealProfile, quote: MCPQuoteResult, dateStr: 
     ? `${sizeMW} MW BESS · ${kWh.toLocaleString()} kWh · ${dur}h duration + solar`
     : `${sizeMW} MW BESS · ${kWh.toLocaleString()} kWh · ${dur}h duration`;
 
+  const now = new Date();
+  const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86_400_000);
+  const worldFact = pickWorldFact(dayOfYear);
+
   return {
     embeds: [
       {
@@ -445,6 +492,8 @@ function buildDiscordPayload(deal: DealProfile, quote: MCPQuoteResult, dateStr: 
         fields: [
           // Curiosity hook — leads the embed
           { name: '💡 Did You Know?',    value: FUN_FACTS[deal.id] ?? deal.marketHook,          inline: false },
+          // Global energy story of the day
+          { name: '🌍 Energy Around the World', value: worldFact,                              inline: false },
           // Quote financials
           { name: '📐 System',           value: systemDesc,                                    inline: false },
           { name: '💰 Gross Cost',       value: usd(fin.totalInstalledCost),                   inline: true  },
@@ -533,9 +582,9 @@ function generateLinkedInPost(deal: DealProfile, quote: MCPQuoteResult, dateStr:
   const state = zipToState(deal.input.zipCode);
   const fact  = FUN_FACTS[deal.id] ?? deal.marketHook;
 
-  // Rotate across 3 post formats by day-of-year so the feed stays fresh
+  // Rotate across 4 post formats by day-of-year so the feed stays fresh
   const day = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000);
-  const template = day % 3;
+  const template = day % 4;
 
   const sys  = deal.input.hasSolar
     ? `${rec.systemSizeMW} MW BESS · ${rec.durationHours}h + solar`
@@ -596,23 +645,49 @@ function generateLinkedInPost(deal: DealProfile, quote: MCPQuoteResult, dateStr:
   }
 
   // ── Template C: Global → local hook, numbers as proof ────────
+  if (template === 2) {
+    return [
+      `${deal.emoji} ${deal.tagline}`,
+      ``,
+      fact,
+      ``,
+      `${deal.marketHook}`,
+      ``,
+      `Here's the math for a representative ${deal.label} in ${state}:`,
+      ``,
+      nums,
+      ``,
+      `No estimates. No vendor markups baked in. Just NREL benchmark data`,
+      `and real utility rates for that ZIP — calculated fresh this morning.`,
+      ``,
+      deal.ctaLine,
+      ``,
+      tags,
+    ].join('\n');
+  }
+
+  // ── Template D: World energy story first, US industry tie-in second ──
+  const worldFact = pickWorldFact(day);
+
   return [
-    `${deal.emoji} ${deal.tagline}`,
+    `🌍 Energy story of the day:`,
+    ``,
+    worldFact,
+    ``,
+    `---`,
+    ``,
+    `The same physics applies here at home.`,
+    ``,
+    `${deal.emoji} Today's vertical: ${deal.label} in ${state}`,
     ``,
     fact,
     ``,
-    `${deal.marketHook}`,
-    ``,
-    `Here's the math for a representative ${deal.label} in ${state}:`,
-    ``,
+    `The numbers for a site like yours:`,
     nums,
-    ``,
-    `No estimates. No vendor markups baked in. Just NREL benchmark data`,
-    `and real utility rates for that ZIP — calculated fresh this morning.`,
     ``,
     deal.ctaLine,
     ``,
-    tags,
+    `#EnergyStorage #GlobalEnergy #CleanEnergy #${tag} #BESS #MerlinEnergy`,
   ].join('\n');
 }
 
