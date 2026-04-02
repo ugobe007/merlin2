@@ -27,7 +27,10 @@ import { selectOptimalPanel, SSOT_FALLBACK_PANEL } from "./solarPanelSelectionSe
 import type { SolarPanelSpec } from "./solarPanelSelectionService";
 import { selectOptimalBESS, SSOT_FALLBACK_BESS } from "./bessSelectionService";
 import type { BESSSpec } from "./bessSelectionService";
+import { selectOptimalInverter, SSOT_FALLBACK_INVERTER } from "./inverterSelectionService";
+import type { InverterSpec } from "./inverterSelectionService";
 import { getBESSCostPerKWh, getSolarCostPerWatt } from "./data/constants";
+import { supabase, isSupabaseConfigured } from "./supabaseClient";
 
 // ============================================================================
 // TYPES
@@ -38,18 +41,32 @@ export interface VendorPricing {
   solarPricePerWatt: number;
   /** $/kWh pack price (equipment only, excl. PCS + installation) */
   bessPricePerKwh: number;
-  /** $/kW PCS / inverter cost */
+  /** $/kW PCS / inverter cost — from BESS vendor or dedicated inverter vendor */
   bessPricePerKw: number;
+  /** $/kW for dedicated solar inverter / string inverter from inverter vendor */
+  inverterPricePerKw: number;
   /** Full panel spec from DB (null = using SSOT fallback) */
   panelSpec: SolarPanelSpec | null;
   /** Full BESS spec from DB (null = using SSOT fallback) */
   bessSpec: BESSSpec | null;
+  /** Full inverter spec from DB (null = using SSOT fallback) */
+  inverterSpec: InverterSpec | null;
   /** True when vendor DB pricing is active (vs. hardcoded fallback) */
   isVendorPricing: boolean;
   /** Human-readable pricing source for TrueQuote attestation */
   solarSource: string;
   /** Human-readable pricing source for TrueQuote attestation */
   bessSource: string;
+  /** Human-readable pricing source for TrueQuote attestation */
+  inverterSource: string;
+  /** Vendor $/kW for diesel generators (undefined = use SSOT $800/kW constant) */
+  generatorPricePerKwDiesel?: number;
+  /** Vendor $/kW for natural gas generators (undefined = use SSOT $650/kW constant) */
+  generatorPricePerKwNatGas?: number;
+  /** Vendor cost per L2 charger unit in $ (undefined = use SSOT $6,000 constant) */
+  evL2CostPerUnit?: number;
+  /** Vendor cost per DCFC charger unit in $ (undefined = use SSOT $75,000 constant) */
+  evDCFCCostPerUnit?: number;
 }
 
 // ============================================================================
@@ -99,36 +116,50 @@ export async function resolveVendorPricing(
     }
   }
 
-  // ── Solar panel selection ─────────────────────────────────────────────────
+  // ── Run all three selections in parallel ─────────────────────────────────
   let panelSpec: SolarPanelSpec | null = null;
-  let solarPricePerWatt = getSolarCostPerWatt(systemKw); // SSOT fallback
+  let solarPricePerWatt = getSolarCostPerWatt(systemKw);
   let solarSource = "SSOT market reference (Q1 2026)";
 
-  try {
-    const panel = await selectOptimalPanel(state);
+  let bessSpec: BESSSpec | null = null;
+  let bessPricePerKwh = getBESSCostPerKWh(systemKw);
+  let bessPricePerKw = SSOT_FALLBACK_BESS.pricePerKw;
+  let bessSource = "SSOT market reference (Q1 2026)";
+
+  let inverterSpec: InverterSpec | null = null;
+  let inverterPricePerKw = SSOT_FALLBACK_INVERTER.pricePerKw;
+  let inverterSource = "SSOT market reference (NREL Q1 2025)";
+
+  // ── Generator and EV vendor pricing variables ──────────────────────────────
+  let generatorPricePerKwDiesel: number | undefined;
+  let generatorPricePerKwNatGas: number | undefined;
+  let evL2CostPerUnit: number | undefined;
+  let evDCFCCostPerUnit: number | undefined;
+
+  const [panelResult, bessResult, inverterResult] = await Promise.allSettled([
+    selectOptimalPanel(state),
+    selectOptimalBESS(systemKwh, systemKw * 0.25),
+    selectOptimalInverter(systemKw),
+  ]);
+
+  // Solar
+  if (panelResult.status === "fulfilled") {
+    const panel = panelResult.value;
     if (panel && !panel.isFallback) {
       panelSpec = panel;
       solarPricePerWatt = panel.effectivePricePerWatt;
       solarSource = `Vendor: ${panel.manufacturer} ${panel.model} ($${panel.effectivePricePerWatt.toFixed(2)}/W)`;
     } else if (panel) {
-      // isFallback: still use SSOT constant but attach the spec for panel count math
       panelSpec = panel;
       solarSource = `SSOT fallback — ${panel.manufacturer} ${panel.model}`;
     }
-  } catch (err) {
-    if (import.meta.env.DEV) {
-      console.warn("⚠️ vendorProductPricingBridge: solar panel selection failed", err);
-    }
+  } else if (import.meta.env.DEV) {
+    console.warn("⚠️ vendorProductPricingBridge: solar selection failed", panelResult.reason);
   }
 
-  // ── BESS selection ────────────────────────────────────────────────────────
-  let bessSpec: BESSSpec | null = null;
-  let bessPricePerKwh = getBESSCostPerKWh(systemKw); // SSOT fallback
-  let bessPricePerKw = SSOT_FALLBACK_BESS.pricePerKw;
-  let bessSource = "SSOT market reference (Q1 2026)";
-
-  try {
-    const bess = await selectOptimalBESS(systemKwh, systemKw * 0.25);
+  // BESS
+  if (bessResult.status === "fulfilled") {
+    const bess = bessResult.value;
     if (bess && !bess.isFallback) {
       bessSpec = bess;
       bessPricePerKwh = bess.effectivePricePerKwh;
@@ -138,24 +169,140 @@ export async function resolveVendorPricing(
       bessSpec = bess;
       bessSource = `SSOT fallback — ${bess.manufacturer} ${bess.model}`;
     }
-  } catch (err) {
-    if (import.meta.env.DEV) {
-      console.warn("⚠️ vendorProductPricingBridge: BESS selection failed", err);
+  } else if (import.meta.env.DEV) {
+    console.warn("⚠️ vendorProductPricingBridge: BESS selection failed", bessResult.reason);
+  }
+
+  // Inverter
+  if (inverterResult.status === "fulfilled") {
+    const inv = inverterResult.value;
+    if (inv && !inv.isFallback) {
+      inverterSpec = inv;
+      inverterPricePerKw = inv.pricePerKw;
+      inverterSource = `Vendor: ${inv.manufacturer} ${inv.model} ($${inv.pricePerKw}/kW)`;
+    } else if (inv) {
+      inverterSpec = inv;
+      inverterSource = `SSOT fallback — ${inv.manufacturer} ${inv.model}`;
+    }
+  } else if (import.meta.env.DEV) {
+    console.warn("⚠️ vendorProductPricingBridge: inverter selection failed", inverterResult.reason);
+  }
+
+  // ── Generator + EV charger vendor pricing (direct DB queries) ─────────────
+  if (isSupabaseConfigured()) {
+    try {
+      const [genRows, evRows] = await Promise.all([
+        supabase
+          .from("vendor_products")
+          .select("chemistry, price_per_kw, manufacturer, model")
+          .eq("status", "approved")
+          .eq("product_category", "generator")
+          .in("chemistry", ["diesel", "natural_gas"])
+          .gt("price_per_kw", 0)
+          .order("price_per_kw", { ascending: true })
+          .limit(10),
+        supabase
+          .from("vendor_products")
+          .select("chemistry, price_per_kw, power_kw, manufacturer, model")
+          .eq("status", "approved")
+          .eq("product_category", "ev_charger")
+          .in("chemistry", ["l2", "dcfc"])
+          .gt("price_per_kw", 0)
+          .order("price_per_kw", { ascending: true })
+          .limit(10),
+      ]);
+
+      // Generator: pick cheapest per fuel type
+      if (!genRows.error && genRows.data) {
+        const genData = genRows.data as Array<{
+          chemistry: string;
+          price_per_kw: number;
+          manufacturer: string;
+          model: string;
+        }>;
+        const dieselRow = genData.find((r) => r.chemistry === "diesel");
+        const natgasRow = genData.find((r) => r.chemistry === "natural_gas");
+        if (dieselRow) {
+          generatorPricePerKwDiesel = dieselRow.price_per_kw;
+          if (import.meta.env.DEV) {
+            console.log(
+              `⚙️ generator diesel vendor: ${dieselRow.manufacturer} @ $${dieselRow.price_per_kw}/kW`
+            );
+          }
+        }
+        if (natgasRow) {
+          generatorPricePerKwNatGas = natgasRow.price_per_kw;
+          if (import.meta.env.DEV) {
+            console.log(
+              `⚙️ generator natgas vendor: ${natgasRow.manufacturer} @ $${natgasRow.price_per_kw}/kW`
+            );
+          }
+        }
+      }
+
+      // EV: convert $/kW → $/unit using power_kw; pick lowest $/unit per type
+      if (!evRows.error && evRows.data) {
+        const evData = evRows.data as Array<{
+          chemistry: string;
+          price_per_kw: number;
+          power_kw: number;
+          manufacturer: string;
+          model: string;
+        }>;
+        // L2: find lowest $/unit = price_per_kw × power_kw
+        const l2Rows = evData
+          .filter((r) => r.chemistry === "l2" && r.power_kw > 0)
+          .map((r) => ({ ...r, unitCost: r.price_per_kw * r.power_kw }))
+          .sort((a, b) => a.unitCost - b.unitCost);
+        const dcfcRows = evData
+          .filter((r) => r.chemistry === "dcfc" && r.power_kw > 0)
+          .map((r) => ({ ...r, unitCost: r.price_per_kw * r.power_kw }))
+          .sort((a, b) => a.unitCost - b.unitCost);
+        if (l2Rows[0]) {
+          evL2CostPerUnit = Math.round(l2Rows[0].unitCost);
+          if (import.meta.env.DEV) {
+            console.log(`🔌 EV L2 vendor: ${l2Rows[0].manufacturer} @ $${evL2CostPerUnit}/unit`);
+          }
+        }
+        if (dcfcRows[0]) {
+          evDCFCCostPerUnit = Math.round(dcfcRows[0].unitCost);
+          if (import.meta.env.DEV) {
+            console.log(
+              `🔌 EV DCFC vendor: ${dcfcRows[0].manufacturer} @ $${evDCFCCostPerUnit}/unit`
+            );
+          }
+        }
+      }
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.warn("⚠️ vendorProductPricingBridge: generator/EV pricing failed", err);
+      }
     }
   }
 
   const isVendorPricing =
-    (panelSpec !== null && !panelSpec.isFallback) || (bessSpec !== null && !bessSpec.isFallback);
+    (panelSpec !== null && !panelSpec.isFallback) ||
+    (bessSpec !== null && !bessSpec.isFallback) ||
+    (inverterSpec !== null && !inverterSpec.isFallback) ||
+    generatorPricePerKwDiesel !== undefined ||
+    evL2CostPerUnit !== undefined;
 
   const pricing: VendorPricing = {
     solarPricePerWatt,
     bessPricePerKwh,
     bessPricePerKw,
+    inverterPricePerKw,
     panelSpec,
     bessSpec,
+    inverterSpec,
     isVendorPricing,
     solarSource,
     bessSource,
+    inverterSource,
+    generatorPricePerKwDiesel,
+    generatorPricePerKwNatGas,
+    evL2CostPerUnit,
+    evDCFCCostPerUnit,
   };
 
   _cache = { pricing, resolvedAt: Date.now(), systemKw, systemKwh, state };
@@ -165,7 +312,9 @@ export async function resolveVendorPricing(
       `💰 vendorProductPricingBridge: solar=$${solarPricePerWatt.toFixed(3)}/W ` +
         `(${panelSpec?.isFallback === false ? "vendor" : "fallback"}), ` +
         `bess=$${bessPricePerKwh.toFixed(0)}/kWh ` +
-        `(${bessSpec?.isFallback === false ? "vendor" : "fallback"})`
+        `(${bessSpec?.isFallback === false ? "vendor" : "fallback"}), ` +
+        `inverter=$${inverterPricePerKw}/kW ` +
+        `(${inverterSpec?.isFallback === false ? "vendor" : "fallback"})`
     );
   }
 
@@ -186,10 +335,13 @@ export function getVendorPricingSync(systemKw: number = 500): VendorPricing {
     solarPricePerWatt: getSolarCostPerWatt(systemKw),
     bessPricePerKwh: getBESSCostPerKWh(systemKw),
     bessPricePerKw: SSOT_FALLBACK_BESS.pricePerKw,
+    inverterPricePerKw: SSOT_FALLBACK_INVERTER.pricePerKw,
     panelSpec: SSOT_FALLBACK_PANEL,
     bessSpec: SSOT_FALLBACK_BESS,
+    inverterSpec: SSOT_FALLBACK_INVERTER,
     isVendorPricing: false,
     solarSource: "SSOT market reference (Q1 2026)",
     bessSource: "SSOT market reference (Q1 2026)",
+    inverterSource: "SSOT market reference (NREL Q1 2025)",
   };
 }
