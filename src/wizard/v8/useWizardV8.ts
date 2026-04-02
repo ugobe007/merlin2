@@ -43,6 +43,7 @@ const devWarn = import.meta.env.DEV ? (...a: unknown[]) => console.warn(...a) : 
 // Location resolution is V8-native: direct ZIP lookup (zippopotam.us) with
 // utility-rate-service fallback. No dependency on V7's backend /api/location/resolve.
 import { fetchUtility, fetchSolar, fetchWeather } from "@/wizard/v7/api/wizardAPI";
+import { fetchGoogleSolarByZip } from "@/services/solarSizingIntegrationService";
 
 import {
   getFacilityConstraints,
@@ -270,10 +271,14 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     // All three in parallel — fail-soft per service (Promise.allSettled)
     // For international locations, pass country code from state.location.state field
     const countryCode = state.location?.state?.length === 2 ? state.location.state : undefined;
-    const [utilityRes, solarRes, weatherRes] = await Promise.allSettled([
+    const [utilityRes, solarRes, weatherRes, googleSolarRes] = await Promise.allSettled([
       fetchUtility(zip, countryCode),
       fetchSolar(zip),
       fetchWeather(zip),
+      // Google Solar: actual rooftop area + precise sun hours for this address.
+      // Uses existing VITE_GOOGLE_MAPS_API_KEY (Solar API must be enabled in GCP).
+      // Fail-soft: returns null if API not enabled or location has no coverage.
+      fetchGoogleSolarByZip(zip),
     ]);
 
     // ── Utility result ──────────────────────────────────────────────────
@@ -326,6 +331,56 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       });
     } else {
       dispatch({ type: "PATCH_INTEL", patch: { weatherStatus: "error" } });
+    }
+
+    // ── Google Solar result ─────────────────────────────────────────────
+    // Provides actual rooftop area and location-specific sun hours.
+    // Updates solarPhysicalCapKW if industry already selected and user
+    // has not yet manually entered a roof area in Step 3.
+    if (googleSolarRes.status === "fulfilled" && googleSolarRes.value) {
+      const gs = googleSolarRes.value;
+      // roofAreaUsedSqFt is the Google Solar usable panel area (already at 80% of max)
+      const roofSqFt = gs.roofAreaUsedSqFt ?? 0;
+      // specificYieldKwh_per_kWp ÷ 365 ≈ daily peak sun hours
+      const gsPSH = gs.specificYieldKwh_per_kWp ? gs.specificYieldKwh_per_kWp / 365 : undefined;
+
+      dispatch({
+        type: "PATCH_INTEL",
+        patch: {
+          googleSolarRoofSqFt: roofSqFt > 0 ? roofSqFt : undefined,
+          googleSolarPeakSunHours: gsPSH,
+          // Override NREL peak sun hours with Google's location-specific model when available
+          ...(gsPSH && gsPSH > 0 ? { peakSunHours: gsPSH } : {}),
+          googleSolarStatus: "ready",
+        },
+      });
+
+      // If industry is already set and user hasn't entered roof area yet,
+      // immediately update solarPhysicalCapKW with Google Solar's real rooftop data.
+      // This is Vineet's "typical rooftop size" requirement.
+      if (roofSqFt > 0 && state.industry) {
+        const constraints = getFacilityConstraints(state.industry);
+        const usableRoofPercent = constraints?.usableRoofPercent ?? 0.4;
+        const _cachedPanel = getLastSelectedPanelSync();
+        const solarWPerSqft = computeSolarWattsPerSqft(_cachedPanel);
+        const userRoofArea = Number(state.step3Answers?.roofArea ?? 0);
+        // Only apply if user hasn't entered their own roof area
+        if (userRoofArea <= 0) {
+          const googleCapKW = Math.round((roofSqFt * usableRoofPercent * solarWPerSqft) / 1000);
+          if (googleCapKW > 0 && googleCapKW !== state.solarPhysicalCapKW) {
+            dispatch({
+              type: "SET_INDUSTRY_META",
+              solarPhysicalCapKW: googleCapKW,
+              criticalLoadPct: state.criticalLoadPct ?? 0.4,
+            });
+          }
+        }
+      }
+    } else {
+      dispatch({
+        type: "PATCH_INTEL",
+        patch: { googleSolarStatus: "unavailable" },
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -955,28 +1010,55 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
    * setIndustry — dispatches slug + derives meta immediately from SSOT.
    * Meta: solar physical cap + critical load % (IEEE 446 / NEC).
    */
-  const setIndustry = useCallback((slug: IndustrySlug) => {
-    dispatch({ type: "SET_INDUSTRY", slug });
+  const setIndustry = useCallback(
+    (slug: IndustrySlug) => {
+      dispatch({ type: "SET_INDUSTRY", slug });
 
-    // Solar physical cap from SSOT
-    const constraints = getFacilityConstraints(slug);
-    const solarPhysicalCapKW = constraints?.totalRealisticSolarKW ?? 0;
+      // Solar physical cap: prefer Google Solar actual rooftop area over SSOT static estimate.
+      // This is Vineet's "typical rooftop size" requirement — real building data beats generic caps.
+      const constraints = getFacilityConstraints(slug);
+      const ssotCapKW = constraints?.totalRealisticSolarKW ?? 0;
 
-    // Critical load % from SSOT (getCriticalLoadWithSource handles slug variants)
-    let criticalLoadPct = 0.4; // general commercial default
-    try {
-      const critInfo = getCriticalLoadWithSource(slug);
-      criticalLoadPct = critInfo.percentage;
-    } catch {
-      // slug not in table → use default
-    }
+      let solarPhysicalCapKW = ssotCapKW; // SSOT fallback
 
-    dispatch({
-      type: "SET_INDUSTRY_META",
-      solarPhysicalCapKW,
-      criticalLoadPct,
-    });
-  }, []);
+      const googleRoofSqFt = state.intel?.googleSolarRoofSqFt ?? 0;
+      const userRoofArea = Number(state.step3Answers?.roofArea ?? 0);
+
+      // Use Google Solar roof area when:
+      //   • We have it (ZIP already entered before industry selected)
+      //   • User hasn't overridden with their own measurement yet
+      if (googleRoofSqFt > 0 && userRoofArea <= 0) {
+        const usableRoofPercent = constraints?.usableRoofPercent ?? 0.4;
+        const _cachedPanel = getLastSelectedPanelSync();
+        const solarWPerSqft = computeSolarWattsPerSqft(_cachedPanel);
+        const googleCapKW = Math.round((googleRoofSqFt * usableRoofPercent * solarWPerSqft) / 1000);
+        if (googleCapKW > 0) {
+          solarPhysicalCapKW = googleCapKW;
+          devLog(
+            `[setIndustry] Google Solar roof cap: ${googleCapKW} kW ` +
+              `(${googleRoofSqFt.toFixed(0)} sqft × ${usableRoofPercent * 100}% × ${solarWPerSqft} W/sqft) ` +
+              `vs SSOT: ${ssotCapKW} kW`
+          );
+        }
+      }
+
+      // Critical load % from SSOT (getCriticalLoadWithSource handles slug variants)
+      let criticalLoadPct = 0.4; // general commercial default
+      try {
+        const critInfo = getCriticalLoadWithSource(slug);
+        criticalLoadPct = critInfo.percentage;
+      } catch {
+        // slug not in table → use default
+      }
+
+      dispatch({
+        type: "SET_INDUSTRY_META",
+        solarPhysicalCapKW,
+        criticalLoadPct,
+      });
+    },
+    [state.intel?.googleSolarRoofSqFt, state.step3Answers?.roofArea]
+  );
 
   // ── Step 3 ────────────────────────────────────────────────────────────────
 
