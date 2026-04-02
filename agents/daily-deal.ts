@@ -360,6 +360,45 @@ const INDUSTRIES: DealProfile[] = [
 ];
 
 // ─────────────────────────────────────────────────────────────
+// CONTENT DATA — fun facts + ZIP→state lookup
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Surprising / curiosity-triggering fact for each industry.
+ * Leads every LinkedIn post and Discord embed — replaces dry openers
+ * with something a reader actually wants to share.
+ */
+const FUN_FACTS: Record<string, string> = {
+  'car-wash':       'A single high-volume tunnel car wash uses more electricity in a day than 40 average American homes — mostly from compressors and conveyor motors that spike hardest during rush hour.',
+  'hotel':          'Hotels use 50% more energy per square foot than office buildings — yet most of that cost is driven by a handful of peak HVAC moments, not continuous base load. One bad August afternoon sets your rate for the month.',
+  'data-center':    'Global data centers now consume more electricity than the entire United Kingdom. That number doubles roughly every four years — and enterprise tenants are starting to demand 24/7 clean-energy certificates to prove it isn\'t coal.',
+  'hospital':       'The average US hospital spends $680,000/year on electricity alone — more than most facilities spend on medical equipment maintenance. And that bill is mostly set by peak surgical hours, not round-the-clock base load.',
+  'manufacturing':  'US manufacturers collectively pay $110 billion in electricity bills annually. A single motor startup lasts milliseconds — but that millisecond can set your billing peak for 730 hours. The utility is not sorry about it.',
+  'restaurant':     'A commercial kitchen uses 5× more energy per square foot than any other commercial space — and up to 80% of that energy escapes as heat. The fryers and ovens driving the lunch rush are also setting your utility bill for the month.',
+  'grocery':        'The refrigeration system in a single large supermarket runs 24/7/365 and consumes enough electricity to power roughly 1,000 average homes. It never sleeps — and the utility charges peak rates for the moments it works hardest.',
+  'office':         'US office buildings are physically empty — lights off, HVAC minimal — about 65% of the time. Yet demand charges are set by the peak occupancy moment, not the average. You\'re paying full freight for a building that\'s dark most of the week.',
+  'ev-charging':    'Adding 10 × 150 kW DC fast chargers to a parking lot is the electrical equivalent of plugging in a small factory. Most utility transformers serving US parking structures were designed in the 1980s and were not built for this.',
+  'warehouse':      'At peak shift-change, a large e-commerce fulfillment center charging its electric forklift fleet can draw enough power to run a small town. The spike lasts 20 minutes. The demand charge bill lasts all month.',
+  'school':         'US K-12 schools spend $8 billion on energy every year — more than on textbooks and school supplies combined. Most of that bill is determined by a handful of hot June days when the AC runs full blast and the building is half-empty.',
+  'cannabis':       'Indoor cannabis cultivation uses roughly 1% of all US electricity — the same as 1.7 million homes — mostly for grow lighting running 18 hours a day. It\'s one of the most energy-intensive agricultural operations per square foot on earth.',
+  'fitness-center': 'A single commercial treadmill uses as much electricity as 3 refrigerators. The average gym has 80+ of them, all running simultaneously during the after-work rush — the exact moment when utility demand rates are highest.',
+  'cold-storage':   'The global cold chain consumes more energy than commercial aviation. Here in the US, cold storage operators pay some of the highest energy costs per square foot of any building type — mostly from compressor demand spikes.',
+  'brewery':        'Brewing a single barrel of craft beer requires enough electricity to run a home for nearly two days — mostly for heating the mash tun and crash-cooling fermentation tanks. On brew days, a craft brewery\'s load profile looks like a small factory.',
+  'laundry':        'When 40 industrial washing machines start simultaneously at shift change, the demand spike lasts seconds — but sets the billing peak for 730 hours. The utility measures it in real time. Most operators have no idea it\'s happening.',
+  'parking':        'US surface parking lots cover more land area than the entire state of Connecticut. Cities are mandating EV charging in all of them — and almost no transformer serving a parking structure was designed for that load.',
+  'retail':         'Walmart\'s annual electricity bill is approximately $1 billion — making it one of the top utility customers in the United States. Your regional big-box neighbors have the same cost structure, just at smaller scale. And the same fix applies.',
+};
+
+/** Resolve a ZIP code to a 2-letter state abbreviation for post context */
+const ZIP_STATE: Record<string, string> = {
+  '33101': 'FL', '90210': 'CA', '20148': 'VA', '60601': 'IL', '43215': 'OH',
+  '77001': 'TX', '85001': 'AZ', '10001': 'NY', '94102': 'CA', '45202': 'OH',
+  '78201': 'TX', '80203': 'CO', '30301': 'GA', '35201': 'AL', '97201': 'OR',
+  '60290': 'IL',
+};
+function zipToState(zip: string): string { return ZIP_STATE[zip] ?? 'US'; }
+
+// ─────────────────────────────────────────────────────────────
 // DEAL SELECTION
 // ─────────────────────────────────────────────────────────────
 
@@ -404,6 +443,8 @@ function buildDiscordPayload(deal: DealProfile, quote: MCPQuoteResult, dateStr: 
         description: `**${deal.tagline}**\n\n${deal.marketHook}`,
         color: 0xF97316, // Merlin orange
         fields: [
+          // Curiosity hook — leads the embed
+          { name: '💡 Did You Know?',    value: FUN_FACTS[deal.id] ?? deal.marketHook,          inline: false },
           // Quote financials
           { name: '📐 System',           value: systemDesc,                                    inline: false },
           { name: '💰 Gross Cost',       value: usd(fin.totalInstalledCost),                   inline: true  },
@@ -482,35 +523,96 @@ async function postToDiscord(payload: object): Promise<string | null> {
 // LINKEDIN POST GENERATOR
 // ─────────────────────────────────────────────────────────────
 
-function generateLinkedInPost(deal: DealProfile, quote: MCPQuoteResult, _dateStr: string): string {
-  const fin = quote.financials;
-  const rec = quote.recommendation;
-  const fmt = (n: number) => n >= 1000000 ? `$${(n / 1000000).toFixed(1)}M` : `$${(n / 1000).toFixed(0)}K`;
-  const itc = fin.totalInstalledCost - fin.netCostAfterITC;
-  const tag = deal.label.replace(/[^A-Za-z]/g, '');
+function generateLinkedInPost(deal: DealProfile, quote: MCPQuoteResult, dateStr: string): string {
+  const fin  = quote.financials;
+  const rec  = quote.recommendation;
+  const fmt  = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : `$${(n / 1000).toFixed(0)}K`;
+  const itc  = fin.totalInstalledCost - fin.netCostAfterITC;
+  const itcPct = fin.itcPercentage ? Math.round(fin.itcPercentage * 100) : 30;
+  const tag  = deal.label.replace(/[^A-Za-z]/g, '');
+  const state = zipToState(deal.input.zipCode);
+  const fact  = FUN_FACTS[deal.id] ?? deal.marketHook;
 
-  return [
-    `${deal.emoji} Deal of the Day: ${deal.label}`,
-    ``,
-    `"${deal.tagline}"`,
-    ``,
-    deal.marketHook,
-    ``,
-    `📊 Today's TrueQuote™ numbers:`,
-    `• System: ${rec.systemSizeMW} MW · ${rec.durationHours}h battery storage`,
-    `• Gross installed cost: ${fmt(fin.totalInstalledCost)}`,
-    `• After federal ITC (${fin.itcPercentage ?? 30}%): ${fmt(fin.netCostAfterITC)} — saving ${fmt(itc)}`,
+  // Rotate across 3 post formats by day-of-year so the feed stays fresh
+  const day = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000);
+  const template = day % 3;
+
+  const sys  = deal.input.hasSolar
+    ? `${rec.systemSizeMW} MW BESS · ${rec.durationHours}h + solar`
+    : `${rec.systemSizeMW} MW BESS · ${rec.durationHours}h`;
+
+  const nums = [
+    `• System: ${sys}`,
+    `• Cost: ${fmt(fin.totalInstalledCost)} → ${fmt(fin.netCostAfterITC)} after ${itcPct}% ITC (saves ${fmt(itc)})`,
     `• Annual savings: ${fmt(fin.annualSavings)}`,
-    `• Payback period: ${fin.simplePayback} years`,
-    `• 25-year NPV: ${fmt(fin.npv25Year)}`,
+    `• Payback: ${fin.simplePayback} yrs · 25-yr NPV: ${fmt(fin.npv25Year)}`,
+  ].join('\n');
+
+  const tags = `#EnergyStorage #BESS #${tag} #CleanEnergy #DemandCharges #MerlinEnergy`;
+
+  // ── Template A: Fun fact first, then numbers ──────────────────
+  if (template === 0) {
+    return [
+      `${deal.emoji} Here's something most people in ${deal.label.toLowerCase()} don't know:`,
+      ``,
+      fact,
+      ``,
+      deal.marketHook,
+      ``,
+      `So what does the fix actually cost? We ran the numbers.`,
+      ``,
+      `Merlin TrueQuote™ · ${deal.label} · ${state} · ${dateStr}`,
+      nums,
+      ``,
+      `Every figure is calculated live — NREL data, real utility rates for that ZIP, no filler.`,
+      ``,
+      deal.ctaLine,
+      ``,
+      tags,
+    ].join('\n');
+  }
+
+  // ── Template B: Pain-first, rhetorical opener ─────────────────
+  if (template === 1) {
+    return [
+      `${deal.emoji} Quick question for every ${deal.label} operator reading this:`,
+      ``,
+      `How much of your electric bill is demand charges?`,
+      ``,
+      `For most, it's 30–50% — and it's determined by a single peak moment, not your average usage.`,
+      ``,
+      fact,
+      ``,
+      `Here's what a BESS-forward strategy looks like in practice:`,
+      ``,
+      nums,
+      ``,
+      `${deal.painPoint}`,
+      ``,
+      deal.ctaLine,
+      ``,
+      tags,
+    ].join('\n');
+  }
+
+  // ── Template C: Global → local hook, numbers as proof ────────
+  return [
+    `${deal.emoji} ${deal.tagline}`,
     ``,
-    `Every day we feature a new industry vertical. Every number is calculated live`,
-    `using NREL data, DOE frameworks, and actual utility rates for that ZIP code.`,
-    `No estimates. No guesswork. Just math.`,
+    fact,
     ``,
-    `Run your own TrueQuote™ in 5 minutes → merlinpro.energy`,
+    `${deal.marketHook}`,
     ``,
-    `#EnergyStorage #BESS #BatteryStorage #CleanEnergy #${tag} #DemandCharges #MerlinEnergy #TrueQuote`,
+    `Here's the math for a representative ${deal.label} in ${state}:`,
+    ``,
+    nums,
+    ``,
+    `No estimates. No vendor markups baked in. Just NREL benchmark data`,
+    `and real utility rates for that ZIP — calculated fresh this morning.`,
+    ``,
+    deal.ctaLine,
+    ``,
+    tags,
   ].join('\n');
 }
 
