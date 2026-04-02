@@ -177,7 +177,7 @@ const INDUSTRIES: DealProfile[] = [
     marketHook: 'Hyperscalers commit to 24/7 CFE by 2030 — colocation and edge data centers are scrambling to catch up with on-site storage.',
     painPoint: 'Colocation facilities pay $25–35/kW in demand charges PLUS carry expensive diesel gen sets for backup.',
     ctaLine: 'Replace diesel with BESS — get your quote → merlinpro.energy',
-    input: { industry: 'data-center',      peakDemandKw: 1800, monthlyBillDollars: 95000, zipCode: '20148', primaryUseCase: 'backup-power',   hasSolar: false },
+    input: { industry: 'data-center',      peakDemandKw: 1800, monthlyBillDollars: 95000, zipCode: '20148', primaryUseCase: 'peak-shaving',   hasSolar: false },
     roiBenchmark: { paybackRange: '3–5 years', savingsRange: '$200K–$500K/yr', primaryDriver: 'demand charges + backup power replacement' },
   },
   // 3 — Hospital
@@ -189,7 +189,7 @@ const INDUSTRIES: DealProfile[] = [
     marketHook: 'CMS regulators are tightening backup power requirements. Hospitals face $1M+ penalties for grid outages. BESS satisfies both code AND economics.',
     painPoint: 'Large MRI, surgical suites, and HVAC create 2–4 MW demand spikes with near-zero tolerance for interruption.',
     ctaLine: 'BESS + backup power for healthcare → merlinpro.energy',
-    input: { industry: 'hospital',         peakDemandKw: 2200, monthlyBillDollars: 110000, zipCode: '60601', primaryUseCase: 'backup-power',  hasSolar: true  },
+    input: { industry: 'hospital',         peakDemandKw: 2200, monthlyBillDollars: 110000, zipCode: '60601', primaryUseCase: 'peak-shaving',  hasSolar: true  },
     roiBenchmark: { paybackRange: '4–6 years', savingsRange: '$150K–$350K/yr', primaryDriver: 'demand charges + backup power avoidance' },
   },
   // 4 — Manufacturing
