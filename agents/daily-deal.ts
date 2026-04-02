@@ -26,7 +26,7 @@ import { createClient } from '@supabase/supabase-js';
 // MCP CLIENT — calls the live Railway MCP server
 // ─────────────────────────────────────────────────────────────
 
-const MCP_URL = process.env.MERLIN_MCP_URL ?? 'https://merlin-mcp-agent-production.up.railway.app/mcp';
+const MCP_URL = (process.env.MERLIN_MCP_URL || 'https://merlin-mcp-agent-production.up.railway.app/mcp').trim();
 
 let _mcp: McpClient | null = null;
 
