@@ -964,6 +964,75 @@ async function saveDealToSupabase(deal: DealProfile, quote: MCPQuoteResult, date
 }
 
 // ─────────────────────────────────────────────────────────────
+// FINANCIAL GUARDRAILS
+// ─────────────────────────────────────────────────────────────
+
+interface GuardResult { ok: boolean; reasons: string[] }
+
+/**
+ * Parses benchmark strings like '3–5 years' and '$200K–$500K/yr' and
+ * validates computed financials against hard limits before any post goes live.
+ *
+ * Hard limits (block publishing):
+ *   1. NPV (25yr) is negative
+ *   2. Simple payback > 2× the benchmark max payback year
+ *   3. Annual savings < 50% of the benchmark minimum savings
+ *   4. IRR < 3%
+ */
+function validateFinancials(
+  deal: DealProfile,
+  fin: MCPQuoteResult['financials'],
+): GuardResult {
+  const reasons: string[] = [];
+
+  // ── 1. NPV must be positive ───────────────────────────────
+  if (fin.npv25Year < 0) {
+    reasons.push(`Negative NPV (${usd(fin.npv25Year)}) — deal destroys value over 25 years`);
+  }
+
+  // ── 2. Parse payback benchmark ceiling ────────────────────
+  // e.g. '3–5 years' → maxBenchmarkPayback = 5
+  const paybackMatch = deal.roiBenchmark.paybackRange.match(/(\d+)/g);
+  if (paybackMatch && paybackMatch.length >= 2) {
+    const maxBenchmarkPayback = parseFloat(paybackMatch[paybackMatch.length - 1]);
+    const hardPaybackCeiling = maxBenchmarkPayback * 2; // 2× tolerance
+    if (fin.simplePayback > hardPaybackCeiling) {
+      reasons.push(
+        `Payback ${fin.simplePayback}yr exceeds 2× benchmark ceiling of ${maxBenchmarkPayback}yr (limit: ${hardPaybackCeiling}yr)`
+      );
+    }
+  }
+
+  // ── 3. Parse savings benchmark floor ──────────────────────
+  // e.g. '$200K–$500K/yr' → minBenchmarkSavings = 200_000
+  const savingsMatch = deal.roiBenchmark.savingsRange.match(/\$(\d+(?:\.\d+)?)(K|M)?/gi);
+  if (savingsMatch && savingsMatch.length >= 1) {
+    const parseAmount = (s: string): number => {
+      const num = parseFloat(s.replace(/[^0-9.]/g, ''));
+      const suffix = s.slice(-1).toUpperCase();
+      return suffix === 'M' ? num * 1_000_000 : suffix === 'K' ? num * 1_000 : num;
+    };
+    const minBenchmarkSavings = parseAmount(savingsMatch[0]);
+    const hardSavingsFloor = minBenchmarkSavings * 0.5; // 50% tolerance
+    if (fin.annualSavings < hardSavingsFloor) {
+      reasons.push(
+        `Annual savings ${usd(fin.annualSavings)} is below 50% of benchmark minimum ${usd(minBenchmarkSavings)} (floor: ${usd(hardSavingsFloor)})`
+      );
+    }
+  }
+
+  // ── 4. IRR floor ──────────────────────────────────────────
+  const irrNum = typeof fin.irrEstimate === 'string'
+    ? parseFloat(fin.irrEstimate)
+    : fin.irrEstimate;
+  if (!isNaN(irrNum) && irrNum < 3) {
+    reasons.push(`IRR ${irrNum}% is below minimum acceptable threshold of 3%`);
+  }
+
+  return { ok: reasons.length === 0, reasons };
+}
+
+// ─────────────────────────────────────────────────────────────
 // MAIN ORCHESTRATOR
 // ─────────────────────────────────────────────────────────────
 
@@ -1001,6 +1070,43 @@ export async function runDailyDeal(overrideIndustryId?: string): Promise<DailyDe
   console.log(`      System: ${rec.systemSizeMW} MW · ${rec.durationHours}h`);
   console.log(`      Cost: ${usd(fin.totalInstalledCost)} gross → ${usd(fin.netCostAfterITC)} after ITC`);
   console.log(`      Savings: ${usd(fin.annualSavings)}/yr · ${fin.simplePayback}yr payback · NPV ${usd(fin.npv25Year)}`);
+
+  // ── Guardrails: validate financials before publishing ──────────────────────
+  const guard = validateFinancials(industry, fin);
+  if (!guard.ok) {
+    const alertMsg = [
+      `🚨 Merlin Daily Deal — Publishing BLOCKED for ${industry.label} (${dateStr})`,
+      ``,
+      `Reason: ${guard.reasons.join(' | ')}`,
+      ``,
+      `Computed values:`,
+      `  • Annual savings:  ${usd(fin.annualSavings)}`,
+      `  • Simple payback:  ${fin.simplePayback} yrs`,
+      `  • NPV (25yr):      ${usd(fin.npv25Year)}`,
+      `  • IRR:             ${fin.irrEstimate}%`,
+      ``,
+      `Benchmarks for ${industry.label}:`,
+      `  • Payback range:   ${industry.roiBenchmark.paybackRange}`,
+      `  • Savings range:   ${industry.roiBenchmark.savingsRange}`,
+      ``,
+      `No posts were made to Discord, LinkedIn, or X.`,
+      `Fix the industry profile inputs and re-run, or trigger workflow_dispatch manually.`,
+    ].join('\n');
+
+    console.error(`\n${alertMsg}\n`);
+    await emailLinkedInPost(alertMsg, `🚨 Daily Deal BLOCKED — ${industry.label} failed financial guardrails`);
+
+    return {
+      date: dateStr,
+      industry,
+      quote,
+      postedToDiscord: false,
+      postedToX: false,
+      savedToSupabase: false,
+    };
+  }
+  console.log(`   ✅ Financial guardrails passed (payback ${fin.simplePayback}yr, NPV ${usd(fin.npv25Year)})`);
+  // ──────────────────────────────────────────────────────────────────────────
 
   // Build and post Discord embed
   const payload = buildDiscordPayload(industry, quote, dateStr);
