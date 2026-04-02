@@ -8,8 +8,9 @@
 import http from 'http';
 import { exec } from 'child_process';
 
-const CLIENT_ID     = '868g3b32687gnn';
-const CLIENT_SECRET = 'WPL_AP1.8YHmKTTJPySqyx5z.d5PE0g==';
+import 'dotenv/config';
+const CLIENT_ID     = process.env.LINKEDIN_CLIENT_ID     || '868g3b32687gnn';
+const CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET || '';
 const REDIRECT_URI  = 'http://localhost:3333/callback';
 const PORT          = 3333;
 
