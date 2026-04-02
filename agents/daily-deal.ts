@@ -20,6 +20,7 @@
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
+import { TwitterApi } from 'twitter-api-v2';
 
 // ─────────────────────────────────────────────────────────────
 // MCP CLIENT — calls the live Railway MCP server via plain fetch
@@ -131,6 +132,8 @@ export interface DailyDeal {
   quote: MCPQuoteResult;
   postedToDiscord: boolean;
   discordMessageId?: string;
+  postedToX: boolean;
+  xTweetId?: string;
   savedToSupabase: boolean;
 }
 
@@ -692,6 +695,96 @@ function generateLinkedInPost(deal: DealProfile, quote: MCPQuoteResult, dateStr:
 }
 
 // ─────────────────────────────────────────────────────────────
+// X (TWITTER) — @Merlin_Energy
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Build a 3-tweet thread for X. Each tweet ≤ 280 chars.
+ *
+ * Tweet 1: Hook — world fact or industry fact (alternates daily)
+ * Tweet 2: The numbers — tight, scannable
+ * Tweet 3: CTA + hashtags → merlinpro.energy
+ */
+function generateXThread(deal: DealProfile, quote: MCPQuoteResult): string[] {
+  const fin  = quote.financials;
+  const rec  = quote.recommendation;
+  const fmt  = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : `$${(n / 1000).toFixed(0)}K`;
+  const day  = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000);
+  const state = zipToState(deal.input.zipCode);
+  const tag  = deal.label.replace(/[^A-Za-z]/g, '');
+
+  // Alternate: even days = world fact hook, odd days = industry fact hook
+  const rawFact = day % 2 === 0 ? pickWorldFact(day) : (FUN_FACTS[deal.id] ?? deal.marketHook);
+  // Trim to 270 chars max for tweet 1 (leave room for punctuation)
+  const hook = rawFact.length > 270 ? rawFact.slice(0, 267) + '...' : rawFact;
+
+  const sys = deal.input.hasSolar
+    ? `${rec.systemSizeMW} MW BESS + solar · ${rec.durationHours}h`
+    : `${rec.systemSizeMW} MW BESS · ${rec.durationHours}h`;
+
+  const tweet2 = [
+    `${deal.emoji} ${deal.label} · ${state} — what the math looks like:`,
+    ``,
+    `System: ${sys}`,
+    `After ITC: ${fmt(fin.netCostAfterITC)}`,
+    `Annual savings: ${fmt(fin.annualSavings)}`,
+    `Payback: ${fin.simplePayback} yrs  ·  NPV: ${fmt(fin.npv25Year)}`,
+  ].join('\n');
+
+  const tweet3 = `Every number is calculated live — NREL data, real utility rates for that ZIP. No vendor estimates.\n\nRun yours free → merlinpro.energy\n\n#BESS #CleanEnergy #${tag} #MerlinEnergy`;
+
+  return [hook, tweet2, tweet3];
+}
+
+/**
+ * Post a tweet thread to @Merlin_Energy using OAuth 1.0a.
+ *
+ * Required env vars (from developer.x.com → your app → Keys & Tokens):
+ *   X_API_KEY        — API Key (Consumer Key)
+ *   X_API_SECRET     — API Key Secret (Consumer Secret)
+ *   X_ACCESS_TOKEN   — Access Token for @Merlin_Energy
+ *   X_ACCESS_SECRET  — Access Token Secret for @Merlin_Energy
+ */
+async function postToX(thread: string[]): Promise<string | null> {
+  if (process.env.DRY_RUN === 'true') {
+    console.log('   🔵 [DRY RUN] X thread skipped — copy logged below:');
+    thread.forEach((t, i) => console.log(`\n--- Tweet ${i + 1} ---\n${t}`));
+    return 'dry-run-x';
+  }
+
+  const apiKey       = process.env.X_API_KEY;
+  const apiSecret    = process.env.X_API_SECRET;
+  const accessToken  = process.env.X_ACCESS_TOKEN;
+  const accessSecret = process.env.X_ACCESS_SECRET;
+
+  if (!apiKey || !apiSecret || !accessToken || !accessSecret) {
+    console.warn('   ⚠️  X not configured — set X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET');
+    return null;
+  }
+
+  const client = new TwitterApi({ appKey: apiKey, appSecret: apiSecret, accessToken, accessSecret });
+
+  try {
+    let replyToId: string | undefined;
+    let firstId:   string | undefined;
+
+    for (const text of thread) {
+      const res = await client.v2.tweet(
+        text,
+        replyToId ? { reply: { in_reply_to_tweet_id: replyToId } } : {},
+      );
+      if (!firstId)  firstId  = res.data.id;
+      replyToId = res.data.id;
+    }
+
+    return firstId ?? null;
+  } catch (err) {
+    console.error('[DailyDeal] X post failed:', (err as Error).message);
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
 // EMAIL FALLBACK — when LinkedIn org page is not yet configured
 // ─────────────────────────────────────────────────────────────
 
@@ -930,6 +1023,17 @@ export async function runDailyDeal(overrideIndustryId?: string): Promise<DailyDe
     console.log('   ⚠️  LinkedIn post emailed to Robert or skipped — check logs above');
   }
 
+  // Post to X (@Merlin_Energy)
+  const xThread = generateXThread(industry, quote);
+  console.log('   🐦 Posting to X (@Merlin_Energy)...');
+  const xTweetId = await postToX(xThread);
+  const postedToX = xTweetId !== null;
+  if (postedToX) {
+    console.log(`   ✅ Posted to X (tweet ID: ${xTweetId})`);
+  } else {
+    console.log('   ⚠️  X post skipped or failed — configure X_API_KEY + X_ACCESS_TOKEN');
+  }
+
   // Save to Supabase
   console.log('   💾 Saving to Supabase...');
   const savedToSupabase = await saveDealToSupabase(industry, quote, dateStr, messageId, linkedInPost);
@@ -945,6 +1049,8 @@ export async function runDailyDeal(overrideIndustryId?: string): Promise<DailyDe
     quote,
     postedToDiscord,
     discordMessageId: messageId ?? undefined,
+    postedToX,
+    xTweetId: xTweetId ?? undefined,
     savedToSupabase,
   };
 
@@ -967,7 +1073,7 @@ if (isMain) {
   const overrideId = process.env.DAILY_DEAL_INDUSTRY;
   runDailyDeal(overrideId)
     .then((deal) => {
-      console.log(`\nResult: ${deal.postedToDiscord ? '✅ Posted' : '⚠️  Not posted'} to Discord | ${deal.savedToSupabase ? '✅ Saved' : '⚠️  Not saved'} to Supabase`);
+      console.log(`\nResult: ${deal.postedToDiscord ? '✅ Posted' : '⚠️  Not posted'} to Discord | ${deal.postedToX ? '✅ Posted' : '⚠️  Not posted'} to X | ${deal.savedToSupabase ? '✅ Saved' : '⚠️  Not saved'} to Supabase`);
       process.exit(0);
     })
     .catch((err) => {
