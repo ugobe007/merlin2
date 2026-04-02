@@ -205,6 +205,8 @@ export async function processQuote(
     userInterested: request.preferences.generator.interested,
     customSizeKw: request.preferences.generator.customSizeKw,
     fuelType: request.preferences.generator.fuelType,
+    vendorPricePerKwDiesel: vendorPricing.generatorPricePerKwDiesel,
+    vendorPricePerKwNatGas: vendorPricing.generatorPricePerKwNatGas,
   });
   if (import.meta.env.DEV)
     console.log(
@@ -224,6 +226,8 @@ export async function processQuote(
     l2Count: request.preferences.ev.l2Count,
     dcfcCount: request.preferences.ev.dcfcCount,
     ultraFastCount: request.preferences.ev.ultraFastCount,
+    vendorL2CostPerUnit: vendorPricing.evL2CostPerUnit,
+    vendorDCFCCostPerUnit: vendorPricing.evDCFCCostPerUnit,
   });
   if (import.meta.env.DEV)
     console.log("🔌 EV:", evResult.totalChargers, "chargers /", evResult.totalPowerKW, "kW");
