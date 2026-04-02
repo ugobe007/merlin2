@@ -69,6 +69,11 @@ jobs:
           DISCORD_LEAD_WEBHOOK_URL: ${{ secrets.DISCORD_LEAD_WEBHOOK_URL }}
           # MCP server (Railway) — hardcoded production URL; never empty
           MERLIN_MCP_URL: https://merlin-mcp-agent-production.up.railway.app/mcp
+          # X (Twitter) @Merlin_Energy
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
           # Dry-run flag
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
         run: npx tsx agents/daily-deal.ts
