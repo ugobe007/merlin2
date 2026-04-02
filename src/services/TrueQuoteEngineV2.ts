@@ -48,6 +48,10 @@ import { STATE_SUN_HOURS } from "./data/constants";
 import { applyMarginPolicy } from "./marginPolicyEngine";
 import { toMarginRenderEnvelope } from "./marginRenderEnvelopeAdapter";
 
+// Vendor Product Pricing Bridge (April 2026)
+// Resolves live solar $/W and BESS $/kWh from approved vendor_products
+import { resolveVendorPricing } from "./vendorProductPricingBridge";
+
 // Version
 const ENGINE_VERSION = "2.0.0";
 
@@ -69,6 +73,28 @@ export async function processQuote(
   }
 
   // ─────────────────────────────────────────────────────────────
+  // STEP 0: Resolve vendor product pricing (live DB → SSOT fallback)
+  // ─────────────────────────────────────────────────────────────
+  // Estimate system size upfront for pricing tier selection.
+  // These estimates are refined once load/sizing calcs complete but are
+  // close enough for pricing tier (utility vs commercial vs small).
+  const estimatedSolarKw = 500; // Placeholder — refined after Step 3
+  const estimatedBessKwh = 1000; // Placeholder — refined after Step 2
+  const vendorPricing = await resolveVendorPricing(
+    estimatedSolarKw,
+    estimatedBessKwh,
+    request.location.state
+  );
+  if (import.meta.env.DEV) {
+    console.log(
+      "💰 Vendor pricing:",
+      vendorPricing.isVendorPricing ? "LIVE (vendor DB)" : "SSOT fallback",
+      `solar=$${vendorPricing.solarPricePerWatt.toFixed(3)}/W`,
+      `bess=$${vendorPricing.bessPricePerKwh.toFixed(0)}/kWh`
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
   // STEP 1: Calculate Load
   // ─────────────────────────────────────────────────────────────
   const loadResult = calculateLoad({
@@ -87,7 +113,8 @@ export async function processQuote(
     useCaseData: request.facility.useCaseData,
     goals: request.goals,
   });
-  if (import.meta.env.DEV) console.log("🔋 BESS:", bessResult.powerKW, "kW /", bessResult.energyKWh, "kWh");
+  if (import.meta.env.DEV)
+    console.log("🔋 BESS:", bessResult.powerKW, "kW /", bessResult.energyKWh, "kWh");
 
   // ─────────────────────────────────────────────────────────────
   // STEP 3: Calculate Solar
@@ -102,6 +129,8 @@ export async function processQuote(
     sunHoursPerDay: sunHours,
     userInterested: request.preferences.solar.interested,
     customSizeKw: request.preferences.solar.customSizeKw,
+    // Vendor DB pricing — overrides SSOT constant when vendor products approved
+    vendorPricePerWatt: vendorPricing.solarPricePerWatt,
   });
   if (import.meta.env.DEV) {
     console.log(
@@ -132,12 +161,13 @@ export async function processQuote(
     customSizeKw: request.preferences.generator.customSizeKw,
     fuelType: request.preferences.generator.fuelType,
   });
-  if (import.meta.env.DEV) console.log(
-    "⛽ Generator:",
-    generatorResult.capacityKW,
-    "kW",
-    generatorResult.recommended ? "(recommended)" : ""
-  );
+  if (import.meta.env.DEV)
+    console.log(
+      "⛽ Generator:",
+      generatorResult.capacityKW,
+      "kW",
+      generatorResult.recommended ? "(recommended)" : ""
+    );
 
   // ─────────────────────────────────────────────────────────────
   // STEP 5: Calculate EV Charging
@@ -150,7 +180,8 @@ export async function processQuote(
     dcfcCount: request.preferences.ev.dcfcCount,
     ultraFastCount: request.preferences.ev.ultraFastCount,
   });
-  if (import.meta.env.DEV) console.log("🔌 EV:", evResult.totalChargers, "chargers /", evResult.totalPowerKW, "kW");
+  if (import.meta.env.DEV)
+    console.log("🔌 EV:", evResult.totalChargers, "chargers /", evResult.totalPowerKW, "kW");
 
   // ─────────────────────────────────────────────────────────────
   // STEP 6: Calculate Financials
@@ -169,12 +200,13 @@ export async function processQuote(
     demandCharge: 15, // TODO: Get from utility service
     state: request.location.state,
   });
-  if (import.meta.env.DEV) console.log(
-    "💰 Financials: $" + financialResult.netCost.toLocaleString(),
-    "net cost,",
-    financialResult.simplePaybackYears,
-    "yr payback"
-  );
+  if (import.meta.env.DEV)
+    console.log(
+      "💰 Financials: $" + financialResult.netCost.toLocaleString(),
+      "net cost,",
+      financialResult.simplePaybackYears,
+      "yr payback"
+    );
 
   // ─────────────────────────────────────────────────────────────
   // STEP 7: Build Base Calculation
@@ -285,12 +317,13 @@ export async function processQuote(
     hasNaturalGasLine: request.facility.useCaseData?.hasNaturalGasLine || false,
   };
 
-  if (import.meta.env.DEV) console.log("🪄 User preferences:", {
-    solar: userPreferences.solar.interested,
-    generator: userPreferences.generator.interested,
-    ev: userPreferences.ev.interested,
-    hasNaturalGasLine: userPreferences.hasNaturalGasLine,
-  });
+  if (import.meta.env.DEV)
+    console.log("🪄 User preferences:", {
+      solar: userPreferences.solar.interested,
+      generator: userPreferences.generator.interested,
+      ev: userPreferences.ev.interested,
+      hasNaturalGasLine: userPreferences.hasNaturalGasLine,
+    });
 
   const magicFitProposal = generateMagicFitProposal(
     baseCalculation,
@@ -333,13 +366,16 @@ export async function processQuote(
     const baseCost = opt.financials.totalInvestment;
     try {
       const marginResult = applyMarginPolicy({
-        lineItems: [],  // Could be extended with equipment breakdown
+        lineItems: [], // Could be extended with equipment breakdown
         totalBaseCost: baseCost,
         riskLevel: "standard",
         customerSegment: "direct",
       });
       opt.marginRender = toMarginRenderEnvelope(marginResult);
-      if (import.meta.env.DEV) console.log(`  ${tier}: base=$${baseCost.toLocaleString()} → sell=$${opt.marginRender.sellPriceTotal.toLocaleString()}`);
+      if (import.meta.env.DEV)
+        console.log(
+          `  ${tier}: base=$${baseCost.toLocaleString()} → sell=$${opt.marginRender.sellPriceTotal.toLocaleString()}`
+        );
     } catch (err) {
       console.warn(`  ${tier}: margin policy failed, using baseCost as sellPrice`, err);
       // Fallback: sellPriceTotal = baseCost (no margin)
@@ -351,15 +387,23 @@ export async function processQuote(
         obtainableCostTotal: baseCost,
         procurementBufferTotal: 0,
         needsHumanReview: false,
-        confidenceBadge: { level: 'high' as const, badge: '✅ Verified', message: 'Fallback pricing' },
+        confidenceBadge: {
+          level: "high" as const,
+          badge: "✅ Verified",
+          message: "Fallback pricing",
+        },
         reviewEvents: [],
         clampEvents: [],
         lineItems: [],
-        marginBandId: 'fallback',
-        policyVersion: '1.2.0',
+        marginBandId: "fallback",
+        policyVersion: "1.2.0",
         pricingAsOf: new Date().toISOString(),
-        _FORBIDDEN_computeMarginInUI: () => { throw new Error("UI must not compute margin"); },
-        _FORBIDDEN_computeNetCostInUI: () => { throw new Error("UI must not compute net cost"); },
+        _FORBIDDEN_computeMarginInUI: () => {
+          throw new Error("UI must not compute margin");
+        },
+        _FORBIDDEN_computeNetCostInUI: () => {
+          throw new Error("UI must not compute net cost");
+        },
       };
     }
   }
