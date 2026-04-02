@@ -26,7 +26,13 @@ import { createClient } from '@supabase/supabase-js';
 // MCP CLIENT — calls the live Railway MCP server
 // ─────────────────────────────────────────────────────────────
 
-const MCP_URL = (process.env.MERLIN_MCP_URL || 'https://merlin-mcp-agent-production.up.railway.app/mcp').trim();
+// Railway MCP server — hardcoded production URL
+// Override only via MERLIN_MCP_URL env var (must be a full https:// URL)
+const MCP_URL = (() => {
+  const raw = (process.env.MERLIN_MCP_URL ?? '').trim();
+  if (raw.startsWith('http')) return raw;
+  return 'https://merlin-mcp-agent-production.up.railway.app/mcp';
+})();
 
 let _mcp: McpClient | null = null;
 
