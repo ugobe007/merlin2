@@ -69,8 +69,10 @@ const INDUSTRY_DEFAULTS = {
   hotel:         { peakLoadKW: 500,  solarCapKW: 225,  criticalLoadPct: 0.45, electricityRate: 0.13, demandCharge: 18 },
   restaurant:    { peakLoadKW: 80,   solarCapKW: 30,   criticalLoadPct: 0.60, electricityRate: 0.14, demandCharge: 16 },
   retail:        { peakLoadKW: 300,  solarCapKW: 100,  criticalLoadPct: 0.35, electricityRate: 0.12, demandCharge: 15 },
-  car_wash:      { peakLoadKW: 247,  solarCapKW: 39,   criticalLoadPct: 0.80, electricityRate: 0.12, demandCharge: 15 },
-  carwash:       { peakLoadKW: 247,  solarCapKW: 39,   criticalLoadPct: 0.80, electricityRate: 0.12, demandCharge: 15 },
+  // car_wash: solarCapKW scales with peakLoadKW (canopy ~27% of peak kW)
+  // demandCharge $20/kW reflects real commercial rates (EIA 2024 C&I median)
+  car_wash:      { peakLoadKW: 450,  solarCapKW: 120,  criticalLoadPct: 0.80, electricityRate: 0.13, demandCharge: 20 },
+  carwash:       { peakLoadKW: 450,  solarCapKW: 120,  criticalLoadPct: 0.80, electricityRate: 0.13, demandCharge: 20 },
   warehouse:     { peakLoadKW: 400,  solarCapKW: 819,  criticalLoadPct: 0.30, electricityRate: 0.10, demandCharge: 12 },
   office:        { peakLoadKW: 200,  solarCapKW: 150,  criticalLoadPct: 0.40, electricityRate: 0.12, demandCharge: 15 },
   gym:           { peakLoadKW: 150,  solarCapKW: 60,   criticalLoadPct: 0.30, electricityRate: 0.13, demandCharge: 15 },
@@ -132,6 +134,37 @@ function calcAnnualReserves(solarKW, bessKWh) {
   );
 }
 
+// ── Vendor pricing lookup (queries equipment_pricing via Supabase REST) ───────
+/**
+ * Returns the lowest approved vendor BESS price from equipment_pricing,
+ * or null if none is found or Supabase is not configured.
+ * Uses fetch() — no extra dependency needed.
+ */
+async function getVendorBessPrice() {
+  const sbUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  if (!sbUrl || !sbKey) return null;
+
+  try {
+    const res = await fetch(
+      `${sbUrl}/rest/v1/equipment_pricing?equipment_type=eq.battery&order=price_per_kwh.asc&limit=1` +
+        `&select=price_per_kwh,price_per_kw,manufacturer,model`,
+      {
+        headers: {
+          apikey: sbKey,
+          Authorization: `Bearer ${sbKey}`,
+          Accept: 'application/json',
+        },
+      }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return rows?.[0] ?? null; // { price_per_kwh, price_per_kw, manufacturer, model }
+  } catch {
+    return null;
+  }
+}
+
 // ── Tier sizing helpers (ported from step4Logic.ts) ──────────────────────────
 
 function sizeBESS(peakLoadKW, tierLabel, bessApplication) {
@@ -156,13 +189,16 @@ function sizeGenerator(peakLoadKW, criticalLoadPct, tierLabel) {
   return Math.max(10, Math.round(peakLoadKW * criticalLoadPct * NEC_GEN_MARGIN * scale));
 }
 
-function calcTierCosts(eq) {
+function calcTierCosts(eq, priceOverrides = {}) {
   const { solarKW = 0, bessKW = 0, bessKWh = 0, generatorKW = 0,
           l2Chargers = 0, dcfcChargers = 0, hpcChargers = 0,
           generatorFuelType = 'diesel' } = eq;
+  // Allow vendor pricing overrides (from equipment_pricing table)
+  const bessPerKwh = priceOverrides.bessPerKwh ?? BESS_PRICE_PER_KWH;
+  const bessPerKw  = priceOverrides.bessPerKw  ?? BESS_PRICE_PER_KW;
   const isNatGas    = generatorFuelType === 'natural-gas';
   const solarCost   = solarKW  * SOLAR_PRICE_PER_WATT * 1000;
-  const bessCost    = bessKWh  * BESS_PRICE_PER_KWH + bessKW * BESS_PRICE_PER_KW;
+  const bessCost    = bessKWh  * bessPerKwh + bessKW * bessPerKw;
   const genCost     = generatorKW > 0
     ? generatorKW * (isNatGas ? GEN_PRICE_PER_KW_NATGAS : GEN_PRICE_PER_KW_DIESEL)
       + (isNatGas ? 0 : GEN_FUEL_TANK + GEN_TRANSFER_SWITCH)
@@ -226,7 +262,7 @@ function calcROI(netInvestment, netAnnualSavings) {
   };
 }
 
-function buildTier(tierLabel, p) {
+function buildTier(tierLabel, p, priceOverrides = {}) {
   const { bessKW, bessKWh, durationHrs } = sizeBESS(p.peakLoadKW, tierLabel, p.bessApplication);
   const solarKW     = p.overrideSolarKW != null
     ? Math.round(p.overrideSolarKW * { Starter: 0.7, Recommended: 1.0, Complete: 1.3 }[tierLabel])
@@ -238,7 +274,7 @@ function buildTier(tierLabel, p) {
     solarKW, bessKW, bessKWh, generatorKW, generatorFuelType: p.generatorFuelType,
     l2Chargers: p.l2Chargers, dcfcChargers: p.dcfcChargers, hpcChargers: p.hpcChargers,
   };
-  const costs   = calcTierCosts(eq);
+  const costs   = calcTierCosts(eq, priceOverrides);
   const savings = calcTierSavings(eq, p.electricityRate, p.demandCharge, p.psh);
   const roi     = calcROI(costs.netInvestment, savings.netAnnualSavings);
   return {
@@ -345,6 +381,22 @@ router.post('/', async (req, res) => {
       return res.status(500).json({ ok: false, error: 'Location service not configured' });
     }
 
+    // ── 0. Fetch vendor BESS pricing (non-blocking — falls back to constants) ──
+    const vendorBess = await getVendorBessPrice();
+    const priceOverrides = {};
+    if (vendorBess?.price_per_kwh) {
+      const vendorPerKwh = Number(vendorBess.price_per_kwh);
+      // Only apply if vendor price is cheaper than our default constant
+      if (vendorPerKwh > 0 && vendorPerKwh < BESS_PRICE_PER_KWH) {
+        priceOverrides.bessPerKwh = vendorPerKwh;
+        if (vendorBess.price_per_kw) priceOverrides.bessPerKw = Number(vendorBess.price_per_kw);
+        console.log(
+          `[/api/quote] 🏷️  Using vendor BESS price: $${vendorPerKwh}/kWh` +
+          ` from ${vendorBess.manufacturer ?? 'vendor'} (default: $${BESS_PRICE_PER_KWH}/kWh)`
+        );
+      }
+    }
+
     // ── 1. Geocode location ────────────────────────────────────────────────
     const geo = await geocode(location, googleKey);
     if (!geo) {
@@ -380,9 +432,9 @@ router.post('/', async (req, res) => {
 
     // ── 4. Build three tiers ───────────────────────────────────────────────
     const tiers = {
-      starter:     buildTier('Starter',     p),
-      recommended: buildTier('Recommended', p),
-      complete:    buildTier('Complete',     p),
+      starter:     buildTier('Starter',     p, priceOverrides),
+      recommended: buildTier('Recommended', p, priceOverrides),
+      complete:    buildTier('Complete',     p, priceOverrides),
     };
 
     const elapsed = Date.now() - startTime;
