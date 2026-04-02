@@ -966,75 +966,6 @@ async function saveDealToSupabase(deal: DealProfile, quote: MCPQuoteResult, date
 }
 
 // ─────────────────────────────────────────────────────────────
-// FINANCIAL GUARDRAILS
-// ─────────────────────────────────────────────────────────────
-
-interface GuardResult { ok: boolean; reasons: string[] }
-
-/**
- * Parses benchmark strings like '3–5 years' and '$200K–$500K/yr' and
- * validates computed financials against hard limits before any post goes live.
- *
- * Hard limits (block publishing):
- *   1. NPV (25yr) is negative
- *   2. Simple payback > 2× the benchmark max payback year
- *   3. Annual savings < 50% of the benchmark minimum savings
- *   4. IRR < 3%
- */
-function validateFinancials(
-  deal: DealProfile,
-  fin: MCPQuoteResult['financials'],
-): GuardResult {
-  const reasons: string[] = [];
-
-  // ── 1. NPV must be positive ───────────────────────────────
-  if (fin.npv25Year < 0) {
-    reasons.push(`Negative NPV (${usd(fin.npv25Year)}) — deal destroys value over 25 years`);
-  }
-
-  // ── 2. Parse payback benchmark ceiling ────────────────────
-  // e.g. '3–5 years' → maxBenchmarkPayback = 5
-  const paybackMatch = deal.roiBenchmark.paybackRange.match(/(\d+)/g);
-  if (paybackMatch && paybackMatch.length >= 2) {
-    const maxBenchmarkPayback = parseFloat(paybackMatch[paybackMatch.length - 1]);
-    const hardPaybackCeiling = maxBenchmarkPayback * 2; // 2× tolerance
-    if (fin.simplePayback > hardPaybackCeiling) {
-      reasons.push(
-        `Payback ${fin.simplePayback}yr exceeds 2× benchmark ceiling of ${maxBenchmarkPayback}yr (limit: ${hardPaybackCeiling}yr)`
-      );
-    }
-  }
-
-  // ── 3. Parse savings benchmark floor ──────────────────────
-  // e.g. '$200K–$500K/yr' → minBenchmarkSavings = 200_000
-  const savingsMatch = deal.roiBenchmark.savingsRange.match(/\$(\d+(?:\.\d+)?)(K|M)?/gi);
-  if (savingsMatch && savingsMatch.length >= 1) {
-    const parseAmount = (s: string): number => {
-      const num = parseFloat(s.replace(/[^0-9.]/g, ''));
-      const suffix = s.slice(-1).toUpperCase();
-      return suffix === 'M' ? num * 1_000_000 : suffix === 'K' ? num * 1_000 : num;
-    };
-    const minBenchmarkSavings = parseAmount(savingsMatch[0]);
-    const hardSavingsFloor = minBenchmarkSavings * 0.5; // 50% tolerance
-    if (fin.annualSavings < hardSavingsFloor) {
-      reasons.push(
-        `Annual savings ${usd(fin.annualSavings)} is below 50% of benchmark minimum ${usd(minBenchmarkSavings)} (floor: ${usd(hardSavingsFloor)})`
-      );
-    }
-  }
-
-  // ── 4. IRR floor ──────────────────────────────────────────
-  const irrNum = typeof fin.irrEstimate === 'string'
-    ? parseFloat(fin.irrEstimate)
-    : fin.irrEstimate;
-  if (!isNaN(irrNum) && irrNum < 3) {
-    reasons.push(`IRR ${irrNum}% is below minimum acceptable threshold of 3%`);
-  }
-
-  return { ok: reasons.length === 0, reasons };
-}
-
-// ─────────────────────────────────────────────────────────────
 // MAIN ORCHESTRATOR
 // ─────────────────────────────────────────────────────────────
 
@@ -1053,127 +984,22 @@ export async function runDailyDeal(overrideIndustryId?: string): Promise<DailyDe
   console.log(`   ZIP: ${industry.input.zipCode} | Peak: ${industry.input.peakDemandKw} kW | Bill: $${industry.input.monthlyBillDollars}/mo`);
   console.log(`${'─'.repeat(55)}`);
 
-  // ── Quote + guardrail loop: try scheduled industry, then up to 2 fallbacks ─
-  // If multiple industries all fail guardrails, the engine itself is likely
-  // broken — we alert and bail rather than posting any data.
-  const MAX_ATTEMPTS = 3;
-  const failLog: Array<{ industry: DealProfile; reasons: string[]; fin: MCPQuoteResult['financials'] }> = [];
+  // Call TrueQuote™ engine
+  console.log('   🔄 Calling TrueQuote™ via MCP...');
+  const quote = await callTool('generate_truequote', {
+    industry:           industry.input.industry,
+    peakDemandKw:       industry.input.peakDemandKw,
+    monthlyBillDollars: industry.input.monthlyBillDollars,
+    zipCode:            industry.input.zipCode,
+    primaryUseCase:     industry.input.primaryUseCase,
+    hasSolar:           industry.input.hasSolar,
+  }) as MCPQuoteResult;
 
-  let chosenIndustry: DealProfile = industry;
-  let chosenQuote: MCPQuoteResult | null = null;
-  const attemptIdx = INDUSTRIES.indexOf(industry);
-
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const candidate = attempt === 0
-      ? industry
-      : INDUSTRIES[(attemptIdx + attempt) % INDUSTRIES.length];
-
-    if (attempt > 0) {
-      console.log(`\n   🔁 Fallback attempt ${attempt}: ${candidate.emoji} ${candidate.label}`);
-      console.log(`   ZIP: ${candidate.input.zipCode} | Peak: ${candidate.input.peakDemandKw} kW | Bill: $${candidate.input.monthlyBillDollars}/mo`);
-    }
-
-    console.log('   🔄 Calling TrueQuote™ via MCP...');
-    let raw: MCPQuoteResult;
-    try {
-      raw = await callTool('generate_truequote', {
-        industry:           candidate.input.industry,
-        peakDemandKw:       candidate.input.peakDemandKw,
-        monthlyBillDollars: candidate.input.monthlyBillDollars,
-        zipCode:            candidate.input.zipCode,
-        primaryUseCase:     candidate.input.primaryUseCase,
-        hasSolar:           candidate.input.hasSolar,
-      }) as MCPQuoteResult;
-    } catch (err) {
-      failLog.push({ industry: candidate, reasons: [`MCP call threw: ${String(err)}`], fin: {} as MCPQuoteResult['financials'] });
-      continue;
-    }
-
-    const candidateFin = raw.financials;
-    const candidateRec = raw.recommendation;
-    console.log(`   ✅ Quote complete — System: ${candidateRec.systemSizeMW} MW · ${candidateRec.durationHours}h`);
-    console.log(`      Cost: ${usd(candidateFin.totalInstalledCost)} gross → ${usd(candidateFin.netCostAfterITC)} after ITC`);
-    console.log(`      Savings: ${usd(candidateFin.annualSavings)}/yr · ${candidateFin.simplePayback}yr payback · NPV ${usd(candidateFin.npv25Year)}`);
-
-    const guard = validateFinancials(candidate, candidateFin);
-    if (guard.ok) {
-      chosenIndustry = candidate;
-      chosenQuote    = raw;
-      if (attempt > 0) {
-        console.log(`   ✅ Guardrails passed on fallback: ${candidate.label} (original: ${industry.label})`);
-        // Notify Robert that a substitution happened
-        const subMsg = [
-          `ℹ️  Merlin Daily Deal — Industry substitution on ${dateStr}`,
-          ``,
-          `Scheduled: ${industry.label}  →  Published: ${candidate.label}`,
-          ``,
-          `Original failure reasons:`,
-          ...failLog.flatMap(f => [`  [${f.industry.label}]`, ...f.reasons.map(r => `    • ${r}`)]),
-          ``,
-          `The substituted deal passed all guardrails and was posted normally.`,
-        ].join('\n');
-        await emailLinkedInPost(subMsg, `ℹ️  Daily Deal substituted — ${industry.label} → ${candidate.label}`);
-      } else {
-        console.log(`   ✅ Financial guardrails passed (payback ${candidateFin.simplePayback}yr, NPV ${usd(candidateFin.npv25Year)})`);
-      }
-      break;
-    }
-
-    // This candidate failed — log it and decide if it looks like an engine problem
-    failLog.push({ industry: candidate, reasons: guard.reasons, fin: candidateFin });
-    console.warn(`   ⚠️  Guardrails FAILED for ${candidate.label}: ${guard.reasons.join(' | ')}`);
-  }
-
-  // If no candidate passed, determine root cause and alert
-  if (!chosenQuote) {
-    const allNegativeNPV = failLog.every(f => f.fin.npv25Year !== undefined && f.fin.npv25Year < 0);
-    const engineSuspect  = failLog.length >= 2 && allNegativeNPV;
-
-    const alertLines = [
-      engineSuspect
-        ? `🔥 Merlin Daily Deal — ENGINE MAY BE BROKEN (${dateStr})`
-        : `🚨 Merlin Daily Deal — Publishing BLOCKED (${dateStr})`,
-      ``,
-      engineSuspect
-        ? `${failLog.length} different industries all returned negative NPV — this points to a systematic engine error, not a profile issue.`
-        : `All ${failLog.length} industry attempt(s) failed financial guardrails.`,
-      ``,
-      `Failed attempts:`,
-      ...failLog.map(f => [
-        `  [${f.industry.label}]`,
-        `    Reasons: ${f.reasons.join(' | ')}`,
-        `    Savings: ${usd(f.fin.annualSavings ?? 0)} · Payback: ${f.fin.simplePayback ?? '?'}yr · NPV: ${usd(f.fin.npv25Year ?? 0)} · IRR: ${f.fin.irrEstimate ?? '?'}%`,
-      ].join('\n')),
-      ``,
-      `No posts were made to Discord, LinkedIn, or X.`,
-      engineSuspect
-        ? `ACTION REQUIRED: Check the TrueQuote engine / MCP server for systematic errors.`
-        : `ACTION REQUIRED: Review the industry profile inputs and re-run via workflow_dispatch.`,
-    ].join('\n');
-
-    console.error(`\n${alertLines}\n`);
-    await emailLinkedInPost(
-      alertLines,
-      engineSuspect
-        ? `🔥 Daily Deal ENGINE ERROR — all ${failLog.length} industries failed guardrails`
-        : `🚨 Daily Deal BLOCKED — guardrails failed after ${failLog.length} attempt(s)`,
-    );
-
-    return {
-      date: dateStr,
-      industry,
-      quote: failLog[0]?.fin ? { financials: failLog[0].fin, recommendation: {} } as MCPQuoteResult : {} as MCPQuoteResult,
-      postedToDiscord: false,
-      postedToX: false,
-      savedToSupabase: false,
-    };
-  }
-
-  const quote = chosenQuote;
-  // ──────────────────────────────────────────────────────────────────────────
-
-  // Use whichever industry passed guardrails (may be a fallback)
-  Object.assign(industry, chosenIndustry);
+  const fin = quote.financials;
+  const rec = quote.recommendation;
+  console.log(`   ✅ Quote complete — System: ${rec.systemSizeMW} MW · ${rec.durationHours}h`);
+  console.log(`      Cost: ${usd(fin.totalInstalledCost)} gross → ${usd(fin.netCostAfterITC)} after ITC`);
+  console.log(`      Savings: ${usd(fin.annualSavings)}/yr · ${fin.simplePayback}yr payback · NPV ${usd(fin.npv25Year)}`);
 
   // Build and post Discord embed
   const payload = buildDiscordPayload(industry, quote, dateStr);
