@@ -31,7 +31,7 @@ export default function StatusQuoSection() {
             {/* Scene 1 */}
             <div className="mb-5">
               <p
-                className="text-[10px] text-amber-500/60 uppercase tracking-widest font-semibold mb-2"
+                className="text-[10px] text-sky-400/60 uppercase tracking-widest font-semibold mb-2"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
                 Scene 1 — The vendor call
@@ -56,7 +56,7 @@ export default function StatusQuoSection() {
             {/* Scene 2 */}
             <div className="mb-5">
               <p
-                className="text-[10px] text-amber-500/60 uppercase tracking-widest font-semibold mb-2"
+                className="text-[10px] text-sky-400/60 uppercase tracking-widest font-semibold mb-2"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
                 Scene 2 — The engineering study
@@ -81,7 +81,7 @@ export default function StatusQuoSection() {
             {/* Scene 3 */}
             <div className="mb-6">
               <p
-                className="text-[10px] text-amber-500/60 uppercase tracking-widest font-semibold mb-2"
+                className="text-[10px] text-sky-400/60 uppercase tracking-widest font-semibold mb-2"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
                 Scene 3 — EPC procurement
@@ -125,17 +125,14 @@ export default function StatusQuoSection() {
 
           {/* ── Right: By the Numbers ────────────────────────────────────── */}
           <div>
-            <div
-              className="rounded-2xl overflow-hidden"
-              style={{
-                background: "linear-gradient(160deg, #0C0810 0%, #100810 100%)",
-                border: "1px solid rgba(239,68,68,0.12)",
-              }}
-            >
+            <div className="rounded-2xl overflow-hidden border border-white/[0.07] bg-[#080F1E]">
+              {/* Sky-blue top accent stripe — matches eyebrow */}
+              <div className="h-[3px] w-full bg-gradient-to-r from-sky-500 via-sky-400 to-transparent" />
+
               {/* Header */}
-              <div className="px-5 py-3 border-b border-red-900/30">
+              <div className="px-5 py-3 border-b border-white/[0.06]">
                 <p
-                  className="text-[10px] text-red-400/70 uppercase tracking-widest font-semibold"
+                  className="text-[10px] text-sky-400/60 uppercase tracking-widest font-semibold"
                   style={{ fontFamily: "'JetBrains Mono', monospace" }}
                 >
                   By the numbers
@@ -143,7 +140,7 @@ export default function StatusQuoSection() {
               </div>
 
               {/* 4 stats — 2×2 grid */}
-              <div className="grid grid-cols-2 border-b border-red-900/20">
+              <div className="grid grid-cols-2 border-b border-white/[0.06]">
                 {[
                   { n: "$112K", label: "avg. soft costs before ground breaks" },
                   { n: "14 mo", label: "inquiry to construction start, typically" },
@@ -153,17 +150,17 @@ export default function StatusQuoSection() {
                   <div
                     key={s.n}
                     className={`px-5 py-4 ${
-                      i % 2 === 0 ? "border-r border-red-900/20" : ""
-                    } ${i < 2 ? "border-b border-red-900/20" : ""}`}
+                      i % 2 === 0 ? "border-r border-white/[0.06]" : ""
+                    } ${i < 2 ? "border-b border-white/[0.06]" : ""}`}
                   >
                     <p
-                      className="text-[22px] font-extrabold text-red-400 mb-0.5"
+                      className="text-[22px] font-extrabold text-white mb-0.5"
                       style={{ fontFamily: "'Nunito', sans-serif" }}
                     >
                       {s.n}
                     </p>
                     <p
-                      className="text-[11px] text-slate-500 leading-snug"
+                      className="text-[11px] text-slate-400 leading-snug"
                       style={{ fontFamily: "'Nunito Sans', sans-serif" }}
                     >
                       {s.label}
@@ -173,9 +170,9 @@ export default function StatusQuoSection() {
               </div>
 
               {/* Phase breakdown */}
-              <div className="px-5 py-4 border-b border-red-900/20">
+              <div className="px-5 py-4 border-b border-white/[0.06]">
                 <p
-                  className="text-[9px] text-slate-600 uppercase tracking-widest mb-3 font-semibold"
+                  className="text-[9px] text-sky-400/50 uppercase tracking-widest mb-3 font-semibold"
                   style={{ fontFamily: "'JetBrains Mono', monospace" }}
                 >
                   Where the time and money go
@@ -193,25 +190,25 @@ export default function StatusQuoSection() {
                       >
                         {row.phase}
                       </span>
-                      <span className="text-[10px] text-slate-600 font-mono w-20 text-right">
+                      <span className="text-[10px] text-slate-500 font-mono w-20 text-right">
                         {row.time}
                       </span>
-                      <span className="text-[10px] text-red-400/70 font-mono w-24 text-right">
+                      <span className="text-[10px] text-slate-400 font-mono w-24 text-right">
                         {row.cost}
                       </span>
                     </div>
                   ))}
-                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-red-900/20">
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/[0.06]">
                     <span
                       className="text-[12px] text-white font-bold flex-1"
                       style={{ fontFamily: "'Nunito', sans-serif" }}
                     >
                       Total
                     </span>
-                    <span className="text-[10px] text-red-400 font-mono font-bold w-20 text-right">
+                    <span className="text-[10px] text-amber-400 font-mono font-bold w-20 text-right">
                       14–18 mo
                     </span>
-                    <span className="text-[10px] text-red-400 font-mono font-bold w-24 text-right">
+                    <span className="text-[10px] text-amber-400 font-mono font-bold w-24 text-right">
                       $75K–$225K
                     </span>
                   </div>
@@ -241,7 +238,7 @@ export default function StatusQuoSection() {
                     $0
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-600 font-mono mt-1">
+                <p className="text-[11px] text-slate-500 font-mono mt-1">
                   Independent · No vendor bias · Same math
                 </p>
               </div>
