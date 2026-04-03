@@ -218,28 +218,39 @@ export default function IndustriesSection() {
     <section id="industries" className="py-10 bg-[#060D1F]">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         {/* ── Section header ──────────────────────────────────────────── */}
-        <div className="mb-5">
+        <div className="mb-6">
+          <div className="flex items-center gap-2.5 mb-3">
+            <span className="h-px w-8 bg-emerald-500" />
+            <span
+              className="text-[10px] text-emerald-400 font-bold uppercase tracking-[0.22em]"
+              style={{ fontFamily: "'Outfit', sans-serif" }}
+            >
+              Free · No Signup · Instant
+            </span>
+          </div>
           <h2
-            className="text-2xl lg:text-3xl font-extrabold text-white mb-1.5 leading-tight"
+            className="text-3xl lg:text-4xl font-extrabold text-white mb-2 leading-tight"
             style={{ fontFamily: "'Nunito', sans-serif" }}
           >
             Run a quick estimate for your facility.
           </h2>
-          <p className="text-slate-500 text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
+          <p className="text-slate-300 text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
             Two numbers from your utility bill. Same engine powering enterprise TrueQuotes. No
             signup.
           </p>
         </div>
 
         {/* ── Estimate form — clean bordered strip ── */}
-        <div className="rounded-xl border border-white/[0.08] overflow-hidden">
+        <div className="rounded-xl border border-emerald-500/25 overflow-hidden shadow-lg shadow-emerald-500/5">
+          {/* Emerald top accent stripe */}
+          <div className="h-[3px] w-full bg-gradient-to-r from-emerald-500 via-emerald-400 to-transparent" />
           {/* Input strip */}
           {phase !== "result" && (
             <div className="p-5">
               <div className="grid grid-cols-1 md:grid-cols-[1.5fr_120px_160px_130px_auto] gap-3 items-end">
                 {/* Industry */}
                 <div>
-                  <label className="text-[9px] text-slate-600 uppercase tracking-[0.2em] font-semibold block mb-1.5">
+                  <label className="text-[9px] text-slate-400 uppercase tracking-[0.2em] font-semibold block mb-1.5">
                     Facility Type
                   </label>
                   <select
@@ -258,7 +269,7 @@ export default function IndustriesSection() {
 
                 {/* ZIP */}
                 <div>
-                  <label className="text-[9px] text-slate-600 uppercase tracking-[0.2em] font-semibold block mb-1.5">
+                  <label className="text-[9px] text-slate-400 uppercase tracking-[0.2em] font-semibold block mb-1.5">
                     ZIP
                   </label>
                   <input
@@ -275,7 +286,7 @@ export default function IndustriesSection() {
 
                 {/* Monthly Bill */}
                 <div>
-                  <label className="text-[9px] text-slate-600 uppercase tracking-[0.2em] font-semibold block mb-1.5">
+                  <label className="text-[9px] text-slate-400 uppercase tracking-[0.2em] font-semibold block mb-1.5">
                     Monthly Bill
                   </label>
                   <div className="relative">
@@ -299,7 +310,7 @@ export default function IndustriesSection() {
 
                 {/* Peak kW */}
                 <div>
-                  <label className="text-[9px] text-slate-600 uppercase tracking-[0.2em] font-semibold block mb-1.5">
+                  <label className="text-[9px] text-slate-400 uppercase tracking-[0.2em] font-semibold block mb-1.5">
                     Peak kW
                   </label>
                   <div className="relative">
@@ -456,7 +467,7 @@ export default function IndustriesSection() {
           )}
         </div>
 
-        <p className="text-[10px] text-slate-700 font-mono text-center mt-3">
+        <p className="text-[10px] text-slate-500 font-mono text-center mt-3">
           NREL · EIA · IRA 2022 · Rough estimate · Not a binding quote
         </p>
       </div>
