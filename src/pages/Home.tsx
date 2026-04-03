@@ -3,6 +3,7 @@
 
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import StatusQuoSection from "@/components/StatusQuoSection";
 import DailyDealCard from "@/components/DailyDealCard";
 import IndustriesSection from "@/components/IndustriesSection";
 import WorkflowSection from "@/components/WorkflowSection";
@@ -16,6 +17,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#060D1F]">
       <Navbar />
       <HeroSection />
+      <StatusQuoSection />
       <DailyDealCard />
       <IndustriesSection />
 
@@ -25,7 +27,7 @@ export default function Home() {
           <div className="flex items-center gap-4">
             <div className="h-px flex-1 bg-white/[0.04]" />
             <span className="text-[11px] text-slate-700 uppercase tracking-widest font-medium">
-              Once you see the number — here's how to go deeper
+              From first number to a full, shareable project model
             </span>
             <div className="h-px flex-1 bg-white/[0.04]" />
           </div>
