@@ -5,7 +5,7 @@
    Estimate calls POST /api/quote — same engine as TrueQuote.               */
 
 import { useState, useEffect, useRef } from "react";
-import { ChevronRight, CheckCircle2, AlertCircle, RotateCcw, Zap } from "lucide-react";
+import { ChevronRight, CheckCircle2, AlertCircle, RotateCcw } from "lucide-react";
 
 // ── Animated rolling number ───────────────────────────────────────────────────
 function RollingNumber({
@@ -215,93 +215,51 @@ export default function IndustriesSection() {
   const rec = result?.tiers.recommended;
 
   return (
-    <section id="industries" className="py-20 bg-[#060D1F]">
+    <section id="industries" className="py-10 bg-[#060D1F]">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
-        {/* ── Section header with narrative ──────────────────────────────── */}
-        <div className="mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/[0.05] text-emerald-400/70 text-[10px] font-semibold tracking-widest uppercase mb-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            No signup · No sales call
-          </div>
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-            <div>
-              <h2
-                className="text-4xl lg:text-5xl font-extrabold text-white mb-3 leading-tight"
-                style={{ fontFamily: "'Nunito', sans-serif" }}
-              >
-                Your industry. Your numbers.
-              </h2>
-              <p
-                className="text-slate-400 text-base max-w-2xl"
-                style={{ fontFamily: "'Nunito Sans', sans-serif" }}
-              >
-                Pick your vertical, enter two numbers from your utility bill, and Merlin runs the
-                same engine powering our enterprise quotes — real NREL data, real ITC credits, real
-                payback math.
-              </p>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-[11px] text-slate-600 font-mono">Powered by</p>
-              <p className="text-[11px] text-emerald-600 font-mono">NREL · IEEE · IRA 2022</p>
-            </div>
-          </div>
+        {/* ── Section header ──────────────────────────────────────────── */}
+        <div className="mb-5">
+          <h2
+            className="text-2xl lg:text-3xl font-extrabold text-white mb-1.5 leading-tight"
+            style={{ fontFamily: "'Nunito', sans-serif" }}
+          >
+            Run a quick estimate for your facility.
+          </h2>
+          <p className="text-slate-500 text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
+            Two numbers from your utility bill. Same engine powering enterprise TrueQuotes. No
+            signup.
+          </p>
         </div>
 
-        {/* ── Horizontal Estimate Bar ─────────────────────────────────────── */}
-        <div
-          className="rounded-2xl overflow-hidden mb-4"
-          style={{
-            background: "linear-gradient(160deg, #0C1829 0%, #080F1E 100%)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            boxShadow: "0 0 0 1px rgba(16,185,129,0.06), 0 20px 60px rgba(0,0,0,0.4)",
-            animation: "industryHeartbeat 4s ease-in-out infinite",
-          }}
-        >
-          {/* Top accent line */}
-          <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
-
-          {/* Bar header */}
-          <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.05]">
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-emerald-400" />
-              <span
-                className="text-emerald-400 text-[13px] font-bold tracking-tight"
-                style={{ fontFamily: "'Outfit', sans-serif" }}
-              >
-                Quick Estimate
-              </span>
-              <span className="text-[10px] text-slate-600 font-mono ml-1">· {active.label}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              {phase === "result" && (
-                <button
-                  onClick={() => {
-                    setPhase("idle");
-                    setResult(null);
-                  }}
-                  className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
-                >
-                  <RotateCcw className="w-3 h-3" /> Reset
-                </button>
-              )}
-              <span className="flex items-center gap-1.5 text-[10px] text-emerald-500 font-mono font-semibold">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-                </span>
-                LIVE ENGINE
-              </span>
-            </div>
-          </div>
-
-          {/* ── Input row ── */}
+        {/* ── Estimate form — clean bordered strip ── */}
+        <div className="rounded-xl border border-white/[0.08] overflow-hidden">
+          {/* Input strip */}
           {phase !== "result" && (
-            <div className="px-6 py-5">
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_160px_180px_160px_auto] gap-3 items-end">
+            <div className="p-5">
+              <div className="grid grid-cols-1 md:grid-cols-[1.5fr_120px_160px_130px_auto] gap-3 items-end">
+                {/* Industry */}
+                <div>
+                  <label className="text-[9px] text-slate-600 uppercase tracking-[0.2em] font-semibold block mb-1.5">
+                    Facility Type
+                  </label>
+                  <select
+                    value={activeId}
+                    onChange={(e) => setActiveId(e.target.value)}
+                    className="w-full bg-[#0A1628] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm font-semibold focus:outline-none focus:border-emerald-500/40 transition-colors cursor-pointer appearance-none"
+                    style={{ fontFamily: "'Nunito', sans-serif" }}
+                  >
+                    {industries.map((ind) => (
+                      <option key={ind.id} value={ind.id}>
+                        {ind.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* ZIP */}
                 <div>
                   <label className="text-[9px] text-slate-600 uppercase tracking-[0.2em] font-semibold block mb-1.5">
-                    ZIP Code
+                    ZIP
                   </label>
                   <input
                     type="text"
@@ -309,12 +267,9 @@ export default function IndustriesSection() {
                     maxLength={5}
                     value={zip}
                     onChange={(e) => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
-                    placeholder="e.g. 90210"
-                    className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm font-bold placeholder:text-slate-700 focus:outline-none focus:border-emerald-500/40 transition-colors"
-                    style={{
-                      fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-                      letterSpacing: "0.06em",
-                    }}
+                    placeholder="90210"
+                    className="w-full bg-[#0A1628] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm font-bold placeholder:text-slate-700 focus:outline-none focus:border-emerald-500/40 transition-colors"
+                    style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.05em" }}
                   />
                 </div>
 
@@ -325,7 +280,7 @@ export default function IndustriesSection() {
                   </label>
                   <div className="relative">
                     <span
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-bold"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"
                       style={{ fontFamily: "'JetBrains Mono', monospace" }}
                     >
                       $
@@ -336,16 +291,16 @@ export default function IndustriesSection() {
                       value={monthlyBill}
                       onChange={(e) => setBill(e.target.value)}
                       placeholder="18,000"
-                      className="w-full bg-black/30 border border-white/10 rounded-lg pl-6 pr-3 py-2.5 text-white text-sm font-bold placeholder:text-slate-700 focus:outline-none focus:border-emerald-500/40 transition-colors"
+                      className="w-full bg-[#0A1628] border border-white/10 rounded-lg pl-6 pr-3 py-2.5 text-white text-sm font-bold placeholder:text-slate-700 focus:outline-none focus:border-emerald-500/40 transition-colors"
                       style={{ fontFamily: "'JetBrains Mono', monospace" }}
                     />
                   </div>
                 </div>
 
-                {/* Peak Demand */}
+                {/* Peak kW */}
                 <div>
                   <label className="text-[9px] text-slate-600 uppercase tracking-[0.2em] font-semibold block mb-1.5">
-                    Peak Demand
+                    Peak kW
                   </label>
                   <div className="relative">
                     <input
@@ -354,17 +309,16 @@ export default function IndustriesSection() {
                       value={peakKW}
                       onChange={(e) => setPeakKW(e.target.value)}
                       placeholder="450"
-                      className="w-full bg-black/30 border border-white/10 rounded-lg px-3 pr-10 py-2.5 text-white text-sm font-bold placeholder:text-slate-700 focus:outline-none focus:border-emerald-500/40 transition-colors"
+                      className="w-full bg-[#0A1628] border border-white/10 rounded-lg px-3 pr-9 py-2.5 text-white text-sm font-bold placeholder:text-slate-700 focus:outline-none focus:border-emerald-500/40 transition-colors"
                       style={{ fontFamily: "'JetBrains Mono', monospace" }}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 text-[11px] font-mono">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 text-[10px] font-mono">
                       kW
                     </span>
                   </div>
-                  <p className="text-[9px] text-slate-700 mt-1 font-mono">From your utility bill</p>
                 </div>
 
-                {/* CTA */}
+                {/* Button */}
                 <div className="flex flex-col justify-end">
                   <button
                     onClick={handleEstimate}
@@ -373,8 +327,8 @@ export default function IndustriesSection() {
                       phase === "loading"
                         ? "bg-emerald-500/20 text-emerald-400/50 cursor-wait"
                         : isReady
-                          ? "bg-emerald-500 hover:bg-emerald-400 text-black hover:scale-[1.02] active:scale-[0.99] shadow-lg shadow-emerald-500/20"
-                          : "bg-white/5 text-white/30 border border-white/[0.08]"
+                          ? "bg-emerald-500 hover:bg-emerald-400 text-black hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-emerald-500/20"
+                          : "bg-white/5 text-white/20 border border-white/[0.07] cursor-not-allowed"
                     }`}
                     style={{ fontFamily: "'Outfit', sans-serif" }}
                   >
@@ -385,8 +339,7 @@ export default function IndustriesSection() {
                       </>
                     ) : (
                       <>
-                        Estimate {active.label} savings
-                        <ChevronRight className="w-4 h-4" />
+                        Calculate savings <ChevronRight className="w-4 h-4" />
                       </>
                     )}
                   </button>
@@ -402,19 +355,29 @@ export default function IndustriesSection() {
             </div>
           )}
 
-          {/* ── Results row (expands inline) ── */}
+          {/* ── Results (inline) ── */}
           {phase === "result" && rec && (
-            <div className="px-6 py-5" style={{ animation: "industryFadeIn 0.4s ease-out" }}>
-              <div className="flex items-center gap-2 mb-4">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                <span className="text-[11px] text-slate-400 font-mono">
-                  {result?.location.formattedAddress} · {active.label} · Recommended system
-                </span>
+            <div className="p-5" style={{ animation: "industryFadeIn 0.4s ease-out" }}>
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    {result?.location.formattedAddress} · {active.label} · Recommended
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    setPhase("idle");
+                    setResult(null);
+                  }}
+                  className="flex items-center gap-1 text-[10px] text-slate-600 hover:text-slate-300 transition-colors flex-shrink-0"
+                >
+                  <RotateCcw className="w-3 h-3" /> Reset
+                </button>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 items-center">
-                {/* Annual Savings */}
-                <div className="bg-black/40 border border-emerald-500/20 rounded-xl px-5 py-4">
+                <div className="bg-emerald-950/40 border border-emerald-500/20 rounded-xl px-5 py-4">
                   <div className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">
                     Annual Savings
                   </div>
@@ -431,8 +394,7 @@ export default function IndustriesSection() {
                   <div className="text-[9px] text-slate-600 font-mono mt-0.5">per year</div>
                 </div>
 
-                {/* Payback */}
-                <div className="bg-black/30 border border-white/[0.06] rounded-xl px-5 py-4">
+                <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl px-5 py-4">
                   <div className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">
                     Payback
                   </div>
@@ -445,8 +407,7 @@ export default function IndustriesSection() {
                   <div className="text-[9px] text-slate-600 font-mono mt-0.5">simple payback</div>
                 </div>
 
-                {/* Net Cost */}
-                <div className="bg-black/30 border border-white/[0.06] rounded-xl px-5 py-4">
+                <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl px-5 py-4">
                   <div className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">
                     Net Cost
                   </div>
@@ -461,8 +422,7 @@ export default function IndustriesSection() {
                   <div className="text-[9px] text-slate-600 font-mono mt-0.5">after 30% ITC</div>
                 </div>
 
-                {/* 10yr ROI */}
-                <div className="bg-black/30 border border-white/[0.06] rounded-xl px-5 py-4">
+                <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl px-5 py-4">
                   <div className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">
                     10-yr ROI
                   </div>
@@ -479,18 +439,16 @@ export default function IndustriesSection() {
                   </div>
                 </div>
 
-                {/* Build full quote CTA */}
                 <div className="flex flex-col gap-2">
                   <a
                     href={`/wizard?industry=${active.engineKey}&zip=${zip}`}
-                    className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold bg-yellow-500 hover:bg-yellow-400 text-black transition-all duration-200 hover:scale-[1.02] shadow-lg shadow-yellow-500/20 whitespace-nowrap"
+                    className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold bg-yellow-500 hover:bg-yellow-400 text-black transition-all duration-200 hover:scale-[1.01] shadow-lg shadow-yellow-500/20 whitespace-nowrap"
                     style={{ fontFamily: "'Outfit', sans-serif" }}
                   >
-                    Build full TrueQuote™
-                    <ChevronRight className="w-4 h-4" />
+                    Build full TrueQuote™ <ChevronRight className="w-4 h-4" />
                   </a>
                   <p className="text-[9px] text-slate-700 text-center font-mono">
-                    Rough estimate · NREL + EIA data
+                    Rough estimate only
                   </p>
                 </div>
               </div>
@@ -498,92 +456,14 @@ export default function IndustriesSection() {
           )}
         </div>
 
-        {/* ── Industry tab pills ──────────────────────────────────────────── */}
-        <div className="flex flex-wrap gap-2 mb-6 mt-8">
-          {industries.map((ind) => {
-            const isActive = ind.id === activeId;
-            return (
-              <button
-                key={ind.id}
-                onClick={() => setActiveId(ind.id)}
-                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
-                  isActive
-                    ? "bg-transparent border-emerald-400 text-emerald-400"
-                    : "border-white/15 text-slate-400 hover:text-white hover:border-white/30 bg-transparent"
-                }`}
-                style={{ fontFamily: "'Nunito', sans-serif" }}
-              >
-                {ind.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* ── Full-width industry card ────────────────────────────────────── */}
-        <div className="rounded-2xl border border-white/[0.08] bg-[#0A1628]/60 overflow-hidden mb-4">
-          <div className="grid lg:grid-cols-[1fr_auto] gap-0">
-            {/* Left: industry info */}
-            <div className="p-8 lg:p-10 border-b lg:border-b-0 lg:border-r border-white/[0.06]">
-              <h3
-                className="text-3xl font-extrabold text-emerald-400 mb-3"
-                style={{ fontFamily: "'Nunito', sans-serif" }}
-              >
-                {active.label}
-              </h3>
-              <p
-                className="text-slate-400 text-base leading-relaxed mb-6 max-w-md"
-                style={{ fontFamily: "'Nunito Sans', sans-serif" }}
-              >
-                {active.description}
-              </p>
-              <a
-                href={`/wizard?industry=${active.engineKey}`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-emerald-500/40 text-sm font-semibold text-emerald-400 hover:border-emerald-400 hover:text-emerald-300 transition-all duration-200"
-                style={{ fontFamily: "'Nunito', sans-serif" }}
-              >
-                Start my {active.label} quote →
-              </a>
-            </div>
-
-            {/* Right: metrics grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-2 lg:w-[420px]">
-              {[
-                { label: "TYPICAL SYSTEM", value: active.systemSize, green: false },
-                { label: "ANNUAL SAVINGS", value: active.annualSavings, green: true },
-                { label: "PAYBACK", value: active.payback, green: false },
-                { label: "OUTPUT", value: active.output, green: false },
-              ].map((m, i) => (
-                <div
-                  key={m.label}
-                  className={`p-7 ${i < 2 ? "border-b" : ""} ${
-                    i % 2 === 0 ? "border-r" : ""
-                  } border-white/[0.06]`}
-                >
-                  <p className="text-[10px] text-slate-600 uppercase tracking-widest mb-2 font-medium">
-                    {m.label}
-                  </p>
-                  <p
-                    className={`text-2xl font-extrabold ${
-                      m.green ? "text-emerald-400" : "text-white"
-                    }`}
-                    style={{ fontFamily: "'Nunito', sans-serif" }}
-                  >
-                    {m.value}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <p className="text-[10px] text-slate-700 font-mono text-center mt-3">
+          NREL · EIA · IRA 2022 · Rough estimate · Not a binding quote
+        </p>
       </div>
 
       <style>{`
-        @keyframes industryHeartbeat {
-          0%, 100% { box-shadow: 0 0 0 1px rgba(16,185,129,0.06), 0 20px 60px rgba(0,0,0,0.4); }
-          50%       { box-shadow: 0 0 0 1px rgba(16,185,129,0.18), 0 20px 60px rgba(0,0,0,0.4); }
-        }
         @keyframes industryFadeIn {
-          from { opacity: 0; transform: translateY(6px); }
+          from { opacity: 0; transform: translateY(4px); }
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
