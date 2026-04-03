@@ -867,17 +867,6 @@ async function postToLinkedIn(postText: string, dateStr: string, industryLabel: 
   }
 
   const accessToken = process.env.LINKEDIN_ACCESS_TOKEN;
-  // Only post to the Merlin Energy company page — never to personal profile.
-  // LINKEDIN_ORG_URN must be set (e.g. urn:li:organization:112979004) and the
-  // access token must have the w_organization_social scope.
-  // If ORG_URN is not set → email the post to Robert for manual publishing.
-  const orgUrn = process.env.LINKEDIN_ORG_URN;
-
-  if (!orgUrn) {
-    console.warn('   ⚠️  LINKEDIN_ORG_URN not set — emailing post instead of publishing to personal profile.');
-    await emailLinkedInPost(postText, emailSubject);
-    return null;
-  }
 
   if (!accessToken) {
     console.warn('   ⚠️  LINKEDIN_ACCESS_TOKEN not set — emailing post as fallback.');
@@ -885,38 +874,65 @@ async function postToLinkedIn(postText: string, dateStr: string, industryLabel: 
     return null;
   }
 
-  const body = {
-    author: orgUrn,
-    lifecycleState: 'PUBLISHED',
-    specificContent: {
-      'com.linkedin.ugc.ShareContent': {
-        shareCommentary: { text: postText },
-        shareMediaCategory: 'NONE',
+  // Try company page first (requires w_organization_social scope + LinkedIn
+  // Community Management API approval). If that fails or ORG_URN is not set,
+  // fall back to posting on Robert's personal profile (w_member_social).
+  const orgUrn    = process.env.LINKEDIN_ORG_URN;
+  const personUrn = process.env.LINKEDIN_PERSON_URN;
+
+  async function postAs(authorUrn: string, label: string): Promise<string | null> {
+    const body = {
+      author: authorUrn,
+      lifecycleState: 'PUBLISHED',
+      specificContent: {
+        'com.linkedin.ugc.ShareContent': {
+          shareCommentary: { text: postText },
+          shareMediaCategory: 'NONE',
+        },
       },
-    },
-    visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' },
-  };
+      visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' },
+    };
 
-  const res = await fetch('https://api.linkedin.com/v2/ugcPosts', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-      'X-Restli-Protocol-Version': '2.0.0',
-    },
-    body: JSON.stringify(body),
-  });
+    const res = await fetch('https://api.linkedin.com/v2/ugcPosts', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'X-Restli-Protocol-Version': '2.0.0',
+      },
+      body: JSON.stringify(body),
+    });
 
-  if (!res.ok) {
-    const err = await res.text();
-    console.error('[DailyDeal] LinkedIn company page post failed:', res.status, err.slice(0, 200));
-    console.log('   📧 Falling back to email — sending post to Robert for manual publishing...');
-    await emailLinkedInPost(postText, `[FAILED — Manual Post Needed] ${emailSubject}`);
-    return null;
+    if (!res.ok) {
+      const err = await res.text();
+      console.warn(`   ⚠️  LinkedIn ${label} post failed (${res.status}): ${err.slice(0, 150)}`);
+      return null;
+    }
+
+    const postId = res.headers.get('x-restli-id') ?? 'posted';
+    console.log(`   ✅ Posted to LinkedIn ${label}`);
+    return postId;
   }
 
-  const postId = res.headers.get('x-restli-id') ?? 'posted';
-  return postId;
+  // 1. Try company page
+  if (orgUrn) {
+    const id = await postAs(orgUrn, 'company page (Merlin Energy)');
+    if (id) return id;
+    console.log('   🔄 Company page failed — trying personal profile fallback...');
+  } else {
+    console.log('   ℹ️  LINKEDIN_ORG_URN not set — posting to personal profile.');
+  }
+
+  // 2. Fall back to personal profile
+  if (personUrn) {
+    const id = await postAs(personUrn, 'personal profile (Bob Christopher)');
+    if (id) return id;
+  }
+
+  // 3. Last resort — email
+  console.log('   📧 All LinkedIn posting failed — emailing post for manual publishing...');
+  await emailLinkedInPost(postText, `[FAILED — Manual Post Needed] ${emailSubject}`);
+  return null;
 }
 
 async function saveDealToSupabase(deal: DealProfile, quote: MCPQuoteResult, dateStr: string, messageId: string | null, linkedInPost: string): Promise<boolean> {
