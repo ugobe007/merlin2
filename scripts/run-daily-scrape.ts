@@ -271,21 +271,27 @@ async function runDailyScrape() {
 runDailyScrape()
   .then(results => {
     console.log('\nExiting with results:', JSON.stringify(results, null, 2));
-    // Only fail if ZERO sources succeeded OR zero articles saved AND there were errors
-    // Previously: any single error = exit 1, which caused GitHub Actions to always fail
-    const totalSources = results.sourcesProcessed + results.errors.length;
+    // Failure conditions:
+    //   1. ALL sources failed (nothing worked at all)
+    //   2. Zero articles found total (feeds returned nothing — possible auth/config issue)
+    // NOT a failure:
+    //   - Some sources 403/429 while others succeed (common for public RSS)
+    //   - Articles saved = 0 because all are duplicates (DB is already current — healthy!)
     const allFailed = results.sourcesProcessed === 0 && results.errors.length > 0;
-    const noData = results.articlesSaved === 0 && totalSources > 0;
-    
+    const noItemsFound = results.articlesFound === 0 && results.sourcesProcessed > 0;
+
     if (allFailed) {
       console.error('\n🚨 ALL sources failed. Exiting with error.');
       process.exit(1);
-    } else if (noData && results.errors.length > 0) {
-      console.warn('\n⚠️ No articles saved despite processing sources. Exiting with error.');
+    } else if (noItemsFound) {
+      console.warn('\n⚠️ Sources responded but returned zero articles — possible feed config issue.');
       process.exit(1);
     } else {
       if (results.errors.length > 0) {
-        console.warn(`\n⚠️ ${results.errors.length} source(s) had errors, but ${results.sourcesProcessed} succeeded. Treating as partial success.`);
+        console.warn(`\n⚠️ ${results.errors.length} source(s) had errors, but ${results.sourcesProcessed} succeeded.`);
+      }
+      if (results.articlesSaved === 0 && results.articlesFound > 0) {
+        console.log(`\nℹ️  All ${results.articlesFound} articles already in DB — database is current. ✅`);
       }
       process.exit(0);
     }
