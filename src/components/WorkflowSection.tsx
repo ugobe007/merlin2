@@ -3,7 +3,14 @@
    Auto-expands when navigated to via hash link */
 
 import { useState, useEffect } from "react";
-import { SplitSquareHorizontal, ClipboardList, Cpu, TrendingUp, FileCheck, ChevronDown } from "lucide-react";
+import {
+  SplitSquareHorizontal,
+  ClipboardList,
+  Cpu,
+  TrendingUp,
+  FileCheck,
+  ChevronDown,
+} from "lucide-react";
 
 const steps = [
   {
@@ -49,17 +56,17 @@ export default function WorkflowSection() {
   // Auto-expand when hash navigation points here
   useEffect(() => {
     const handleHashChange = () => {
-      if (window.location.hash === '#workflow') {
+      if (window.location.hash === "#workflow") {
         setOpen(true);
       }
     };
-    
+
     // Check on mount
     handleHashChange();
-    
+
     // Listen for hash changes
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
   return (
@@ -95,7 +102,7 @@ export default function WorkflowSection() {
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-2 text-slate-500 text-sm">
+        <div className="flex items-center gap-2 text-slate-300 text-sm">
           <span className="hidden sm:inline" style={{ fontFamily: "'Manrope', sans-serif" }}>
             {open ? "Collapse" : "See all 5 steps"}
           </span>
@@ -128,7 +135,10 @@ export default function WorkflowSection() {
                 const isRight = step.align === "right";
 
                 return (
-                  <div key={step.number} className="relative lg:grid lg:grid-cols-2 lg:gap-12 lg:mb-14">
+                  <div
+                    key={step.number}
+                    className="relative lg:grid lg:grid-cols-2 lg:gap-12 lg:mb-14"
+                  >
                     {isRight ? (
                       <>
                         <div className="hidden lg:block" />
@@ -193,7 +203,10 @@ function StepCard({
       >
         {step.title}
       </h3>
-      <p className="text-slate-500 text-sm leading-relaxed" style={{ fontFamily: "'Manrope', sans-serif" }}>
+      <p
+        className="text-slate-500 text-sm leading-relaxed"
+        style={{ fontFamily: "'Manrope', sans-serif" }}
+      >
         {step.body}
       </p>
     </div>

@@ -117,7 +117,8 @@ export default function StatusQuoSection() {
                 className="text-emerald-400 text-base leading-relaxed font-semibold mt-2"
                 style={{ fontFamily: "'Nunito Sans', sans-serif" }}
               >
-                Merlin replaces the first six months of that process. For free.
+                Merlin compresses that entire evaluation phase into minutes — and delivers an
+                EPC-ready project model your team can act on.
               </p>
             </div>
           </div>
