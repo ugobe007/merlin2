@@ -92,12 +92,27 @@ const BESS_RATIO = {
   peak_shaving: 0.40,  // IEEE 4538388, MDPI Energies 11(8):2048
   arbitrage:    0.50,  // peak shaving + TOU shifting
   resilience:   0.70,  // IEEE 446 critical-load coverage
+  ups:          0.90,  // IEEE 446 §4.4 — full critical-load UPS coverage
   microgrid:    1.00,  // full islanding (NREL)
 };
 
 const TIER_BESS_SCALE        = { Starter: 0.55,  Recommended: 1.0,  Complete: 1.5  };
 const TIER_DURATION_HRS      = { Starter: 2,     Recommended: 4,    Complete: 6    };
 const TIER_SOLAR_PENETRATION = { Starter: 0.50,  Recommended: 0.85, Complete: 1.0  };
+
+// Industry-specific BESS duration constraints (override tier defaults).
+// max: cap (peak-shaving industries don't need multi-hour storage)
+// min: floor (critical-load / UPS industries require guaranteed runtime)
+const INDUSTRY_DURATION_OVERRIDE = {
+  car_wash:    { max: 2 },   // demand peaks <15 min; 2h is more than enough
+  carwash:     { max: 2 },
+  restaurant:  { max: 2 },   // demand smoothing only; no overnight backup
+  gym:         { max: 2 },
+  retail:      { max: 2 },
+  healthcare:  { min: 4 },   // NFPA 99 critical branch; 4h minimum for BESS
+  hospital:    { min: 4 },
+  data_center: { min: 4 },   // Tier II+; BESS handles first 4h, gen handles rest
+};
 // Generator: excluded at Starter by default; Complete gets 25% extra headroom
 const TIER_GEN_SCALE         = { Starter: 0,     Recommended: 1.0,  Complete: 1.25 };
 const NEC_GEN_MARGIN         = 1.25;  // NEC/LADWP reserve margin
@@ -167,11 +182,15 @@ async function getVendorBessPrice() {
 
 // ── Tier sizing helpers (ported from step4Logic.ts) ──────────────────────────
 
-function sizeBESS(peakLoadKW, tierLabel, bessApplication) {
+function sizeBESS(peakLoadKW, tierLabel, bessApplication, industryKey = '') {
   const ratio       = BESS_RATIO[bessApplication] ?? BESS_RATIO.peak_shaving;
   const bessKW      = Math.max(BESS_COMMERCIAL_FLOOR,
                        Math.round(peakLoadKW * ratio * TIER_BESS_SCALE[tierLabel]));
-  const durationHrs = TIER_DURATION_HRS[tierLabel];
+  let   durationHrs = TIER_DURATION_HRS[tierLabel];
+  // Apply industry-level duration floor / ceiling
+  const dur = INDUSTRY_DURATION_OVERRIDE[industryKey];
+  if (dur?.max !== undefined) durationHrs = Math.min(durationHrs, dur.max);
+  if (dur?.min !== undefined) durationHrs = Math.max(durationHrs, dur.min);
   const bessKWh     = Math.round(bessKW * durationHrs);
   return { bessKW, bessKWh, durationHrs };
 }
@@ -263,7 +282,7 @@ function calcROI(netInvestment, netAnnualSavings) {
 }
 
 function buildTier(tierLabel, p, priceOverrides = {}) {
-  const { bessKW, bessKWh, durationHrs } = sizeBESS(p.peakLoadKW, tierLabel, p.bessApplication);
+  const { bessKW, bessKWh, durationHrs } = sizeBESS(p.peakLoadKW, tierLabel, p.bessApplication, p.industryKey ?? '');
   const solarKW     = p.overrideSolarKW != null
     ? Math.round(p.overrideSolarKW * { Starter: 0.7, Recommended: 1.0, Complete: 1.3 }[tierLabel])
     : sizeSolar(p.solarCapKW, p.psh, tierLabel);
@@ -424,6 +443,7 @@ router.post('/', async (req, res) => {
       hpcChargers,
       generatorFuelType,
       bessApplication: req.body.bessApplication ?? 'peak_shaving',
+      industryKey,
       // Optional single-system overrides (bypass auto-sizing when provided)
       overrideSolarKW: inputSolarKW != null ? Number(inputSolarKW) : null,
       overrideGenKW:   inputGenKW   > 0     ? Number(inputGenKW)   : null,

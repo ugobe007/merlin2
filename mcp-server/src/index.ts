@@ -42,8 +42,9 @@ const QuoteInputSchema = z.object({
   monthlyBillDollars: z.number().min(100).max(500_000).describe('Average monthly utility bill in dollars'),
   zipCode: z.string().regex(/^\d{5}$/).describe('5-digit US ZIP code'),
   primaryUseCase: z.enum([
-    'peak-shaving', 'backup-power', 'TOU-arbitrage', 'solar-self-consumption', 'demand-charge-reduction'
-  ]).default('peak-shaving').describe('Primary application for the BESS'),
+    'peak-shaving', 'backup-power', 'TOU-arbitrage', 'solar-self-consumption',
+    'demand-charge-reduction', 'ups-backup'
+  ]).default('peak-shaving').describe('Primary application for the BESS. Use ups-backup for hospitals, data centers, or any facility requiring uninterruptible power (100% critical-load coverage, ≥4h duration).'),
   hasSolar: z.boolean().default(false).describe('Does the facility have or plan solar?'),
   solarMW: z.number().optional().describe('Existing/planned solar size in MW'),
   desiredPaybackYears: z.number().min(1).max(20).optional().describe('Target payback period'),
@@ -192,6 +193,7 @@ async function generateQuote(input: z.infer<typeof QuoteInputSchema>) {
     'TOU-arbitrage':             'arbitrage',
     'solar-self-consumption':    'peak_shaving',
     'demand-charge-reduction':   'peak_shaving',
+    'ups-backup':                'ups',       // full critical-load UPS coverage
   };
 
   // Map MCP industry slugs → quote engine industry keys
