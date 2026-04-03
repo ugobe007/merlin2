@@ -1,9 +1,6 @@
 /* Merlin Energy — Our Story / About Section
-   Founder narrative replacing the pull-quote ValueSection.
+   Founder narrative. Always fully expanded. No toggle.
    Placement: bottom of home page, above Footer.              */
-
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
 
 const SHIELD_GOLD =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/shield-gold_53d77804.png";
@@ -11,8 +8,6 @@ const SHIELD_BLUE =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/shield-blue_6e564263.png";
 
 export default function ValueSection() {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   return (
     <section className="py-16 bg-[#060D1F] border-t border-white/[0.05]">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
@@ -35,7 +30,8 @@ export default function ValueSection() {
               style={{ fontFamily: "'Nunito', sans-serif" }}
             >
               We've been inside these projects.
-              <br className="hidden lg:block" /> That's why we built this.
+              <br className="hidden lg:block" />
+              That's why we built this.
             </h2>
 
             <div className="space-y-5">
@@ -44,66 +40,73 @@ export default function ValueSection() {
                 style={{ fontFamily: "'Nunito Sans', sans-serif" }}
               >
                 We came from large battery manufacturers and chemical companies — and spent years
-                managing megawatt-scale storage deployments across North America, Europe, and
-                Asia-Pacific. We understood the technology. What we couldn't understand was why
-                getting a project off the ground was still so hard.
+                designing and deploying megawatt-scale battery energy storage systems across North
+                America, Europe, and Asia-Pacific. We understood the technology at the cell and
+                system level: the BMS logic, inverter configurations, transformer sizing, ESS
+                control software, and how every variable shifts when the load profile of the
+                facility changes. What we couldn't understand was why the decision to deploy was
+                still so hard.
               </p>
 
               <p
                 className="text-slate-400 text-base leading-relaxed"
                 style={{ fontFamily: "'Nunito Sans', sans-serif" }}
               >
-                Every facility we worked with was stuck in the same cycle: competing vendor
-                proposals that disagreed by six figures, engineering studies that took months and
-                cost $85,000 to confirm what the numbers already suggested, and procurement
-                timelines that burned through a year of utility bills before a single panel was
-                installed. The technology was ready. The decision process wasn't.
+                The energy equation is not simple. BESS is the core — but it never operates alone.
+                It has to be sized against peak demand, calibrated to the utility rate structure,
+                stacked with solar if the roof supports it, and extended with backup generation when
+                grid reliability is the constraint. EV charging infrastructure adds both a revenue
+                layer and an additional load that reshapes the entire power profile. For data
+                centers, the calculation is existential: power grids are strained, utility pricing
+                is rising, and a resilient on-site energy strategy is no longer optional.
               </p>
 
-              {/* Expandable continuation */}
-              <div
-                className={`overflow-hidden transition-all duration-500 ease-in-out space-y-5 ${
-                  isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-                }`}
-              >
-                <p
-                  className="text-slate-400 text-base leading-relaxed"
-                  style={{ fontFamily: "'Nunito Sans', sans-serif" }}
-                >
-                  We looked at what AI could do and found a critical gap: general AI systems aren't
-                  trained on energy physics, utility rate structures, IRA incentive calculations, or
-                  the specific demand profiles that separate a car wash from a hotel from a data
-                  center. They generate text. They don't do the engineering.
-                </p>
-                <p
-                  className="text-slate-400 text-base leading-relaxed"
-                  style={{ fontFamily: "'Nunito Sans', sans-serif" }}
-                >
-                  So we built <span className="text-yellow-400 font-semibold">TrueQuote</span> — a
-                  decision engine designed specifically for commercial energy projects. It runs
-                  physics-based solar and storage sizing, applies live utility rate data, factors
-                  current incentive structures, and delivers an EPC-ready project model your team
-                  can act on. The same quality of analysis that once required months of vendor
-                  meetings, an engineering firm, and a procurement team — in minutes, for any
-                  facility.
-                </p>
-              </div>
-
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="flex items-center gap-2 text-sm text-sky-400/70 hover:text-sky-300 transition-colors"
+              <p
+                className="text-slate-400 text-base leading-relaxed"
                 style={{ fontFamily: "'Nunito Sans', sans-serif" }}
               >
-                {isExpanded ? "Read less" : "Read more"}
-                <ChevronDown
-                  size={14}
-                  className={`transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}
-                />
-              </button>
+                The deeper problem: no one has mapped this complexity into a coherent workflow that
+                a facility operator can actually use. A hotel is not a hospital. A car wash is not a
+                data center. An airport is a small city — with terminal loads, operations loads, and
+                concession loads that behave independently but share the same utility
+                infrastructure. A college campus is the same. Each building, each department, each
+                use case demands a different energy configuration — and the variables compound fast:
+                inverter topology, transformer capacity, battery chemistry, state-of-charge
+                strategy, demand response windows, generator dispatch logic. Getting it wrong costs
+                millions. Getting it right requires cross-industry knowledge most operators will
+                never have access to.
+              </p>
+
+              <p
+                className="text-slate-400 text-base leading-relaxed"
+                style={{ fontFamily: "'Nunito Sans', sans-serif" }}
+              >
+                We looked at what AI could do and found a critical gap: general AI systems are not
+                trained on energy physics, utility tariff structures, BMS control logic, or the
+                demand profiles that separate a 450 kW car wash from a 2 MW data center. They
+                generate plausible-sounding text. They don't do the engineering. So we built{" "}
+                <span className="text-yellow-400 font-semibold">TrueQuote</span> — an AI-enabled
+                orchestration engine designed specifically for the complexity of commercial and
+                industrial energy projects. It models BESS, solar, wind, backup generation, and EV
+                infrastructure together — configured to the specific load profile of each industry,
+                sized against live utility data, and delivered as an EPC-ready project model in
+                minutes. The kind of analysis that once required an engineering firm, six vendor
+                proposals, and fourteen months of calendar — produced before the first meeting.
+              </p>
+
+              <p
+                className="text-slate-400 text-base leading-relaxed"
+                style={{ fontFamily: "'Nunito Sans', sans-serif" }}
+              >
+                This is the first platform built to orchestrate that level of complexity through a
+                simple interface. Not because the engineering is simple — it isn't. But because
+                we've spent years doing it the hard way, and we know exactly what needs to be
+                abstracted and what needs to be preserved.
+              </p>
             </div>
           </div>
 
-          {/* ── Right: Product + credentials ── */}
+          {/* ── Right: Products + scope ── */}
           <div className="space-y-4">
             {/* Product badges */}
             <div className="rounded-xl border border-white/[0.07] bg-[#080F1E] overflow-hidden">
@@ -131,11 +134,10 @@ export default function ValueSection() {
                       TrueQuote™
                     </div>
                     <div className="text-[11px] text-slate-500 leading-snug">
-                      EPC-ready project models for facility operators
+                      EPC-ready energy project models for facility operators
                     </div>
                   </div>
                 </div>
-
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-500/5 border border-blue-500/15">
                   <img
                     src={SHIELD_BLUE}
@@ -150,29 +152,65 @@ export default function ValueSection() {
                       ProQuote™
                     </div>
                     <div className="text-[11px] text-slate-500 leading-snug">
-                      Precision response tools for EPC vendors
+                      Precision response tools for EPC vendors &amp; integrators
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Credentials */}
+            {/* What Merlin sizes */}
             <div className="rounded-xl border border-white/[0.07] bg-[#080F1E] px-5 py-4 space-y-3">
               <p
                 className="text-[9px] text-sky-400/50 uppercase tracking-widest font-semibold"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
-                Background
+                What Merlin sizes
+              </p>
+              {[
+                { label: "BESS", note: "Battery energy storage — the core" },
+                { label: "Solar + Wind", note: "Generation stacked to the load" },
+                { label: "Backup generation", note: "Diesel, linear, emerging nuclear" },
+                { label: "EV charging", note: "Revenue layer + load management" },
+                { label: "Power infrastructure", note: "Inverters, transformers, switches" },
+                { label: "BMS / ESS software", note: "Control logic & dispatch strategy" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-start gap-2.5">
+                  <div className="w-1 h-1 rounded-full bg-emerald-400/60 mt-1.5 flex-shrink-0" />
+                  <div>
+                    <span
+                      className="text-[12px] text-white font-semibold"
+                      style={{ fontFamily: "'Nunito', sans-serif" }}
+                    >
+                      {item.label}
+                    </span>
+                    <span
+                      className="text-[12px] text-slate-500 ml-1.5"
+                      style={{ fontFamily: "'Nunito Sans', sans-serif" }}
+                    >
+                      — {item.note}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Background */}
+            <div className="rounded-xl border border-white/[0.07] bg-[#080F1E] px-5 py-4 space-y-3">
+              <p
+                className="text-[9px] text-sky-400/50 uppercase tracking-widest font-semibold"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
+                Our background
               </p>
               {[
                 "Battery manufacturing & electrochemistry",
                 "Global BESS deployments — NA, EU, APAC",
-                "Built for industry-specific energy workflows",
+                "EV charging infrastructure & operations",
                 "AI tuned to energy physics, not general text",
               ].map((c) => (
                 <div key={c} className="flex items-start gap-2.5">
-                  <div className="w-1 h-1 rounded-full bg-emerald-400/60 mt-1.5 flex-shrink-0" />
+                  <div className="w-1 h-1 rounded-full bg-sky-400/50 mt-1.5 flex-shrink-0" />
                   <span
                     className="text-[12px] text-slate-400 leading-snug"
                     style={{ fontFamily: "'Nunito Sans', sans-serif" }}
