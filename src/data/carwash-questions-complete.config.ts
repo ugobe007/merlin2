@@ -583,11 +583,12 @@ export const carWashQuestionsComplete: Question[] = [
     type: "slider",
     section: "solar",
     title: "Total site area?",
-    subtitle: "Total property size including parking and vacuum areas",
-    range: { min: 0, max: 75000, step: 1000 },
-    smartDefault: 15000,
+    subtitle:
+      "Total property including tunnel, vacuum islands, and drive lanes. Typical express tunnel: 1.0–1.5 acres (43K–65K sq ft).",
+    range: { min: 0, max: 100000, step: 1000 },
+    smartDefault: 50000,
     unit: " sq ft",
-    validation: { required: true, min: 0, max: 75000 },
+    validation: { required: true, min: 0, max: 100000 },
     impactsCalculations: ["siteLayout"],
   },
   {
