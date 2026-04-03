@@ -1,10 +1,9 @@
 /* Merlin Energy — Homepage
-   Sections: Navbar → Hero → QuickEstimate → DailyDeal → Industries → Workflow → Value → Footer */
+   Sections: Navbar → Hero → DailyDeal → Industries+Estimate → Workflow → Value → Footer */
 
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import DailyDealCard from "@/components/DailyDealCard";
-import QuickEstimateWidget from "@/components/QuickEstimateWidget";
 import IndustriesSection from "@/components/IndustriesSection";
 import WorkflowSection from "@/components/WorkflowSection";
 import ValueSection from "@/components/ValueSection";
@@ -17,32 +16,37 @@ export default function Home() {
     <div className="min-h-screen bg-[#060D1F]">
       <Navbar />
       <HeroSection />
-
-      {/* ── Quick Estimate Widget ───────────────────────────────────────── */}
-      <section className="bg-[#060D1F] border-b border-white/[0.04] py-14">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/[0.05] text-emerald-400/80 text-[11px] font-medium tracking-wide mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              No signup required
-            </div>
-            <h2
-              className="text-2xl sm:text-3xl font-extrabold text-white mb-2"
-              style={{ fontFamily: "'Outfit', sans-serif" }}
-            >
-              Get a rough number in <span className="text-emerald-400">10 seconds</span>
-            </h2>
-            <p className="text-slate-500 text-sm max-w-sm mx-auto">
-              4 fields. Real NREL data. Same engine our Discord bot uses.
-            </p>
-          </div>
-          <QuickEstimateWidget />
-        </div>
-      </section>
-
       <DailyDealCard />
       <IndustriesSection />
+
+      {/* ── Section bridge: Hero → How it works ─────────────────────────── */}
+      <div className="bg-[#060D1F] pt-4 pb-0">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
+          <div className="flex items-center gap-4">
+            <div className="h-px flex-1 bg-white/[0.04]" />
+            <span className="text-[11px] text-slate-700 uppercase tracking-widest font-medium">
+              Once you see the number — here's how to go deeper
+            </span>
+            <div className="h-px flex-1 bg-white/[0.04]" />
+          </div>
+        </div>
+      </div>
+
       <WorkflowSection />
+
+      {/* ── Section bridge: How it works → Why Merlin ───────────────────── */}
+      <div className="bg-[#060D1F] pt-4 pb-0">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
+          <div className="flex items-center gap-4">
+            <div className="h-px flex-1 bg-white/[0.04]" />
+            <span className="text-[11px] text-slate-700 uppercase tracking-widest font-medium">
+              Why this approach beats a vendor quote
+            </span>
+            <div className="h-px flex-1 bg-white/[0.04]" />
+          </div>
+        </div>
+      </div>
+
       <ValueSection />
 
       {/* Footer */}
