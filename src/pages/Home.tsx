@@ -1,10 +1,9 @@
 /* Merlin Energy — Homepage
-   Sections: Navbar → Hero → DailyDeal → Industries+Estimate → Workflow → Value → Footer */
+   Sections: Navbar → Hero → StatusQuo → Industries+Estimate → Workflow → Value → Footer */
 
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import StatusQuoSection from "@/components/StatusQuoSection";
-import DailyDealCard from "@/components/DailyDealCard";
 import IndustriesSection from "@/components/IndustriesSection";
 import WorkflowSection from "@/components/WorkflowSection";
 import ValueSection from "@/components/ValueSection";
@@ -18,7 +17,6 @@ export default function Home() {
       <Navbar />
       <HeroSection />
       <StatusQuoSection />
-      <DailyDealCard />
       <IndustriesSection />
 
       {/* ── Section bridge: Hero → How it works ─────────────────────────── */}
