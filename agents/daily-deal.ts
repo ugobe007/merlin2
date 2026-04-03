@@ -152,7 +152,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Kill the demand spike. Keep the tunnels running.',
     marketHook: 'Tunnel car washes draw 400–800 kW in burst loads — one of the highest demand-charge exposure profiles in commercial real estate.',
     painPoint: 'Demand charges from compressors & conveyor systems can represent 40–60% of the total electric bill.',
-    ctaLine: 'Run a TrueQuote™ for your car wash portfolio → merlinpro.energy',
+    ctaLine: 'Run a TrueQuote™ for your car wash portfolio → merlinenergy.net',
     input: { industry: 'car-wash',         peakDemandKw: 450,  monthlyBillDollars: 18000, zipCode: '33101', primaryUseCase: 'peak-shaving',  hasSolar: true  },
     roiBenchmark: { paybackRange: '4–6 years', savingsRange: '$30K–$80K/yr', primaryDriver: 'demand charge reduction' },
   },
@@ -164,7 +164,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Lower your energy bill. Raise your ESG score.',
     marketHook: 'Hotels face dual exposure: TOU arbitrage opportunity (high evening occupancy) + demand spikes from HVAC and laundry equipment.',
     painPoint: 'Peak HVAC & pool heating in summer drives demand charges up to $22/kW in coastal markets.',
-    ctaLine: 'Get a hotel-specific BESS quote → merlinpro.energy',
+    ctaLine: 'Get a hotel-specific BESS quote → merlinenergy.net',
     input: { industry: 'hotel',            peakDemandKw: 650,  monthlyBillDollars: 32000, zipCode: '90210', primaryUseCase: 'peak-shaving',  hasSolar: true  },
     roiBenchmark: { paybackRange: '5–7 years', savingsRange: '$50K–$150K/yr', primaryDriver: 'demand charges + TOU arbitrage' },
   },
@@ -176,7 +176,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Backup power that also pays for itself.',
     marketHook: 'Hyperscalers commit to 24/7 CFE by 2030 — colocation and edge data centers are scrambling to catch up with on-site storage.',
     painPoint: 'Colocation facilities pay $25–35/kW in demand charges PLUS carry expensive diesel gen sets for backup.',
-    ctaLine: 'Replace diesel with BESS — get your quote → merlinpro.energy',
+    ctaLine: 'Replace diesel with BESS — get your quote → merlinenergy.net',
     input: { industry: 'data-center',      peakDemandKw: 1800, monthlyBillDollars: 95000, zipCode: '20148', primaryUseCase: 'peak-shaving',   hasSolar: false },
     roiBenchmark: { paybackRange: '3–5 years', savingsRange: '$200K–$500K/yr', primaryDriver: 'demand charges + backup power replacement' },
   },
@@ -188,7 +188,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Mission-critical uptime. BESS-backed resilience.',
     marketHook: 'CMS regulators are tightening backup power requirements. Hospitals face $1M+ penalties for grid outages. BESS satisfies both code AND economics.',
     painPoint: 'Large MRI, surgical suites, and HVAC create 2–4 MW demand spikes with near-zero tolerance for interruption.',
-    ctaLine: 'BESS + backup power for healthcare → merlinpro.energy',
+    ctaLine: 'BESS + backup power for healthcare → merlinenergy.net',
     input: { industry: 'hospital',         peakDemandKw: 2200, monthlyBillDollars: 110000, zipCode: '60601', primaryUseCase: 'peak-shaving',  hasSolar: true  },
     roiBenchmark: { paybackRange: '4–6 years', savingsRange: '$150K–$350K/yr', primaryDriver: 'demand charges + backup power avoidance' },
   },
@@ -200,7 +200,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Absorb motor startup spikes. Slash demand charges.',
     marketHook: 'Reshoring boom: US manufacturing floor space up 28% since 2022 — new plants are commissioning with BESS day one to avoid demand charge penalties.',
     painPoint: 'Motor startups, welding, and press operations create 1–5 ms demand spikes that set peak demand for the entire month.',
-    ctaLine: 'Industrial BESS quote → merlinpro.energy',
+    ctaLine: 'Industrial BESS quote → merlinenergy.net',
     input: { industry: 'manufacturing',    peakDemandKw: 1400, monthlyBillDollars: 65000, zipCode: '43215', primaryUseCase: 'peak-shaving',  hasSolar: true  },
     roiBenchmark: { paybackRange: '3–5 years', savingsRange: '$100K–$400K/yr', primaryDriver: 'demand charge from production equipment' },
   },
@@ -212,7 +212,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Lunch rush demand spikes are costing you. Stop it.',
     marketHook: 'National QSR chains are piloting BESS across 50-store portfolios to flatten demand and qualify for utility demand response incentives.',
     painPoint: 'Commercial kitchen equipment during lunch rush (11am–1pm) sets monthly peak demand for all 730 hours.',
-    ctaLine: 'QSR energy optimization quote → merlinpro.energy',
+    ctaLine: 'QSR energy optimization quote → merlinenergy.net',
     input: { industry: 'restaurant',       peakDemandKw: 120,  monthlyBillDollars: 6500,  zipCode: '77001', primaryUseCase: 'peak-shaving',  hasSolar: false },
     roiBenchmark: { paybackRange: '5–8 years', savingsRange: '$20K–$60K/yr', primaryDriver: 'demand charge from kitchen equipment' },
   },
@@ -224,7 +224,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Refrigeration loads are relentless. Manage them.',
     marketHook: 'Grocery chains commit to net-zero refrigerants AND grid emissions — BESS sits at the intersection of both mandates.',
     painPoint: 'Refrigeration compressors run 24/7 — demand charges for grocery are among the highest $/sqft of any commercial building type.',
-    ctaLine: 'Grocery BESS + solar quote → merlinpro.energy',
+    ctaLine: 'Grocery BESS + solar quote → merlinenergy.net',
     input: { industry: 'grocery',          peakDemandKw: 400,  monthlyBillDollars: 22000, zipCode: '85001', primaryUseCase: 'peak-shaving',  hasSolar: true  },
     roiBenchmark: { paybackRange: '4–7 years', savingsRange: '$40K–$100K/yr', primaryDriver: 'refrigeration demand charges' },
   },
@@ -236,7 +236,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'LEED score + lower opex. BESS does both.',
     marketHook: 'Return-to-office has stalled but HVAC must run for air quality compliance — landlords eat the demand charge bill regardless of occupancy.',
     painPoint: 'HVAC startup during morning ramp (7–9am) creates a demand spike that determines the monthly demand charge rate.',
-    ctaLine: 'Commercial office BESS quote → merlinpro.energy',
+    ctaLine: 'Commercial office BESS quote → merlinenergy.net',
     input: { industry: 'office',           peakDemandKw: 400,  monthlyBillDollars: 20000, zipCode: '10001', primaryUseCase: 'peak-shaving',  hasSolar: false },
     roiBenchmark: { paybackRange: '5–8 years', savingsRange: '$35K–$80K/yr', primaryDriver: 'HVAC demand charges' },
   },
@@ -248,7 +248,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: "Add 10 fast chargers. Don't upgrade your transformer.",
     marketHook: "NEVI grants are flooding the market — but utilities can't keep up. BESS lets EV hubs deploy fast without $500K transformer upgrades.",
     painPoint: 'Each 150 kW DC fast charger adds 150 kW to peak demand — 10 chargers = 1.5 MW demand spike on the utility.',
-    ctaLine: 'EV charging hub BESS sizing → merlinpro.energy',
+    ctaLine: 'EV charging hub BESS sizing → merlinenergy.net',
     input: { industry: 'ev-charging',      peakDemandKw: 1000, monthlyBillDollars: 55000, zipCode: '94102', primaryUseCase: 'ev-charging',   hasSolar: true  },
     roiBenchmark: { paybackRange: '4–6 years', savingsRange: '$80K–$180K/yr', primaryDriver: 'demand charges + transformer upgrade avoidance' },
   },
@@ -260,7 +260,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Dock door motors + EV forklifts = massive demand spikes.',
     marketHook: 'E-commerce fulfillment centers are electrifying their fleets — BESS absorbs the charging load and prevents demand charge explosions.',
     painPoint: 'Forklift charging during shift change creates sharp demand spikes that can triple the monthly demand charge.',
-    ctaLine: 'Warehouse BESS quote → merlinpro.energy',
+    ctaLine: 'Warehouse BESS quote → merlinenergy.net',
     input: { industry: 'warehouse',        peakDemandKw: 600,  monthlyBillDollars: 28000, zipCode: '45202', primaryUseCase: 'peak-shaving',  hasSolar: true  },
     roiBenchmark: { paybackRange: '4–6 years', savingsRange: '$50K–$120K/yr', primaryDriver: 'fleet charging demand spikes' },
   },
@@ -272,7 +272,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: "Cafeteria + HVAC at 8am. It's expensive. Fix it.",
     marketHook: 'K-12 districts are combining Inflation Reduction Act direct-pay ITC (≥30%) with BESS to eliminate demand charges and teach clean energy.',
     painPoint: 'School buildings sit idle 40% of the year but pay demand charges based on peak days in June when AC is full blast.',
-    ctaLine: 'K-12 / university BESS + solar quote → merlinpro.energy',
+    ctaLine: 'K-12 / university BESS + solar quote → merlinenergy.net',
     input: { industry: 'school',           peakDemandKw: 280,  monthlyBillDollars: 12000, zipCode: '78201', primaryUseCase: 'peak-shaving',  hasSolar: true  },
     roiBenchmark: { paybackRange: '4–7 years', savingsRange: '$25K–$70K/yr', primaryDriver: 'demand charges + direct-pay ITC' },
   },
@@ -284,7 +284,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Grow lights run 18 hours. Your demand charge does too.',
     marketHook: 'Vertical cannabis farms pay 2–3x commercial rates in many states — BESS + solar is the #1 operating cost lever available.',
     painPoint: 'Indoor grow lighting creates flat, round-the-clock loads that generate massive demand charges without demand management.',
-    ctaLine: 'Cannabis cultivation energy quote → merlinpro.energy',
+    ctaLine: 'Cannabis cultivation energy quote → merlinenergy.net',
     input: { industry: 'cannabis',         peakDemandKw: 420,  monthlyBillDollars: 35000, zipCode: '80203', primaryUseCase: 'peak-shaving',  hasSolar: false },
     roiBenchmark: { paybackRange: '3–5 years', savingsRange: '$60K–$150K/yr', primaryDriver: 'grow light demand charges at premium rates' },
   },
@@ -296,7 +296,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Peak hour = peak demand. BESS smooths both.',
     marketHook: 'National gym chains (Planet Fitness, Life Time) are rolling out BESS as a brand differentiator — "this gym runs on clean energy."',
     painPoint: 'After-work rush (5–8pm) runs HVAC, pools, saunas, and cardio equipment simultaneously — setting monthly peak demand.',
-    ctaLine: 'Fitness center BESS + solar quote → merlinpro.energy',
+    ctaLine: 'Fitness center BESS + solar quote → merlinenergy.net',
     input: { industry: 'fitness-center',   peakDemandKw: 200,  monthlyBillDollars: 9000,  zipCode: '30301', primaryUseCase: 'peak-shaving',  hasSolar: false },
     roiBenchmark: { paybackRange: '5–7 years', savingsRange: '$18K–$45K/yr', primaryDriver: 'HVAC demand charges during peak hours' },
   },
@@ -308,7 +308,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Compressors never stop. Demand charges never stop either.',
     marketHook: 'Food supply chain disruptions are pushing cold storage operators toward on-site backup power — BESS solves reliability AND economics.',
     painPoint: 'Refrigeration compressors are 24/7 base loads with defrost cycles creating sharp 15-minute demand spikes that set billing peak.',
-    ctaLine: 'Cold storage BESS + resilience quote → merlinpro.energy',
+    ctaLine: 'Cold storage BESS + resilience quote → merlinenergy.net',
     input: { industry: 'cold-storage',     peakDemandKw: 600,  monthlyBillDollars: 26000, zipCode: '35201', primaryUseCase: 'peak-shaving',  hasSolar: false },
     roiBenchmark: { paybackRange: '4–7 years', savingsRange: '$45K–$100K/yr', primaryDriver: 'refrigeration demand charges' },
   },
@@ -320,7 +320,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Brew day demand spikes are killing your margins.',
     marketHook: 'Craft breweries are energy-intensive at small scale — BESS enables them to compete with larger operations on operating cost.',
     painPoint: 'Mash tun heating and chilling equipment on brew day creates demand spikes 3–5x normal baseline.',
-    ctaLine: 'Brewery energy optimization quote → merlinpro.energy',
+    ctaLine: 'Brewery energy optimization quote → merlinenergy.net',
     input: { industry: 'brewery',          peakDemandKw: 180,  monthlyBillDollars: 8000,  zipCode: '97201', primaryUseCase: 'peak-shaving',  hasSolar: false },
     roiBenchmark: { paybackRange: '5–8 years', savingsRange: '$15K–$40K/yr', primaryDriver: 'demand spikes on brew days' },
   },
@@ -332,7 +332,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Industrial washers are demand charge machines.',
     marketHook: 'Commercial laundry operators with 50+ machine facilities are adopting BESS to qualify for utility demand response programs worth $5K–$30K/year.',
     painPoint: 'Industrial washers draw 15–20 kW each — 40 machines starting simultaneously hits 600–800 kW for seconds that set monthly peak.',
-    ctaLine: 'Commercial laundry BESS quote → merlinpro.energy',
+    ctaLine: 'Commercial laundry BESS quote → merlinenergy.net',
     input: { industry: 'laundry',          peakDemandKw: 280,  monthlyBillDollars: 11000, zipCode: '60290', primaryUseCase: 'peak-shaving',  hasSolar: false },
     roiBenchmark: { paybackRange: '5–8 years', savingsRange: '$20K–$55K/yr', primaryDriver: 'demand charges from washer motor startups' },
   },
@@ -344,7 +344,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Add EV charging. Skip the transformer upgrade.',
     marketHook: 'Cities are mandating EV-ready parking — BESS lets operators deploy Level 2 + DCFC charging without hitting utility demand charge penalties.',
     painPoint: 'Parking garages have very low base loads but new EV mandates create sudden 200–500 kW demand spikes from charging.',
-    ctaLine: 'EV-ready parking garage BESS quote → merlinpro.energy',
+    ctaLine: 'EV-ready parking garage BESS quote → merlinenergy.net',
     input: { industry: 'parking',          peakDemandKw: 400,  monthlyBillDollars: 18000, zipCode: '10001', primaryUseCase: 'ev-charging',   hasSolar: false },
     roiBenchmark: { paybackRange: '5–8 years', savingsRange: '$30K–$80K/yr', primaryDriver: 'EV charging demand management' },
   },
@@ -356,7 +356,7 @@ const INDUSTRIES: DealProfile[] = [
     tagline: 'Black Friday demand charges last all year.',
     marketHook: 'Retail ESG mandates are driving chains to commit to 100% clean energy — BESS + rooftop solar is the fastest path for big-box stores.',
     painPoint: "HVAC, lighting, and refrigeration in retail creates a consistent peak that's hard to shed without affecting customer experience.",
-    ctaLine: 'Retail chain BESS + solar quote → merlinpro.energy',
+    ctaLine: 'Retail chain BESS + solar quote → merlinenergy.net',
     input: { industry: 'retail',           peakDemandKw: 450,  monthlyBillDollars: 21000, zipCode: '85001', primaryUseCase: 'peak-shaving',  hasSolar: true  },
     roiBenchmark: { paybackRange: '4–6 years', savingsRange: '$40K–$100K/yr', primaryDriver: 'HVAC + refrigeration demand charges' },
   },
@@ -517,7 +517,7 @@ function buildDiscordPayload(deal: DealProfile, quote: MCPQuoteResult, dateStr: 
           { name: '🚀 Take Action',      value: deal.ctaLine,                                  inline: false },
         ],
         footer: {
-          text: `Merlin TrueQuote™ · ${dateStr} · NREL ATB 2024 benchmark-backed · merlinpro.energy`,
+          text: `Merlin TrueQuote™ · ${dateStr} · NREL ATB 2024 benchmark-backed · merlinenergy.net`,
         },
         timestamp: new Date().toISOString(),
       },
@@ -703,7 +703,7 @@ function generateLinkedInPost(deal: DealProfile, quote: MCPQuoteResult, dateStr:
  *
  * Tweet 1: Hook — world fact or industry fact (alternates daily)
  * Tweet 2: The numbers — tight, scannable
- * Tweet 3: CTA + hashtags → merlinpro.energy
+ * Tweet 3: CTA + hashtags → merlinenergy.net
  */
 function generateXThread(deal: DealProfile, quote: MCPQuoteResult): string[] {
   const fin  = quote.financials;
@@ -731,7 +731,7 @@ function generateXThread(deal: DealProfile, quote: MCPQuoteResult): string[] {
     `Payback: ${fin.simplePayback} yrs  ·  NPV: ${fmt(fin.npv25Year)}`,
   ].join('\n');
 
-  const tweet3 = `Every number is calculated live — NREL data, real utility rates for that ZIP. No vendor estimates.\n\nRun yours free → merlinpro.energy\n\n#BESS #CleanEnergy #${tag} #MerlinEnergy`;
+  const tweet3 = `Every number is calculated live — NREL data, real utility rates for that ZIP. No vendor estimates.\n\nRun yours free → merlinenergy.net\n\n#BESS #CleanEnergy #${tag} #MerlinEnergy`;
 
   return [hook, tweet2, tweet3];
 }
@@ -835,7 +835,7 @@ async function emailLinkedInPost(postText: string, subject: string): Promise<boo
 ${postText}
         </div>
         <p style="color: #9ca3af; font-size: 12px; margin-bottom: 0;">
-          Generated by Merlin TrueQuote™ · merlinpro.energy
+          Generated by Merlin TrueQuote™ · merlinenergy.net
         </p>
       </div>
     </div>
