@@ -9,9 +9,9 @@ export default function StatusQuoSection() {
       {/* Top label + main grid */}
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pt-10 pb-0">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-5 h-px bg-red-500/60" />
+          <div className="w-5 h-px bg-sky-500/40" />
           <span
-            className="text-[10px] text-red-400/70 uppercase tracking-[0.25em] font-semibold"
+            className="text-[10px] text-sky-400/60 uppercase tracking-[0.25em] font-semibold"
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           >
             The problem we exist to solve
@@ -31,7 +31,7 @@ export default function StatusQuoSection() {
             {/* Scene 1 */}
             <div className="mb-5">
               <p
-                className="text-[10px] text-red-400/60 uppercase tracking-widest font-semibold mb-2"
+                className="text-[10px] text-amber-500/60 uppercase tracking-widest font-semibold mb-2"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
                 Scene 1 — The vendor call
@@ -56,7 +56,7 @@ export default function StatusQuoSection() {
             {/* Scene 2 */}
             <div className="mb-5">
               <p
-                className="text-[10px] text-red-400/60 uppercase tracking-widest font-semibold mb-2"
+                className="text-[10px] text-amber-500/60 uppercase tracking-widest font-semibold mb-2"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
                 Scene 2 — The engineering study
@@ -81,7 +81,7 @@ export default function StatusQuoSection() {
             {/* Scene 3 */}
             <div className="mb-6">
               <p
-                className="text-[10px] text-red-400/60 uppercase tracking-widest font-semibold mb-2"
+                className="text-[10px] text-amber-500/60 uppercase tracking-widest font-semibold mb-2"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
                 Scene 3 — EPC procurement
