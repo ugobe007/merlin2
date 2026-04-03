@@ -181,7 +181,7 @@ const customStyles = `
 
 function formatCurrency(value: number): string {
   if (value >= 1_000_000) {
-    return `$${(value / 1_000_000).toFixed(2)}M`;
+    return `$${(value / 1_000_000).toFixed(1)}M`;
   }
   if (value >= 1_000) {
     return `$${(value / 1_000).toFixed(0)}K`;
@@ -900,7 +900,9 @@ export default function Step4V8({ state, actions }: Props) {
                           tier.itcBasisBreakdown.evChargingCost > 0) && (
                           <p className="text-slate-600 text-[9px] mt-2 leading-relaxed">
                             Excluded: generators
-                            {tier.itcBasisBreakdown.evChargingCost > 0 ? ", EV infrastructure" : ""}{" "}
+                            {tier.itcBasisBreakdown.evChargingCost > 0
+                              ? ", EV infrastructure"
+                              : ""}{" "}
                             — not eligible per §48
                           </p>
                         )}

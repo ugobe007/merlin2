@@ -371,7 +371,7 @@ function getAdvisorContent(
       const tier = tiers?.[recIdx];
       const bizName = business?.name;
       const fmt$ = (n: number) =>
-        n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : `$${Math.round(n / 1_000)}k`;
+        n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : `$${Math.round(n / 1_000)}K`;
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {/* Greeting */}
