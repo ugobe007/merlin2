@@ -1,11 +1,12 @@
 /* Merlin Energy — Homepage
-   Sections: Navbar → Hero → StatusQuo → Industries+Estimate → Workflow → Value → Footer */
+   Sections: Navbar → Hero → StatusQuo → Industries+Estimate → Workflow → Platform → Value → Footer */
 
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import StatusQuoSection from "@/components/StatusQuoSection";
 import IndustriesSection from "@/components/IndustriesSection";
 import WorkflowSection from "@/components/WorkflowSection";
+import PlatformSection from "@/components/PlatformSection";
 import ValueSection from "@/components/ValueSection";
 
 const WIZARD_URL =
@@ -33,6 +34,7 @@ export default function Home() {
       </div>
 
       <WorkflowSection />
+      <PlatformSection />
 
       {/* ── Section bridge: How it works → Why Merlin ───────────────────── */}
       <div className="bg-[#060D1F] pt-4 pb-0">
