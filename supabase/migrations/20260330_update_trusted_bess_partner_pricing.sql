@@ -12,10 +12,7 @@
 UPDATE vendor_products
 SET
   price_per_kwh          = 112.0,
-  price_per_kw           = 120.0,
-  -- Recompute effective_price_per_kwh (tariff_adder_pct defaults to 0 for
-  -- direct-partner products; effective = price until tariff is set per PO)
-  effective_price_per_kwh = 112.0
+  price_per_kw           = 120.0
 WHERE manufacturer = 'Great Power'
   AND model = 'GP-BESS-200'
   AND product_category = 'battery';
@@ -23,8 +20,7 @@ WHERE manufacturer = 'Great Power'
 UPDATE vendor_products
 SET
   price_per_kwh           = 108.0,
-  price_per_kw            = 118.0,
-  effective_price_per_kwh = 108.0
+  price_per_kw            = 118.0
 WHERE manufacturer = 'Great Power'
   AND model = 'GP-BESS-500'
   AND product_category = 'battery';
@@ -32,8 +28,7 @@ WHERE manufacturer = 'Great Power'
 UPDATE vendor_products
 SET
   price_per_kwh           = 130.0,
-  price_per_kw            = 128.0,
-  effective_price_per_kwh = 130.0
+  price_per_kw            = 128.0
 WHERE manufacturer = 'Discovery Energy'
   AND model = 'DCS-E 240'
   AND product_category = 'battery';
@@ -41,8 +36,7 @@ WHERE manufacturer = 'Discovery Energy'
 UPDATE vendor_products
 SET
   price_per_kwh           = 150.0,
-  price_per_kw            = 135.0,
-  effective_price_per_kwh = 150.0
+  price_per_kw            = 135.0
 WHERE manufacturer = 'LiON Energy'
   AND model = 'Guardian 250'
   AND product_category = 'battery';
@@ -50,8 +44,7 @@ WHERE manufacturer = 'LiON Energy'
 UPDATE vendor_products
 SET
   price_per_kwh           = 145.0,
-  price_per_kw            = 132.0,
-  effective_price_per_kwh = 145.0
+  price_per_kw            = 132.0
 WHERE manufacturer = 'LiON Energy'
   AND model = 'Guardian 500'
   AND product_category = 'battery';

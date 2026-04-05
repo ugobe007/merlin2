@@ -101,7 +101,7 @@ interface RenewablesSectionProps {
 }
 
 export const RenewablesSection = React.memo(function RenewablesSection({
-  includeRenewables,
+  includeRenewables: _includeRenewables,
   setIncludeRenewables,
   // Solar
   solarPVIncluded,
@@ -178,13 +178,12 @@ export const RenewablesSection = React.memo(function RenewablesSection({
   setEvAdditionalPowerKW,
   // Context
   storageSizeMW,
-  durationHours,
+  durationHours: _durationHours,
 }: RenewablesSectionProps) {
   // Which add-on config panel is currently expanded
   const [expandedAddon, setExpandedAddon] = useState<string | null>(null);
 
-  const toggleExpand = (key: string) =>
-    setExpandedAddon((prev) => (prev === key ? null : key));
+  const toggleExpand = (key: string) => setExpandedAddon((prev) => (prev === key ? null : key));
 
   // Enable an add-on: flip its Included flag, open master toggle, auto-expand config
   const enableAddon = (key: string, setter: (v: boolean) => void) => {
@@ -224,6 +223,14 @@ export const RenewablesSection = React.memo(function RenewablesSection({
       ? evLevel2Count * 7.2 + evDCFCCount * 150 + evHPCCount * 250 + evAdditionalPowerKW
       : 0);
 
+  // Phase 5: Merlin shared engine — suggest sizing from BESS context
+  // IEEE 446-1995 Orange Book: generator reserve = BESS kW × 0.70
+  // NREL sun-quality: solar BESS offset ≈ BESS kW × 0.40 × sunFactor (default PSH 4.5 → factor 1.0)
+  const bessKW = storageSizeMW * 1000;
+  const merlinSuggestedGenKW = bessKW > 0 ? Math.round(bessKW * 0.7) : 0;
+  const _sunFactor = Math.max(0.4, Math.min(1.0, (solarPeakSunHours - 2.5) / 2.0));
+  const merlinSuggestedSolarKW = bessKW > 0 ? Math.round(bessKW * 0.4 * _sunFactor) : 0;
+
   // Card definition for each add-on
   const addonCards = [
     {
@@ -259,6 +266,7 @@ export const RenewablesSection = React.memo(function RenewablesSection({
           setSolarPeakSunHours={setSolarPeakSunHours}
           solarTrackingType={solarTrackingType}
           setSolarTrackingType={setSolarTrackingType}
+          merlinSuggestedKW={merlinSuggestedSolarKW}
         />
       ),
     },
@@ -313,6 +321,7 @@ export const RenewablesSection = React.memo(function RenewablesSection({
           setGeneratorRedundancy={setGeneratorRedundancy}
           generatorSpaceAvailable={generatorSpaceAvailable}
           setGeneratorSpaceAvailable={setGeneratorSpaceAvailable}
+          merlinSuggestedKW={merlinSuggestedGenKW}
         />
       ),
     },
@@ -322,9 +331,7 @@ export const RenewablesSection = React.memo(function RenewablesSection({
       label: "EV Charging",
       priceSig: "$8K–35K/port · revenue-generating asset",
       included: evChargersIncluded,
-      badge: evChargersIncluded
-        ? `${evLevel2Count + evDCFCCount + evHPCCount} ports`
-        : null,
+      badge: evChargersIncluded ? `${evLevel2Count + evDCFCCount + evHPCCount} ports` : null,
       onEnable: () => enableAddon("ev", setEvChargersIncluded),
       onDisable: () => disableAddon("ev", setEvChargersIncluded),
       config: (
@@ -383,13 +390,11 @@ export const RenewablesSection = React.memo(function RenewablesSection({
         <div className="flex items-center gap-3">
           <Sparkles className="w-5 h-5 text-emerald-400" />
           <div>
-            <h3 className="text-base font-semibold text-white leading-tight">
-              Optional Add-Ons
-            </h3>
+            <h3 className="text-base font-semibold text-white leading-tight">Optional Add-Ons</h3>
             <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
               Solar, wind, generators, EV charging &amp; fuel cells —{" "}
-              <strong style={{ color: "rgba(52,211,153,0.75)" }}>not included</strong> in
-              your base BESS quote
+              <strong style={{ color: "rgba(52,211,153,0.75)" }}>not included</strong> in your base
+              BESS quote
             </p>
           </div>
         </div>
@@ -425,8 +430,9 @@ export const RenewablesSection = React.memo(function RenewablesSection({
       <div className="p-5">
         {activeCount === 0 && (
           <p className="text-[12px] mb-4" style={{ color: "rgba(255,255,255,0.3)" }}>
-            Your current quote is <strong style={{ color: "rgba(255,255,255,0.55)" }}>BESS only</strong>.
-            Click any card below to include it in the quote.
+            Your current quote is{" "}
+            <strong style={{ color: "rgba(255,255,255,0.55)" }}>BESS only</strong>. Click any card
+            below to include it in the quote.
           </p>
         )}
 
@@ -460,10 +466,7 @@ export const RenewablesSection = React.memo(function RenewablesSection({
                         </span>
                       </div>
                       {active && addon.badge ? (
-                        <span
-                          className="text-[11px] font-bold"
-                          style={{ color: "#34d399" }}
-                        >
+                        <span className="text-[11px] font-bold" style={{ color: "#34d399" }}>
                           {addon.badge} configured
                         </span>
                       ) : (
@@ -540,7 +543,10 @@ export const RenewablesSection = React.memo(function RenewablesSection({
             </p>
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <p
+                  className="text-[10px] uppercase tracking-wider mb-1"
+                  style={{ color: "rgba(255,255,255,0.35)" }}
+                >
                   Total Added Capacity
                 </p>
                 <p className="text-xl font-bold text-emerald-400">
@@ -548,7 +554,10 @@ export const RenewablesSection = React.memo(function RenewablesSection({
                 </p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <p
+                  className="text-[10px] uppercase tracking-wider mb-1"
+                  style={{ color: "rgba(255,255,255,0.35)" }}
+                >
                   BESS System
                 </p>
                 <p className="text-xl font-bold text-white">
@@ -556,7 +565,10 @@ export const RenewablesSection = React.memo(function RenewablesSection({
                 </p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <p
+                  className="text-[10px] uppercase tracking-wider mb-1"
+                  style={{ color: "rgba(255,255,255,0.35)" }}
+                >
                   Total System
                 </p>
                 <p className="text-xl font-bold text-blue-400">

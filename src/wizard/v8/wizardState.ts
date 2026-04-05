@@ -499,6 +499,7 @@ export type WizardIntent =
         solarKW: number;
         generatorKW: number;
         generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
+        linearGeneratorKW: number;
         level2Chargers: number;
         dcfcChargers: number;
         hpcChargers: number;
@@ -919,6 +920,7 @@ export interface WizardActions {
       solarKW: number;
       generatorKW: number;
       generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
+      linearGeneratorKW: number;
       level2Chargers: number;
       dcfcChargers: number;
       hpcChargers: number;

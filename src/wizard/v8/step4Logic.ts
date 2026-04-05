@@ -714,14 +714,13 @@ function buildOneTier(
 
   // ── Hybrid Coverage ──────────────────────────────────────────────────────
   // Always computed — data is available once BESS + solar + gen are sized.
-  const stateWithLinearGen = state as WizardState & { linearGeneratorKW?: number };
   const hybridCoverage = computeHybridCoverage(
     bessKW,
     bessKWh,
     finalSolarKW,
     finalGenKW,
     state.generatorFuelType ?? "diesel",
-    stateWithLinearGen.linearGeneratorKW ?? 0,
+    state.linearGeneratorKW ?? 0,
     state.baseLoadKW,
     state.peakLoadKW * state.criticalLoadPct,
     intel?.peakSunHours ?? 5.0
@@ -790,7 +789,10 @@ function buildOneTier(
   // charge, sun hours) — NOT the generic MW multipliers in centralizedCalculations.
   // EV charging revenue is captured here via evChargers count parameter.
   const electricityRate = intel?.utilityRate ?? 0.15;
-  const demandCharge = intel?.demandCharge ?? 15;
+  // Industry-specific demand charge fallback: hospitals carry $20-25/kW commercial
+  // tariffs by default (large critical-care load requires firm capacity reservation).
+  // All other industries default to $15/kW (typical mid-market commercial).
+  const demandCharge = intel?.demandCharge ?? (state.industry === "hospital" ? 20 : 15);
   const sunHoursPerDay = intel?.peakSunHours ?? 5;
   const evChargerCount = level2 + dcfc + hpc;
 
@@ -812,6 +814,7 @@ function buildOneTier(
       // Peak rate: if no peakRate in intel, estimate peak = base + $0.05/kWh spread
       hasTOU: intel?.hasTOU ?? false,
       peakRate: intel?.peakRate ?? electricityRate + 0.05,
+      industry: state.industry ?? undefined,
     },
     finalSolarKW
   );
@@ -944,6 +947,8 @@ function buildOneTier(
     installationLaborCost: v45Costs.installationLaborCost,
     totalProjectCost: v45Costs.totalProjectCost,
     notes: tierNotes,
+    generatorFuelType: state.generatorFuelType,
+    linearGeneratorKW: state.linearGeneratorKW ?? 0,
   };
 }
 
@@ -1092,6 +1097,7 @@ function recalcWithoutGenerator(tier: QuoteTier, state: WizardState): QuoteTier 
       cyclesPerYear: 250,
       hasTOU: state.intel?.hasTOU ?? false,
       peakRate: state.intel?.peakRate ?? electricityRate + 0.05,
+      industry: state.industry ?? undefined,
     },
     tier.solarKW
   );
@@ -1179,6 +1185,7 @@ function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
       cyclesPerYear: 250,
       hasTOU: state.intel?.hasTOU ?? false,
       peakRate: state.intel?.peakRate ?? electricityRate + 0.05,
+      industry: state.industry ?? undefined,
     },
     tier.solarKW
   );
@@ -1244,12 +1251,16 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
   //   a) The user explicitly requested it (wantsGenerator = true)
   //   b) The facility has high critical loads (criticalLoadPct ≥ 50%) — safety requirement
   //   c) The generator need was explicitly stated as full_backup or resilience
+  //   d) The industry is "hospital" — NEC 517 / NFPA 99 mandates backup power for
+  //      healthcare occupancies. Removing it would produce a code-violating design.
+  //      Hospitals account for the generator cost via avoided downtime savings credit.
   // In those cases the generator is a necessity, not an optional ROI lever.
   const generatorIsExplicitlyNeeded =
     state.wantsGenerator === true ||
     state.criticalLoadPct >= 0.5 ||
     state.step3Answers?.generatorNeed === "full_backup" ||
-    state.step3Answers?.generatorNeed === "resilience";
+    state.step3Answers?.generatorNeed === "resilience" ||
+    state.industry === "hospital";
 
   if (adjusted.generatorKW > 0 && !generatorIsExplicitlyNeeded) {
     const noGen = recalcWithoutGenerator(adjusted, state);

@@ -1076,6 +1076,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
         solarKW: number;
         generatorKW: number;
         generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
+        linearGeneratorKW: number;
         level2Chargers: number;
         dcfcChargers: number;
         hpcChargers: number;

@@ -297,6 +297,274 @@ interface Props {
   actions: WizardActions;
 }
 
+// ============================================================================
+// PHASE 1 + 3: SIZING INTELLIGENCE PANEL
+// Collapsible per-tier panel showing the full load→BESS→solar→gen chain.
+// Mirrors the exact formulas in step4Logic.ts (do not edit independently).
+// ============================================================================
+
+const BESS_APP_LABELS: Record<string, string> = {
+  peak_shaving: "Peak shaving",
+  backup_power: "Backup power",
+  energy_arbitrage: "Energy arbitrage",
+  demand_response: "Demand response",
+  load_shifting: "Load shifting",
+  resilience: "Resilience",
+  stacked: "Multi-use (stacked)",
+};
+
+const BESS_RATIO_META: Record<string, { ratio: number; source: string }> = {
+  peak_shaving: { ratio: 0.4, source: "IEEE 4538388 · MDPI 11(8):2048" },
+  demand_response: { ratio: 0.4, source: "IEEE 4538388" },
+  stacked: { ratio: 0.4, source: "IEEE 4538388 (conservative)" },
+  energy_arbitrage: { ratio: 0.5, source: "Industry benchmark" },
+  load_shifting: { ratio: 0.5, source: "Industry benchmark" },
+  backup_power: { ratio: 0.7, source: "IEEE 446-1995 Orange Book" },
+  resilience: { ratio: 0.7, source: "IEEE 446-1995 Orange Book" },
+};
+
+const TIER_BESS_SCALE: Record<string, number> = {
+  Starter: 0.55,
+  Recommended: 1.0,
+  Complete: 1.5,
+};
+
+interface SizingIntelligencePanelProps {
+  tier: import("../wizardState").QuoteTier;
+  state: WizardState;
+  isPerfectFit: boolean;
+}
+
+function SizingIntelligencePanel({ tier, state, isPerfectFit }: SizingIntelligencePanelProps) {
+  const [open, setOpen] = React.useState(false);
+
+  const { baseLoadKW, peakLoadKW, criticalLoadPct, intel, solarPhysicalCapKW } = state;
+  const criticalKW = Math.round(peakLoadKW * criticalLoadPct);
+  const sunHours = intel?.peakSunHours ?? 0;
+  const sunFactor = Math.max(0.4, Math.min(1.0, (sunHours - 2.5) / 2.0));
+  const application =
+    (state.step3Answers?.primaryBESSApplication as string | undefined) ?? "peak_shaving";
+  const { ratio: bessRatio, source: bessSource } = BESS_RATIO_META[application] ?? {
+    ratio: 0.4,
+    source: "IEEE standard",
+  };
+  const tierScale = TIER_BESS_SCALE[tier.label] ?? 1.0;
+
+  const solarCapPct =
+    (solarPhysicalCapKW ?? 0) > 0 && tier.solarKW > 0
+      ? Math.round((tier.solarKW / (solarPhysicalCapKW ?? 1)) * 100)
+      : 0;
+
+  const genIncluded = tier.generatorKW > 0;
+  const linearGenKW = tier.linearGeneratorKW ?? 0;
+  const genNeed = state.step3Answers?.generatorNeed as string | undefined;
+
+  const genReason = genIncluded
+    ? genNeed === "full_backup"
+      ? "User requested full backup"
+      : genNeed === "resilience"
+        ? "User requested resilience"
+        : criticalLoadPct >= 0.5
+          ? `Critical load ≥ 50% (${Math.round(criticalLoadPct * 100)}%)`
+          : "Included per goal policy"
+    : genNeed === "none" || !genNeed
+      ? "Not requested"
+      : criticalLoadPct < 0.5
+        ? `Critical load ${Math.round(criticalLoadPct * 100)}% < 50% threshold`
+        : "Excluded for ROI";
+
+  const accentCls = isPerfectFit ? "text-emerald-400" : "text-slate-400";
+  const borderCls = isPerfectFit
+    ? "border-emerald-500/20 bg-emerald-900/[0.07]"
+    : "border-slate-700/40 bg-slate-900/30";
+
+  if (!open) {
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(true);
+        }}
+        className={`w-full flex items-center justify-between px-3 py-2.5 mb-2 rounded-lg transition-all border ${borderCls} hover:opacity-80`}
+      >
+        <span className={`flex items-center gap-1.5 text-xs font-semibold ${accentCls}`}>
+          <span>🧮</span>
+          <span>How Merlin sized this</span>
+        </span>
+        <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+      </button>
+    );
+  }
+
+  return (
+    <div
+      className={`mb-3 rounded-lg border text-[11px] leading-relaxed ${borderCls}`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={() => setOpen(false)}
+        className="w-full flex items-center justify-between p-3 pb-2"
+      >
+        <span className={`flex items-center gap-1.5 font-bold text-xs ${accentCls}`}>
+          <span>🧮</span> How Merlin sized this
+        </span>
+        <ChevronUp className="w-3.5 h-3.5 text-slate-500" />
+      </button>
+
+      <div className="px-3 pb-3 space-y-3">
+        {/* ── Load Profile ── */}
+        <div>
+          <p className="text-[9px] uppercase tracking-[0.18em] text-slate-500 mb-1.5 font-bold">
+            Load Profile
+          </p>
+          <div className="space-y-0.5">
+            <div className="flex justify-between items-baseline">
+              <span className="text-slate-500">Base load</span>
+              <span className="text-slate-300 font-medium tabular-nums">
+                {baseLoadKW} kW <span className="text-slate-600 text-[9px]">avg continuous</span>
+              </span>
+            </div>
+            <div className="flex justify-between items-baseline">
+              <span className="text-slate-400 font-semibold">Peak load</span>
+              <span className="text-white font-semibold tabular-nums">
+                {peakLoadKW} kW <span className="text-emerald-500/70 text-[9px]">← BESS basis</span>
+              </span>
+            </div>
+            <div className="flex justify-between items-baseline">
+              <span className="text-slate-500">Critical load</span>
+              <span className="text-slate-300 font-medium tabular-nums">
+                {criticalKW} kW{" "}
+                <span className="text-slate-600 text-[9px]">
+                  {Math.round(criticalLoadPct * 100)}% · IEEE 446
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Battery Storage ── */}
+        <div className="border-t border-white/[0.05] pt-2.5">
+          <p className="text-[9px] uppercase tracking-[0.18em] text-slate-500 mb-1.5 font-bold">
+            Battery Storage
+          </p>
+          <div className="space-y-0.5">
+            <div className="flex justify-between items-baseline">
+              <span className="text-slate-500">Application</span>
+              <span className="text-slate-300 font-medium">
+                {BESS_APP_LABELS[application] ?? application}
+              </span>
+            </div>
+            <div className="flex justify-between items-baseline">
+              <span className="text-slate-500">IEEE sizing ratio</span>
+              <span className="text-slate-300 font-medium tabular-nums">
+                {bessRatio} <span className="text-slate-600 text-[9px]">({bessSource})</span>
+              </span>
+            </div>
+            <div className="flex justify-between items-baseline">
+              <span className="text-slate-500">Tier scale</span>
+              <span className="text-slate-300 font-medium tabular-nums">
+                ×{tierScale} <span className="text-slate-600 text-[9px]">({tier.label})</span>
+              </span>
+            </div>
+            <div className="flex justify-between items-baseline border-t border-white/[0.04] pt-1 mt-0.5">
+              <span className={accentCls}>Result</span>
+              <span className={`font-bold tabular-nums ${accentCls}`}>
+                {tier.bessKW} kW / {tier.bessKWh} kWh
+                <span className="text-slate-500 font-normal text-[9px]"> 2h C2 std</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Solar (Phase 3 transparency) ── */}
+        {intel?.solarFeasible && (solarPhysicalCapKW ?? 0) > 0 && (
+          <div className="border-t border-white/[0.05] pt-2.5">
+            <p className="text-[9px] uppercase tracking-[0.18em] text-slate-500 mb-1.5 font-bold">
+              Solar ☀️
+            </p>
+            <div className="space-y-0.5">
+              <div className="flex justify-between items-baseline">
+                <span className="text-slate-500">Location</span>
+                <span className="text-slate-300 font-medium tabular-nums">
+                  {sunHours.toFixed(1)} PSH · grade {intel.solarGrade}
+                </span>
+              </div>
+              <div className="flex justify-between items-baseline">
+                <span className="text-slate-500">Sun quality factor</span>
+                <span className="text-slate-300 font-medium tabular-nums">
+                  {Math.round(sunFactor * 100)}%{" "}
+                  <span className="text-slate-600 text-[9px]">NREL methodology</span>
+                </span>
+              </div>
+              <div className="flex justify-between items-baseline">
+                <span className="text-slate-500">Roof capacity</span>
+                <span className="text-slate-300 font-medium tabular-nums">
+                  {solarPhysicalCapKW} kW available
+                </span>
+              </div>
+              <div className="flex justify-between items-baseline border-t border-white/[0.04] pt-1 mt-0.5">
+                <span className={accentCls}>Sized</span>
+                <span
+                  className={`font-bold tabular-nums ${tier.solarKW > 0 ? accentCls : "text-slate-500 italic"}`}
+                >
+                  {tier.solarKW > 0
+                    ? `${tier.solarKW} kW · ${solarCapPct}% of cap (best ROI)`
+                    : "Not included"}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Power Generation ── */}
+        <div className="border-t border-white/[0.05] pt-2.5">
+          <p className="text-[9px] uppercase tracking-[0.18em] text-slate-500 mb-1.5 font-bold">
+            Power Generation
+          </p>
+          <div className="space-y-0.5">
+            <div className="flex justify-between items-baseline">
+              <span className="text-slate-500">Rotary generator</span>
+              <span
+                className={`font-medium tabular-nums ${genIncluded ? accentCls : "text-slate-500 italic"}`}
+              >
+                {genIncluded
+                  ? `${tier.generatorKW} kW${tier.generatorFuelType ? ` · ${tier.generatorFuelType}` : ""}`
+                  : "Excluded"}
+              </span>
+            </div>
+            <div className="flex justify-between items-baseline">
+              <span className="text-slate-500">Reason</span>
+              <span className="text-slate-400 text-right" style={{ maxWidth: 180 }}>
+                {genReason}
+              </span>
+            </div>
+            {linearGenKW > 0 && (
+              <>
+                <div className="flex justify-between items-baseline border-t border-white/[0.04] pt-1 mt-0.5">
+                  <span className="text-slate-500">Linear generator</span>
+                  <span className={`font-bold tabular-nums ${accentCls}`}>
+                    {linearGenKW} kW continuous
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-slate-500">Role</span>
+                  <span className="text-slate-400">Trickle-charge BESS · 72h endurance</span>
+                </div>
+              </>
+            )}
+            <div className="flex justify-between items-baseline border-t border-white/[0.04] pt-1 mt-0.5">
+              <span className="text-slate-600 italic">Wind</span>
+              <span className="text-slate-600 italic text-[9px]">
+                Merlin Network · coming 2026 💨
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── State-level incentive lookup (quantifiable programs only) ────────────────
 // Estimates are conservative midpoints based on current program rates.
 // CA SGIP: ~$200/kWh  |  NY NYSERDA: ~$150/kWh  |  MA SMART: ~$1,200/kW AC
@@ -787,10 +1055,34 @@ export default function Step4V8({ state, actions }: Props) {
                       <div className={`equipment-chip ${config.chipBg} border`}>
                         <span>🔥</span>
                         <span className={config.chipText}>
-                          {Math.round(tier.generatorKW)} kW Generator
+                          {Math.round(tier.generatorKW)} kW{" "}
+                          {tier.generatorFuelType === "natural-gas"
+                            ? "Gas Gen"
+                            : tier.generatorFuelType === "dual-fuel"
+                              ? "Dual-Fuel Gen"
+                              : "Diesel Gen"}
                         </span>
                       </div>
                     )}
+
+                    {/* Linear Generator — Phase 2 */}
+                    {(tier.linearGeneratorKW ?? 0) >= 1 && (
+                      <div className={`equipment-chip ${config.chipBg} border border-cyan-500/30`}>
+                        <span>🔄</span>
+                        <span className={`${config.chipText} text-cyan-300`}>
+                          {Math.round(tier.linearGeneratorKW ?? 0)} kW Linear Gen
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Wind — coming soon (Phase 4) */}
+                    <div
+                      className="equipment-chip border border-dashed border-slate-700 bg-slate-900/40 opacity-40 cursor-not-allowed select-none"
+                      title="Wind energy — coming to Merlin Network Q3 2026"
+                    >
+                      <span>💨</span>
+                      <span className="text-slate-500 text-[11px] font-medium">Wind · 2026</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1080,6 +1372,9 @@ export default function Step4V8({ state, actions }: Props) {
                       </div>
                     </div>
                   )}
+
+                {/* Phase 1: Sizing Intelligence Panel */}
+                <SizingIntelligencePanel tier={tier} state={state} isPerfectFit={isPerfectFit} />
 
                 {/* V4.5 Cost Breakdown - Expandable */}
                 <button

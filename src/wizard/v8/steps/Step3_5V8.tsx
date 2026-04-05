@@ -2745,6 +2745,10 @@ export default function Step3_5V8({ state, actions }: Props) {
   );
   // EV charging is OPT-IN — defaults OFF unless user previously enabled it
   const [wantsEV, setWantsEV] = useState<boolean>(() => state.wantsEVCharging === true);
+  // Linear generator is OPT-IN — continuous baseload bridge for extended outages (Phase 2)
+  const [wantsLinearGen, setWantsLinearGen] = useState<boolean>(
+    () => (state.linearGeneratorKW ?? 0) > 0
+  );
   // pendingSolarKW — set by banner actions to force-update the SolarCard slider
   // when canopyInterest hasn't changed in value (e.g. already 'yes' from step 3)
   // or when the slider needs to sync from an external button click.
@@ -2805,6 +2809,27 @@ export default function Step3_5V8({ state, actions }: Props) {
     setWantsEV(false);
     actions.setAddonPreference("ev", false);
     actions.setAddonConfig({ level2Chargers: 0, dcfcChargers: 0, hpcChargers: 0 });
+  };
+
+  // Linear generator sizing — sized to output above base load so net BESS charging occurs
+  const linearGenRecKW =
+    state.baseLoadKW > 0
+      ? Math.max(10, Math.round(state.baseLoadKW * 1.2))
+      : Math.max(50, Math.round(state.peakLoadKW * 0.3));
+  const linearGenMaxKW = Math.max(250, linearGenRecKW * 2);
+  const linearGenMinKW = 10;
+  const handleAddLinearGen = () => {
+    setWantsLinearGen(true);
+    actions.setAddonConfig({ linearGeneratorKW: linearGenRecKW });
+  };
+  const handleRemoveLinearGen = () => {
+    setWantsLinearGen(false);
+    actions.setAddonConfig({ linearGeneratorKW: 0 });
+  };
+  const handleLinearGenConfig = (kw: number) => {
+    actions.setAddonConfig({
+      linearGeneratorKW: Math.max(linearGenMinKW, Math.min(linearGenMaxKW, kw)),
+    });
   };
 
   const effectiveSolarCapKW = getEffectiveSolarCapKW(state);
@@ -2886,6 +2911,11 @@ export default function Step3_5V8({ state, actions }: Props) {
 
   const liveSolarKW = state.solarKW > 0 ? state.solarKW : solarFeasible ? solarRecKW : 0;
   const liveGenKW = wantsGenerator ? (state.generatorKW > 0 ? state.generatorKW : genRecKW) : 0;
+  const liveLinearGenKW = wantsLinearGen
+    ? (state.linearGeneratorKW ?? 0) > 0
+      ? (state.linearGeneratorKW ?? 0)
+      : linearGenRecKW
+    : 0;
   const liveL2 = state.level2Chargers || 0;
   const liveDcfc = state.dcfcChargers || 0;
   const liveHpc = state.hpcChargers || 0;
@@ -2898,9 +2928,11 @@ export default function Step3_5V8({ state, actions }: Props) {
   // DOE/EVI benchmarks: L2=$1,350/yr, DCFC=$18,000/yr, HPC=$60,000/yr — matches pricingServiceV45
   const evRevenueK = Math.round((liveL2 * 1350 + liveDcfc * 18000 + liveHpc * 60000) / 1000);
   const genCostPerKW = fuelType === "diesel" ? 690 : 500;
+  const linearGenCostPerKW = 550; // Mainspring-class linear generator: ~$550/kW installed
   const totalInvestmentK =
     Math.round((liveSolarKW * 1400) / 1000) +
     Math.round((liveGenKW * genCostPerKW) / 1000) +
+    Math.round((liveLinearGenKW * linearGenCostPerKW) / 1000) +
     Math.round((liveL2 * 9000 + liveDcfc * 55000 + liveHpc * 130000) / 1000);
   const annualSavingsK = solarSavingsK + genSavingsK + evRevenueK;
   const paybackYears =
@@ -3172,6 +3204,193 @@ export default function Step3_5V8({ state, actions }: Props) {
             }}
           >
             + Add Generator
+          </button>
+        </div>
+      )}
+
+      {/* ── Phase 2: Linear Generator ── */}
+      {wantsLinearGen ? (
+        <>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={handleRemoveLinearGen}
+              style={{
+                padding: "5px 14px",
+                borderRadius: 6,
+                border: "1px solid rgba(34,211,238,0.25)",
+                background: "transparent",
+                color: "rgba(34,211,238,0.65)",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              ✕ Remove Linear Generator
+            </button>
+          </div>
+          <div
+            style={{
+              borderRadius: 12,
+              background: "rgba(8,25,38,0.8)",
+              border: "1px solid rgba(34,211,238,0.20)",
+              padding: "20px",
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+              <div
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 10,
+                  background: "rgba(34,211,238,0.10)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 22,
+                  flexShrink: 0,
+                }}
+              >
+                🔄
+              </div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: "#67e8f9" }}>
+                  Linear Generator
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(148,163,184,0.6)", marginTop: 2 }}>
+                  Continuous baseload output · trickle-charges BESS · 72h fuel endurance
+                </div>
+              </div>
+            </div>
+
+            {/* kW Slider */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: "rgba(148,163,184,0.7)" }}>Output</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#67e8f9" }}>
+                  {(state.linearGeneratorKW ?? 0) > 0
+                    ? (state.linearGeneratorKW ?? 0)
+                    : linearGenRecKW}{" "}
+                  kW continuous
+                </span>
+              </div>
+              <input
+                type="range"
+                min={linearGenMinKW}
+                max={linearGenMaxKW}
+                step={10}
+                value={
+                  (state.linearGeneratorKW ?? 0) > 0
+                    ? (state.linearGeneratorKW ?? 0)
+                    : linearGenRecKW
+                }
+                onChange={(e) => handleLinearGenConfig(Number(e.target.value))}
+                style={{ width: "100%", accentColor: "#22d3ee" }}
+              />
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: 10,
+                  color: "rgba(100,116,139,0.7)",
+                  marginTop: 4,
+                }}
+              >
+                <span>{linearGenMinKW} kW min</span>
+                <span style={{ color: "rgba(34,211,238,0.5)" }}>✦ Rec: {linearGenRecKW} kW</span>
+                <span>{linearGenMaxKW} kW max</span>
+              </div>
+            </div>
+
+            {/* How it works */}
+            <div
+              style={{
+                borderRadius: 8,
+                background: "rgba(34,211,238,0.05)",
+                border: "1px solid rgba(34,211,238,0.12)",
+                padding: "10px 12px",
+                fontSize: 11,
+                color: "rgba(148,163,184,0.7)",
+                lineHeight: 1.6,
+              }}
+            >
+              <strong style={{ color: "rgba(103,232,249,0.8)" }}>How it works:</strong> Runs at
+              rated capacity continuously. Serves base load first; any excess output trickles into
+              the BESS. During a grid outage the BESS covers peak demand while the linear gen keeps
+              it charged — enabling 72h+ autonomy without refuelling large tanks. Fuel: natural gas
+              (pipeline or on-site storage). Quieter and lower-emission than rotary diesel
+              alternatives.
+            </div>
+          </div>
+        </>
+      ) : (
+        <div
+          style={{
+            borderRadius: 12,
+            background: "rgba(15,17,23,0.7)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            padding: "16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 10,
+                background: "rgba(34,211,238,0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 21,
+                flexShrink: 0,
+              }}
+            >
+              🔄
+            </div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(203,213,225,0.85)" }}>
+                Linear Generator
+                <span
+                  style={{
+                    marginLeft: 8,
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: "rgba(34,211,238,0.7)",
+                    background: "rgba(34,211,238,0.08)",
+                    border: "1px solid rgba(34,211,238,0.2)",
+                    borderRadius: 4,
+                    padding: "1px 6px",
+                  }}
+                >
+                  72h endurance
+                </span>
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(148,163,184,0.5)", marginTop: 2 }}>
+                Continuous baseload bridge · trickle-charges BESS during extended outages
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={handleAddLinearGen}
+            style={{
+              padding: "9px 16px",
+              borderRadius: 8,
+              border: "1.5px solid rgba(34,211,238,0.4)",
+              background: "transparent",
+              color: "#22d3ee",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}
+          >
+            + Add Linear Gen
           </button>
         </div>
       )}

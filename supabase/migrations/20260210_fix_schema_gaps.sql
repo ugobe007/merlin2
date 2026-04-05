@@ -127,20 +127,30 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
     WHERE table_schema = 'public' AND table_name = 'scrape_jobs' AND column_name = 'status') THEN
     ALTER TABLE public.scrape_jobs ADD COLUMN status text;
-    -- Backfill from existing last_run_status
-    UPDATE public.scrape_jobs SET status = last_run_status WHERE status IS NULL;
-    COMMENT ON COLUMN public.scrape_jobs.status IS 'Alias for last_run_status. Kept in sync via trigger. Used by systemHealthCheck.ts.';
+    -- Backfill from last_run_status only if that column exists
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'scrape_jobs' AND column_name = 'last_run_status') THEN
+      UPDATE public.scrape_jobs SET status = last_run_status WHERE status IS NULL;
+    END IF;
+    COMMENT ON COLUMN public.scrape_jobs.status IS 'Status column used by systemHealthCheck.ts.';
   END IF;
 END
 $$;
 
--- Trigger to keep status in sync with last_run_status
+-- Trigger to keep status in sync with last_run_status (only created if last_run_status column exists)
 CREATE OR REPLACE FUNCTION public.sync_scrape_job_status()
 RETURNS trigger
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  NEW.status := NEW.last_run_status;
+  -- Only sync if last_run_status column exists on this table
+  IF TG_TABLE_NAME = 'scrape_jobs' THEN
+    BEGIN
+      NEW.status := NEW.last_run_status;
+    EXCEPTION WHEN undefined_column THEN
+      -- last_run_status does not exist, leave status as-is
+    END;
+  END IF;
   RETURN NEW;
 END;
 $$;

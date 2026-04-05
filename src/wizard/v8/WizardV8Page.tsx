@@ -625,6 +625,7 @@ export default function WizardV8Page() {
             actions.setAddonConfig({
               solarKW: committedSolarKW,
               generatorKW: committedGenKW,
+              linearGeneratorKW: state.linearGeneratorKW ?? 0,
               level2Chargers: evCounts.level2,
               dcfcChargers: evCounts.dcfc,
               hpcChargers: state.wantsEVCharging ? state.hpcChargers : 0,
