@@ -21,6 +21,8 @@ interface GeneratorConfigProps {
   setGeneratorUseCases: (value: string[] | ((prev: string[]) => string[])) => void;
   generatorRedundancy: boolean;
   setGeneratorRedundancy: (value: boolean) => void;
+  /** Optional: Merlin engine suggested capacity based on BESS size (IEEE 446 0.7× reserve) */
+  merlinSuggestedKW?: number;
 }
 
 export const GeneratorConfig = React.memo(function GeneratorConfig({
@@ -36,6 +38,7 @@ export const GeneratorConfig = React.memo(function GeneratorConfig({
   setGeneratorUseCases,
   generatorRedundancy,
   setGeneratorRedundancy,
+  merlinSuggestedKW,
 }: GeneratorConfigProps) {
   return (
     <div
@@ -49,6 +52,19 @@ export const GeneratorConfig = React.memo(function GeneratorConfig({
         <h4 className="text-base font-semibold flex items-center gap-2 text-white">
           <GitBranch className="w-5 h-5 text-emerald-400" />
           Generator System
+          {merlinSuggestedKW !== undefined && merlinSuggestedKW > 0 && (
+            <span
+              title="Merlin engine suggestion: IEEE 446-1995 Orange Book — 70% of BESS power as reserve margin"
+              className="ml-2 text-[11px] font-normal px-2 py-0.5 rounded-full cursor-help"
+              style={{
+                background: "rgba(62,207,142,0.10)",
+                border: "1px solid rgba(62,207,142,0.25)",
+                color: "rgba(62,207,142,0.8)",
+              }}
+            >
+              🧙 Merlin suggests {merlinSuggestedKW.toLocaleString()} kW
+            </span>
+          )}
         </h4>
         <label className="flex items-center gap-2 cursor-pointer">
           <input

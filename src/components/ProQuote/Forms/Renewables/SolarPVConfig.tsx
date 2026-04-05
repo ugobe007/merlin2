@@ -32,6 +32,8 @@ interface SolarPVConfigProps {
   setSolarInverterType: (value: string) => void;
   solarTrackingType: "fixed" | "single-axis" | "dual-axis";
   setSolarTrackingType: (value: "fixed" | "single-axis" | "dual-axis") => void;
+  /** Optional: Merlin engine suggestion — BESS×0.4×PSH (NREL sun-quality-adjusted) */
+  merlinSuggestedKW?: number;
 }
 
 export const SolarPVConfig = React.memo(function SolarPVConfig({
@@ -57,6 +59,7 @@ export const SolarPVConfig = React.memo(function SolarPVConfig({
   setSolarInverterType,
   solarTrackingType,
   setSolarTrackingType,
+  merlinSuggestedKW,
 }: SolarPVConfigProps) {
   // Calculate solar sizing and space constraints
   // Use cached supplier panel spec (wattPeak/area) when available — same panel buildTiers selected.
@@ -99,6 +102,19 @@ export const SolarPVConfig = React.memo(function SolarPVConfig({
       <div className="flex items-center justify-between mb-6">
         <h4 className="text-base font-semibold flex items-center gap-2 text-white">
           ☀️ Solar PV System
+          {merlinSuggestedKW !== undefined && merlinSuggestedKW > 0 && (
+            <span
+              title="Merlin engine suggestion: BESS power × 0.4 × sun factor (NREL methodology) for BESS charge-offset"
+              className="ml-2 text-[11px] font-normal px-2 py-0.5 rounded-full cursor-help"
+              style={{
+                background: "rgba(251,191,36,0.10)",
+                border: "1px solid rgba(251,191,36,0.25)",
+                color: "rgba(251,191,36,0.8)",
+              }}
+            >
+              🧙 Merlin suggests {merlinSuggestedKW.toLocaleString()} kW
+            </span>
+          )}
         </h4>
         <label className="flex items-center gap-3 cursor-pointer">
           <input

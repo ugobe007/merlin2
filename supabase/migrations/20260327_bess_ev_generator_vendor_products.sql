@@ -88,6 +88,11 @@ ALTER TABLE vendor_products
   ADD COLUMN IF NOT EXISTS container_footprint_sqft   NUMERIC(7,2),  -- Physical footprint per container (sq ft) — site planning
   ADD COLUMN IF NOT EXISTS fire_suppression_included  BOOLEAN DEFAULT TRUE; -- Integrated fire suppression system
 
+-- Tariff/import adder (also extended by 20260329 for solar — added here first so
+-- the generated column below can reference it safely)
+ALTER TABLE vendor_products
+  ADD COLUMN IF NOT EXISTS tariff_adder_pct NUMERIC(5,2) DEFAULT 0;
+
 -- Computed: effective $/kWh including any freight/import adder (nullable — only for battery)
 ALTER TABLE vendor_products
   ADD COLUMN IF NOT EXISTS effective_price_per_kwh NUMERIC(10,4)
@@ -106,7 +111,7 @@ ALTER TABLE vendor_products
   ADD COLUMN IF NOT EXISTS fuel_type               VARCHAR(40),    -- 'diesel' | 'natural_gas' | 'dual_fuel' | 'propane' | 'biogas'
   ADD COLUMN IF NOT EXISTS prime_rating_kw         NUMERIC(8,2),   -- Prime/continuous kW rating
   ADD COLUMN IF NOT EXISTS standby_rating_kw       NUMERIC(8,2),   -- Standby kW rating (higher, short-term)
-  ADD COLUMN IF NOT EXISTS fuel_consumption_gph    NUMERIC(6,3),   -- Fuel consumption at 100% load (gal/hr diesel or scfm natural gas)
+  ADD COLUMN IF NOT EXISTS fuel_consumption_gph    NUMERIC(10,3),   -- Fuel consumption at 100% load (gal/hr diesel or scfm natural gas)
   ADD COLUMN IF NOT EXISTS emissions_tier          VARCHAR(20),    -- 'Tier 4 Final' | 'Tier 3' | 'EPA Tier 2' etc.
   ADD COLUMN IF NOT EXISTS enclosure_type          VARCHAR(40),    -- 'open' | 'sound-attenuated' | 'weather-protected'
   ADD COLUMN IF NOT EXISTS ats_included            BOOLEAN DEFAULT FALSE; -- Automatic transfer switch included

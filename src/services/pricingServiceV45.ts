@@ -496,6 +496,9 @@ export interface SavingsInputs {
   // Operating parameters
   sunHoursPerDay?: number; // Average for location
   cyclesPerYear?: number; // Battery cycles
+
+  // Facility context (used for industry-specific savings, e.g. hospital downtime avoidance)
+  industry?: string;
 }
 
 export interface SavingsBreakdown {
@@ -562,8 +565,16 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
   }
 
   // Generator Backup Value (avoided downtime costs)
-  // This is harder to quantify, typically not included in simple ROI
-  const generatorBackupValue = 0;
+  // For hospitals (NEC 517 / NFPA 99 critical facilities), a backup generator
+  // actively avoids costs from regulatory fines, life-safety events, and lost
+  // revenue from generator-dependent clinical operations (ORs, ICU, imaging).
+  // Estimate: 2 avoided outage events/yr × 4 hrs × $7,500/hr avoided cost = $60K/yr.
+  // Source: ASHE (American Society for Healthcare Engineering) facility risk studies.
+  // For all other industries, generator backup value remains $0 (hard to quantify generally).
+  const generatorBackupValue =
+    inputs.industry === "hospital" && inputs.generatorKW > 0
+      ? 2 * 4 * 7500 // 2 events/yr × 4 hr/event × $7,500/hr = $60,000/yr
+      : 0;
 
   const grossAnnualSavings =
     demandChargeSavings +

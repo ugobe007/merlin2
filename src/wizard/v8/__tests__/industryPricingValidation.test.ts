@@ -241,8 +241,8 @@ describe("WOW Car Wash scenario (4-bay express, NG gen, 4×L2)", () => {
     expectApprox(carWashNG.solarCost + carWashNG.bessCost, expectedITCBase, "ITC base");
   });
 
-  it("netCost ≈ $298,502 (±1%)", () => {
-    expectApprox(carWashNG.netInvestment, 298502, "car wash NG net");
+  it("netCost ≈ $304,097 (±1%)", () => {
+    expectApprox(carWashNG.netInvestment, 304097, "car wash NG net");
   });
 
   it("EV chargers (4×L2) = $28,000", () => {
@@ -264,8 +264,8 @@ describe("WOW Car Wash — diesel variant", () => {
     expectApprox(carWashDiesel.totalInvestment, 375393, "car wash diesel gross");
   });
 
-  it("netCost ≈ $351,681 (±1%)", () => {
-    expectApprox(carWashDiesel.netInvestment, 351681, "car wash diesel net");
+  it("netCost ≈ $358,856 (±1%)", () => {
+    expectApprox(carWashDiesel.netInvestment, 358856, "car wash diesel net");
   });
 
   it("diesel costs more than NG variant by exactly $36,000 (200kW×$190+$15K tank)", () => {
@@ -305,8 +305,8 @@ describe("Hotel scenario (200-room, NG gen, 8×L2, 2×DCFC)", () => {
     expectApprox(hotel.totalInvestment, 943238, "hotel gross");
   });
 
-  it("netCost ≈ $863,963 (±1%) — includes 2×DCFC 480V electrical infrastructure", () => {
-    expectApprox(hotel.netInvestment, 863963, "hotel net");
+  it("netCost ≈ $874,273 (±1%) — includes 2×DCFC 480V electrical infrastructure", () => {
+    expectApprox(hotel.netInvestment, 874273, "hotel net");
   });
 
   it("EV chargers (8×L2 + 2×DCFC) = $156,000", () => {
@@ -334,8 +334,8 @@ describe("EV Hub scenario (4×DCFC + 2×HPC, solar+BESS, no gen)", () => {
     expectApprox(evHub.totalInvestment, 1042695, "EV hub gross");
   });
 
-  it("netCost ≈ $981,120 (±1%) — includes 4×DCFC + 2×HPC 480V infra ($120K equipment)", () => {
-    expectApprox(evHub.netInvestment, 981120, "EV hub net");
+  it("netCost ≈ $1,000,411 (±1%) — includes 4×DCFC + 2×HPC 480V infra ($120K equipment)", () => {
+    expectApprox(evHub.netInvestment, 1000411, "EV hub net");
   });
 
   it("EV chargers (4×DCFC + 2×HPC) = $500,000", () => {

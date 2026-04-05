@@ -189,6 +189,7 @@ ALTER TABLE imported_solar_designs ENABLE ROW LEVEL SECURITY;
 -- (Supabase service_role key automatically bypasses RLS)
 
 -- Admins can manage platform keys (requires admin role in your auth system)
+DROP POLICY IF EXISTS "admin_manage_platform_keys" ON solar_sizing_platform_keys;
 CREATE POLICY "admin_manage_platform_keys"
     ON solar_sizing_platform_keys
     FOR ALL
@@ -198,12 +199,14 @@ CREATE POLICY "admin_manage_platform_keys"
     );
 
 -- Authenticated users can read imported designs (their own org's designs)
+DROP POLICY IF EXISTS "read_imported_designs" ON imported_solar_designs;
 CREATE POLICY "read_imported_designs"
     ON imported_solar_designs
     FOR SELECT
     USING (auth.role() = 'authenticated');
 
 -- Only service role can insert/update imported designs
+DROP POLICY IF EXISTS "service_manage_imported_designs" ON imported_solar_designs;
 CREATE POLICY "service_manage_imported_designs"
     ON imported_solar_designs
     FOR ALL
@@ -223,6 +226,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_solar_platform_keys_updated_at ON solar_sizing_platform_keys;
 CREATE TRIGGER trg_solar_platform_keys_updated_at
     BEFORE UPDATE ON solar_sizing_platform_keys
     FOR EACH ROW
