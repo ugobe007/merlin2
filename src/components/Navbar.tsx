@@ -4,9 +4,10 @@
           About Merlin → AboutMerlinModal */
 
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut, User } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
 import { AboutMerlinModal } from "@/components/modals/AboutMerlinModal";
+import { authService } from "@/services/authService";
 
 const WIZARD_URL =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/merlin-wizard_11d2b1f0.png";
@@ -17,11 +18,19 @@ export default function Navbar() {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [showAbout, setShowAbout] = useState(false);
+  const [currentUser, setCurrentUser] = useState(authService.getCurrentUser());
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handler);
     return () => window.removeEventListener("scroll", handler);
+  }, []);
+
+  // Re-render when auth state changes (OAuth redirect, sign in, sign out)
+  useEffect(() => {
+    const onAuthChange = () => setCurrentUser(authService.getCurrentUser());
+    window.addEventListener("merlin:authchange", onAuthChange);
+    return () => window.removeEventListener("merlin:authchange", onAuthChange);
   }, []);
 
   const openSignIn = () => {
@@ -104,22 +113,46 @@ export default function Navbar() {
 
             {/* Right nav — desktop */}
             <div className="hidden lg:flex items-center gap-2">
-              {/* Sign In */}
-              <button
-                onClick={openSignIn}
-                className="text-sm text-slate-400 hover:text-white transition-colors font-medium px-3 py-2"
-                style={{ fontFamily: "'Manrope', sans-serif" }}
-              >
-                Sign In
-              </button>
-              {/* Sign Up */}
-              <button
-                onClick={openSignUp}
-                className="text-sm font-semibold text-slate-300 hover:text-white border border-white/25 hover:border-white/50 px-4 py-2 rounded-lg transition-all duration-200"
-                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
-                Sign Up
-              </button>
+              {currentUser ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-sm text-slate-300">
+                    <User size={15} className="text-slate-400" />
+                    <span style={{ fontFamily: "'Manrope', sans-serif" }}>
+                      {currentUser.firstName || currentUser.email}
+                    </span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      await authService.signOut();
+                      setCurrentUser(null);
+                    }}
+                    className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors px-3 py-2"
+                    style={{ fontFamily: "'Manrope', sans-serif" }}
+                  >
+                    <LogOut size={14} />
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Sign In */}
+                  <button
+                    onClick={openSignIn}
+                    className="text-sm text-slate-400 hover:text-white transition-colors font-medium px-3 py-2"
+                    style={{ fontFamily: "'Manrope', sans-serif" }}
+                  >
+                    Sign In
+                  </button>
+                  {/* Sign Up */}
+                  <button
+                    onClick={openSignUp}
+                    className="text-sm font-semibold text-slate-300 hover:text-white border border-white/25 hover:border-white/50 px-4 py-2 rounded-lg transition-all duration-200"
+                    style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Mobile toggle */}
