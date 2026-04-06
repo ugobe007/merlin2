@@ -72,10 +72,12 @@ const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
 function writeCache(user: User | null): void {
   if (!user) {
     localStorage.removeItem(CURRENT_USER_KEY);
-    return;
+  } else {
+    const sessionExpiry = new Date(Date.now() + SESSION_DURATION_MS).toISOString();
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify({ user, sessionExpiry }));
   }
-  const sessionExpiry = new Date(Date.now() + SESSION_DURATION_MS).toISOString();
-  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify({ user, sessionExpiry }));
+  // Notify React components so they re-render after async auth state change
+  window.dispatchEvent(new CustomEvent("merlin:authchange", { detail: user }));
 }
 
 function readCache(): User | null {
@@ -125,31 +127,75 @@ function rowToUser(row: Record<string, any>): User {
 
 class SupabaseAuthService {
   constructor() {
-    supabase.auth.onAuthStateChange(async (_event, session) => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
       if (!session?.user) {
         writeCache(null);
         return;
       }
-      try {
-        const { data } = await supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-        writeCache(data ? rowToUser(data) : this._metaToUser(session.user));
-      } catch {
-        writeCache(this._metaToUser(session.user));
+      // Try to fetch existing profile row
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      if (data) {
+        // Map actual DB columns (full_name, plan, user_type) to User type
+        const row = data as Record<string, any>;
+        const nameParts = (row.full_name ?? "").split(" ");
+        const mapped: Record<string, any> = {
+          ...row,
+          first_name: row.first_name ?? nameParts[0] ?? "",
+          last_name: row.last_name ?? nameParts.slice(1).join(" ") ?? "",
+          tier: row.tier ?? row.plan ?? "free",
+          account_type: row.account_type ?? row.user_type ?? "individual",
+          profile_completed: row.profile_completed ?? false,
+        };
+        writeCache(rowToUser(mapped));
+      } else {
+        // No profile row (new OAuth user) or 500 error — build from auth metadata
+        if (error) console.warn("[auth] user_profiles fetch:", error.message);
+        const user = this._metaToUser(session.user);
+        writeCache(user);
+        // Attempt to create a minimal profile row for this OAuth user
+        if (event === "SIGNED_IN") {
+          const m = session.user.user_metadata ?? {};
+          const fullName =
+            m.full_name ?? m.name ?? `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim();
+          await supabase
+            .from("user_profiles")
+            .upsert({
+              id: session.user.id,
+              email: session.user.email ?? "",
+              full_name: fullName || null,
+              updated_at: new Date().toISOString(),
+            } as any)
+            .then(({ error: e }) => {
+              if (e) console.warn("[auth] profile upsert:", e.message);
+            });
+        }
+      }
+
+      // After OAuth redirect, reload the page without the hash so
+      // all React components re-mount with the fresh auth state
+      if (event === "SIGNED_IN" && window.location.hash.includes("access_token")) {
+        window.location.replace(window.location.origin);
       }
     });
   }
 
   private _metaToUser(authUser: any): User {
     const m = authUser.user_metadata ?? {};
+    // OAuth providers store the name differently:
+    // GitHub → m.user_name, m.name
+    // Google → m.full_name, m.name
+    const fullName = m.full_name ?? m.name ?? "";
+    const nameParts = fullName.split(" ");
     return {
       id: authUser.id,
       email: authUser.email ?? "",
-      firstName: m.first_name ?? m.firstName ?? "",
-      lastName: m.last_name ?? m.lastName ?? "",
+      firstName: m.first_name ?? m.given_name ?? nameParts[0] ?? "",
+      lastName: m.last_name ?? m.family_name ?? nameParts.slice(1).join(" ") ?? "",
       company: m.company ?? undefined,
       tier: "free",
       createdAt: authUser.created_at ?? new Date().toISOString(),
