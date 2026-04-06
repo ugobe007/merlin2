@@ -773,6 +773,12 @@ async function postToX(thread: string[]): Promise<string | null> {
     return 'dry-run-x';
   }
 
+  // Set X_POSTING_ENABLED=false to pause X posts without removing keys
+  if (process.env.X_POSTING_ENABLED === 'false') {
+    console.log('   ⏸️  X posting is disabled (X_POSTING_ENABLED=false) — skipping.');
+    return null;
+  }
+
   const apiKey       = process.env.X_API_KEY;
   const apiSecret    = process.env.X_API_KEY_SECRET;
   const accessToken  = process.env.X_ACCESS_TOKEN;
