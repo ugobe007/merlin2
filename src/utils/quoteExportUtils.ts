@@ -276,27 +276,27 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
   const fmtPct = (v: number) => `${v.toFixed(1)}%`;
   const fmtNum = (v: number) => v.toLocaleString("en-US");
 
-  // ── Professional color palette (Print-friendly, WHITE background) ─
+  // ── Merlin Design Template color palette ───────────────────────
   const C = {
-    emerald: "0F7544", // Dark green — readable on white, print-friendly
-    emeraldLight: "10B981", // Emerald-500 accent
-    emeraldBg: "F0FDF4", // Very light green bg for tables (emerald-50)
-    navy: "1A1F36", // Primary text
+    emerald: "1B8F5A", // Merlin section-heading green (matches DOCX template)
+    emeraldLight: "3ECF8E", // Merlin brand accent — bright emerald
+    emeraldBg: "EDFDF5", // Light emerald panel bg (TrueQuote strip)
+    navy: "1E293B", // Primary text / dark panel (slate-800)
     dark: "2D3748", // Secondary text
     body: "4A5568", // Body text
-    muted: "718096", // Muted/caption text
+    muted: "718096", // Muted / caption text
     border: "CBD5E1", // Table borders (slate-300)
-    headerBg: "1E293B", // Dark header bg for tables (matches panelDark)
+    headerBg: "1E293B", // Dark table header bg
     headerText: "FFFFFF", // White text on dark bg
-    highlight: "F0FDF4", // Highlight rows (emerald-50)
+    highlight: "F0FFF4", // Alternating row highlight (emerald-50)
     amber: "D97706",
     red: "DC2626",
     // ── Dark panels (Merlin dark theme) ──
-    panelDark: "1E293B", // Tailwind slate-800 — wizard Step 1 panel color
+    panelDark: "1E293B", // Tailwind slate-800 — wizard / cover panel
     panelDarkAlt: "334155", // Tailwind slate-700 — subtle contrast
-    lightGrey: "F1F5F9", // Light grey sub-panel
+    lightGrey: "F1F5F9", // Light grey metadata sub-panel
     lightGreyDark: "E2E8F0", // Slightly darker grey
-    gold: "D4A017", // Gold accent for TrueQuote badge
+    gold: "FFD700", // Gold accent for TrueQuote badge
   };
 
   // ── Helper: decode base64 string to Uint8Array for ImageRun ──────
@@ -313,11 +313,16 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
   const proquoteBadgeImg = b64toUint8(PROQUOTE_BADGE_BASE64);
 
   // ── Helper: Section heading ──────────────────────────────────────
+  // Full heading in Merlin emerald green — matches DOCX template exactly
   const sectionHeading = (num: string, text: string) =>
     new Paragraph({
       children: [
-        new TextRun({ text: `${num}  `, size: 28, bold: true, color: C.emerald }),
-        new TextRun({ text: text.toUpperCase(), size: 28, bold: true, color: C.navy }),
+        new TextRun({
+          text: `${num}  ${text.toUpperCase()}`,
+          size: 28,
+          bold: true,
+          color: C.emerald,
+        }),
       ],
       spacing: { before: 480, after: 200 },
       border: {
