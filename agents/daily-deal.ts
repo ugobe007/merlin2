@@ -774,12 +774,12 @@ async function postToX(thread: string[]): Promise<string | null> {
   }
 
   const apiKey       = process.env.X_API_KEY;
-  const apiSecret    = process.env.X_API_SECRET;
+  const apiSecret    = process.env.X_API_KEY_SECRET;
   const accessToken  = process.env.X_ACCESS_TOKEN;
-  const accessSecret = process.env.X_ACCESS_SECRET;
+  const accessSecret = process.env.X_ACCESS_TOKEN_SECRET;
 
   if (!apiKey || !apiSecret || !accessToken || !accessSecret) {
-    console.warn('   ⚠️  X not configured — set X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET');
+    console.warn('   ⚠️  X not configured — set X_API_KEY, X_API_KEY_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET');
     return null;
   }
 
