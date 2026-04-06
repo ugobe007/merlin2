@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Solar Done Right — Merlin Energy Whitepaper 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --accent:      #CA8A04;
+    --accent-lt:   #FDE047;
+    --accent-bg:   #FEFCE8;
+    --navy:        #1E293B;
+    --slate:       #475569;
+    --border:      #FEF08A;
+    --white:       #FFFFFF;
+    --page-width:  760px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #f1f5f9; color: var(--navy); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { max-width: var(--page-width); margin: 40px auto; background: var(--white); border-radius: 12px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,.12); }
+  .cover { background: linear-gradient(145deg, #1c1600 0%, #2d2000 60%, #1a1000 100%); padding: 64px 60px 56px; position: relative; overflow: hidden; }
+  .cover::before { content: ''; position: absolute; top: -80px; right: -80px; width: 380px; height: 380px; border-radius: 50%; background: radial-gradient(circle, rgba(202,138,4,.3) 0%, transparent 70%); }
+  .cover-tag { display: inline-block; background: var(--accent-lt); color: #78350f; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; margin-bottom: 24px; }
+  .cover h1 { font-size: 38px; font-weight: 900; color: var(--white); line-height: 1.12; margin-bottom: 8px; max-width: 500px; }
+  .cover h1 span { color: var(--accent-lt); }
+  .cover .subtitle { font-size: 17px; color: #94a3b8; font-weight: 400; margin-bottom: 36px; max-width: 460px; line-height: 1.5; }
+  .cover-meta { display: flex; gap: 28px; flex-wrap: wrap; }
+  .cover-meta-item { color: #64748b; font-size: 13px; }
+  .cover-meta-item strong { display: block; color: #cbd5e1; font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .stripe { background: var(--accent); color: var(--white); padding: 12px 60px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+  .body { padding: 44px 60px; }
+  .lead { font-size: 17px; line-height: 1.78; color: var(--slate); margin-bottom: 36px; border-left: 4px solid var(--accent-lt); padding-left: 20px; }
+  h2 { font-size: 22px; font-weight: 800; color: var(--navy); margin-bottom: 12px; margin-top: 40px; }
+  h2:first-of-type { margin-top: 0; }
+  p { font-size: 15px; line-height: 1.75; color: var(--slate); margin-bottom: 16px; }
+  .pull-quote { background: var(--accent-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px 28px; margin: 32px 0; font-size: 19px; font-weight: 700; color: var(--accent); line-height: 1.4; text-align: center; }
+  .pull-quote span { display: block; font-size: 13px; font-weight: 500; color: var(--slate); margin-top: 6px; }
+  .stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin: 32px 0; }
+  .stat-card { background: var(--navy); border-radius: 10px; padding: 20px; text-align: center; }
+  .stat-card .num { font-size: 28px; font-weight: 900; color: var(--accent-lt); }
+  .stat-card .label { font-size: 12px; color: #94a3b8; margin-top: 4px; line-height: 1.4; }
+  .insight-list { list-style: none; margin: 16px 0 24px; }
+  .insight-list li { padding: 10px 0 10px 28px; border-bottom: 1px solid #f1f5f9; font-size: 15px; color: var(--slate); line-height: 1.6; position: relative; }
+  .insight-list li::before { content: '→'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+  /* Comparison grid */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
+  .compare-card { border-radius: 10px; padding: 20px; }
+  .compare-card.bad { background: #fef2f2; border: 1px solid #fecaca; }
+  .compare-card.good { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .compare-card .compare-tag { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
+  .compare-card.bad .compare-tag { color: #dc2626; }
+  .compare-card.good .compare-tag { color: #16a34a; }
+  .compare-card h4 { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .compare-card p { font-size: 13px; color: var(--slate); line-height: 1.6; margin-bottom: 0; }
+  .cta { background: linear-gradient(135deg, #1c1600 0%, #2d2000 100%); border-radius: 12px; padding: 36px 40px; margin-top: 44px; text-align: center; }
+  .cta h3 { font-size: 22px; font-weight: 800; color: var(--white); margin-bottom: 10px; }
+  .cta p { font-size: 15px; color: #94a3b8; margin-bottom: 24px; }
+  .cta a { display: inline-block; background: var(--accent-lt); color: #78350f; font-weight: 700; font-size: 15px; padding: 12px 28px; border-radius: 8px; text-decoration: none; }
+  .footer { border-top: 1px solid #e2e8f0; padding: 20px 60px; display: flex; justify-content: space-between; align-items: center; }
+  .footer-brand { font-size: 13px; font-weight: 700; color: var(--accent); }
+  .footer-disclaimer { font-size: 11px; color: #94a3b8; max-width: 420px; text-align: right; }
+  @media print { body { background: white; } .page { margin: 0; box-shadow: none; border-radius: 0; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cover">
+    <div class="cover-tag">Solar Energy Strategy · Series 5 of 7</div>
+    <h1>Solar <span>Done Right</span></h1>
+    <p class="subtitle">Why Rooftop Panels Alone Won't Save Your Business — and the Smarter Framework That Actually Moves the Needle</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item"><strong>Published</strong>April 2026</div>
+      <div class="cover-meta-item"><strong>Author</strong>Merlin Energy Intelligence</div>
+      <div class="cover-meta-item"><strong>Read Time</strong>4 minutes</div>
+    </div>
+  </div>
+
+  <div class="stripe">The Solar Trap — and How Most Businesses Fall Into It</div>
+
+  <div class="body">
+
+    <p class="lead">Solar energy is genuinely powerful. Panels installed today produce electricity at roughly $0.04/kWh over their lifetime — a fraction of grid rates. But the solar industry has a storytelling problem: it often leads with "go solar and cut your bill in half." For most commercial businesses, this is misleading — not because solar doesn't work, but because panels without the right context and system design deliver a fraction of their potential value.</p>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="num">10 AM–2 PM</div>
+        <div class="label">peak solar production window — typically your lowest-demand business hours</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">4–9 PM</div>
+        <div class="label">peak electricity pricing (TOU) — when solar output is zero or minimal</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">NEM 3.0</div>
+        <div class="label">California's 2023 net metering reform cut solar export value by ~75% — a warning for all states</div>
+      </div>
+    </div>
+
+    <h2>The Solar Timing Problem</h2>
+    <p>Solar panels produce electricity when the sun shines — not when your business needs electricity most. A hotel's peak demand is in the morning (HVAC, kitchen, laundry) and evening (guest services, dining, HVAC again). A retail store peaks in the late afternoon and evening when customers arrive. A restaurant spikes at lunch and dinner service.</p>
+    <p>In all three cases, solar's production peak (10 AM–2 PM) doesn't align with the demand peak. Without storage, the excess solar is exported to the grid at net-metering rates — which, as California's NEM 3.0 demonstrated, can be dramatically lower than the retail rate you were hoping to offset.</p>
+
+    <div class="compare-grid">
+      <div class="compare-card bad">
+        <div class="compare-tag">❌ Common Mistake</div>
+        <h4>Solar Sized for Annual kWh Match</h4>
+        <p>You size panels to match your annual electricity consumption. On paper, you "produce" as much as you use. In practice, 40% is exported at low net-metering rates during daytime when you don't need it, and you still buy expensive peak-hour power in the evenings.</p>
+      </div>
+      <div class="compare-card good">
+        <div class="compare-tag">✅ Right Approach</div>
+        <h4>Solar Sized for Daytime Load + BESS</h4>
+        <p>Solar is sized to serve daytime consumption directly. Excess production charges the BESS. BESS discharges during evening peaks at premium pricing hours. Zero curtailment, zero export waste. Every panel produces at its maximum economic value.</p>
+      </div>
+    </div>
+
+    <h2>The Net Metering Risk</h2>
+    <p>Net metering — the policy that lets you "sell" excess solar to the grid at retail rates — is under legislative pressure in most US states. California already slashed export compensation by 75% with NEM 3.0. Hawaii eliminated net metering entirely. Texas, Florida, and Arizona are debating similar reforms.</p>
+    <p>Businesses that sized their solar based on net metering economics are discovering their business case has evaporated. The businesses that paired solar with storage — and therefore don't rely on export compensation — are unaffected. Storage immunizes your solar investment against policy risk.</p>
+
+    <div class="pull-quote">
+      Net metering is a policy, not a physical law. It can change. Your battery can't be legislated away.
+    </div>
+
+    <h2>Solar Curtailment: The Hidden Revenue Killer</h2>
+    <p>In grids with high solar penetration (California, Texas, Arizona, Hawaii), the utility grid becomes saturated with solar during midday hours. Grid operators respond by "curtailing" solar generation — literally ordering systems to stop producing. In California's CAISO market, solar curtailment hit record levels in 2024: over 4 million MWh of potential generation lost.</p>
+    <p>If your solar system is curtailed, you produce nothing and earn nothing — but you still paid for the panels. Storage again provides the solution: instead of exporting to a curtailed grid, the BESS absorbs the solar and holds it until the curtailment window ends and prices recover.</p>
+
+    <h2>The Right Solar Framework for Commercial Businesses</h2>
+    <ul class="insight-list">
+      <li><strong>Step 1 — Bill Forensics:</strong> Identify your demand charge structure and TOU pricing windows before any solar sizing decision.</li>
+      <li><strong>Step 2 — Load Profile Analysis:</strong> Map your 15-minute load data across 12 months. Understand when your demand peaks and when your building is quiet.</li>
+      <li><strong>Step 3 — Size Solar for Daytime Load:</strong> Size the array to serve your building's daytime consumption directly — not to match annual kWh production. This maximizes self-consumption and eliminates curtailment risk.</li>
+      <li><strong>Step 4 — Pair with BESS:</strong> Size BESS to absorb excess midday solar production and discharge during peak pricing hours (4–9 PM). This is where most of the ROI lives.</li>
+      <li><strong>Step 5 — Model Multiple Scenarios:</strong> Solar + BESS + rate escalation + NEM policy risk. The combination that wins across all scenarios is the right configuration.</li>
+    </ul>
+
+    <div class="pull-quote">
+      Solar ROI without storage: 7–12 years. Solar ROI with BESS: 4–7 years. <span>The difference is self-consumption rate — and the difference in self-consumption rate is storage.</span>
+    </div>
+
+    <div class="cta">
+      <h3>Model Your Solar + Storage Configuration with TrueQuote™</h3>
+      <p>Merlin's TrueQuote™ models solar sizing, BESS sizing, and their combined financial performance against your real utility rate structure — including demand charges, TOU pricing, and NEM compensation scenarios.</p>
+      <a href="https://merlin2.fly.dev">Get Your TrueQuote™ →</a>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-brand">⚡ Merlin Energy</div>
+    <div class="footer-disclaimer">Merlin Energy Intelligence Series. © 2026 Merlin Energy. Solar performance data based on NREL PVWatts and commercial deployment benchmarks. NEM policy references reflect published utility filings.</div>
+  </div>
+
+</div>
+</body>
+</html>
