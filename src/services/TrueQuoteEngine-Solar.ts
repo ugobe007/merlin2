@@ -370,8 +370,7 @@ export function applyPlatformDesign(
       : 0;
 
   // Annual generation: prefer platform's own simulation
-  const annualGenerationKWh =
-    override.importedAnnualKwh ?? estimateAnnualGeneration(systemKw, industry);
+  const annualGenerationKWh = override.importedAnnualKwh ?? estimateAnnualGeneration(systemKw);
 
   const systemSizeCategory = getSystemSizeCategory(systemKw);
 

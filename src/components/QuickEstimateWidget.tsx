@@ -115,6 +115,7 @@ export default function QuickEstimateWidget() {
       return () => clearTimeout(t);
     } else {
       setResultsVisible(false);
+      return undefined;
     }
   }, [phase]);
 
