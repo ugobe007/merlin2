@@ -178,6 +178,7 @@ export default function IndustriesSection() {
       return () => clearTimeout(t);
     } else {
       setResultsVisible(false);
+      return undefined;
     }
   }, [phase]);
 

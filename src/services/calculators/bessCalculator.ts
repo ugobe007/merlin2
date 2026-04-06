@@ -67,7 +67,7 @@ function resolveBESSConstants(input: BESSCalculationInput): typeof BESS_CONSTANT
     ...BESS_CONSTANTS,
     ...(input.vendorPricePerKwh ? { COST_PER_KWH_DEFAULT: input.vendorPricePerKwh } : {}),
     ...(input.vendorPricePerKw ? { COST_PER_KW: input.vendorPricePerKw } : {}),
-  };
+  } as typeof BESS_CONSTANTS;
 }
 
 // Industry-specific BESS configurations
