@@ -91,7 +91,34 @@ const AdminDashboard: React.FC = () => {
     | "aiData"
     | "marketing"
     | "whitepapers"
-  >("dashboard");
+  >(
+    (() => {
+      const p = new URLSearchParams(window.location.search).get("tab");
+      const valid = [
+        "dashboard",
+        "marketIntelligence",
+        "systemHealth",
+        "godSettings",
+        "matching",
+        "premium",
+        "realtime",
+        "workflows",
+        "health",
+        "analytics",
+        "users",
+        "useCases",
+        "pricing",
+        "godSettings",
+        "matching",
+        "premium",
+        "realtime",
+        "settings",
+        "marketing",
+        "whitepapers",
+      ];
+      return (p && valid.includes(p) ? p : "dashboard") as any;
+    })()
+  );
   // const [refreshInterval, setRefreshInterval] = useState<number>(30); // Unused
   const [showPricingAdmin, setShowPricingAdmin] = useState(false);
 
@@ -277,14 +304,23 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Exit to Home Button - Smaller, professional */}
-            <button
-              onClick={() => (window.location.href = "/")}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-sm rounded-lg font-medium transition-all duration-200"
-            >
-              <Home className="w-3.5 h-3.5" />
-              <span>Exit</span>
-            </button>
+            {/* Header right actions */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveTab("whitepapers")}
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 text-sm rounded-lg font-medium transition-all duration-200"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Whitepapers</span>
+              </button>
+              <button
+                onClick={() => (window.location.href = "/")}
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-sm rounded-lg font-medium transition-all duration-200"
+              >
+                <Home className="w-3.5 h-3.5" />
+                <span>Exit</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
