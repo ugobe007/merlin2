@@ -130,7 +130,7 @@ export default function Navbar() {
                         Admin
                       </a>
                       <a
-                        href="/admin"
+                        href="/admin?tab=whitepapers"
                         className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors px-3 py-2 rounded-md hover:bg-white/[0.05]"
                         style={{ fontFamily: "'Manrope', sans-serif" }}
                       >
