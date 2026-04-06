@@ -4,10 +4,12 @@
           About Merlin → AboutMerlinModal */
 
 import { useState, useEffect } from "react";
-import { Menu, X, LogOut, User } from "lucide-react";
+import { Menu, X, LogOut, User, LayoutDashboard, FileText } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
 import { AboutMerlinModal } from "@/components/modals/AboutMerlinModal";
 import { authService } from "@/services/authService";
+
+const ADMIN_EMAILS = ["ugobe07@gmail.com", "admin@merlinenergy.net", "viewer@merlinenergy.net"];
 
 const WIZARD_URL =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/merlin-wizard_11d2b1f0.png";
@@ -19,6 +21,7 @@ export default function Navbar() {
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [showAbout, setShowAbout] = useState(false);
   const [currentUser, setCurrentUser] = useState(authService.getCurrentUser());
+  const isAdmin = !!currentUser && ADMIN_EMAILS.includes(currentUser.email);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -115,6 +118,27 @@ export default function Navbar() {
             <div className="hidden lg:flex items-center gap-2">
               {currentUser ? (
                 <div className="flex items-center gap-3">
+                  {/* Admin links */}
+                  {isAdmin && (
+                    <>
+                      <a
+                        href="/admin"
+                        className="flex items-center gap-1.5 text-sm text-amber-400 hover:text-amber-300 transition-colors px-3 py-2 rounded-md hover:bg-amber-500/[0.08]"
+                        style={{ fontFamily: "'Manrope', sans-serif" }}
+                      >
+                        <LayoutDashboard size={14} />
+                        Admin
+                      </a>
+                      <a
+                        href="/admin"
+                        className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors px-3 py-2 rounded-md hover:bg-white/[0.05]"
+                        style={{ fontFamily: "'Manrope', sans-serif" }}
+                      >
+                        <FileText size={14} />
+                        Whitepapers
+                      </a>
+                    </>
+                  )}
                   <div className="flex items-center gap-2 text-sm text-slate-300">
                     <User size={15} className="text-slate-400" />
                     <span style={{ fontFamily: "'Manrope', sans-serif" }}>
