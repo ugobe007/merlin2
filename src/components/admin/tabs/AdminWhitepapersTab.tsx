@@ -33,6 +33,90 @@ const WHITEPAPERS: Whitepaper[] = [
     pdfReady: true,
     linkedInReady: true,
   },
+  {
+    id: "energy-blind-spots",
+    title: "Energy Blind Spots",
+    subtitle: "What Most Business Owners Don't Know They Don't Know",
+    published: "April 2026",
+    industries: ["All Industries"],
+    description:
+      "Demand charges, time-of-use rates, ratchet clauses, power factor penalties — five hidden costs that inflate commercial electric bills and why most businesses never see them coming.",
+    url: "/whitepapers/energy-blind-spots.html",
+    pdfReady: true,
+    linkedInReady: true,
+  },
+  {
+    id: "datacenter-effect",
+    title: "The Data Center Effect",
+    subtitle: "How Big Tech Is Raising Your Electric Bill",
+    published: "April 2026",
+    industries: ["Car Wash", "Grocery", "Retail", "Restaurant"],
+    description:
+      "When Google or Microsoft builds a 500 MW data center in your county, every local business sharing that grid pays for the infrastructure upgrade. Includes the car wash example and the top 5 at-risk corridors.",
+    url: "/whitepapers/datacenter-effect.html",
+    pdfReady: true,
+    linkedInReady: true,
+  },
+  {
+    id: "oil-at-200",
+    title: "Oil at $200/Barrel",
+    subtitle: "Is Your Business Ready for the Energy Supply Shock?",
+    published: "April 2026",
+    industries: ["Hospital", "Data Center", "Cold Storage", "Manufacturing"],
+    description:
+      "Middle East export disruption is no longer a tail risk. At $200/barrel oil, diesel generators cost $0.75/kWh to run. Here's how businesses with diesel-dependent backup power can hedge before the shock hits.",
+    url: "/whitepapers/oil-at-200.html",
+    pdfReady: true,
+    linkedInReady: true,
+  },
+  {
+    id: "bess-explained",
+    title: "BESS Systems Explained",
+    subtitle: "The Energy Swiss Army Knife Your Business Needs",
+    published: "April 2026",
+    industries: ["All Industries"],
+    description:
+      "BESS is not a giant UPS. It's an intelligent optimizer that reduces demand charges, captures TOU arbitrage, integrates solar, and extends generator life — working every hour of every day, not just during outages.",
+    url: "/whitepapers/bess-explained.html",
+    pdfReady: true,
+    linkedInReady: true,
+  },
+  {
+    id: "solar-done-right",
+    title: "Solar Done Right",
+    subtitle: "Why Rooftop Panels Alone Won't Save Your Business",
+    published: "April 2026",
+    industries: ["Hotel", "Retail", "Restaurant", "Car Wash"],
+    description:
+      "Solar panels generate when the sun shines — not when you need electricity. NEM 3.0, curtailment, and TOU misalignment kill most solar-only ROI cases. Here's the framework that actually works.",
+    url: "/whitepapers/solar-done-right.html",
+    pdfReady: true,
+    linkedInReady: true,
+  },
+  {
+    id: "generators-decoded",
+    title: "Generators Decoded",
+    subtitle: "Diesel, Natural Gas & Turbines — What Businesses Must Know",
+    published: "April 2026",
+    industries: ["Hospital", "Data Center", "Hotel", "Manufacturing"],
+    description:
+      "Three generator types, three very different risk profiles. Most commercial generators run at 25–40% load — inefficient and expensive. Here's how BESS transforms generator economics and extends equipment life 2–3×.",
+    url: "/whitepapers/generators-decoded.html",
+    pdfReady: true,
+    linkedInReady: true,
+  },
+  {
+    id: "nuclear-option",
+    title: "The Nuclear Option",
+    subtitle: "Why Data Centers and Hospitals Should Be Paying Attention to SMRs",
+    published: "April 2026",
+    industries: ["Data Center", "Hospital", "University"],
+    description:
+      "Microsoft restarted Three Mile Island. Google signed Kairos Power SMR agreements. Small Modular Reactors are coming — and the organizations that begin planning now will have a 10-year advantage. Who should be in the queue.",
+    url: "/whitepapers/nuclear-option.html",
+    pdfReady: true,
+    linkedInReady: true,
+  },
 ];
 
 const INDUSTRY_COLORS: Record<string, string> = {

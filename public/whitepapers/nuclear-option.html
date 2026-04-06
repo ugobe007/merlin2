@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Nuclear Option — Merlin Energy Whitepaper 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --accent:      #1D4ED8;
+    --accent-lt:   #93C5FD;
+    --accent-bg:   #EFF6FF;
+    --navy:        #1E293B;
+    --slate:       #475569;
+    --border:      #BFDBFE;
+    --white:       #FFFFFF;
+    --page-width:  760px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #f1f5f9; color: var(--navy); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { max-width: var(--page-width); margin: 40px auto; background: var(--white); border-radius: 12px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,.12); }
+  .cover { background: linear-gradient(145deg, #050d1a 0%, #0b1f42 60%, #060e2c 100%); padding: 64px 60px 56px; position: relative; overflow: hidden; }
+  .cover::before { content: ''; position: absolute; top: -80px; right: -80px; width: 380px; height: 380px; border-radius: 50%; background: radial-gradient(circle, rgba(29,78,216,.3) 0%, transparent 70%); }
+  .cover-tag { display: inline-block; background: var(--accent-lt); color: #1e3a8a; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; margin-bottom: 24px; }
+  .cover h1 { font-size: 38px; font-weight: 900; color: var(--white); line-height: 1.12; margin-bottom: 8px; max-width: 500px; }
+  .cover h1 span { color: var(--accent-lt); }
+  .cover .subtitle { font-size: 17px; color: #94a3b8; font-weight: 400; margin-bottom: 36px; max-width: 460px; line-height: 1.5; }
+  .cover-meta { display: flex; gap: 28px; flex-wrap: wrap; }
+  .cover-meta-item { color: #64748b; font-size: 13px; }
+  .cover-meta-item strong { display: block; color: #cbd5e1; font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .stripe { background: var(--accent); color: var(--white); padding: 12px 60px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+  .body { padding: 44px 60px; }
+  .lead { font-size: 17px; line-height: 1.78; color: var(--slate); margin-bottom: 36px; border-left: 4px solid var(--accent-lt); padding-left: 20px; }
+  h2 { font-size: 22px; font-weight: 800; color: var(--navy); margin-bottom: 12px; margin-top: 40px; }
+  h2:first-of-type { margin-top: 0; }
+  p { font-size: 15px; line-height: 1.75; color: var(--slate); margin-bottom: 16px; }
+  .pull-quote { background: var(--accent-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px 28px; margin: 32px 0; font-size: 19px; font-weight: 700; color: var(--accent); line-height: 1.4; text-align: center; }
+  .pull-quote span { display: block; font-size: 13px; font-weight: 500; color: var(--slate); margin-top: 6px; }
+  .stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin: 32px 0; }
+  .stat-card { background: var(--navy); border-radius: 10px; padding: 20px; text-align: center; }
+  .stat-card .num { font-size: 28px; font-weight: 900; color: var(--accent-lt); }
+  .stat-card .label { font-size: 12px; color: #94a3b8; margin-top: 4px; line-height: 1.4; }
+  .insight-list { list-style: none; margin: 16px 0 24px; }
+  .insight-list li { padding: 10px 0 10px 28px; border-bottom: 1px solid #f1f5f9; font-size: 15px; color: var(--slate); line-height: 1.6; position: relative; }
+  .insight-list li::before { content: '→'; position: absolute; left: 0; color: var(--accent-lt); font-weight: 700; }
+  /* SMR card grid */
+  .smr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
+  .smr-card { background: #0f172a; border: 1px solid #1e3a5f; border-radius: 10px; padding: 20px; }
+  .smr-card .company { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-lt); margin-bottom: 6px; }
+  .smr-card h4 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .smr-card p { font-size: 13px; color: #94a3b8; line-height: 1.6; margin-bottom: 0; }
+  /* Who should / shouldn't table */
+  .fit-table { width: 100%; border-collapse: collapse; margin: 24px 0; }
+  .fit-table th { background: var(--navy); color: #fff; font-size: 12px; font-weight: 600; text-align: left; padding: 10px 16px; }
+  .fit-table td { font-size: 14px; color: var(--slate); padding: 10px 16px; border-bottom: 1px solid #f1f5f9; }
+  .fit-table tr:nth-child(even) td { background: #f8fafc; }
+  .fit-table td.yes { color: #16a34a; font-weight: 600; }
+  .fit-table td.no { color: #dc2626; font-weight: 600; }
+  .cta { background: linear-gradient(135deg, #050d1a 0%, #0b1f42 100%); border-radius: 12px; padding: 36px 40px; margin-top: 44px; text-align: center; }
+  .cta h3 { font-size: 22px; font-weight: 800; color: var(--white); margin-bottom: 10px; }
+  .cta p { font-size: 15px; color: #94a3b8; margin-bottom: 24px; }
+  .cta a { display: inline-block; background: var(--accent-lt); color: #1e3a8a; font-weight: 700; font-size: 15px; padding: 12px 28px; border-radius: 8px; text-decoration: none; }
+  .footer { border-top: 1px solid #e2e8f0; padding: 20px 60px; display: flex; justify-content: space-between; align-items: center; }
+  .footer-brand { font-size: 13px; font-weight: 700; color: var(--accent); }
+  .footer-disclaimer { font-size: 11px; color: #94a3b8; max-width: 420px; text-align: right; }
+  @media print { body { background: white; } .page { margin: 0; box-shadow: none; border-radius: 0; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cover">
+    <div class="cover-tag">Long-Term Energy Strategy · Series 7 of 7</div>
+    <h1>The <span>Nuclear</span> Option</h1>
+    <p class="subtitle">Small Modular Reactors Are Coming. Data Centers and Hospitals That Start Planning Now Will Have a 10-Year Advantage Over Those That Don't.</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item"><strong>Published</strong>April 2026</div>
+      <div class="cover-meta-item"><strong>Author</strong>Merlin Energy Intelligence</div>
+      <div class="cover-meta-item"><strong>Read Time</strong>5 minutes</div>
+    </div>
+  </div>
+
+  <div class="stripe">The Biggest Energy Shift Since the Shale Revolution — And It's Moving Faster Than Anyone Expected</div>
+
+  <div class="body">
+
+    <p class="lead">In September 2023, Microsoft signed a power purchase agreement to restart the Three Mile Island nuclear plant — 835 MW of carbon-free baseload power, contracted for 20 years. In December 2023, Google signed agreements with Kairos Power for up to 500 MW of Small Modular Reactor output, expected online between 2030 and 2035. These aren't experiments. They are capital commitments by the world's most sophisticated energy buyers. The question isn't whether nuclear is viable for large commercial users. It's whether your organization is thinking about it early enough to act.</p>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="num">$0.09/kWh</div>
+        <div class="label">projected levelized cost of electricity from SMRs over 40 years — competitive with gas at scale</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">92%</div>
+        <div class="label">capacity factor for nuclear vs. 25–35% for solar and 35–45% for wind — true baseload</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">2028–32</div>
+        <div class="label">first commercial SMR deployments expected in US — planning decisions must be made now</div>
+      </div>
+    </div>
+
+    <h2>What Are Small Modular Reactors?</h2>
+    <p>Traditional nuclear plants are massive: 1,000–1,600 MW, costing $10–20 billion and taking 15+ years to build. That scale makes them impractical for most buyers. Small Modular Reactors (SMRs) are a fundamentally different product: factory-manufactured, modular units producing 50–300 MW each, designed to be assembled on-site like large industrial equipment. Multiple units can be clustered to meet load requirements.</p>
+    <p>The modularity addresses nuclear's historic Achilles heel — cost overruns driven by custom, on-site construction. Factory production enables quality control, standardization, and learning-curve cost reduction. The goal of the leading SMR developers is to achieve costs competitive with combined-cycle natural gas, without fuel price volatility or emissions.</p>
+
+    <h2>Who Is Already Moving</h2>
+
+    <div class="smr-grid">
+      <div class="smr-card">
+        <div class="company">Microsoft</div>
+        <h4>Three Mile Island Restart</h4>
+        <p>20-year PPA for 835 MW of existing nuclear capacity. Online 2028. Purpose: power Microsoft's mid-Atlantic data center footprint with carbon-free baseload energy.</p>
+      </div>
+      <div class="smr-card">
+        <div class="company">Google + Kairos Power</div>
+        <h4>SMR Purchase Agreements</h4>
+        <p>Up to 500 MW across multiple Kairos fluoride-salt SMR units. Deployment 2030–2035. Google's stated goal: 24/7 carbon-free energy for data center operations.</p>
+      </div>
+      <div class="smr-card">
+        <div class="company">Amazon / AWS</div>
+        <h4>Nuclear Site Acquisitions</h4>
+        <p>Amazon purchased a former nuclear power plant site in Pennsylvania in 2024. Intended for 2.5 GW of data center capacity powered by on-site nuclear generation.</p>
+      </div>
+      <div class="smr-card">
+        <div class="company">NuScale / TerraPower</div>
+        <h4>Commercial Pipeline</h4>
+        <p>NuScale's VOYGR design is NRC-approved (first SMR to achieve this). TerraPower's Natrium reactor breaks ground in Wyoming in 2026. Multiple commercial deployments expected by 2030.</p>
+      </div>
+    </div>
+
+    <h2>Who Should Be Paying Attention</h2>
+
+    <table class="fit-table">
+      <thead>
+        <tr><th>Facility Type</th><th>Load Profile</th><th>SMR Fit?</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Hyperscale Data Centers</strong></td><td>100–2,000 MW, 24/7</td><td class="yes">Excellent</td><td>24/7 baseload, carbon-free, 40-year price stability</td></tr>
+        <tr><td><strong>Large Hospital Systems</strong></td><td>10–100 MW, mission-critical</td><td class="yes">Strong</td><td>Resilience priority, continuous operation, regulatory appetite</td></tr>
+        <tr><td><strong>University Campuses</strong></td><td>20–200 MW, district energy</td><td class="yes">Strong</td><td>Long planning horizons, existing regulatory familiarity with research reactors</td></tr>
+        <tr><td><strong>Industrial Manufacturing</strong></td><td>50–500 MW, continuous process</td><td class="yes">Good</td><td>Baseload match, carbon reduction mandates, cost stability</td></tr>
+        <tr><td><strong>Commercial Buildings (&lt;5 MW)</strong></td><td>0.5–5 MW, variable</td><td class="no">Not a fit</td><td>Below economic minimum scale; BESS + solar + generator is the right stack</td></tr>
+        <tr><td><strong>Retail / Hospitality</strong></td><td>0.1–2 MW, variable</td><td class="no">Not a fit</td><td>Load profile doesn't match; TrueQuote™ BESS+solar is appropriate</td></tr>
+      </tbody>
+    </table>
+
+    <div class="pull-quote">
+      Nuclear is not for every business. But for every hospital or data center that dismisses it without analysis, there is a competitor that is already in the planning queue for 2032 power.
+    </div>
+
+    <h2>The Timeline Reality</h2>
+    <p>The most important thing large energy users need to understand about SMRs: the lead time is 5–10 years from decision to power. Site permitting, NRC licensing, interconnection agreements, construction, and commissioning all take time. A hospital system or large data center campus that wants nuclear power operational by 2033 needs to begin formal planning and site analysis by 2026–2027.</p>
+    <p>The decisions being made today by Microsoft, Google, and Amazon are not because they need the power today. They are because these organizations understand 20-year energy cost structures and are positioning for a future in which grid rates are significantly higher, carbon pricing is real, and energy supply risk is a board-level concern.</p>
+
+    <ul class="insight-list">
+      <li><strong>Step 1 (Now):</strong> Qualify your load profile. Does your facility need 50+ MW of continuous, 24/7 power? If yes, begin SMR feasibility study.</li>
+      <li><strong>Step 2 (2026–2027):</strong> Engage a nuclear developer for a site assessment and preliminary power purchase structure. NuScale, TerraPower, Kairos, and Oklo all have commercial engagement programs.</li>
+      <li><strong>Step 3 (2027–2028):</strong> Site permitting and interconnection agreements. These are long lead-time items. Starting late means you miss the first commercial deployment wave.</li>
+      <li><strong>Step 4 (2028–2030):</strong> Construction and commissioning. First power expected in the 2030–2033 window for facilities that begin engagement now.</li>
+      <li><strong>While You Wait:</strong> Deploy BESS, solar, and generator optimization to reduce costs and build energy resilience in the interim. These assets will complement nuclear when it arrives.</li>
+    </ul>
+
+    <div class="cta">
+      <h3>Start with TrueQuote™ — Build Toward Nuclear</h3>
+      <p>The path to nuclear starts with understanding your current energy costs and what can be optimized today. Merlin TrueQuote™ gives you the financial baseline — so you know what you're paying now and what your energy investment roadmap should look like over the next 10 years.</p>
+      <a href="https://merlin2.fly.dev">Get Your TrueQuote™ →</a>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-brand">⚡ Merlin Energy</div>
+    <div class="footer-disclaimer">Merlin Energy Intelligence Series. © 2026 Merlin Energy. SMR commercial timelines and cost projections based on published developer disclosures and DOE/NREL analysis. Not investment advice.</div>
+  </div>
+
+</div>
+</body>
+</html>

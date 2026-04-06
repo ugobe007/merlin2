@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Energy Blind Spots — Merlin Energy Whitepaper 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --accent:      #1B8F5A;
+    --accent-lt:   #3ECF8E;
+    --accent-bg:   #EDFDF5;
+    --navy:        #1E293B;
+    --slate:       #475569;
+    --border:      #D1FAE5;
+    --white:       #FFFFFF;
+    --page-width:  760px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #f1f5f9;
+    color: var(--navy);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page {
+    max-width: var(--page-width);
+    margin: 40px auto;
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,.12);
+  }
+  /* Cover */
+  .cover {
+    background: linear-gradient(145deg, var(--navy) 0%, #0f2540 60%, #0d3d2a 100%);
+    padding: 64px 60px 56px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 380px; height: 380px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(62,207,142,.15) 0%, transparent 70%);
+  }
+  .cover-tag {
+    display: inline-block;
+    background: var(--accent-lt);
+    color: var(--navy);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+  }
+  .cover h1 {
+    font-size: 38px;
+    font-weight: 900;
+    color: var(--white);
+    line-height: 1.12;
+    margin-bottom: 8px;
+    max-width: 500px;
+  }
+  .cover h1 span { color: var(--accent-lt); }
+  .cover .subtitle {
+    font-size: 17px;
+    color: #94a3b8;
+    font-weight: 400;
+    margin-bottom: 36px;
+    max-width: 460px;
+    line-height: 1.5;
+  }
+  .cover-meta { display: flex; gap: 28px; flex-wrap: wrap; }
+  .cover-meta-item { color: #64748b; font-size: 13px; }
+  .cover-meta-item strong { display: block; color: #cbd5e1; font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  /* Section stripe */
+  .stripe {
+    background: var(--accent);
+    color: var(--white);
+    padding: 12px 60px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+  /* Body */
+  .body { padding: 44px 60px; }
+  .lead {
+    font-size: 17px;
+    line-height: 1.78;
+    color: var(--slate);
+    margin-bottom: 36px;
+    border-left: 4px solid var(--accent-lt);
+    padding-left: 20px;
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 12px;
+    margin-top: 40px;
+  }
+  h2:first-of-type { margin-top: 0; }
+  p { font-size: 15px; line-height: 1.75; color: var(--slate); margin-bottom: 16px; }
+  .pull-quote {
+    background: var(--accent-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin: 32px 0;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.4;
+    text-align: center;
+  }
+  .pull-quote span { display: block; font-size: 13px; font-weight: 500; color: var(--slate); margin-top: 6px; }
+  /* Stat row */
+  .stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin: 32px 0; }
+  .stat-card {
+    background: var(--navy);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-card .num { font-size: 28px; font-weight: 900; color: var(--accent-lt); }
+  .stat-card .label { font-size: 12px; color: #94a3b8; margin-top: 4px; line-height: 1.4; }
+  /* Insight list */
+  .insight-list { list-style: none; margin: 16px 0 24px; }
+  .insight-list li {
+    padding: 10px 0 10px 28px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 15px;
+    color: var(--slate);
+    line-height: 1.6;
+    position: relative;
+  }
+  .insight-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent-lt);
+    font-weight: 700;
+  }
+  /* CTA */
+  .cta {
+    background: linear-gradient(135deg, var(--navy) 0%, #0d3d2a 100%);
+    border-radius: 12px;
+    padding: 36px 40px;
+    margin-top: 44px;
+    text-align: center;
+  }
+  .cta h3 { font-size: 22px; font-weight: 800; color: var(--white); margin-bottom: 10px; }
+  .cta p { font-size: 15px; color: #94a3b8; margin-bottom: 24px; }
+  .cta a {
+    display: inline-block;
+    background: var(--accent-lt);
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 15px;
+    padding: 12px 28px;
+    border-radius: 8px;
+    text-decoration: none;
+  }
+  /* Footer */
+  .footer {
+    border-top: 1px solid #e2e8f0;
+    padding: 20px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0;
+  }
+  .footer-brand { font-size: 13px; font-weight: 700; color: var(--accent); }
+  .footer-disclaimer { font-size: 11px; color: #94a3b8; max-width: 420px; text-align: right; }
+  @media print {
+    body { background: white; }
+    .page { margin: 0; box-shadow: none; border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="cover-tag">Business Energy Intelligence · Series 1 of 7</div>
+    <h1>Energy <span>Blind Spots</span></h1>
+    <p class="subtitle">What Most Business Owners Don't Know They Don't Know — and What It's Costing Them Every Month</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item"><strong>Published</strong>April 2026</div>
+      <div class="cover-meta-item"><strong>Author</strong>Merlin Energy Intelligence</div>
+      <div class="cover-meta-item"><strong>Read Time</strong>4 minutes</div>
+    </div>
+  </div>
+
+  <div class="stripe">The Problem with "Just Pay the Bill"</div>
+
+  <div class="body">
+
+    <p class="lead">Most businesses treat electricity like rent — a fixed cost you pay and forget. They optimize for kilowatt-hour usage (kWh), install LED lighting, maybe add solar. Then they look at the bill and wonder why it didn't go down. The reason: the most expensive part of your electric bill has nothing to do with how much energy you use.</p>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="num">40%</div>
+        <div class="label">of commercial bills consumed by demand charges alone</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">3–4×</div>
+        <div class="label">more expensive to use energy during peak hours (TOU pricing)</div>
+      </div>
+      <div class="stat-card">
+        <div class="num">12 mo</div>
+        <div class="label">some utilities bill based on your highest peak over the last year</div>
+      </div>
+    </div>
+
+    <h2>The Demand Charge Problem</h2>
+    <p>Your utility doesn't just charge you for energy consumed — it charges you for the <em>rate</em> at which you consumed it. Every month, your meter records your highest 15-minute average power draw. That number — your "peak demand" — gets multiplied by a demand charge rate (typically $10–$25 per kW) and added to your bill.</p>
+    <p>A restaurant that runs all its kitchen equipment simultaneously for 15 minutes at noon can set a demand peak that inflates its bill for the entire month — even if the rest of the month is quiet. The kitchen didn't run "more" energy. It ran it badly.</p>
+
+    <div class="pull-quote">
+      "We installed solar and cut our kWh usage by 30%. Our bill barely moved." <span>— Common feedback from businesses without demand charge management</span>
+    </div>
+
+    <h2>Five Costs Your CFO Probably Doesn't Know Exist</h2>
+    <ul class="insight-list">
+      <li><strong>Demand Charges:</strong> Based on your peak 15-minute draw. Often $10–$25/kW/month. Easily 30–50% of your total bill.</li>
+      <li><strong>Time-of-Use (TOU) Rates:</strong> Energy costs 2–4× more during afternoon peak hours (typically 4–9 PM). Businesses that run heavy loads at these times pay a massive, invisible premium.</li>
+      <li><strong>Ratchet Clauses:</strong> Some utilities bill based on your single highest demand reading over the past 12 months — one bad day can haunt you for a year.</li>
+      <li><strong>Power Factor Penalties:</strong> Running inductive equipment (motors, compressors, HVAC) at poor power factor draws reactive power the utility must supply but can't bill for directly — so they add penalty charges instead.</li>
+      <li><strong>Interconnection Fees:</strong> Want to add solar or storage? Utilities charge variable interconnection fees to "study" the impact on their grid. In some jurisdictions these run $50K–$500K+ and can kill project economics entirely.</li>
+    </ul>
+
+    <h2>The Right Framework: Bill Forensics First</h2>
+    <p>Before deploying any energy technology, a business must understand its <em>cost structure</em>, not just its consumption. That means obtaining 12 months of interval data (15-minute readings), identifying demand peaks, understanding the rate schedule, and modeling how different technologies — BESS, solar, demand response — actually interact with each charge type.</p>
+    <p>Businesses that skip this step frequently deploy the wrong solution. Solar panels reduce energy charges. BESS reduces demand charges. Generators provide resilience. They are not interchangeable — and deploying them without a bill forensics model first is like prescribing medication without a diagnosis.</p>
+
+    <div class="pull-quote">
+      The goal isn't to use less energy. The goal is to control <em>when</em> you use it.
+    </div>
+
+    <h2>Where to Start</h2>
+    <p>Request 12 months of interval data from your utility (most provide this through their online portal or upon request). Identify your top 5 demand peaks — what caused them, what time of day, what day of week. Then model the cost impact of shifting or reducing each one. This analysis alone typically reveals $20,000–$200,000 in annual savings opportunity for mid-sized commercial operations.</p>
+
+    <!-- CTA -->
+    <div class="cta">
+      <h3>Merlin TrueQuote™ — Bill Forensics in Minutes</h3>
+      <p>Enter your building type and ZIP code. Merlin pulls utility rate schedules, NREL benchmarks, and models demand charge reduction across BESS, solar, and hybrid configurations — in real time.</p>
+      <a href="https://merlin2.fly.dev">Get Your TrueQuote™ →</a>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-brand">⚡ Merlin Energy</div>
+    <div class="footer-disclaimer">Merlin Energy Intelligence Series. © 2026 Merlin Energy. This whitepaper is for educational purposes. Financial projections are estimates based on published utility rate data and NREL benchmarks.</div>
+  </div>
+
+</div>
+</body>
+</html>
