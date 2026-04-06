@@ -314,7 +314,7 @@ const AdminDashboard: React.FC = () => {
                 <span>Whitepapers</span>
               </button>
               <button
-                onClick={() => (window.location.href = "/")}
+                onClick={() => (window.location.href = import.meta.env.VITE_PUBLIC_URL || "/")}
                 className="flex items-center gap-1.5 px-3 py-1.5 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-sm rounded-lg font-medium transition-all duration-200"
               >
                 <Home className="w-3.5 h-3.5" />

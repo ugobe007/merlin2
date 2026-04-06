@@ -228,7 +228,7 @@ export default function AdminMarketingTab() {
               type="button"
               onClick={() => {
                 window.open(
-                  `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://merlin2.fly.dev")}&summary=${encodeURIComponent(linkedinPost.slice(0, 700))}`,
+                  `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(import.meta.env.VITE_PUBLIC_URL || "https://merlinenergy.net")}&summary=${encodeURIComponent(linkedinPost.slice(0, 700))}`,
                   "_blank"
                 );
               }}
