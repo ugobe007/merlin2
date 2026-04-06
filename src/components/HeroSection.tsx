@@ -464,7 +464,7 @@ function CalculationCard() {
 
   return (
     <div
-      className="relative w-full max-w-[480px] rounded-2xl overflow-hidden"
+      className="relative w-full max-w-[560px] rounded-2xl overflow-hidden"
       style={{
         background: "linear-gradient(160deg, #0C1829 0%, #080F1E 100%)",
         animation: "heartbeatBorder 4s ease-in-out infinite",
@@ -937,10 +937,10 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_30%,rgba(59,130,246,0.10)_0%,transparent_70%)]" />
 
       {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-20">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full py-20">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* ── Left: headline + path selector ─────────────────────────────── */}
-          <div className="max-w-2xl">
+          <div className="max-w-3xl">
             {/* Badge */}
             <div className="animate-fade-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-500/25 bg-blue-500/[0.08] text-blue-300/80 text-[11px] font-medium tracking-wide mb-8">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
@@ -949,7 +949,7 @@ export default function HeroSection() {
 
             {/* Headline */}
             <h1
-              className="animate-fade-up-delay-1 text-6xl sm:text-7xl lg:text-[82px] font-extrabold leading-[0.92] tracking-tight mb-7"
+              className="animate-fade-up-delay-1 text-6xl sm:text-7xl lg:text-[82px] xl:text-[96px] font-extrabold leading-[0.92] tracking-tight mb-7"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
               <span className="text-emerald-400">Energy ROI</span>
