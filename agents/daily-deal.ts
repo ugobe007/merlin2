@@ -29,6 +29,24 @@ import { TwitterApi } from 'twitter-api-v2';
 
 const RAILWAY_MCP = 'https://merlin-mcp-agent-production.up.railway.app/mcp';
 
+// The MCP generate_truequote tool only accepts a specific set of industry enum
+// values. Map any agent industry IDs that fall outside that set to the closest
+// supported equivalent so the RPC call never fails with a validation error.
+const MCP_INDUSTRY_MAP: Record<string, string> = {
+  'grocery':      'retail',        // grocery = retail vertical
+  'school':       'university',    // K-12 demand profile ≈ university
+  'cannabis':     'agriculture',   // indoor grow = agricultural production
+  'fitness-center': 'office',      // demand curve similar to commercial office
+  'cold-storage': 'warehouse',     // cold storage is a specialised warehouse
+  'brewery':      'manufacturing', // brewing = light manufacturing
+  'laundry':      'retail',        // commercial laundry = service retail
+  'parking':      'ev-charging',   // parking lot w/ EVs = EV charging use case
+};
+
+function toMcpIndustry(id: string): string {
+  return MCP_INDUSTRY_MAP[id] ?? id;
+}
+
 async function callTool(name: string, args: Record<string, unknown>): Promise<unknown> {
   const res = await fetch(RAILWAY_MCP, {
     method: 'POST',
@@ -67,7 +85,10 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<un
   if (json.error) throw new Error(`MCP error: ${json.error.message}`);
 
   const text = json.result?.content?.[0]?.text;
-  return text ? JSON.parse(text) : json.result;
+  if (!text) return json.result;
+  // MCP tool errors arrive as a plain string in content[0].text (not JSON)
+  if (text.startsWith('MCP error')) throw new Error(text);
+  return JSON.parse(text);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1107,7 +1128,7 @@ export async function runDailyDeal(overrideIndustryId?: string): Promise<DailyDe
   // Call TrueQuote™ engine
   console.log('   🔄 Calling TrueQuote™ via MCP...');
   const quote = await callTool('generate_truequote', {
-    industry:           industry.input.industry,
+    industry:           toMcpIndustry(industry.input.industry),
     peakDemandKw:       industry.input.peakDemandKw,
     monthlyBillDollars: industry.input.monthlyBillDollars,
     zipCode:            industry.input.zipCode,
