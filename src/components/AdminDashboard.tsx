@@ -40,6 +40,7 @@ import AdminPremiumTab from "./admin/tabs/AdminPremiumTab";
 import AdminRealtimeTab from "./admin/tabs/AdminRealtimeTab";
 import AdminSettingsTab from "./admin/tabs/AdminSettingsTab";
 import AdminMarketingTab from "./admin/tabs/AdminMarketingTab";
+import AdminWhitepapersTab from "./admin/tabs/AdminWhitepapersTab";
 
 /**
  * System Administrator Dashboard
@@ -89,6 +90,7 @@ const AdminDashboard: React.FC = () => {
     | "migration"
     | "aiData"
     | "marketing"
+    | "whitepapers"
   >("dashboard");
   // const [refreshInterval, setRefreshInterval] = useState<number>(30); // Unused
   const [showPricingAdmin, setShowPricingAdmin] = useState(false);
@@ -233,6 +235,12 @@ const AdminDashboard: React.FC = () => {
           label: "Marketing Kit",
           icon: Megaphone,
           description: "Email, LinkedIn & SMS outreach templates",
+        },
+        {
+          key: "whitepapers",
+          label: "Whitepapers",
+          icon: FileText,
+          description: "Industry whitepapers ready for LinkedIn & share",
         },
       ],
     },
@@ -623,6 +631,7 @@ const AdminDashboard: React.FC = () => {
         {activeTab === "settings" && <AdminSettingsTab />}
 
         {activeTab === "marketing" && <AdminMarketingTab />}
+        {activeTab === "whitepapers" && <AdminWhitepapersTab />}
       </div>
 
       {/* Pricing Admin Dashboard Modal */}
