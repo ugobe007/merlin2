@@ -2178,12 +2178,13 @@ export default function Step5V8({ state, actions }: Props) {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
       {/* ── DATA SOURCES MODAL ───────────────────────────────────────────── */}
       {showDataSourcesModal &&
-        ((
+        createPortal(
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ background: "rgba(0,0,0,0.72)" }}
@@ -2281,9 +2282,9 @@ export default function Step5V8({ state, actions }: Props) {
                 All incentives subject to eligibility verification.
               </p>
             </div>
-          </div>
-        ),
-        document.body)}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
