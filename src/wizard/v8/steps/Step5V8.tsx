@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import type { WizardState, WizardActions } from "../wizardState";
 import {
   Battery,
@@ -323,6 +324,8 @@ export default function Step5V8({ state, actions }: Props) {
       if (!bypassLeadGate && !leadCaptured && !isUserAuthenticated()) {
         setPendingFormat(format);
         setShowLeadGate(true);
+        // Scroll to top so the modal is centered in the visible viewport
+        window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
 
@@ -1968,86 +1971,88 @@ export default function Step5V8({ state, actions }: Props) {
       </div>
 
       {/* ================================================================
-          LEAD CAPTURE MODAL
+          LEAD CAPTURE MODAL — rendered via portal to escape willChange container
       ================================================================ */}
-      {showLeadGate && (
-        <div
-          className="fixed inset-0 bg-black/85 z-[9999] flex items-center justify-center p-5"
-          onClick={() => setShowLeadGate(false)}
-        >
+      {showLeadGate &&
+        createPortal(
           <div
-            className="bg-slate-900 rounded-2xl max-w-md w-full p-8 relative"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 bg-black/85 z-[9999] flex items-center justify-center p-5"
+            onClick={() => setShowLeadGate(false)}
           >
-            <button
-              onClick={() => setShowLeadGate(false)}
-              className="absolute top-4 right-4 text-slate-500 hover:text-slate-300 transition-colors"
+            <div
+              className="bg-slate-900 rounded-2xl max-w-md w-full p-8 relative"
+              onClick={(e) => e.stopPropagation()}
             >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-3 mb-2">
-              <FileText className="w-6 h-6 text-[#3ECF8E]" />
-              <h2 className="text-xl font-bold text-slate-100">Get Your Quote</h2>
-            </div>
-
-            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
-              Enter your details to download your {pendingFormat?.toUpperCase()} quote. We'll save
-              it to your account so you can access it anytime.
-            </p>
-
-            <div className="flex flex-col gap-3.5 mb-5">
-              <input
-                type="text"
-                placeholder="Your name *"
-                value={leadForm.name}
-                onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
-                className="px-4 py-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-100 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3ECF8E]/30"
-              />
-              <input
-                type="email"
-                placeholder="Email address *"
-                value={leadForm.email}
-                onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
-                className="px-4 py-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-100 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3ECF8E]/30"
-              />
-              <input
-                type="text"
-                placeholder="Company (optional)"
-                value={leadForm.company}
-                onChange={(e) => setLeadForm({ ...leadForm, company: e.target.value })}
-                className="px-4 py-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-100 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3ECF8E]/30"
-              />
-            </div>
-
-            <div className="flex gap-3">
               <button
-                onClick={handleLeadSubmit}
-                disabled={!leadForm.name || !leadForm.email || leadSubmitting}
-                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-[#3ECF8E] text-slate-900 font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#3ECF8E]/90 transition-colors"
+                onClick={() => setShowLeadGate(false)}
+                className="absolute top-4 right-4 text-slate-500 hover:text-slate-300 transition-colors"
               >
-                {leadSubmitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <Bookmark className="w-4 h-4" />
-                    Get Quote
-                  </>
-                )}
+                <X className="w-5 h-5" />
               </button>
-              <button
-                onClick={handleSkipLead}
-                className="px-5 py-3 rounded-lg border border-slate-700 text-slate-400 font-semibold text-sm hover:bg-slate-800 transition-colors"
-              >
-                Skip
-              </button>
+
+              <div className="flex items-center gap-3 mb-2">
+                <FileText className="w-6 h-6 text-[#3ECF8E]" />
+                <h2 className="text-xl font-bold text-slate-100">Get Your Quote</h2>
+              </div>
+
+              <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+                Enter your details to download your {pendingFormat?.toUpperCase()} quote. We'll save
+                it to your account so you can access it anytime.
+              </p>
+
+              <div className="flex flex-col gap-3.5 mb-5">
+                <input
+                  type="text"
+                  placeholder="Your name *"
+                  value={leadForm.name}
+                  onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
+                  className="px-4 py-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-100 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3ECF8E]/30"
+                />
+                <input
+                  type="email"
+                  placeholder="Email address *"
+                  value={leadForm.email}
+                  onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
+                  className="px-4 py-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-100 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3ECF8E]/30"
+                />
+                <input
+                  type="text"
+                  placeholder="Company (optional)"
+                  value={leadForm.company}
+                  onChange={(e) => setLeadForm({ ...leadForm, company: e.target.value })}
+                  className="px-4 py-3 rounded-lg border border-slate-700 bg-slate-800 text-slate-100 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3ECF8E]/30"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleLeadSubmit}
+                  disabled={!leadForm.name || !leadForm.email || leadSubmitting}
+                  className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-[#3ECF8E] text-slate-900 font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#3ECF8E]/90 transition-colors"
+                >
+                  {leadSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="w-4 h-4" />
+                      Get Quote
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleSkipLead}
+                  className="px-5 py-3 rounded-lg border border-slate-700 text-slate-400 font-semibold text-sm hover:bg-slate-800 transition-colors"
+                >
+                  Skip
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
       {/* ================================================================
           PROQUOTE™ UPSELL — Merlin is the salesman
@@ -2117,165 +2122,168 @@ export default function Step5V8({ state, actions }: Props) {
         />
       )}
 
-      {showProQuoteModal && (
-        <div
-          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
-          onClick={() => setShowProQuoteModal(false)}
-        >
+      {showProQuoteModal &&
+        createPortal(
           <div
-            className="bg-slate-800 rounded-xl p-6 max-w-2xl w-full border-2 border-[#3ECF8E]/30"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowProQuoteModal(false)}
           >
-            <div className="flex items-center gap-3 mb-4">
-              <img src={badgeProQuoteIcon} alt="ProQuote" className="w-12 h-12" />
-              <div>
-                <h3 className="text-xl font-bold text-[#3ECF8E]">ProQuote™</h3>
-                <p className="text-sm text-slate-400">Full engineering control</p>
+            <div
+              className="bg-slate-800 rounded-xl p-6 max-w-2xl w-full border-2 border-[#3ECF8E]/30"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <img src={badgeProQuoteIcon} alt="ProQuote" className="w-12 h-12" />
+                <div>
+                  <h3 className="text-xl font-bold text-[#3ECF8E]">ProQuote™</h3>
+                  <p className="text-sm text-slate-400">Full engineering control</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-sm text-slate-300">
+                  ProQuote gives you access to advanced features:
+                </p>
+                <ul className="space-y-2">
+                  {[
+                    "Custom equipment selection and sizing",
+                    "Fuel cell and hydrogen integration",
+                    "Advanced financial modeling (DCF, IRR, NPV)",
+                    "Bank-ready Word/Excel exports",
+                    "Detailed engineering specifications",
+                    "Vendor comparison tools",
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-slate-400">
+                      <span className="text-[#3ECF8E] mt-0.5">✓</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    window.location.href = "/pro-quote";
+                  }}
+                  className="flex-1 py-2.5 rounded-lg bg-[#3ECF8E] text-slate-900 font-bold hover:bg-[#2aad70] transition-colors"
+                >
+                  Open ProQuote™
+                </button>
+                <button
+                  onClick={() => setShowProQuoteModal(false)}
+                  className="px-6 py-2.5 rounded-lg border border-white/[0.10] bg-white/[0.04] hover:bg-white/[0.06] text-slate-300 font-medium transition-colors"
+                >
+                  Close
+                </button>
               </div>
             </div>
-
-            <div className="space-y-3">
-              <p className="text-sm text-slate-300">
-                ProQuote gives you access to advanced features:
-              </p>
-              <ul className="space-y-2">
-                {[
-                  "Custom equipment selection and sizing",
-                  "Fuel cell and hydrogen integration",
-                  "Advanced financial modeling (DCF, IRR, NPV)",
-                  "Bank-ready Word/Excel exports",
-                  "Detailed engineering specifications",
-                  "Vendor comparison tools",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-slate-400">
-                    <span className="text-[#3ECF8E] mt-0.5">✓</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => {
-                  window.location.href = "/pro-quote";
-                }}
-                className="flex-1 py-2.5 rounded-lg bg-[#3ECF8E] text-slate-900 font-bold hover:bg-[#2aad70] transition-colors"
-              >
-                Open ProQuote™
-              </button>
-              <button
-                onClick={() => setShowProQuoteModal(false)}
-                className="px-6 py-2.5 rounded-lg border border-white/[0.10] bg-white/[0.04] hover:bg-white/[0.06] text-slate-300 font-medium transition-colors"
-              >
-                Close
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* ── DATA SOURCES MODAL ───────────────────────────────────────────── */}
-      {showDataSourcesModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.72)" }}
-          onClick={() => setShowDataSourcesModal(false)}
-        >
+      {showDataSourcesModal &&
+        ((
           <div
-            className="relative w-full max-w-lg rounded-2xl border border-amber-500/30 bg-slate-950 p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.72)" }}
+            onClick={() => setShowDataSourcesModal(false)}
           >
-            {/* Close */}
-            <button
-              onClick={() => setShowDataSourcesModal(false)}
-              className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
-              aria-label="Close"
+            <div
+              className="relative w-full max-w-lg rounded-2xl border border-amber-500/30 bg-slate-950 p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
+              {/* Close */}
+              <button
+                onClick={() => setShowDataSourcesModal(false)}
+                className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+                aria-label="Close"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Title */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/40 flex items-center justify-center">
-                <svg className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M16.403 12.652a3 3 0 000-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-xs font-bold text-amber-400 uppercase tracking-widest">
-                  TrueQuote™ Verified
-                </p>
-                <h3 className="text-base font-bold text-white">Pricing Data Sources</h3>
-              </div>
-            </div>
-
-            {/* Sources */}
-            <div className="space-y-3 mb-5">
-              {[
-                {
-                  label: "Solar equipment costs",
-                  source: "NREL ATB 2024",
-                  url: "https://atb.nrel.gov",
-                },
-                {
-                  label: "Battery storage pricing",
-                  source: "BloombergNEF BNEF 2024",
-                  url: "https://about.bnef.com",
-                },
-                {
-                  label: "Electricity rates",
-                  source: "U.S. EIA Form EIA-861",
-                  url: "https://www.eia.gov",
-                },
-                {
-                  label: "Equipment & installation",
-                  source: "StoreFAST Supplier Index",
-                  url: "https://storefast.energy",
-                },
-                {
-                  label: "Federal ITC (30%)",
-                  source: "IRS Section 48 / Inflation Reduction Act",
-                  url: "https://www.irs.gov/credits-deductions/businesses/energy-incentives-for-businesses",
-                },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between gap-4 py-2 border-b border-white/[0.05]"
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
                 >
-                  <span className="text-sm text-slate-400">{item.label}</span>
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-semibold text-amber-300 hover:text-amber-200 underline underline-offset-2 shrink-0"
-                  >
-                    {item.source}
-                  </a>
-                </div>
-              ))}
-            </div>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
 
-            <p className="text-[11px] text-slate-500 leading-relaxed">
-              Pricing estimates reflect regional averages for similar facility profiles. Actual
-              costs may vary based on site conditions, permitting, and final equipment selection.
-              All incentives subject to eligibility verification.
-            </p>
+              {/* Title */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/40 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.403 12.652a3 3 0 000-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.883l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-amber-400 uppercase tracking-widest">
+                    TrueQuote™ Verified
+                  </p>
+                  <h3 className="text-base font-bold text-white">Pricing Data Sources</h3>
+                </div>
+              </div>
+
+              {/* Sources */}
+              <div className="space-y-3 mb-5">
+                {[
+                  {
+                    label: "Solar equipment costs",
+                    source: "NREL ATB 2024",
+                    url: "https://atb.nrel.gov",
+                  },
+                  {
+                    label: "Battery storage pricing",
+                    source: "BloombergNEF BNEF 2024",
+                    url: "https://about.bnef.com",
+                  },
+                  {
+                    label: "Electricity rates",
+                    source: "U.S. EIA Form EIA-861",
+                    url: "https://www.eia.gov",
+                  },
+                  {
+                    label: "Equipment & installation",
+                    source: "StoreFAST Supplier Index",
+                    url: "https://storefast.energy",
+                  },
+                  {
+                    label: "Federal ITC (30%)",
+                    source: "IRS Section 48 / Inflation Reduction Act",
+                    url: "https://www.irs.gov/credits-deductions/businesses/energy-incentives-for-businesses",
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex items-center justify-between gap-4 py-2 border-b border-white/[0.05]"
+                  >
+                    <span className="text-sm text-slate-400">{item.label}</span>
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-amber-300 hover:text-amber-200 underline underline-offset-2 shrink-0"
+                    >
+                      {item.source}
+                    </a>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Pricing estimates reflect regional averages for similar facility profiles. Actual
+                costs may vary based on site conditions, permitting, and final equipment selection.
+                All incentives subject to eligibility verification.
+              </p>
+            </div>
           </div>
-        </div>
-      )}
+        ),
+        document.body)}
     </div>
   );
 }
