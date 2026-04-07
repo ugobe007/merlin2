@@ -598,6 +598,7 @@ const getIndustryName = (template: string | string[]): string => {
   return result;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const generatePDF = (quoteData: QuoteData, equipmentBreakdown: any): void => {
   // Safe defaults for all properties
   const q = {
@@ -1565,7 +1566,7 @@ Please contact me to discuss this proposal and answer any questions I may have.
 
 Thank you!\`;
               
-              const mailtoLink = \`mailto:info@merlinenergy.com?subject=Quote Inquiry - Energy Storage System&body=\${encodeURIComponent(message)}\`;
+              const mailtoLink = \`mailto:info@merlinenergy.net?subject=Quote Inquiry - Energy Storage System&body=\${encodeURIComponent(message)}\`;
               window.open(mailtoLink);
             } else {
               alert("Email address is required so we can respond to your inquiry.");
@@ -1590,6 +1591,7 @@ Thank you!\`;
   printWindow.document.close();
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const generateExcel = (quoteData: QuoteData, equipmentBreakdown: any): void => {
   // Safe defaults for all properties
   const q = {
@@ -1649,7 +1651,7 @@ export const generateExcel = (quoteData: QuoteData, equipmentBreakdown: any): vo
   const csvContent = `ENERGY SAVINGS QUOTE - MERLIN ENERGY INC.
 Generated Date:,${today}
 Quote Valid Until:,${new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}
-Website:,www.merlinenergy.com
+Website:,www.merlinenergy.net
 
 ====================================
 PROJECT INFORMATION
@@ -1886,8 +1888,8 @@ NEXT STEPS
 CONTACT INFORMATION
 ====================================
 Company:,Merlin Energy Inc.
-Website:,www.merlinenergy.com
-Email:,quotes@merlinenergy.com
+Website:,www.merlinenergy.net
+Email:,quotes@merlinenergy.net
 Phone:,(555) 123-4567
 
 Thank you for considering Merlin Energy for your energy storage needs!
@@ -1913,6 +1915,7 @@ Thank you for considering Merlin Energy for your energy storage needs!
   URL.revokeObjectURL(url);
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): void => {
   // Validate and provide defaults for all required properties
   const safeData = {
@@ -2130,7 +2133,7 @@ export const generateWord = (quoteData: QuoteData, equipmentBreakdown: any): voi
   <!-- Company Information -->
   <div class="company-info">
     <div class="company-name">Merlin Energy Inc.</div>
-    <div class="company-website">www.merlinenergy.com</div>
+    <div class="company-website">www.merlinenergy.net</div>
   </div>
   
   <!-- Executive Summary Table -->
