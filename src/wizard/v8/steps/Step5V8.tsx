@@ -1933,6 +1933,30 @@ export default function Step5V8({ state, actions }: Props) {
           </button>
         </div>
 
+        {/* ── CONTACT US CTA ── */}
+        <div className="mt-4 pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-sky-500/[0.12] border border-sky-500/25 flex items-center justify-center flex-shrink-0">
+              <Mail className="w-4 h-4 text-sky-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-200 leading-snug">
+                Speak with a Merlin Energy specialist
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Questions about this quote? Our team typically responds within 1 business day.
+              </p>
+            </div>
+          </div>
+          <a
+            href={`mailto:sales@merlinenergy.net?cc=ugobe07%40gmail.com%2Cvkapila2004%40gmail.com&subject=${encodeURIComponent(`BESS Quote Inquiry — ${quoteRef}`)}&body=${encodeURIComponent(`Hi Merlin Energy team,\n\nI have a question about my BESS quote:\n\nQuote Reference: ${quoteRef}\nSystem Size: ${tier ? `${(tier.bessKW / 1000).toFixed(2)} MW / ${tier.durationHours ?? 2} hr` : "—"}\nLocation: ${state.locationRaw || "—"}\n\nPlease reach out at your earliest convenience.\n\nThank you.`)}`}
+            className="flex-shrink-0 flex items-center gap-2 h-9 px-4 rounded-xl border border-sky-500/40 text-sky-400 hover:border-sky-400 hover:text-sky-300 hover:bg-sky-500/[0.06] transition-colors text-sm font-semibold"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            Contact Us →
+          </a>
+        </div>
+
         {/* ── TECHNICAL SPECS TOGGLE ── */}
         <div className="pt-3 border-t border-white/[0.04]">
           <button
