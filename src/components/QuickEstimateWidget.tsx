@@ -16,7 +16,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { ChevronDown, ChevronRight, BatteryFull, Sun, TrendingUp, Zap } from "lucide-react";
-import { STATE_RATES, STATE_NAMES } from "@/config/stateRates";
+import { STATE_RATES } from "@/config/stateRates";
 
 const SHIELD_GOLD =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/shield-gold_53d77804.png";
@@ -67,6 +67,17 @@ const INDUSTRY_ORDER = [
   "hospitality",
 ];
 
+// ── Solar peak hours by latitude — NREL PVWatts calibrated zones ────────────────
+function getSolarPeakHours(lat: number): number {
+  if (lat >= 47) return 3.8; // WA, OR, northern MT/MN/ME
+  if (lat >= 44) return 4.2; // WI, MI, ID, upper New England
+  if (lat >= 40) return 4.6; // OH, PA, NJ, IN, CO, UT, NV
+  if (lat >= 36) return 5.0; // CA coast/central, TN, NC, VA, AZ, NM
+  if (lat >= 32) return 5.4; // GA, SC, AL, MS, LA, TX central, CA south
+  if (lat >= 27) return 5.8; // FL, south TX
+  return 6.2; // Hawaii, extreme south
+}
+
 // ── Rolling number counter ─────────────────────────────────────────────────────
 function RollingNumber({
   target,
@@ -116,7 +127,12 @@ function RollingNumber({
 }
 
 // ── Savings calculation — synchronous, no API call ─────────────────────────────
-function calcSavings(industry: string, state: string, monthlyBill?: number) {
+function calcSavings(
+  industry: string,
+  state: string,
+  solarPeakHours: number,
+  monthlyBill?: number
+) {
   const meta = INDUSTRY_SIZING[industry];
   if (!meta) return null;
   const stateData = STATE_RATES[state] || STATE_RATES["Other"];
@@ -139,7 +155,8 @@ function calcSavings(industry: string, state: string, monthlyBill?: number) {
   // Annual savings
   const energySavings = bessKWh * 0.35 * rate * 340; // 340 cycles/yr, 35% price delta
   const demandSavings = bessKW * demandCharge * 12 * 0.72; // 72% capture efficiency
-  const solarSavings = solarKW * 1250 * rate; // 1250 kWh/kW/yr avg production
+  const annualSolarKWh = solarKW * solarPeakHours * 365; // location-specific NREL production
+  const solarSavings = annualSolarKWh * rate;
   const annual = energySavings + demandSavings + solarSavings;
 
   // System cost — installed commercial 2025, after 30% ITC
@@ -204,20 +221,80 @@ function SelectField({
 // ── Main widget ────────────────────────────────────────────────────────────────
 export default function QuickEstimateWidget() {
   const [industry, setIndustry] = useState("");
-  const [state, setState] = useState("");
+  const [zip, setZip] = useState("");
+  const [zipLoading, setZipLoading] = useState(false);
+  const [zipError, setZipError] = useState("");
+  const [location, setLocation] = useState<{
+    state: string;
+    stateShort: string;
+    city: string;
+    lat: number;
+    solarPeakHours: number;
+  } | null>(null);
   const [bill, setBill] = useState("");
   const [showBill, setShowBill] = useState(false);
   const [resultsIn, setResultsIn] = useState(false);
 
   const billNum = bill ? parseFloat(bill.replace(/,/g, "")) : undefined;
-  const hasInputs = state.length > 0 && industry.length > 0;
-  const stateData = state ? STATE_RATES[state] : null;
+  const hasInputs = !!location && industry.length > 0;
+  const stateData = location ? STATE_RATES[location.state] : null;
   const indMeta = industry ? INDUSTRY_SIZING[industry] : null;
 
-  // Instant synchronous calculation
+  // ZIP → Google Geocoding → state + city + lat → solar peak hours
+  useEffect(() => {
+    if (zip.length !== 5 || !/^\d{5}$/.test(zip)) {
+      setLocation(null);
+      setZipError("");
+      return;
+    }
+    setZipLoading(true);
+    setZipError("");
+    const key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${zip}&components=country:US&key=${key}`
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.status === "OK" && data.results[0]) {
+          const result = data.results[0];
+          const stateComp = result.address_components.find(
+            (c: { types: string[]; long_name: string; short_name: string }) =>
+              c.types.includes("administrative_area_level_1")
+          );
+          const cityComp = result.address_components.find(
+            (c: { types: string[]; long_name: string }) =>
+              c.types.includes("locality") ||
+              c.types.includes("neighborhood") ||
+              c.types.includes("sublocality_level_1")
+          );
+          const lat: number = result.geometry.location.lat;
+          const stateName: string = stateComp?.long_name ?? "";
+          if (stateName && STATE_RATES[stateName]) {
+            setLocation({
+              state: stateName,
+              stateShort: stateComp?.short_name ?? stateName.slice(0, 2).toUpperCase(),
+              city: cityComp?.long_name ?? "",
+              lat,
+              solarPeakHours: getSolarPeakHours(lat),
+            });
+          } else {
+            setZipError("ZIP not found — try another");
+          }
+        } else {
+          setZipError("ZIP not recognized");
+        }
+      })
+      .catch(() => setZipError("Unable to look up ZIP"))
+      .finally(() => setZipLoading(false));
+  }, [zip]);
+
+  // Instant synchronous calculation (fires once ZIP resolves)
   const est = useMemo(
-    () => (hasInputs ? calcSavings(industry, state, billNum) : null),
-    [industry, state, billNum] // eslint-disable-line react-hooks/exhaustive-deps
+    () =>
+      hasInputs && location
+        ? calcSavings(industry, location.state, location.solarPeakHours, billNum)
+        : null,
+    [industry, location, billNum] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   // Animate results panel in after both fields are filled
@@ -232,7 +309,7 @@ export default function QuickEstimateWidget() {
   }, [!!est]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const ctaUrl =
-    `/wizard?industry=${encodeURIComponent(industry)}&state=${encodeURIComponent(state)}` +
+    `/wizard?industry=${encodeURIComponent(industry)}&state=${encodeURIComponent(location?.state ?? "")}&zip=${zip}` +
     (billNum ? `&bill=${billNum}` : "");
 
   return (
@@ -308,31 +385,64 @@ export default function QuickEstimateWidget() {
             </SelectField>
           </div>
 
-          {/* State — full width + live rate callout */}
+          {/* ZIP — full width + live location / rate / solar callout */}
           <div className="col-span-2">
-            <SelectField
-              label="State"
-              value={state}
-              placeholder="Select state…"
-              onChange={setState}
-            >
-              {STATE_NAMES.map((s) => (
-                <option key={s} value={s} style={{ background: "#0A1628" }}>
-                  {s}
-                </option>
-              ))}
-            </SelectField>
-            {stateData && (
+            <label className="block text-[9px] uppercase tracking-[0.15em] text-slate-400 font-semibold mb-1.5">
+              ZIP Code
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={5}
+                value={zip}
+                onChange={(e) => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                placeholder="e.g. 90210"
+                className="w-full bg-white/[0.07] border border-white/[0.14] hover:border-white/28 focus:border-emerald-500/60 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white placeholder:text-slate-600 transition-all focus:outline-none"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              />
+              {zipLoading && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <svg
+                    className="animate-spin h-3.5 w-3.5 text-emerald-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                </div>
+              )}
+              {location && !zipLoading && (
+                <div className="absolute inset-0 rounded-xl ring-1 ring-emerald-500/35 pointer-events-none" />
+              )}
+            </div>
+            {zipError && (
+              <p className="text-[9px] text-red-400 font-mono mt-1 ml-0.5">{zipError}</p>
+            )}
+            {location && !zipLoading && stateData && (
               <div
-                className="flex items-center gap-1.5 mt-1.5 ml-0.5"
+                className="flex items-center gap-1.5 mt-1.5 ml-0.5 flex-wrap"
                 style={{ animation: "qeIn 0.3s ease-out" }}
               >
+                <span className="text-[9px] text-emerald-400 font-mono font-semibold">
+                  📍 {location.city ? `${location.city}, ` : ""}
+                  {location.stateShort}
+                </span>
+                <span className="text-slate-500 text-[9px]">·</span>
                 <span className="text-[9px] text-emerald-400 font-mono font-semibold">
                   ${stateData.rate.toFixed(3)}/kWh
                 </span>
                 <span className="text-slate-500 text-[9px]">·</span>
                 <span className="text-[9px] text-slate-400 font-mono">
-                  ${stateData.demandCharge}/kW demand
+                  {location.solarPeakHours} peak sun hrs
                 </span>
               </div>
             )}
@@ -429,7 +539,8 @@ export default function QuickEstimateWidget() {
                 {billNum && billNum > 500
                   ? `~${est.peakKW}kW estimated peak`
                   : `${indMeta?.peakKW}kW typical peak`}{" "}
-                · {state}
+                · {location?.city ? `${location.city}, ` : ""}
+                {location?.stateShort}
               </div>
             </div>
 
