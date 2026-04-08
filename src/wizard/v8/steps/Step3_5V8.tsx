@@ -373,35 +373,42 @@ function ConfirmBtn({
       onClick={onClick}
       style={{
         width: "100%",
-        padding: needsConfirm ? "13px 16px" : "11px 16px",
+        padding: needsConfirm ? "14px 16px" : "11px 16px",
         borderRadius: 10,
-        border: needsConfirm
-          ? "2px solid rgba(52,211,153,0.55)"
-          : "1.5px solid rgba(52,211,153,0.3)",
-        background: "transparent",
+        border: needsConfirm ? "2px solid #3ECF8E" : "1.5px solid rgba(52,211,153,0.3)",
+        background: needsConfirm ? "#3ECF8E" : "transparent",
         cursor: "pointer",
         fontSize: needsConfirm ? 14 : 13,
         fontWeight: 800,
-        letterSpacing: "0.06em",
+        letterSpacing: "0.07em",
         textTransform: "uppercase" as const,
-        color: needsConfirm ? "rgba(52,211,153,0.7)" : "#34d399",
-        transition: "border-color 0.2s, color 0.2s, box-shadow 0.2s, text-shadow 0.2s",
-        animation: needsConfirm ? "confirmGlow 1.8s ease-in-out infinite" : "none",
+        color: needsConfirm ? "#0D1117" : "#34d399",
+        transition: "background 0.15s, border-color 0.15s, box-shadow 0.15s",
+        boxShadow: needsConfirm
+          ? "0 0 0 3px rgba(52,211,153,0.25), 0 2px 12px rgba(52,211,153,0.35)"
+          : "none",
+        animation: "none",
         position: "relative" as const,
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(52,211,153,1.0)";
-        (e.currentTarget as HTMLButtonElement).style.color = "#34d399";
-        (e.currentTarget as HTMLButtonElement).style.textShadow = "0 0 10px rgba(52,211,153,0.5)";
+        if (needsConfirm) {
+          (e.currentTarget as HTMLButtonElement).style.background = "#34d399";
+          (e.currentTarget as HTMLButtonElement).style.boxShadow =
+            "0 0 0 4px rgba(52,211,153,0.3), 0 4px 16px rgba(52,211,153,0.45)";
+        } else {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(52,211,153,1.0)";
+          (e.currentTarget as HTMLButtonElement).style.color = "#34d399";
+        }
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.borderColor = needsConfirm
-          ? "rgba(52,211,153,0.55)"
-          : "rgba(52,211,153,0.3)";
-        (e.currentTarget as HTMLButtonElement).style.color = needsConfirm
-          ? "rgba(52,211,153,0.7)"
-          : "#34d399";
-        (e.currentTarget as HTMLButtonElement).style.textShadow = "";
+        if (needsConfirm) {
+          (e.currentTarget as HTMLButtonElement).style.background = "#3ECF8E";
+          (e.currentTarget as HTMLButtonElement).style.boxShadow =
+            "0 0 0 3px rgba(52,211,153,0.25), 0 2px 12px rgba(52,211,153,0.35)";
+        } else {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(52,211,153,0.3)";
+          (e.currentTarget as HTMLButtonElement).style.color = "#34d399";
+        }
       }}
     >
       {needsConfirm ? `✓ ${label}` : label}
@@ -1036,14 +1043,12 @@ function SolarCard({
           <style>{`
             @keyframes carportGlow {
               0%,100% {
-                box-shadow: 0 0 0 0 rgba(251,191,36,0), inset 0 0 0 0 rgba(251,191,36,0);
-                border-color: rgba(251,191,36,0.6);
-                background: rgba(251,191,36,0.07);
+                box-shadow: none;
+                border-color: rgba(251,191,36,0.5);
               }
               50% {
-                box-shadow: 0 0 0 3px rgba(251,191,36,0.25), 0 0 20px 4px rgba(251,191,36,0.2);
-                border-color: rgba(251,191,36,1.0);
-                background: rgba(251,191,36,0.14);
+                box-shadow: 0 0 0 3px rgba(251,191,36,0.22), 0 0 16px 3px rgba(251,191,36,0.15);
+                border-color: rgba(251,191,36,0.95);
               }
             }
           `}</style>
@@ -1073,8 +1078,8 @@ function SolarCard({
                   flex: 1,
                   padding: "12px 6px 10px",
                   borderRadius: 10,
-                  border: "2px solid rgba(52,211,153,0.65)",
-                  background: "rgba(52,211,153,0.09)",
+                  border: "2px solid rgba(52,211,153,0.75)",
+                  background: "transparent",
                   textAlign: "center",
                   userSelect: "none",
                 }}
@@ -1121,7 +1126,8 @@ function SolarCard({
                     color: "#34d399",
                     fontWeight: 700,
                     marginTop: 4,
-                    background: "rgba(52,211,153,0.15)",
+                    background: "transparent",
+                    border: "1px solid rgba(52,211,153,0.5)",
                     borderRadius: 4,
                     padding: "2px 6px",
                     display: "inline-block",
@@ -1151,15 +1157,15 @@ function SolarCard({
                       padding: "12px 6px 10px",
                       borderRadius: 10,
                       border: carportActive
-                        ? "2px solid rgba(251,191,36,0.95)"
-                        : "2px solid rgba(251,191,36,0.6)",
-                      background: carportActive ? "rgba(251,191,36,0.18)" : "rgba(251,191,36,0.07)",
+                        ? "2px solid rgba(251,191,36,1.0)"
+                        : "2px solid rgba(251,191,36,0.55)",
+                      background: "transparent",
                       cursor: "pointer",
                       textAlign: "center",
-                      transition: "border-color 0.15s, background 0.15s, box-shadow 0.15s",
+                      transition: "border-color 0.15s, box-shadow 0.15s",
                       animation: carportActive ? "none" : "carportGlow 1.8s ease-in-out infinite",
                       boxShadow: carportActive
-                        ? "0 0 0 3px rgba(251,191,36,0.2), 0 0 16px 2px rgba(251,191,36,0.15)"
+                        ? "0 0 0 3px rgba(251,191,36,0.18), 0 0 12px 2px rgba(251,191,36,0.1)"
                         : undefined,
                     }}
                   >
@@ -1193,13 +1199,12 @@ function SolarCard({
                         fontSize: 10,
                         fontWeight: 700,
                         marginTop: 4,
-                        background: carportActive
-                          ? "rgba(251,191,36,0.2)"
-                          : "rgba(251,191,36,0.15)",
+                        background: "transparent",
+                        border: `1px solid ${carportActive ? "rgba(251,191,36,0.6)" : "rgba(251,191,36,0.4)"}`,
                         borderRadius: 4,
                         padding: "2px 6px",
                         display: "inline-block",
-                        color: carportActive ? "rgba(251,191,36,0.85)" : "rgba(251,191,36,0.9)",
+                        color: carportActive ? "#fbbf24" : "rgba(251,191,36,0.8)",
                       }}
                     >
                       {carportActive ? `${withCanopyKW.toLocaleString()} kW total` : "Tap to add →"}
