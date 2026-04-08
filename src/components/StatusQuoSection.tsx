@@ -25,7 +25,7 @@ export default function StatusQuoSection() {
               className="text-3xl lg:text-4xl font-extrabold text-white leading-tight mb-5"
               style={{ fontFamily: "'Nunito', sans-serif" }}
             >
-              The way commercial facilities buy energy projects hasn't changed in 30 years.
+              The process of buying commercial energy is broken. And it's been broken for decades.
             </h2>
 
             {/* Scene 1 */}
