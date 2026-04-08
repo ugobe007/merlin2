@@ -1754,7 +1754,7 @@ function EVChargingCard({
   const [dcfc, setDcfc] = useState(initialDcfc > 0 ? initialDcfc : 0);
   const [hpc, setHpc] = useState(initialHpc > 0 ? initialHpc : 0);
   const [confirmed, setConfirmed] = useState(false);
-  const [showDCFC, setShowDCFC] = useState(initialDcfc > 0 || initialHpc > 0);
+  const [showDCFC, setShowDCFC] = useState(true); // Level 3 Fast Charging always visible
   const [showPanel, setShowPanel] = useState(false);
   const [panelAssessed, setPanelAssessed] = useState(
     initialPanelAmps > 0 || initialServiceType !== "unknown"
@@ -1980,7 +1980,8 @@ function EVChargingCard({
           <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>🧙</span>
           <div style={{ fontSize: 13, color: "rgba(203,213,225,0.85)", lineHeight: 1.55 }}>
             <strong style={{ color: "#38bdf8" }}>Merlin recommends {recL2} Level 2</strong> for your
-            facility. DCFC adds $18K/yr revenue per charger but requires 480V 3-phase power.
+            facility. <strong style={{ color: "#a78bfa" }}>Level 3 Fast Charging</strong> adds
+            $18K/yr revenue per charger (480V 3-phase required).
           </div>
         </div>
 
@@ -2015,7 +2016,7 @@ function EVChargingCard({
             <span style={{ fontSize: 18, color: "#a78bfa" }}>⚡</span>
             <div style={{ flex: 1 }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: "#a78bfa" }}>
-                + Add DC Fast Charging (DCFC)
+                + Add Fast Charging (Level 3 · DCFC)
               </span>
               <span style={{ fontSize: 12, color: "rgba(148,163,184,0.45)", marginLeft: 8 }}>
                 $18K/yr revenue per unit
@@ -2027,10 +2028,10 @@ function EVChargingCard({
           <>
             <StepperRow
               which="dcfc"
-              label="DC Fast Charge (DCFC)"
-              sub="50 kW each · needs 480V 3-phase · $18K/yr revenue"
+              label="Fast Charging (Level 3)"
+              sub="50 kW each · DC Fast Charge · 480V 3-phase · $18K/yr revenue"
               color="#a78bfa"
-              icon="🔋"
+              icon="⚡"
               value={dcfc}
               max={8}
             />
@@ -2105,7 +2106,7 @@ function EVChargingCard({
               >
                 <span style={{ fontSize: 16 }}>⚠️</span>
                 <span style={{ fontSize: 13, fontWeight: 600, color: "#fbbf24" }}>
-                  Panel check required for DCFC — tap to assess
+                  Panel check required for Level 3 Fast Charging — tap to assess
                 </span>
               </button>
             )}
