@@ -177,14 +177,14 @@ function SelectField({
 }) {
   return (
     <div>
-      <label className="block text-[9px] uppercase tracking-[0.18em] text-slate-600 font-semibold mb-1.5">
+      <label className="block text-[9px] uppercase tracking-[0.15em] text-slate-400 font-semibold mb-1.5">
         {label}
       </label>
       <div className="relative">
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-white/[0.04] border border-white/[0.09] hover:border-white/20 focus:border-emerald-500/50 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white transition-all appearance-none cursor-pointer focus:outline-none"
+          className="w-full bg-white/[0.07] border border-white/[0.14] hover:border-white/28 focus:border-emerald-500/60 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white transition-all appearance-none cursor-pointer focus:outline-none"
           style={{ fontFamily: "'Outfit', sans-serif" }}
         >
           <option value="" disabled style={{ background: "#0A1628" }}>
@@ -194,7 +194,7 @@ function SelectField({
         </select>
         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
         {value && (
-          <div className="absolute inset-0 rounded-xl ring-1 ring-emerald-500/20 pointer-events-none" />
+          <div className="absolute inset-0 rounded-xl ring-1 ring-emerald-500/35 pointer-events-none" />
         )}
       </div>
     </div>
@@ -239,10 +239,10 @@ export default function QuickEstimateWidget() {
     <div
       className="relative w-full max-w-[460px] mx-auto rounded-2xl overflow-hidden select-none"
       style={{
-        background: "linear-gradient(150deg, #0B1628 0%, #070E1D 100%)",
+        background: "linear-gradient(150deg, #0D1B34 0%, #080F20 100%)",
         boxShadow: hasInputs
-          ? "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(62,207,142,0.15), 0 0 60px rgba(62,207,142,0.04)"
-          : "0 32px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.07)",
+          ? "0 40px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(62,207,142,0.22), 0 0 60px rgba(62,207,142,0.06)"
+          : "0 32px 64px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.13)",
         transition: "box-shadow 0.6s ease",
       }}
     >
@@ -252,14 +252,14 @@ export default function QuickEstimateWidget() {
         style={{
           background: hasInputs
             ? "linear-gradient(90deg, transparent, #3ECF8E 50%, transparent)"
-            : "linear-gradient(90deg, transparent, rgba(255,255,255,0.06) 50%, transparent)",
+            : "linear-gradient(90deg, transparent, rgba(255,255,255,0.18) 50%, transparent)",
         }}
       />
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.05]">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.10]">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center flex-shrink-0">
             <Zap className="w-3.5 h-3.5 text-emerald-400" />
           </div>
           <div>
@@ -269,7 +269,7 @@ export default function QuickEstimateWidget() {
             >
               Instant Savings Estimate
             </span>
-            <span className="block text-[9px] text-slate-600 font-mono tracking-wide">
+            <span className="block text-[9px] text-slate-500 font-mono tracking-wide">
               No commitment · ~20 seconds
             </span>
           </div>
@@ -327,11 +327,11 @@ export default function QuickEstimateWidget() {
                 className="flex items-center gap-1.5 mt-1.5 ml-0.5"
                 style={{ animation: "qeIn 0.3s ease-out" }}
               >
-                <span className="text-[9px] text-emerald-600 font-mono">
+                <span className="text-[9px] text-emerald-400 font-mono font-semibold">
                   ${stateData.rate.toFixed(3)}/kWh
                 </span>
-                <span className="text-slate-700 text-[9px]">·</span>
-                <span className="text-[9px] text-slate-600 font-mono">
+                <span className="text-slate-500 text-[9px]">·</span>
+                <span className="text-[9px] text-slate-400 font-mono">
                   ${stateData.demandCharge}/kW demand
                 </span>
               </div>
@@ -343,19 +343,19 @@ export default function QuickEstimateWidget() {
         {hasInputs && !showBill && (
           <button
             onClick={() => setShowBill(true)}
-            className="w-full text-[10px] text-slate-500 hover:text-slate-300 font-mono mb-4 flex items-center justify-center gap-1.5 transition-colors"
+            className="w-full text-[10px] text-slate-400 hover:text-slate-200 font-mono mb-4 flex items-center justify-center gap-1.5 transition-colors"
             style={{ animation: "qeIn 0.3s ease-out" }}
           >
-            <span className="text-emerald-700 text-[12px] leading-none">+</span>
+            <span className="text-emerald-500 text-[12px] leading-none">+</span>
             Add monthly bill for a more accurate estimate
           </button>
         )}
 
         {showBill && (
           <div className="mb-4" style={{ animation: "qeIn 0.3s ease-out" }}>
-            <label className="block text-[9px] uppercase tracking-[0.18em] text-slate-600 font-semibold mb-1.5">
+            <label className="block text-[9px] uppercase tracking-[0.15em] text-slate-400 font-semibold mb-1.5">
               Monthly Utility Bill{" "}
-              <span className="text-slate-700 normal-case tracking-normal font-normal">
+              <span className="text-slate-500 normal-case tracking-normal font-normal">
                 (optional — improves accuracy)
               </span>
             </label>
@@ -373,10 +373,10 @@ export default function QuickEstimateWidget() {
                 onChange={(e) => setBill(e.target.value.replace(/[^\d,]/g, ""))}
                 placeholder="18,000"
                 autoFocus
-                className="w-full bg-white/[0.04] border border-white/[0.09] focus:border-emerald-500/50 rounded-xl pl-7 pr-16 py-2.5 text-white text-sm font-bold placeholder:text-slate-700 focus:outline-none transition-all"
+                className="w-full bg-white/[0.07] border border-white/[0.14] focus:border-emerald-500/60 rounded-xl pl-7 pr-16 py-2.5 text-white text-sm font-bold placeholder:text-slate-600 focus:outline-none transition-all"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-600 font-mono">
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-mono">
                 /mo
               </span>
             </div>
@@ -424,7 +424,7 @@ export default function QuickEstimateWidget() {
                   />
                 </span>
               </div>
-              <div className="text-[9px] text-slate-600 font-mono mt-1.5">
+              <div className="text-[9px] text-slate-400 font-mono mt-1.5">
                 Based on{" "}
                 {billNum && billNum > 500
                   ? `~${est.peakKW}kW estimated peak`
@@ -466,13 +466,13 @@ export default function QuickEstimateWidget() {
               ].map((m, i) => (
                 <div
                   key={i}
-                  className="bg-white/[0.025] border border-white/[0.05] rounded-lg p-2 text-center"
+                  className="bg-white/[0.05] border border-white/[0.09] rounded-lg p-2 text-center"
                   style={{ animation: `qeIn 0.35s ${i * 0.07}s ease-out both` }}
                 >
-                  <div className="flex items-center justify-center text-slate-600 mb-1">
+                  <div className="flex items-center justify-center text-slate-400 mb-1">
                     {m.icon}
                   </div>
-                  <div className="text-[8px] text-slate-600 uppercase tracking-widest leading-none mb-1">
+                  <div className="text-[8px] text-slate-400 uppercase tracking-widest leading-none mb-1">
                     {m.label}
                   </div>
                   <div
@@ -481,7 +481,7 @@ export default function QuickEstimateWidget() {
                   >
                     {m.value}
                   </div>
-                  <div className="text-[7px] text-slate-700 font-mono mt-0.5 leading-tight">
+                  <div className="text-[7px] text-slate-500 font-mono mt-0.5 leading-tight">
                     {m.sub}
                   </div>
                 </div>
@@ -489,7 +489,7 @@ export default function QuickEstimateWidget() {
             </div>
 
             {/* Disclaimer */}
-            <p className="text-[9px] text-slate-700 font-mono text-center mb-4 leading-relaxed">
+            <p className="text-[9px] text-slate-500 font-mono text-center mb-4 leading-relaxed">
               Rough estimate · NREL CBECS 2018 + EIA 2024 commercial rates · 30% ITC applied
             </p>
 
@@ -511,13 +511,23 @@ export default function QuickEstimateWidget() {
           </div>
         ) : (
           /* Placeholder when inputs incomplete */
-          <div className="flex flex-col items-center justify-center py-6 gap-2">
-            <div className="w-9 h-9 rounded-full bg-white/[0.025] border border-white/[0.05] flex items-center justify-center mb-1">
-              <Zap className="w-4 h-4 text-slate-700" />
+          <div className="flex flex-col items-center justify-center py-7 gap-2.5">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center mb-1"
+              style={{
+                background: "rgba(62,207,142,0.08)",
+                border: "1px solid rgba(62,207,142,0.22)",
+              }}
+            >
+              <Zap className="w-4 h-4 text-emerald-400" />
             </div>
-            <p className="text-[11px] text-slate-700 font-mono text-center leading-relaxed">
+            <p
+              className="text-[13px] text-slate-300 font-semibold text-center leading-snug"
+              style={{ fontFamily: "'Outfit', sans-serif" }}
+            >
               Select industry + state
-              <br />
+            </p>
+            <p className="text-[10px] text-slate-500 font-mono text-center">
               to see your savings instantly
             </p>
           </div>
@@ -525,7 +535,7 @@ export default function QuickEstimateWidget() {
       </div>
 
       {/* Bottom progress bar */}
-      <div className="h-[2px] bg-white/[0.025]">
+      <div className="h-[2px] bg-white/[0.08]">
         <div
           className="h-full bg-emerald-500/50 transition-all duration-700"
           style={{ width: est ? "100%" : hasInputs ? "55%" : "0%" }}
