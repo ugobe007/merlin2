@@ -270,7 +270,7 @@ const INDUSTRIES: DealProfile[] = [
     marketHook: "NEVI grants are flooding the market — but utilities can't keep up. BESS lets EV hubs deploy fast without $500K transformer upgrades.",
     painPoint: 'Each 150 kW DC fast charger adds 150 kW to peak demand — 10 chargers = 1.5 MW demand spike on the utility.',
     ctaLine: 'EV charging hub BESS sizing → merlinenergy.net',
-    input: { industry: 'ev-charging',      peakDemandKw: 1000, monthlyBillDollars: 55000, zipCode: '94102', primaryUseCase: 'ev-charging',   hasSolar: true  },
+    input: { industry: 'ev-charging',      peakDemandKw: 1000, monthlyBillDollars: 55000, zipCode: '94102', primaryUseCase: 'demand-charge-reduction',   hasSolar: true  },
     roiBenchmark: { paybackRange: '4–6 years', savingsRange: '$80K–$180K/yr', primaryDriver: 'demand charges + transformer upgrade avoidance' },
   },
   // 9 — Warehouse
@@ -366,7 +366,7 @@ const INDUSTRIES: DealProfile[] = [
     marketHook: 'Cities are mandating EV-ready parking — BESS lets operators deploy Level 2 + DCFC charging without hitting utility demand charge penalties.',
     painPoint: 'Parking garages have very low base loads but new EV mandates create sudden 200–500 kW demand spikes from charging.',
     ctaLine: 'EV-ready parking garage BESS quote → merlinenergy.net',
-    input: { industry: 'parking',          peakDemandKw: 400,  monthlyBillDollars: 18000, zipCode: '10001', primaryUseCase: 'ev-charging',   hasSolar: false },
+    input: { industry: 'parking',          peakDemandKw: 400,  monthlyBillDollars: 18000, zipCode: '10001', primaryUseCase: 'demand-charge-reduction',   hasSolar: false },
     roiBenchmark: { paybackRange: '5–8 years', savingsRange: '$30K–$80K/yr', primaryDriver: 'EV charging demand management' },
   },
   // 17 — Retail / Big Box
