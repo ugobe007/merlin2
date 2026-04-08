@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { MiniWizardV8 } from "@/wizard/v8/MiniWizardV8";
 import ScheduleDemoModal from "@/components/modals/ScheduleDemoModal";
+import { ElCarWashLogo } from "@/components/logos/ElCarWashLogo";
 
 // ========================================
 // CAMPAIGN CONFIGURATION
@@ -404,20 +405,9 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
   const [showWizard, setShowWizard] = useState(false);
   const [showDemoModal, setShowDemoModal] = useState(false);
 
-  console.log("[CarWashCampaign] Rendered, showWizard:", showWizard, "URL:", window.location.href);
-
   useEffect(() => {
-    console.log("[CarWashCampaign] Mounted at URL:", window.location.href);
-
-    const handleBeforeUnload = (_e: BeforeUnloadEvent) => {
-      if (showWizard) {
-        console.log("[CarWashCampaign] Page is being unloaded/navigated while wizard is open");
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [showWizard]);
+    // no-op
+  }, []);
 
   // Wizard fullscreen mode
   if (showWizard) {
@@ -463,32 +453,40 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
+    <div
+      className="min-h-screen"
+      style={{ background: "linear-gradient(160deg, #0D1B34 0%, #080F20 60%, #0D1B34 100%)" }}
+    >
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/80 backdrop-blur-md border-b border-gray-700">
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 border-b"
+        style={{
+          background: "rgba(8,15,32,0.85)",
+          backdropFilter: "blur(16px)",
+          borderColor: "rgba(255,255,255,0.09)",
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <span className="text-2xl">⚡</span>
-              <span className="text-xl font-bold text-white">Merlin BESS</span>
+            <div className="flex items-center gap-4">
+              <ElCarWashLogo height={32} />
+              <span className="text-[11px] text-slate-500 font-mono border-l border-white/10 pl-4">
+                powered by Merlin Energy
+              </span>
             </div>
             <div className="flex items-center space-x-6">
-              <a href="/" className="text-gray-300 hover:text-white transition">
+              <a href="/" className="text-slate-400 hover:text-white transition text-sm">
                 Home
               </a>
-              <a href="/wizard-v8" className="text-gray-300 hover:text-white transition">
+              <a href="/wizard-v8" className="text-slate-400 hover:text-white transition text-sm">
                 Quote Tool
               </a>
               <button
-                onClick={() =>
-                  window.open(
-                    `mailto:sales@merlinbess.com?subject=${encodeURIComponent(config.emailSubject)}`,
-                    "_blank"
-                  )
-                }
-                className="px-5 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition font-semibold"
+                onClick={() => setShowDemoModal(true)}
+                className="px-5 py-2 rounded-lg font-semibold text-sm transition-all"
+                style={{ background: "linear-gradient(135deg, #3ECF8E, #2db87a)", color: "#000" }}
               >
-                Contact Sales
+                Schedule Demo
               </button>
             </div>
           </div>
@@ -522,7 +520,7 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
               </button>
               <button
                 onClick={() => setShowWizard(true)}
-                className="px-12 py-5 border-3 border-cyan-400 text-cyan-300 text-2xl font-black rounded-xl hover:border-cyan-300 hover:text-cyan-200 hover:shadow-2xl hover:shadow-cyan-400/30 transition-all transform hover:scale-105"
+                className="px-12 py-5 border-[3px] border-cyan-400 text-cyan-300 text-2xl font-black rounded-xl hover:border-cyan-300 hover:text-cyan-200 hover:shadow-2xl hover:shadow-cyan-400/30 transition-all transform hover:scale-105"
                 style={{
                   background: "transparent",
                   boxShadow: "0 0 30px rgba(34, 211, 238, 0.15)",
@@ -594,7 +592,7 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
               {/* Annual Savings */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 blur-xl group-hover:blur-2xl transition-all"></div>
-                <div className="relative bg-gray-900/80 backdrop-blur-xl border-3 border-cyan-400 rounded-2xl p-8 text-center hover:border-cyan-300 transition-all">
+                <div className="relative bg-[#080F20]/90 backdrop-blur-xl border-[3px] border-cyan-400 rounded-2xl p-8 text-center hover:border-cyan-300 transition-all">
                   <div className="text-sm font-bold text-cyan-400 tracking-wider mb-2">
                     ANNUAL SAVINGS
                   </div>
@@ -621,7 +619,7 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
               {/* ROI */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-amber-500/20 blur-xl group-hover:blur-2xl transition-all"></div>
-                <div className="relative bg-gray-900/80 backdrop-blur-xl border-3 border-orange-400 rounded-2xl p-8 text-center hover:border-orange-300 transition-all">
+                <div className="relative bg-[#080F20]/90 backdrop-blur-xl border-[3px] border-orange-400 rounded-2xl p-8 text-center hover:border-orange-300 transition-all">
                   <div className="text-sm font-bold text-orange-400 tracking-wider mb-2">
                     10-YEAR ROI
                   </div>
@@ -645,7 +643,7 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
               {/* Investment */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-green-500/20 blur-xl group-hover:blur-2xl transition-all"></div>
-                <div className="relative bg-gray-900/80 backdrop-blur-xl border-3 border-emerald-400 rounded-2xl p-8 text-center hover:border-emerald-300 transition-all">
+                <div className="relative bg-[#080F20]/90 backdrop-blur-xl border-[3px] border-emerald-400 rounded-2xl p-8 text-center hover:border-emerald-300 transition-all">
                   <div className="text-sm font-bold text-emerald-400 tracking-wider mb-2">
                     TOTAL INVESTMENT
                   </div>
@@ -666,12 +664,25 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
                       <span className="text-emerald-300">{config.featuredLocation.netGain}</span>
                     </div>
                   </div>
+                  <div
+                    className="mt-3 px-3 py-1.5 rounded-lg text-xs font-bold"
+                    style={{
+                      background: "rgba(62,207,142,0.15)",
+                      border: "1px solid rgba(62,207,142,0.3)",
+                      color: "#3ECF8E",
+                    }}
+                  >
+                    30% ITC reduces net cost by ~$134K
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* System Configuration & Value Props Combined */}
-            <div className="bg-gray-900/50 backdrop-blur border-2 border-gray-700 rounded-2xl overflow-hidden">
+            <div
+              className="border border-white/[0.12] rounded-2xl overflow-hidden"
+              style={{ background: "rgba(255,255,255,0.03)" }}
+            >
               <div className="p-8">
                 <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
                   <span className="text-emerald-400 mr-3">⚡</span>
@@ -829,7 +840,7 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
               <h2 className="text-3xl font-bold text-white mb-8 text-center">
                 📍 {config.locations.length} Locations Ready for Transformation
               </h2>
-              <div className={`grid md:grid-cols-${Math.min(config.locations.length, 5)} gap-4`}>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 {config.locations.map((site) => (
                   <div
                     key={site.city}
@@ -870,7 +881,7 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
               <h2 className="text-3xl font-bold text-white mb-8 text-center">
                 🚀 Scenario Analysis: {config.featuredLocation.name}
               </h2>
-              <div className={`grid md:grid-cols-${Math.min(config.scenarios.length, 5)} gap-4`}>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 {config.scenarios.map((scenario) => (
                   <div
                     key={scenario.name}
@@ -918,12 +929,7 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
-                onClick={() =>
-                  window.open(
-                    `mailto:sales@merlinbess.com?subject=${encodeURIComponent(config.emailSubject)}&body=${encodeURIComponent(config.emailBody)}`,
-                    "_blank"
-                  )
-                }
+                onClick={() => setShowDemoModal(true)}
                 className="px-8 py-4 bg-emerald-500 text-white text-lg font-semibold rounded-lg hover:bg-emerald-600 transition shadow-lg shadow-emerald-500/20"
               >
                 📅 Schedule Demo
@@ -948,18 +954,19 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
       </div>
 
       {/* Footer */}
-      <div className="border-t border-gray-700 py-12 px-4">
-        <div className="max-w-7xl mx-auto text-center text-gray-400">
-          <p className="mb-4">⚡ Merlin BESS Solutions — Car Wash Energy Transformation</p>
+      <div className="border-t py-12 px-4" style={{ borderColor: "rgba(255,255,255,0.09)" }}>
+        <div className="max-w-7xl mx-auto text-center text-slate-500">
+          <p className="mb-4">⚡ Merlin Energy — Car Wash Energy Transformation</p>
           <p className="text-sm">
-            Campaign: {config.companyName} | March 2026
+            Campaign: {config.companyName} |{" "}
+            {new Date().toLocaleString("default", { month: "long", year: "numeric" })}
             <br />
             For inquiries:{" "}
             <a
-              href="mailto:sales@merlinbess.com"
+              href="mailto:sales@merlinenergy.net"
               className="text-emerald-400 hover:text-emerald-300"
             >
-              sales@merlinbess.com
+              sales@merlinenergy.net
             </a>
           </p>
         </div>
