@@ -636,7 +636,7 @@ export default function QuickEstimateWidget() {
               className="text-[13px] text-slate-300 font-semibold text-center leading-snug"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
-              Select industry + state
+              Select industry + ZIP
             </p>
             <p className="text-[10px] text-slate-500 font-mono text-center">
               to see your savings instantly

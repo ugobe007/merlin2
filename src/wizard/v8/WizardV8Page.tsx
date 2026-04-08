@@ -24,7 +24,7 @@
 
 import React, { Suspense, lazy, useEffect, useMemo } from "react";
 import { useWizardV8 } from "./useWizardV8";
-import type { WizardStep } from "./wizardState";
+import type { WizardStep, IndustrySlug } from "./wizardState";
 import { Step0V8_ModeSelect } from "./steps/Step0V8_ModeSelect";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
 import { EV_PACKAGE_COUNTS } from "./addonSizing";
@@ -491,23 +491,75 @@ export default function WizardV8Page() {
   const { state, actions } = useWizardV8();
   const step = state.step;
 
-  // Read URL params on mount (for deep linking like /wizard-v8?step=3&industry=car_wash)
+  // Read URL params on mount.
+  // Widget CTA path: /wizard?industry=hotel&state=Nevada&zip=89052
+  //   → skip Step 0, land on Step 1 with ZIP pre-filled and intel fetch already fired,
+  //     industry pre-set so Step 2 opens with the card already highlighted.
+  // Deep-link path: /wizard?step=3 → jump to that step directly (dev / share links).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const stepParam = params.get("step");
     const industryParam = params.get("industry");
+    const zipParam = params.get("zip");
+    const stepParam = params.get("step");
 
+    if (industryParam || zipParam) {
+      // ── Widget CTA seed ──────────────────────────────────────────────────
+      // Skip the mode-select screen entirely — user already stated intent.
+      actions.goToStep(1 as WizardStep);
+
+      // Pre-populate ZIP → setLocationRaw fires the debounced intel fetch
+      // (utility rate, solar grade, demand windows) so Step 1 shows results
+      // the moment it renders, no extra user action needed.
+      if (zipParam) {
+        actions.setLocationRaw(zipParam);
+      }
+
+      // Pre-populate industry → Step 2 will render with the card pre-selected.
+      // Widget slugs match IndustrySlug exactly (hotel, car_wash, retail, etc.).
+      if (industryParam) {
+        const VALID_SLUGS = new Set<IndustrySlug>([
+          "hotel",
+          "car_wash",
+          "ev_charging",
+          "office",
+          "retail",
+          "restaurant",
+          "warehouse",
+          "manufacturing",
+          "data_center",
+          "hospital",
+          "healthcare",
+          "gas_station",
+          "truck_stop",
+          "apartment",
+          "cold_storage",
+          "college",
+          "government",
+          "airport",
+          "casino",
+          "microgrid",
+          "residential",
+          "agricultural",
+          "shopping_center",
+          "indoor_farm",
+          "fitness_center",
+          "gym",
+          "other",
+        ]);
+        const slug = VALID_SLUGS.has(industryParam as IndustrySlug)
+          ? (industryParam as IndustrySlug)
+          : "other";
+        actions.setIndustry(slug);
+      }
+
+      return; // don't process ?step= when widget params are present
+    }
+
+    // ── Manual deep-link (dev / share links) ────────────────────────────────
     if (stepParam) {
       const targetStep = parseInt(stepParam, 10);
       if (!isNaN(targetStep) && targetStep >= 0 && targetStep <= 6) {
         actions.goToStep(targetStep as WizardStep);
-
-        // If industry provided, pre-populate it
-        if (industryParam && targetStep >= 3 && import.meta.env.DEV) {
-          // Set industry silently (without triggering navigation)
-          // This will be picked up when step 3 renders
-          console.log("[WizardV8Page] Pre-populating industry from URL:", industryParam);
-        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
