@@ -350,7 +350,8 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
           googleSolarRoofSqFt: roofSqFt > 0 ? roofSqFt : undefined,
           googleSolarPeakSunHours: gsPSH,
           // Override NREL peak sun hours with Google's location-specific model when available
-          ...(gsPSH && gsPSH > 0 ? { peakSunHours: gsPSH } : {}),
+          // Guard: only accept physically plausible values (1–9 h/day) to prevent bad API data (e.g. 0.01) overriding NREL
+          ...(gsPSH && gsPSH >= 1.0 && gsPSH <= 9.0 ? { peakSunHours: gsPSH } : {}),
           googleSolarStatus: "ready",
         },
       });

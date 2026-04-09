@@ -328,7 +328,9 @@ export function Step1V8({ state, actions }: Step1Props) {
   // Places library is warm before the user starts typing a business name.
   useEffect(() => {
     if (locationConfirmed) {
-      loadGoogleMapsScript().catch(() => { /* silent — ensurePlacesLibrary will surface the error */ });
+      loadGoogleMapsScript().catch(() => {
+        /* silent — ensurePlacesLibrary will surface the error */
+      });
     }
   }, [locationConfirmed]);
 
@@ -724,14 +726,8 @@ export function Step1V8({ state, actions }: Step1Props) {
           .step1-location-container {
             padding: 16px !important;
           }
-          .step1-country-buttons {
-            flex-direction: row !important;
-            justify-content: flex-start !important;
-            margin-bottom: 16px !important;
-          }
-          .step1-country-buttons button,
-          .step1-country-buttons select {
-            flex: 0 0 auto !important;
+          .step1-business-input {
+            font-size: 16px !important;
           }
         }
       `}</style>
@@ -797,84 +793,124 @@ export function Step1V8({ state, actions }: Step1Props) {
             border: `1px solid ${T.panelBorder}`,
           }}
         >
-          {/* Row 1: Country Selection Buttons */}
-          <div
-            className="step1-country-buttons"
-            style={{
-              display: "flex",
-              gap: 6,
-              alignItems: "center",
-              marginBottom: 12,
-              flexWrap: "wrap",
-            }}
-          >
-            {(["US", "International"] as Country[]).map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => {
-                  setCountry(value);
-                  if (value === "US") {
+          {/* Row 1: Country Selection — large segmented pill toggle */}
+          <div style={{ marginBottom: 14 }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                alignItems: "center",
+                marginBottom: country === "International" ? 10 : 0,
+              }}
+            >
+              {/* Full-width segmented control */}
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  height: 54,
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  background: "rgba(0,0,0,0.20)",
+                  overflow: "hidden",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCountry("US");
                     setSelectedCountryCode("US");
-                  } else {
-                    // When switching to International, default to first non-US country and auto-populate
+                  }}
+                  style={{
+                    flex: 1,
+                    height: "100%",
+                    border: "none",
+                    borderRight: "1px solid rgba(255,255,255,0.08)",
+                    background:
+                      country === "US"
+                        ? "linear-gradient(135deg, rgba(62,207,142,0.22), rgba(62,207,142,0.12))"
+                        : "transparent",
+                    color: country === "US" ? T.accent : T.textSecondary,
+                    fontSize: 15,
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    letterSpacing: "-0.3px",
+                    transition: "background 0.18s ease, color 0.18s ease",
+                  }}
+                >
+                  🇺🇸 United States
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCountry("International");
+                    // Bug fix: clear confirmed US location when switching to International
+                    if (locationConfirmed) {
+                      resetBusinessFlow();
+                      actions.clearLocation();
+                    }
                     const firstIntlCountry = INTERNATIONAL_COUNTRIES.find((c) => c.code !== "US");
                     if (firstIntlCountry) {
                       setSelectedCountryCode(firstIntlCountry.code);
                       actions.setLocationRaw(firstIntlCountry.name);
                     }
-                  }
-                }}
-                style={{
-                  height: 46,
-                  padding: "0 16px",
-                  borderRadius: 8,
-                  border:
-                    country === value
-                      ? `1px solid ${T.accentBorder}`
-                      : "1px solid rgba(255,255,255,0.08)",
-                  background: country === value ? T.accentSoft : "rgba(255,255,255,0.03)",
-                  color: country === value ? T.accent : T.textPrimary,
-                  fontSize: 15,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                {value === "US" ? "US" : "International"}
-              </button>
-            ))}
+                  }}
+                  style={{
+                    flex: 1,
+                    height: "100%",
+                    border: "none",
+                    background:
+                      country === "International"
+                        ? "linear-gradient(135deg, rgba(62,207,142,0.22), rgba(62,207,142,0.12))"
+                        : "transparent",
+                    color: country === "International" ? T.accent : T.textSecondary,
+                    fontSize: 15,
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    letterSpacing: "-0.3px",
+                    transition: "background 0.18s ease, color 0.18s ease",
+                  }}
+                >
+                  🌍 International
+                </button>
+              </div>
 
-            {/* TrueQuote™ badge */}
-            <div
-              style={{
-                marginLeft: "auto",
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                padding: "0 10px",
-                height: 30,
-                borderRadius: 8,
-                border: "1px solid rgba(245,158,11,0.35)",
-                background: "rgba(245,158,11,0.07)",
-                flexShrink: 0,
-              }}
-            >
-              <span
+              {/* TrueQuote™ badge */}
+              <div
                 style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: "#F59E0B",
                   flexShrink: 0,
-                  display: "inline-block",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "0 10px",
+                  height: 30,
+                  borderRadius: 8,
+                  border: "1px solid rgba(245,158,11,0.35)",
+                  background: "rgba(245,158,11,0.07)",
                 }}
-              />
-              <span
-                style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B", letterSpacing: "0.01em" }}
               >
-                TrueQuote™
-              </span>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>Verified</span>
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "#F59E0B",
+                    flexShrink: 0,
+                    display: "inline-block",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#F59E0B",
+                    letterSpacing: "0.01em",
+                  }}
+                >
+                  TrueQuote™
+                </span>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>Verified</span>
+              </div>
             </div>
 
             {country === "International" && (
@@ -891,6 +927,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                   }
                 }}
                 style={{
+                  width: "100%",
                   height: 46,
                   padding: "0 12px",
                   borderRadius: 8,
@@ -1149,13 +1186,62 @@ export function Step1V8({ state, actions }: Step1Props) {
               gap: 16,
             }}
           >
-            <div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: T.textPrimary }}>
-                Enter business name
+            {/* ── Primary CTA: Skip to industry — prominent, above business form ── */}
+            <button
+              type="button"
+              onClick={() => {
+                resetBusinessFlow();
+                actions.goToStep(2);
+              }}
+              style={{
+                width: "100%",
+                padding: "15px 18px",
+                borderRadius: 12,
+                border: `2px solid ${T.accentBorder}`,
+                background: T.accentSoft,
+                color: T.accent,
+                cursor: "pointer",
+                textAlign: "left",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.4px" }}>
+                  Continue or Lookup your Business
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.65, marginTop: 2, fontWeight: 500 }}>
+                  Tap to continue — select your industry in the next step
+                </div>
               </div>
-              <div style={{ fontSize: 13, lineHeight: 1.5, color: T.textSecondary }}>
-                Help us detect your industry automatically — or skip this step and select it
-                manually.
+              <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>→</span>
+            </button>
+
+            {/* Divider */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
+              <span
+                style={{
+                  fontSize: 10,
+                  color: T.textMuted,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.10em",
+                }}
+              >
+                or match your business
+              </span>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
+            </div>
+
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.textSecondary }}>
+                Business name <span style={{ fontWeight: 400, opacity: 0.6 }}>(optional)</span>
+              </div>
+              <div style={{ fontSize: 12, lineHeight: 1.5, color: T.textMuted, marginTop: 2 }}>
+                Auto-detects your industry for a more tailored questionnaire.
               </div>
             </div>
 
@@ -1190,64 +1276,36 @@ export function Step1V8({ state, actions }: Step1Props) {
             )}
 
             <div style={{ display: "grid", gap: 12 }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <input
-                  type="text"
-                  value={businessName}
-                  onChange={(event) => {
-                    setBusinessName(event.target.value);
-                    setBusinessError(null);
-                    setSelectedSuggestion(null);
-                    setPreviewBusiness(null);
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      void handleBusinessContinue();
-                    }
-                  }}
-                  placeholder="Business name (optional)"
-                  autoComplete="off"
-                  style={{
-                    flex: 1,
-                    height: 46,
-                    borderRadius: 10,
-                    border: "1px solid rgba(255,255,255,0.10)",
-                    background: T.input,
-                    color: T.textPrimary,
-                    padding: "0 14px",
-                    fontSize: 14,
-                    outline: "none",
-                    boxSizing: "border-box",
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    resetBusinessFlow();
-                    actions.goToStep(2);
-                  }}
-                  style={{
-                    height: 46,
-                    padding: "0 18px",
-                    borderRadius: 10,
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    background: "rgba(255,255,255,0.03)",
-                    color: T.textSecondary,
-                    fontSize: 13,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Skip
-                </button>
-              </div>
-
-              <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.4 }}>
-                💡 Business matching helps us detect your industry automatically, but you can skip
-                and select it manually.
-              </div>
+              <input
+                type="text"
+                value={businessName}
+                onChange={(event) => {
+                  setBusinessName(event.target.value);
+                  setBusinessError(null);
+                  setSelectedSuggestion(null);
+                  setPreviewBusiness(null);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void handleBusinessContinue();
+                  }
+                }}
+                placeholder="Business name (optional)"
+                autoComplete="off"
+                style={{
+                  width: "100%",
+                  height: 46,
+                  borderRadius: 10,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: T.input,
+                  color: T.textPrimary,
+                  padding: "0 14px",
+                  fontSize: 14,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
 
               {businessSuggestions.length > 0 && !selectedSuggestion && (
                 <div
