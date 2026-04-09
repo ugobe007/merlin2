@@ -1610,14 +1610,12 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
   const storageKWh = storageMWh * 1000;
   const annualSavings = data.financialAnalysis?.annualSavingsUSD ?? 0;
   const paybackYears = data.financialAnalysis?.paybackYears ?? 0;
-  const roi10Year =
-    annualSavings > 0 && data.systemCost > 0
-      ? ((annualSavings * 10 - data.systemCost) / data.systemCost) * 100
-      : 0;
-  const lifetimeSavings = annualSavings * 10;
   const itcRate = data.itcBreakdown?.totalRate ?? (data.financialAnalysis ? 0.3 : 0);
   const itcAmount = data.itcBreakdown?.creditAmount ?? data.systemCost * itcRate;
   const netCost = data.systemCost - itcAmount;
+  const roi10Year =
+    annualSavings > 0 && netCost > 0 ? ((annualSavings * 10 - netCost) / netCost) * 100 : 0;
+  const lifetimeSavings = annualSavings * 10;
   const itcLabel = data.itcBreakdown
     ? `Federal ITC Credit (${Math.round(itcRate * 100)}%)`
     : "Federal ITC Credit (30%)";
@@ -1679,12 +1677,12 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
   <meta charset="UTF-8">
   <title>BESS Proposal - ${data.projectName}</title>
   <style>
-    @page { size: letter; margin: 0.55in 0.7in 0.6in 0.7in; }
+    @page { size: letter; margin: 0; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Calibri', 'Segoe UI', Arial, sans-serif; font-size: 10pt; color: #1E293B; line-height: 1.5; background: #fff; }
+    body { font-family: 'Calibri', 'Segoe UI', Arial, sans-serif; font-size: 10pt; color: #1E293B; line-height: 1.5; background: #fff; padding: 0.55in 0.7in 0.6in 0.7in; overflow-x: hidden; }
 
     /* ── HEADER ── */
-    .ph { background: linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #0F172A 100%); border-bottom: 3px solid #1B8F5A; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; margin: -0.55in -0.7in 0 -0.7in; width: calc(100% + 1.4in); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .ph { background: linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #0F172A 100%); border-bottom: 3px solid #1B8F5A; padding: 20px 28px; display: flex; justify-content: space-between; align-items: center; margin: -0.55in -0.7in 0 -0.7in; width: calc(100% + 1.4in); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .ph-left h1 { font-size: 19pt; font-weight: 800; color: #fff; letter-spacing: 0.2px; line-height: 1.15; margin-bottom: 7px; }
     .ph-left .sub { font-size: 9.5pt; color: #94A3B8; }
     .ph-left .tq  { font-size: 9pt; color: #3ECF8E; margin-top: 5px; font-weight: 700; letter-spacing: 0.4px; }
