@@ -94,19 +94,37 @@ function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): Norma
 
   // Blowers / Dryers (dominant load: 62.5% of total per industry standard)
   // Derive from dryerConfiguration (schema question) → blowerCount + heatedDryers
-  const dryerConfig = String(answers.dryerConfiguration || "blowers");
+  // dryerConfiguration is a type_then_quantity → stored as { type, quantity } object
+  const dryerConfigRaw = answers.dryerConfiguration;
+  const dryerConfig =
+    typeof dryerConfigRaw === "object" && dryerConfigRaw !== null
+      ? String((dryerConfigRaw as Record<string, unknown>).type || "blowers")
+      : String(dryerConfigRaw || "blowers");
+  const dryerQty =
+    typeof dryerConfigRaw === "object" && dryerConfigRaw !== null
+      ? String((dryerConfigRaw as Record<string, unknown>).quantity || "")
+      : "";
+  // Map quantity tier (from quantityOptions) → number of blowers
+  const DRYER_QTY_COUNT: Record<string, number> = {
+    standard: 4,
+    premium: 6,
+    heated: 4,
+    none: 0,
+  };
   const blowerCount =
     answers.blowerCount != null
       ? Number(answers.blowerCount)
-      : dryerConfig === "blowers"
-        ? 6
-        : dryerConfig === "heated"
-          ? 4
-          : dryerConfig === "hybrid"
-            ? 5
-            : dryerConfig === "none"
-              ? 0
-              : 6;
+      : DRYER_QTY_COUNT[dryerQty] != null
+        ? DRYER_QTY_COUNT[dryerQty]
+        : dryerConfig === "blowers"
+          ? 6
+          : dryerConfig === "heated"
+            ? 4
+            : dryerConfig === "hybrid"
+              ? 5
+              : dryerConfig === "none"
+                ? 0
+                : 6;
   const heatedDryers =
     answers.heatedDryers != null
       ? toBool(answers.heatedDryers)
@@ -144,8 +162,10 @@ function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): Norma
   });
 
   // Conveyor motor (tunnel only)
+  // conveyorMotorSize options are HP values ("5", "10", "15") — multiply by 0.746 for kW
   if (washType === "tunnel") {
-    const conveyorKW = answers.conveyorMotorSize != null ? Number(answers.conveyorMotorSize) : 10;
+    const conveyorKW =
+      answers.conveyorMotorSize != null ? Number(answers.conveyorMotorSize) * 0.746 : 7.5;
     processLoads.push({
       category: "process",
       label: "Conveyor Motor",
@@ -183,7 +203,7 @@ function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): Norma
   // Vacuum stations
   const vacStations = answers.vacuumStations != null ? Number(answers.vacuumStations) : 4;
   if (vacStations > 0) {
-    const centralVacHP = answers.centralVacuumHP != null ? Number(answers.centralVacuumHP) : 15;
+    const centralVacHP = answers.centralVacuumHP != null ? Number(answers.centralVacuumHP) : 30; // slider smartDefault = 30 HP (min 20, max 50)
     const vacKW = centralVacHP * 0.746; // HP to kW conversion
     processLoads.push({
       category: "process",
