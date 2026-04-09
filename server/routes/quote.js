@@ -309,11 +309,18 @@ function buildTier(tierLabel, p, priceOverrides = {}) {
 /** Geocode a location string → { lat, lon, formattedAddress } or null */
 async function geocode(query, key) {
   const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
-  url.searchParams.set('address', query.trim());
+  const trimmed = query.trim();
+  const isZip = /^\d{5}$/.test(trimmed);
+  url.searchParams.set('address', trimmed);
+  // Restrict to US — required for reliable ZIP-only resolution (mirrors QuickEstimateWidget fix)
+  url.searchParams.set('components', isZip ? `country:US|postal_code:${trimmed}` : 'country:US');
   url.searchParams.set('key', key);
   const response = await fetch(url.toString());
   const data = await response.json();
-  if (data.status !== 'OK' || !data.results?.[0]) return null;
+  if (data.status !== 'OK' || !data.results?.[0]) {
+    console.error(`[geocode] status=${data.status} error="${data.error_message ?? 'none'}" query="${query}"`);
+    return null;
+  }
   const r = data.results[0];
   let stateCode = null;
   for (const c of r.address_components) {
