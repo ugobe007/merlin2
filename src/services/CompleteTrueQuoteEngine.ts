@@ -189,7 +189,13 @@ export function calculateEnergyProfile(answers: Record<string, any>): EnergyProf
   const totalEquipmentLoad = Object.values(loads).reduce((sum, load) => sum + load, 0);
 
   // Apply diversity factor (not all equipment runs simultaneously)
-  const peakDemand = totalEquipmentLoad * CONSTANTS.DIVERSITY_FACTOR;
+  const calculatedPeak = totalEquipmentLoad * CONSTANTS.DIVERSITY_FACTOR;
+
+  // Billing override: if the user provided their actual peak demand from the bill,
+  // use it directly — it's more accurate than our equipment estimate.
+  const billPeakKw = answers.peakDemandKw != null ? Number(answers.peakDemandKw) : 0;
+  const peakDemand = billPeakKw > 0 ? billPeakKw : calculatedPeak;
+
   const averageDemand = peakDemand * CONSTANTS.LOAD_FACTOR;
   const loadFactor = averageDemand / peakDemand;
 
@@ -611,6 +617,17 @@ export function calculateBESSSystem(
 ): BESSSystem {
   const { DEMAND_CHARGE, ELECTRICITY_RATE } = CONSTANTS;
 
+  // Billing overrides: use user's actual demand charge rate if provided.
+  // If they confirmed demand charges don't apply, savings from that source = $0.
+  const demandChargeApplies = String(answers.demandChargeApplies ?? "unsure");
+  const userRateRaw = answers.demandChargeRate;
+  const effectiveDemandCharge =
+    demandChargeApplies === "no"
+      ? 0
+      : userRateRaw != null && String(userRateRaw) !== "unsure"
+        ? Number(userRateRaw)
+        : DEMAND_CHARGE; // national default: $15/kW-mo
+
   // Peak Shaving: Reduce peak demand by 30-40%
   const peakShaving = energyProfile.peakDemand * 0.35;
 
@@ -626,7 +643,7 @@ export function calculateBESSSystem(
   const batteryPowerKW = peakShaving;
 
   // Demand Charge Reduction
-  const demandChargeReduction = peakShaving * DEMAND_CHARGE * 12; // Annual
+  const demandChargeReduction = peakShaving * effectiveDemandCharge * 12; // Annual
 
   // Energy Arbitrage (charge from solar, discharge during peak)
   const dailyArbitrage = batteryCapacityKWh * 0.9 * ELECTRICITY_RATE; // 90% efficiency

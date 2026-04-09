@@ -123,6 +123,8 @@ const TIER1_BLOCKERS: Record<string, string[]> = {
     "blowerMotorSize", // CRITICAL: 50-60% of bill (blower zone)
     "waterHeaterType", // Load driver: 0/15/35/40 kW depending on fuel type
     "highPressurePumps", // CRITICAL: 20-30% of bill
+    "demandChargeApplies", // Billing gate: unlocks most-impactful BESS ROI path
+    "peakDemandKw", // Billing override: real bill peak > equipment estimate
   ],
   hotel: [
     "hotelCategory", // Core: class drives HVAC + amenity intensity

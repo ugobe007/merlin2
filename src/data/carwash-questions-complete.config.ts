@@ -31,7 +31,7 @@ export interface Question {
   };
   // Optional: field name for database mapping
   fieldName?: string;
-  section: "facility" | "operations" | "equipment" | "solar";
+  section: "facility" | "operations" | "equipment" | "billing" | "solar";
   title: string;
   subtitle?: string;
   helpText?: string;
@@ -622,7 +622,86 @@ export const carWashQuestionsComplete: Question[] = [
     impactsCalculations: ["peakDemand", "heatingLoad"],
   },
   // ============================================================================
-  // SECTION 3: SOLAR & SITE (Q22–Q26, all industries)
+  // SECTION 3: BILLING & UTILITY (Q23–Q26)
+  // Actual bill data overrides calc estimates — most impactful for BESS ROI accuracy
+  // ============================================================================
+  {
+    id: "demandChargeApplies",
+    type: "buttons",
+    section: "billing",
+    title: "Does your utility bill include a demand charge?",
+    subtitle:
+      "Demand charges ($/kW-month) are separate from energy charges and are the #1 target for BESS savings",
+    helpText:
+      "Look for 'Demand Charge', 'Peak Demand', or 'kW Charge' on your bill. Most commercial/industrial accounts over 50 kW have them.",
+    options: [
+      { value: "yes", label: "Yes", description: "I see it on my bill" },
+      { value: "no", label: "No", description: "Energy charges only" },
+      { value: "unsure", label: "Not Sure", description: "Skip — we'll estimate" },
+    ],
+    smartDefault: "unsure",
+    validation: { required: true },
+    impactsCalculations: ["bessROI", "demandSavings"],
+  },
+  {
+    id: "peakDemandKw",
+    type: "slider",
+    section: "billing",
+    title: "What's your highest peak demand on a recent bill?",
+    subtitle:
+      "Found under 'Peak Demand' or 'Billing Demand' — typically the highest kW in the last 12 months",
+    helpText:
+      "This single number drives 60–80% of BESS savings. Even an approximate figure gives us a far more accurate quote than our equipment estimate alone.",
+    range: { min: 0, max: 500, step: 5 },
+    smartDefault: 0,
+    unit: " kW",
+    merlinTip: "A typical express tunnel runs 150–300 kW peak · Flex/full-service: 200–400 kW",
+    conditionalLogic: {
+      dependsOn: "demandChargeApplies",
+      showIf: (val) => val === "yes",
+    },
+    validation: { required: false, min: 0, max: 500 },
+    impactsCalculations: ["bessROI", "bessSize", "demandSavings"],
+  },
+  {
+    id: "demandChargeRate",
+    type: "buttons",
+    section: "billing",
+    title: "Demand charge rate?",
+    subtitle: "The $/kW-month rate on your bill — multiplied by peak kW each month",
+    options: [
+      { value: "10", label: "$10", description: "/kW-mo" },
+      { value: "15", label: "$15", description: "/kW-mo" },
+      { value: "20", label: "$20", description: "/kW-mo" },
+      { value: "25", label: "$25", description: "/kW-mo" },
+      { value: "30", label: "$30", description: "/kW-mo" },
+      { value: "unsure", label: "Not Sure", description: "Use national avg" },
+    ],
+    smartDefault: "unsure",
+    merlinTip: "U.S. commercial average: $15–20/kW-mo · Southwest utilities can hit $25–35",
+    conditionalLogic: {
+      dependsOn: "demandChargeApplies",
+      showIf: (val) => val === "yes",
+    },
+    validation: { required: false },
+    impactsCalculations: ["bessROI", "demandSavings"],
+  },
+  {
+    id: "monthlyKwh",
+    type: "slider",
+    section: "billing",
+    title: "Average monthly electricity usage?",
+    subtitle:
+      "From your utility bill — used to cross-check our load estimate and size the solar system",
+    range: { min: 0, max: 150000, step: 1000 },
+    smartDefault: 0,
+    unit: " kWh/mo",
+    merlinTip: "Typical express tunnel: 30K–60K kWh/mo · Flex/full-service: 50K–100K kWh/mo",
+    validation: { required: false, min: 0, max: 150000 },
+    impactsCalculations: ["solarOffset", "annualEnergyCost"],
+  },
+  // ============================================================================
+  // SECTION 4: SOLAR & SITE (Q27–Q30, all industries)
   // ============================================================================
   {
     id: "totalSiteArea",
@@ -741,6 +820,13 @@ export const carWashSections = [
     description: "Machinery and systems",
     icon: "⚙️",
     questions: carWashQuestionsComplete.filter((q) => q.section === "equipment"),
+  },
+  {
+    id: "billing",
+    title: "Utility & Billing",
+    description: "Actual bill data supercharges ROI accuracy",
+    icon: "⚡",
+    questions: carWashQuestionsComplete.filter((q) => q.section === "billing"),
   },
   {
     id: "solar",

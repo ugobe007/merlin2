@@ -94,6 +94,11 @@ const QUESTION_ICON_MAP: Record<string, IconMapping> = {
   blowerMotorSize: { type: "emoji", value: "💨" },
   brushDriveType: { type: "emoji", value: "⚙️" },
   peakCarsPerHour: { type: "emoji", value: "🚗" },
+  // Billing section
+  demandChargeApplies: { type: "emoji", value: "⚡" },
+  peakDemandKw: { type: "emoji", value: "📊" },
+  demandChargeRate: { type: "emoji", value: "💰" },
+  monthlyKwh: { type: "emoji", value: "🔌" },
   tunnelOrBayCount: { type: "emoji", value: "🛿" },
   numberOfBays: { type: "emoji", value: "🛿" },
 
@@ -1046,9 +1051,9 @@ export function getQuestionIcon(
 
   // 3. Try icon name as Lucide icon
   if (iconName) {
-    const LucideIcon = (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[
-      iconName
-    ];
+    const LucideIcon = (
+      LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>
+    )[iconName];
     if (LucideIcon) {
       return <LucideIcon className="w-5 h-5" />;
     }
@@ -1073,7 +1078,7 @@ function renderIcon(mapping: IconMapping): React.ReactNode {
 
     case "lucide": {
       const LucideIcon = (
-        LucideIcons as Record<string, React.ComponentType<{ className?: string }>>
+        LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>
       )[mapping.value as string];
       if (LucideIcon) {
         return <LucideIcon className="w-5 h-5" />;
