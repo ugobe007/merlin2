@@ -115,14 +115,14 @@ import { devLog } from "@/wizard/v7/debug/devLog";
  */
 const TIER1_BLOCKERS: Record<string, string[]> = {
   "car-wash": [
-    "facilityType", // Core: tunnel vs IBA vs self-serve
+    "facilityType", // Core: tunnel type gates all downstream
     "tunnelOrBayCount", // Core: primary capacity driver
     "operatingHours", // Core: duty cycle
     "daysPerWeek", // Core: annual energy driver
-    "dailyVehicles", // Core: throughput proxy
-    "waterHeaterType", // Load driver: 10-30 kW continuous
-    "dryerConfiguration", // CRITICAL: 40-50% of bill
-    "pumpConfiguration", // CRITICAL: 20-30% of bill
+    "peakCarsPerHour", // Core: duty cycle multiplier → BESS sizing delta
+    "blowerMotorSize", // CRITICAL: 50-60% of bill (blower zone)
+    "waterHeaterType", // Load driver: 0/15/35/40 kW depending on fuel type
+    "highPressurePumps", // CRITICAL: 20-30% of bill
   ],
   hotel: [
     "hotelCategory", // Core: class drives HVAC + amenity intensity
@@ -742,140 +742,140 @@ function makeCompleteResolver(
  */
 function getCOMPLETE_SCHEMAS(): Record<string, () => CuratedSchema> {
   return {
-  "car-wash": makeCompleteResolver(
-    "car-wash",
-    "Car Wash",
-    "🚗",
-    carWashQuestionsComplete,
-    carWashSections
-  ),
-  hotel: makeCompleteResolver("hotel", "Hotel", "🏨", hotelQuestionsComplete, hotelSections),
-  "ev-charging": makeCompleteResolver(
-    "ev-charging",
-    "EV Charging Station",
-    "⚡",
-    evChargingQuestionsComplete,
-    evChargingSections
-  ),
-  datacenter: makeCompleteResolver(
-    "datacenter",
-    "Data Center",
-    "🖥️",
-    datacenterQuestionsComplete,
-    datacenterSections
-  ),
-  hospital: makeCompleteResolver(
-    "hospital",
-    "Healthcare Facility",
-    "🏥",
-    hospitalQuestionsComplete,
-    hospitalSections
-  ),
-  office: makeCompleteResolver(
-    "office",
-    "Office Building",
-    "🏢",
-    officeQuestionsComplete,
-    officeSections
-  ),
-  manufacturing: makeCompleteResolver(
-    "manufacturing",
-    "Manufacturing",
-    "🏭",
-    manufacturingQuestionsComplete,
-    manufacturingSections
-  ),
-  warehouse: makeCompleteResolver(
-    "warehouse",
-    "Warehouse / Logistics",
-    "📦",
-    warehouseQuestionsComplete,
-    warehouseSections
-  ),
-  retail: makeCompleteResolver(
-    "retail",
-    "Retail / Shopping",
-    "🏪",
-    retailQuestionsComplete,
-    retailSections
-  ),
-  "gas-station": makeCompleteResolver(
-    "gas-station",
-    "Gas / Truck Stop",
-    "⛽",
-    gasStationQuestionsComplete,
-    gasStationSections
-  ),
-  airport: makeCompleteResolver(
-    "airport",
-    "Airport",
-    "✈️",
-    airportQuestionsComplete,
-    airportSections
-  ),
-  casino: makeCompleteResolver(
-    "casino",
-    "Casino & Gaming",
-    "🎰",
-    casinoQuestionsComplete,
-    casinoSections
-  ),
-  apartment: makeCompleteResolver(
-    "apartment",
-    "Apartment Complex",
-    "🏠",
-    apartmentQuestionsComplete,
-    apartmentSections
-  ),
-  college: makeCompleteResolver(
-    "college",
-    "College / University",
-    "🎓",
-    collegeQuestionsComplete,
-    collegeSections
-  ),
-  "cold-storage": makeCompleteResolver(
-    "cold-storage",
-    "Cold Storage",
-    "❄️",
-    coldStorageQuestionsComplete,
-    coldStorageSections
-  ),
-  "indoor-farm": makeCompleteResolver(
-    "indoor-farm",
-    "Indoor Farm",
-    "🌱",
-    indoorFarmQuestionsComplete,
-    indoorFarmSections
-  ),
-  agriculture: makeCompleteResolver(
-    "agriculture",
-    "Agriculture",
-    "🌾",
-    agricultureQuestionsComplete,
-    agricultureSections
-  ),
-  residential: makeCompleteResolver(
-    "residential",
-    "Residential",
-    "🏡",
-    residentialQuestionsComplete,
-    residentialSections
-  ),
-  government: makeCompleteResolver(
-    "government",
-    "Government & Public",
-    "🏛️",
-    governmentQuestionsComplete,
-    governmentSections
-  ),
-  restaurant: makeCompleteResolver(
-    "restaurant",
-    "Restaurant",
-    "🍽️",
-    restaurantQuestionsComplete as HotelQuestion[],
-    restaurantSections
-  ),
+    "car-wash": makeCompleteResolver(
+      "car-wash",
+      "Car Wash",
+      "🚗",
+      carWashQuestionsComplete,
+      carWashSections
+    ),
+    hotel: makeCompleteResolver("hotel", "Hotel", "🏨", hotelQuestionsComplete, hotelSections),
+    "ev-charging": makeCompleteResolver(
+      "ev-charging",
+      "EV Charging Station",
+      "⚡",
+      evChargingQuestionsComplete,
+      evChargingSections
+    ),
+    datacenter: makeCompleteResolver(
+      "datacenter",
+      "Data Center",
+      "🖥️",
+      datacenterQuestionsComplete,
+      datacenterSections
+    ),
+    hospital: makeCompleteResolver(
+      "hospital",
+      "Healthcare Facility",
+      "🏥",
+      hospitalQuestionsComplete,
+      hospitalSections
+    ),
+    office: makeCompleteResolver(
+      "office",
+      "Office Building",
+      "🏢",
+      officeQuestionsComplete,
+      officeSections
+    ),
+    manufacturing: makeCompleteResolver(
+      "manufacturing",
+      "Manufacturing",
+      "🏭",
+      manufacturingQuestionsComplete,
+      manufacturingSections
+    ),
+    warehouse: makeCompleteResolver(
+      "warehouse",
+      "Warehouse / Logistics",
+      "📦",
+      warehouseQuestionsComplete,
+      warehouseSections
+    ),
+    retail: makeCompleteResolver(
+      "retail",
+      "Retail / Shopping",
+      "🏪",
+      retailQuestionsComplete,
+      retailSections
+    ),
+    "gas-station": makeCompleteResolver(
+      "gas-station",
+      "Gas / Truck Stop",
+      "⛽",
+      gasStationQuestionsComplete,
+      gasStationSections
+    ),
+    airport: makeCompleteResolver(
+      "airport",
+      "Airport",
+      "✈️",
+      airportQuestionsComplete,
+      airportSections
+    ),
+    casino: makeCompleteResolver(
+      "casino",
+      "Casino & Gaming",
+      "🎰",
+      casinoQuestionsComplete,
+      casinoSections
+    ),
+    apartment: makeCompleteResolver(
+      "apartment",
+      "Apartment Complex",
+      "🏠",
+      apartmentQuestionsComplete,
+      apartmentSections
+    ),
+    college: makeCompleteResolver(
+      "college",
+      "College / University",
+      "🎓",
+      collegeQuestionsComplete,
+      collegeSections
+    ),
+    "cold-storage": makeCompleteResolver(
+      "cold-storage",
+      "Cold Storage",
+      "❄️",
+      coldStorageQuestionsComplete,
+      coldStorageSections
+    ),
+    "indoor-farm": makeCompleteResolver(
+      "indoor-farm",
+      "Indoor Farm",
+      "🌱",
+      indoorFarmQuestionsComplete,
+      indoorFarmSections
+    ),
+    agriculture: makeCompleteResolver(
+      "agriculture",
+      "Agriculture",
+      "🌾",
+      agricultureQuestionsComplete,
+      agricultureSections
+    ),
+    residential: makeCompleteResolver(
+      "residential",
+      "Residential",
+      "🏡",
+      residentialQuestionsComplete,
+      residentialSections
+    ),
+    government: makeCompleteResolver(
+      "government",
+      "Government & Public",
+      "🏛️",
+      governmentQuestionsComplete,
+      governmentSections
+    ),
+    restaurant: makeCompleteResolver(
+      "restaurant",
+      "Restaurant",
+      "🍽️",
+      restaurantQuestionsComplete as HotelQuestion[],
+      restaurantSections
+    ),
   };
 }
 
@@ -1011,9 +1011,24 @@ function resolveFallbackSchema(industry: string): CuratedSchema {
       label: "Do you currently have solar installed?",
       smartDefault: "none",
       options: [
-        { value: "none", label: "No Solar Yet", icon: "🔌", description: "BESS alone still provides savings" },
-        { value: "partial", label: "Some Solar", icon: "☀️", description: "Covers part of your load" },
-        { value: "full", label: "Full Solar Array", icon: "🌞", description: "Covers most of your load" },
+        {
+          value: "none",
+          label: "No Solar Yet",
+          icon: "🔌",
+          description: "BESS alone still provides savings",
+        },
+        {
+          value: "partial",
+          label: "Some Solar",
+          icon: "☀️",
+          description: "Covers part of your load",
+        },
+        {
+          value: "full",
+          label: "Full Solar Array",
+          icon: "🌞",
+          description: "Covers most of your load",
+        },
       ],
       required: true,
       validation: { required: true },
@@ -1027,7 +1042,8 @@ function resolveFallbackSchema(industry: string): CuratedSchema {
       placeholder: "e.g., 200",
       suffix: "kW",
       smartDefault: undefined,
-      helpText: "Enter the rated capacity of your solar system. Check your inverter or solar monitoring app.",
+      helpText:
+        "Enter the rated capacity of your solar system. Check your inverter or solar monitoring app.",
       required: false,
       validation: { required: false, min: 1, max: 50000 },
       conditionalLogic: {
@@ -1132,9 +1148,7 @@ export function resolveStep3Schema(industry: string): CuratedSchema {
   const legacy = resolveLegacySchema(effectiveSchemaKey);
   if (legacy) {
     if (import.meta.env.DEV) {
-      devLog(
-        `[CuratedResolver] ✅ LEGACY schema for "${industry}" (${legacy.questionCount}Q)`
-      );
+      devLog(`[CuratedResolver] ✅ LEGACY schema for "${industry}" (${legacy.questionCount}Q)`);
     }
     return legacy;
   }
