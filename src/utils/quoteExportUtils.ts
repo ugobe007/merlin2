@@ -1598,599 +1598,645 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
 }
 
 /**
- * Export quote as professional PDF proposal — Supabase Design System
- * Dark theme with emerald #3ECF8E accents, real Merlin icon, clean modern typography
+ * Export quote as professional PDF proposal — matches Word template structure exactly.
+ * Same 7 sections as exportQuoteAsWord: Executive Summary, System Specs, Load Profile,
+ * Financial Analysis, Implementation, TrueQuote™ Methodology, Next Steps.
+ * Light / print-safe colour scheme (white bg, slate text, emerald accents).
  */
 export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
-  // Compute derived values
+  // ── Derived values (mirrors exportQuoteAsWord) ───────────────────────────
   const storageMWh = data.storageSizeMWh || data.storageSizeMW * data.durationHours;
+  const storageKW = data.storageSizeMW * 1000;
+  const storageKWh = storageMWh * 1000;
   const annualSavings = data.financialAnalysis?.annualSavingsUSD ?? 0;
   const paybackYears = data.financialAnalysis?.paybackYears ?? 0;
   const roi10Year =
     annualSavings > 0 && data.systemCost > 0
       ? ((annualSavings * 10 - data.systemCost) / data.systemCost) * 100
       : 0;
+  const lifetimeSavings = annualSavings * 10;
+  const itcRate = data.itcBreakdown?.totalRate ?? (data.financialAnalysis ? 0.3 : 0);
+  const itcAmount = data.itcBreakdown?.creditAmount ?? data.systemCost * itcRate;
+  const netCost = data.systemCost - itcAmount;
+  const itcLabel = data.itcBreakdown
+    ? `Federal ITC Credit (${Math.round(itcRate * 100)}%)`
+    : "Federal ITC Credit (30%)";
+  const demandChargeSavings =
+    data.financialAnalysis?.demandChargeSavings ?? data.demandCharge * storageKW * 0.5 * 12;
+  const watermarkText = getWatermarkText();
 
   // Format helpers
   const fmtCurrency = (v: number) => {
     if (!v || !Number.isFinite(v)) return "$0";
-    return "$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
-  const fmtCurrencyShort = (v: number) => {
-    if (!v || !Number.isFinite(v)) return "$0";
     return "$" + v.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   };
+  const fmtCurrencyShort = fmtCurrency;
+  const fmtPct = (v: number) => `${v.toFixed(1)}%`;
+  const fmtNum = (v: number) => v.toLocaleString("en-US");
 
-  const printContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>BESS Proposal - ${data.projectName}</title>
-      <style>
-        @page { size: letter; margin: 0.6in 0.75in; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-          font-size: 10.5pt;
-          color: #1E293B;
-          line-height: 1.55;
-          background: #FFFFFF;
-        }
+  // ── Build contributor rows for load breakdown (shared by Word and PDF) ──
+  const contributorEntries = data.trueQuoteValidation?.kWContributors
+    ? Object.entries(data.trueQuoteValidation.kWContributors)
+        .filter(([, kw]) => kw > 0)
+        .sort(([, a], [, b]) => b - a)
+    : [];
+  const totalContributorKW = contributorEntries.reduce((s, [, kw]) => s + kw, 0);
 
-        /* ── HEADER ─────────────────────────────────────── */
-        .proposal-header {
-          background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-          border-bottom: 3px solid #10B981;
-          padding: 28px 32px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin: -0.6in -0.75in 0 -0.75in;
-          width: calc(100% + 1.5in);
-        }
-        .proposal-header .left h1 {
-          font-size: 20pt;
-          font-weight: 700;
-          letter-spacing: 0.3px;
-          margin-bottom: 8px;
-          line-height: 1.2;
-          color: #FFFFFF;
-        }
-        .proposal-header .left .subtitle {
-          font-size: 10pt;
-          color: #94A3B8;
-          font-weight: 400;
-        }
-        .proposal-header .left .truequote-line {
-          font-size: 9pt;
-          color: #10B981;
-          margin-top: 6px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-        }
-        .proposal-header .right {
-          text-align: right;
-          display: flex;
-          align-items: center;
-          gap: 14px;
-        }
-        .proposal-header .right .merlin-icon {
-          width: 56px;
-          height: 56px;
-          border-radius: 12px;
-          border: 2px solid #10B981;
-        }
-        .proposal-header .right .brand-text {
-          text-align: right;
-        }
-        .proposal-header .right .brand-name {
-          font-size: 16pt;
-          font-weight: 700;
-          letter-spacing: 1px;
-          color: #FFFFFF;
-        }
-        .proposal-header .right .brand-tagline {
-          font-size: 8.5pt;
-          color: #64748B;
-          margin-top: 2px;
-        }
+  const confidenceText =
+    data.trueQuoteConfidence?.overall === "high"
+      ? "HIGH — Industry-specific model with verified inputs"
+      : data.trueQuoteConfidence?.overall === "medium"
+        ? "MEDIUM — Some inputs estimated from industry defaults"
+        : "STANDARD — General facility estimate";
 
-        /* ── ACCENT BAR ──────────────────────────────────── */
-        .accent-bar {
-          height: 3px;
-          background: linear-gradient(90deg, #10B981, #059669, #047857);
-          margin: 0 -0.75in;
-          width: calc(100% + 1.5in);
-        }
+  // ── Re-usable HTML helpers ───────────────────────────────────────────────
+  const twoColRow = (label: string, value: string, valueClass = "") =>
+    `<tr><td class="lc">${label}</td><td class="vc ${valueClass}">${value}</td></tr>`;
 
-        /* ── SECTION HEADERS ────────────────────────────── */
-        .section-heading {
-          font-size: 12pt;
-          font-weight: 700;
-          color: #0F7544;
-          padding: 8px 0;
-          border-bottom: 1px solid #CBD5E1;
-          margin: 28px 0 14px 0;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-        }
+  const threeColRow = (a: string, b: string, c: string) =>
+    `<tr><td>${a}</td><td>${b}</td><td>${c}</td></tr>`;
 
-        /* ── INFO TABLE ─────────────────────────────────── */
-        .info-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 12px 0 24px 0;
-        }
-        .info-table td {
-          padding: 8px 14px;
-          border: 1px solid #CBD5E1;
-          font-size: 10pt;
-        }
-        .info-table .label-cell {
-          font-weight: 600;
-          background: #F1F5F9;
-          width: 35%;
-          color: #64748B;
-        }
-        .info-table .value-cell {
-          color: #1E293B;
-          background: #FFFFFF;
-        }
+  const fourColRow = (a: string, b: string, c: string, d: string) =>
+    `<tr><td>${a}</td><td>${b}</td><td>${c}</td><td>${d}</td></tr>`;
 
-        /* ── KEY METRICS TABLE ──────────────────────────── */
-        .metrics-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 12px 0 24px 0;
-        }
-        .metrics-table thead th {
-          background: #0F172A;
-          color: #FFFFFF;
-          font-weight: 700;
-          font-size: 10pt;
-          padding: 9px 14px;
-          text-align: left;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        .metrics-table tbody td {
-          padding: 8px 14px;
-          border: 1px solid #CBD5E1;
-          font-size: 10pt;
-          background: #FFFFFF;
-        }
-        .metrics-table tbody tr:nth-child(even) td {
-          background: #F8FAFC;
-        }
-        .metrics-table .metric-label {
-          font-weight: 600;
-          color: #64748B;
-        }
-        .metrics-table .metric-value {
-          font-weight: 600;
-          color: #1E293B;
-        }
-        .metrics-table .metric-value.highlight {
-          color: #0F7544;
-          font-weight: 700;
-        }
+  const sectionH = (num: string, title: string) =>
+    `<div class="sh">${num}. ${title.toUpperCase()}</div>`;
 
-        /* ── OVERVIEW SECTION ───────────────────────────── */
-        .overview-text {
-          font-size: 10pt;
-          color: #8B8B8B;
-          margin: 12px 0 20px 0;
-          line-height: 1.65;
-        }
-        .site-layout {
-          display: flex;
-          gap: 20px;
-          margin: 16px 0;
-        }
-        .site-layout .placeholder-box {
-          flex: 1;
-          border: 1px dashed #3ECF8E40;
-          border-radius: 8px;
-          padding: 36px 16px;
-          text-align: center;
-          color: #555;
-          font-size: 9pt;
-          background: #171717;
-        }
-        .site-layout .placeholder-box .icon {
-          font-size: 22pt;
-          display: block;
-          margin-bottom: 8px;
-        }
-        .site-layout .placeholder-box .box-title {
-          font-weight: 700;
-          font-size: 9pt;
-          color: #3ECF8E;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: 4px;
-        }
+  const subH = (title: string) => `<div class="sbh">${title}</div>`;
 
-        /* ── LOAD BREAKDOWN ─────────────────────────────── */
-        .load-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 12px 0 24px 0;
-        }
-        .load-table thead th {
-          background: #1a1a1a;
-          color: #3ECF8E;
-          font-weight: 700;
-          font-size: 9pt;
-          padding: 8px 14px;
-          text-align: left;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          border-bottom: 2px solid #3ECF8E;
-        }
-        .load-table tbody td {
-          padding: 7px 14px;
-          border: 1px solid #2a2a2a;
-          font-size: 9.5pt;
-          background: #111111;
-          color: #ededed;
-        }
-        .load-table tbody tr:nth-child(even) td {
-          background: #171717;
-        }
+  const bodyP = (text: string) => `<p class="bp">${text}</p>`;
 
-        /* ── FINANCIAL DETAILS TABLE ────────────────────── */
-        .financial-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 12px 0 24px 0;
-        }
-        .financial-table td {
-          padding: 8px 14px;
-          border: 1px solid #2a2a2a;
-          font-size: 10pt;
-        }
-        .financial-table .label-cell {
-          font-weight: 600;
-          background: #F1F5F9;
-          width: 50%;
-          color: #64748B;
-        }
-        .financial-table .value-cell {
-          font-weight: 600;
-          color: #1E293B;
-          background: #FFFFFF;
-        }
-        .financial-table .value-cell.green {
-          color: #0F7544;
-        }
+  const metricRow = (label: string, value: string, green = false) =>
+    `<tr><td class="lc">${label}</td><td class="vc${green ? " green" : ""}">${value}</td></tr>`;
 
-        /* ── CONFIDENCE BADGE ───────────────────────────── */
-        .confidence-badge {
-          display: inline-block;
-          padding: 3px 10px;
-          border-radius: 999px;
-          font-size: 9pt;
-          font-weight: 700;
-          letter-spacing: 0.3px;
-        }
-        .confidence-badge.high {
-          background: #D1FAE5;
-          color: #065F46;
-          border: 1px solid #10B981;
-        }
-        .confidence-badge.medium {
-          background: #FEF3C7;
-          color: #92400E;
-          border: 1px solid #F59E0B;
-        }
-        .confidence-badge.low {
-          background: #FEE2E2;
-          color: #991B1B;
-          border: 1px solid #EF4444;
-        }
+  // Helper: generic dark-header table
+  const tableHtml = (headers: string[], rows: string, extraClass = "") =>
+    `<table class="t ${extraClass}"><thead><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table>`;
 
-        /* ── FOOTER ─────────────────────────────────────── */
-        .proposal-footer {
-          margin-top: 36px;
-          padding-top: 16px;
-          border-top: 1px solid #CBD5E1;
-          font-size: 8.5pt;
-          color: #64748B;
-          line-height: 1.7;
-        }
-        .proposal-footer p {
-          margin: 3px 0;
-        }
-        .proposal-footer strong {
-          color: #8B8B8B;
-        }
-        .proposal-footer .disclaimer {
-          font-style: italic;
-          margin-top: 12px;
-          font-size: 8pt;
-          color: #444;
-          padding: 10px 12px;
-          background: #171717;
-          border-radius: 6px;
-          border-left: 3px solid #3ECF8E40;
-        }
+  const printContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>BESS Proposal - ${data.projectName}</title>
+  <style>
+    @page { size: letter; margin: 0.55in 0.7in 0.6in 0.7in; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Calibri', 'Segoe UI', Arial, sans-serif; font-size: 10pt; color: #1E293B; line-height: 1.5; background: #fff; }
 
-        @media print {
-          body { margin: 0; background: #FFFFFF; }
-          .proposal-header,
-          .metrics-table thead th,
-          .load-table thead th,
-          .info-table .label-cell,
-          .financial-table .label-cell,
-          .metrics-table tbody td,
-          .load-table tbody td,
-          .financial-table td,
-          .info-table td,
-          .proposal-footer .disclaimer,
-          .site-layout .placeholder-box {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-        }
-      </style>
-    </head>
-    <body>
+    /* ── HEADER ── */
+    .ph { background: linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #0F172A 100%); border-bottom: 3px solid #1B8F5A; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; margin: -0.55in -0.7in 0 -0.7in; width: calc(100% + 1.4in); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .ph-left h1 { font-size: 19pt; font-weight: 800; color: #fff; letter-spacing: 0.2px; line-height: 1.15; margin-bottom: 7px; }
+    .ph-left .sub { font-size: 9.5pt; color: #94A3B8; }
+    .ph-left .tq  { font-size: 9pt; color: #3ECF8E; margin-top: 5px; font-weight: 700; letter-spacing: 0.4px; }
+    .ph-right { text-align: right; }
+    .ph-right .bn { font-size: 15pt; font-weight: 800; letter-spacing: 1px; color: #fff; }
+    .ph-right .bt { font-size: 8.5pt; color: #64748B; margin-top: 2px; }
+    .ph-right img { width: 48px; height: 48px; border-radius: 10px; border: 2px solid #1B8F5A; display: block; margin: 6px 0 0 auto; }
+    .wm { font-size: 8pt; color: #aaa; text-align: right; margin: 4px -0.7in -4px 0; letter-spacing: 0.5px; }
 
-      <!-- ═══ HEADER ═══ -->
-      <div class="proposal-header">
-        <div class="left">
-          <h1>BATTERY ENERGY STORAGE<br>SYSTEM PROPOSAL</h1>
-          <div class="subtitle">Professional Energy Storage Solution</div>
-          <div class="truequote-line">TrueQuote™ Verified &bull; Source-Backed Pricing</div>
-        </div>
-        <div class="right">
-          <div class="brand-text">
-            <div class="brand-name">MERLIN</div>
-            <div class="brand-tagline">Energy Solutions</div>
-          </div>
-          <img class="merlin-icon" src="${MERLIN_ICON_BASE64}" alt="Merlin" />
-        </div>
-      </div>
-      <div class="accent-bar"></div>
+    /* ── META STRIP ── */
+    .ms { display: flex; gap: 0; margin: 14px 0 0 0; border: 1px solid #CBD5E1; border-radius: 6px; overflow: hidden; }
+    .ms-cell { flex: 1; padding: 9px 14px; border-right: 1px solid #CBD5E1; background: #F8FAFC; }
+    .ms-cell:last-child { border-right: none; }
+    .ms-cell .ml { font-size: 8pt; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+    .ms-cell .mv { font-size: 9.5pt; color: #1E293B; font-weight: 600; }
 
-      <!-- ═══ PROJECT INFORMATION ═══ -->
-      <div class="section-heading">PROJECT INFORMATION</div>
-      <table class="info-table">
-        <tr>
-          <td class="label-cell">Client Name</td>
-          <td class="value-cell">${data.projectName?.replace(/—.*/, "").trim() || "Custom Configuration"}</td>
-        </tr>
-        <tr>
-          <td class="label-cell">Project Name</td>
-          <td class="value-cell">${data.storageSizeMW.toFixed(0)} MW / ${data.durationHours}hr BESS System</td>
-        </tr>
-        <tr>
-          <td class="label-cell">Quote Date</td>
-          <td class="value-cell">${data.quoteDate}</td>
-        </tr>
-        <tr>
-          <td class="label-cell">Location</td>
-          <td class="value-cell">${data.location}</td>
-        </tr>
-      </table>
+    /* ── TrueQuote strip ── */
+    .tqs { background: #EDFDF5; border-left: 3px solid #1B8F5A; padding: 9px 14px; margin: 14px 0; font-size: 9pt; color: #1E293B; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tqs strong { color: #1B8F5A; }
 
-      <!-- ═══ 1. EXECUTIVE SUMMARY ═══ -->
-      <div class="section-heading">1. EXECUTIVE SUMMARY</div>
-      <p class="overview-text">
-        This proposal provides a comprehensive Battery Energy Storage System (BESS) solution designed to meet your
-        specific energy requirements and deliver exceptional return on investment.
-      </p>
-      <table class="metrics-table">
-        <thead>
-          <tr>
-            <th>KEY METRIC</th>
-            <th>VALUE</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="metric-label">System Capacity</td>
-            <td class="metric-value">${storageMWh.toFixed(1)} MWh</td>
-          </tr>
-          <tr>
-            <td class="metric-label">Power Rating</td>
-            <td class="metric-value">${data.storageSizeMW.toFixed(0)} MW</td>
-          </tr>
-          <tr>
-            <td class="metric-label">Total Investment</td>
-            <td class="metric-value">${fmtCurrency(data.systemCost)}</td>
-          </tr>
-          <tr>
-            <td class="metric-label">Annual Energy Savings</td>
-            <td class="metric-value highlight">${fmtCurrencyShort(annualSavings)}/year</td>
-          </tr>
-          <tr>
-            <td class="metric-label">Simple Payback Period</td>
-            <td class="metric-value">${paybackYears > 0 ? paybackYears.toFixed(2) + " years" : "—"}</td>
-          </tr>
-          <tr>
-            <td class="metric-label">10-Year ROI</td>
-            <td class="metric-value ${roi10Year > 0 ? "highlight" : ""}">${roi10Year !== 0 ? roi10Year.toFixed(1) + "%" : "—"}</td>
-          </tr>
-          <tr>
-            <td class="metric-label">System Warranty</td>
-            <td class="metric-value">${data.warrantyYears} Years</td>
-          </tr>
-        </tbody>
-      </table>
+    /* ── SECTION HEADING ── */
+    .sh { font-size: 11.5pt; font-weight: 800; color: #1B8F5A; padding-bottom: 5px; border-bottom: 1.5px solid #CBD5E1; margin: 26px 0 12px 0; letter-spacing: 0.4px; text-transform: uppercase; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .sbh { font-size: 10pt; font-weight: 700; color: #334155; margin: 16px 0 7px 0; }
+    .bp { font-size: 9.5pt; color: #4A5568; line-height: 1.65; margin: 0 0 12px 0; }
 
-      <!-- ═══ 2. PROJECT OVERVIEW & VISUALIZATION ═══ -->
-      <div class="section-heading">2. PROJECT OVERVIEW &amp; VISUALIZATION</div>
-      <p class="overview-text">
-        The proposed system integrates with your existing infrastructure to provide energy storage, peak shaving, and
-        grid stabilization for your <strong style="color:#ededed">${data.useCase}</strong> application.
-      </p>
-      <p class="overview-text" style="margin-bottom: 8px;"><strong style="color:#ededed">Project Site Layout &amp; Configuration:</strong></p>
-      <div class="site-layout">
-        <div class="placeholder-box">
-          <span class="icon">📷</span>
-          <div class="box-title">PROJECT SITE PHOTO</div>
-          <em>[Insert aerial or ground-level photo of installation site]</em>
-        </div>
-        <div class="placeholder-box">
-          <span class="icon">🔧</span>
-          <div class="box-title">SYSTEM DIAGRAM</div>
-          <em>[Insert technical diagram showing BESS configuration and connections]</em>
-        </div>
-      </div>
+    /* ── HERO METRICS GRID ── */
+    .hmg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 20px 0; }
+    .hmc { background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px; padding: 10px 13px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .hmc .hl { font-size: 8pt; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+    .hmc .hv { font-size: 12pt; font-weight: 800; color: #1E293B; }
+    .hmc .hv.green { color: #1B8F5A; }
+    .hmc .hv.amber { color: #D97706; }
 
-      ${
-        data.trueQuoteValidation?.kWContributors
-          ? `
-      <!-- ═══ 3. LOAD BREAKDOWN — TRUEQUOTE™ ═══ -->
-      <div class="section-heading">3. LOAD BREAKDOWN — TrueQuote™ Verified</div>
-      <table class="load-table">
-        <thead>
-          <tr>
-            <th>Component</th>
-            <th>Load (kW)</th>
-            <th>Share</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${Object.entries(data.trueQuoteValidation.kWContributors)
-            .filter(([, kw]) => kw > 0)
-            .sort(([, a], [, b]) => b - a)
-            .map(([key, kw]) => {
-              const share = data.trueQuoteValidation?.kWContributorShares?.[key];
-              const label = key
-                .replace(/([A-Z])/g, " $1")
-                .replace(/^./, (s: string) => s.toUpperCase());
-              return `<tr>
-                <td style="font-weight:600">${label}</td>
-                <td>${Math.round(kw).toLocaleString()} kW</td>
-                <td>${share != null ? (share * 100).toFixed(0) + "%" : "—"}</td>
-              </tr>`;
-            })
-            .join("\n          ")}
-          ${data.trueQuoteValidation.dutyCycle != null ? `<tr style="border-top: 2px solid #3ECF8E;"><td style="font-weight:700;color:#3ECF8E" colspan="2">Duty Cycle</td><td style="font-weight:700;color:#3ECF8E">${(data.trueQuoteValidation.dutyCycle * 100).toFixed(0)}%</td></tr>` : ""}
-        </tbody>
-      </table>
-      `
-          : ""
-      }
+    /* ── GENERIC TABLE ── */
+    .t { width: 100%; border-collapse: collapse; margin: 8px 0 18px 0; font-size: 9.5pt; }
+    .t thead th { background: #1E293B; color: #fff; font-weight: 700; padding: 7px 11px; text-align: left; text-transform: uppercase; font-size: 8.5pt; letter-spacing: 0.4px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .t tbody td { padding: 6.5px 11px; border: 1px solid #E2E8F0; color: #1E293B; vertical-align: top; }
+    .t tbody tr:nth-child(even) td { background: #F8FAFC; }
+    .t tbody .lc { font-weight: 600; color: #475569; background: #F1F5F9; width: 40%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .t tbody .vc { color: #1E293B; }
+    .t tbody .vc.green { color: #1B8F5A; font-weight: 700; }
+    .t tbody .vc.amber { color: #D97706; font-weight: 700; }
+    .t tbody .total-row td { font-weight: 800; border-top: 2px solid #CBD5E1; }
 
-      ${
-        data.financialAnalysis
-          ? `
-      <!-- ═══ ${data.trueQuoteValidation?.kWContributors ? "4" : "3"}. FINANCIAL ANALYSIS ═══ -->
-      <div class="section-heading">${data.trueQuoteValidation?.kWContributors ? "4" : "3"}. FINANCIAL ANALYSIS</div>
-      <table class="financial-table">
-        <tr>
-          <td class="label-cell">Total Investment</td>
-          <td class="value-cell">${fmtCurrency(data.systemCost)}</td>
-        </tr>
-        <tr>
-          <td class="label-cell">Annual Energy Savings</td>
-          <td class="value-cell green">${fmtCurrencyShort(annualSavings)}/year</td>
-        </tr>
-        <tr>
-          <td class="label-cell">Simple Payback</td>
-          <td class="value-cell">${paybackYears > 0 ? paybackYears.toFixed(1) + " years" : "—"}</td>
-        </tr>
-        ${data.financialAnalysis.npv != null ? `<tr><td class="label-cell">NPV (25 yr)</td><td class="value-cell green">${fmtCurrencyShort(data.financialAnalysis.npv)}</td></tr>` : ""}
-        ${data.financialAnalysis.irr != null ? `<tr><td class="label-cell">IRR</td><td class="value-cell">${(data.financialAnalysis.irr * 100).toFixed(1)}%</td></tr>` : ""}
-        ${data.financialAnalysis.demandChargeSavings != null ? `<tr><td class="label-cell">Demand Charge Savings</td><td class="value-cell green">${fmtCurrencyShort(data.financialAnalysis.demandChargeSavings)}/year</td></tr>` : ""}
-        ${data.equipmentCosts?.allInPerKWh ? `<tr><td class="label-cell">All-In Cost $/kWh</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.allInPerKWh)}/kWh</td></tr>` : ""}
-        ${data.equipmentCosts?.allInPerKW ? `<tr><td class="label-cell">All-In Cost $/kW</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.allInPerKW)}/kW</td></tr>` : ""}
-      </table>
-      ${
-        data.equipmentCosts?.totalEquipmentCost
-          ? `
-      <div style="margin-top: 16px; font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Equipment Cost Breakdown</div>
-      <table class="financial-table" style="margin-top: 8px;">
-        ${data.equipmentCosts.batteryCost ? `<tr><td class="label-cell">Battery Storage (LFP)</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.batteryCost)}${data.equipmentCosts.batteryPerKWh ? ` <span style="color:#64748b;font-size:10px">(${fmtCurrencyShort(data.equipmentCosts.batteryPerKWh)}/kWh)</span>` : ""}</td></tr>` : ""}
-        ${data.equipmentCosts.inverterCost ? `<tr><td class="label-cell">Power Conversion (PCS)</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.inverterCost)}${data.equipmentCosts.inverterPerKW ? ` <span style="color:#64748b;font-size:10px">(${fmtCurrencyShort(data.equipmentCosts.inverterPerKW)}/kW)</span>` : ""}</td></tr>` : ""}
-        ${data.equipmentCosts.transformerCost ? `<tr><td class="label-cell">Transformer</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.transformerCost)}</td></tr>` : ""}
-        ${data.equipmentCosts.switchgearCost ? `<tr><td class="label-cell">Switchgear</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.switchgearCost)}</td></tr>` : ""}
-        ${data.equipmentCosts.solarCost ? `<tr><td class="label-cell">Solar Array</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.solarCost)}${data.equipmentCosts.solarPerWatt ? ` <span style="color:#64748b;font-size:10px">($${data.equipmentCosts.solarPerWatt.toFixed(2)}/W)</span>` : ""}</td></tr>` : ""}
-        ${data.equipmentCosts.generatorCost ? `<tr><td class="label-cell">Backup Generator</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.generatorCost)}${data.equipmentCosts.generatorPerKW ? ` <span style="color:#64748b;font-size:10px">(${fmtCurrencyShort(data.equipmentCosts.generatorPerKW)}/kW)</span>` : ""}</td></tr>` : ""}
-        ${data.equipmentCosts.installationCost ? `<tr><td class="label-cell">Installation / BOS / EPC</td><td class="value-cell">${fmtCurrencyShort(data.equipmentCosts.installationCost)}</td></tr>` : ""}
-        <tr style="border-top: 1px solid #334155;"><td class="label-cell" style="font-weight:700">Base Equipment Total</td><td class="value-cell" style="font-weight:700">${fmtCurrencyShort(data.equipmentCosts.totalEquipmentCost)}</td></tr>
-      </table>`
-          : ""
-      }
-      `
-          : ""
-      }
+    /* ── CASH FLOW TABLE ── */
+    .cf-positive { color: #1B8F5A; font-weight: 700; }
+    .cf-negative { color: #DC2626; }
 
-      ${
-        data.trueQuoteConfidence
-          ? `
-      <!-- ═══ TRUEQUOTE™ CONFIDENCE ═══ -->
-      <div class="section-heading">${data.trueQuoteValidation?.kWContributors ? (data.financialAnalysis ? "5" : "4") : data.financialAnalysis ? "4" : "3"}. TrueQuote™ CONFIDENCE</div>
-      <table class="info-table">
-        <tr>
-          <td class="label-cell">Overall Confidence</td>
-          <td class="value-cell">
-            <span class="confidence-badge ${data.trueQuoteConfidence.overall}">
-              ${data.trueQuoteConfidence.overall === "high" ? "✓ HIGH" : data.trueQuoteConfidence.overall === "medium" ? "◐ MEDIUM" : "○ LOW"}
-            </span>
-          </td>
-        </tr>
-        <tr>
-          <td class="label-cell">Profile Completeness</td>
-          <td class="value-cell">${data.trueQuoteConfidence.profileCompleteness}% — ${data.trueQuoteConfidence.userInputs} user inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults</td>
-        </tr>
-        <tr>
-          <td class="label-cell">Industry Model</td>
-          <td class="value-cell">${data.trueQuoteConfidence.industry === "v1" ? "Industry-Specific (TrueQuote™)" : "General Facility Estimate"}</td>
-        </tr>
-        ${data.pricingSnapshotId ? `<tr><td class="label-cell">Pricing Snapshot</td><td class="value-cell" style="font-family:'SF Mono',monospace; color:#555; font-size:9pt;">#${data.pricingSnapshotId.slice(0, 12)}</td></tr>` : ""}
-      </table>
-      ${
-        data.trueQuoteValidation?.assumptions?.length
-          ? `
-          <div style="margin-top: 14px;">
-            <strong style="font-size: 10pt; color: #3ECF8E;">Methodology &amp; Sources</strong>
-            ${data.trueQuoteValidation.assumptions.map((a: string) => `<div style="font-size: 9pt; color: #8B8B8B; margin: 5px 0 5px 14px; padding-left: 8px; border-left: 2px solid #3ECF8E30;">• ${a}</div>`).join("\n")}
-          </div>
-        `
-          : ""
-      }
-      `
-          : ""
-      }
+    /* ── BULLET LIST ── */
+    .bul { margin: 4px 0 4px 14px; }
+    .bul li { font-size: 9.5pt; color: #4A5568; margin: 3px 0; list-style: none; padding-left: 12px; position: relative; }
+    .bul li::before { content: "•"; position: absolute; left: 0; color: #1B8F5A; font-weight: 700; }
 
-      <!-- ═══ FOOTER ═══ -->
-      <div class="proposal-footer">
-        <p>• This quote is valid for <strong>30 days</strong> from the date of issue.</p>
-        <p>• Payment Terms: 50% deposit upon contract signing, 50% upon commissioning.</p>
-        <p>• Warranty: <strong>${data.warrantyYears} year</strong> comprehensive warranty included.</p>
-        <p>• All equipment pricing reflects current market conditions (NREL ATB 2024, IRA 2022).</p>
-        <p>• <strong>merlinenergy.net</strong> &bull; sales@merlinenergy.net</p>
-        <div class="disclaimer">
-          This proposal was generated by Merlin Energy Solutions using TrueQuote™ methodology.
-          All numbers are sourced from NREL, EIA, IEEE, and other authoritative industry standards.
-          Final pricing may vary based on site assessment, permitting, and interconnection requirements.
-        </div>
-      </div>
+    /* ── CONFIDENCE BADGE ── */
+    .cb { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 8.5pt; font-weight: 700; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cb.high { background: #D1FAE5; color: #065F46; border: 1px solid #10B981; }
+    .cb.medium { background: #FEF3C7; color: #92400E; border: 1px solid #F59E0B; }
+    .cb.low { background: #FEE2E2; color: #991B1B; border: 1px solid #EF4444; }
 
-    </body>
-    </html>
-  `;
+    /* ── CTA STRIP ── */
+    .cta { background: #EDFDF5; border-left: 3px solid #1B8F5A; padding: 11px 14px; margin: 12px 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cta strong { color: #1B8F5A; font-size: 10.5pt; }
+    .cta p { font-size: 9pt; color: #4A5568; margin-top: 6px; }
 
-  // Create a new window and print to PDF
+    /* ── FOOTER ── */
+    .pf { margin-top: 28px; padding-top: 12px; border-top: 1px solid #CBD5E1; font-size: 8.5pt; color: #64748B; line-height: 1.75; }
+    .pf .disc { font-style: italic; margin-top: 10px; font-size: 8pt; color: #475569; padding: 9px 12px; background: #F8FAFC; border-radius: 4px; border-left: 3px solid #CBD5E1; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    @media print {
+      .ph, .hmg, .hmc, .tqs, .sh, .cta, .t thead th, .t tbody .lc, .t tbody tr:nth-child(even) td, .ms-cell, .cb, .pf .disc { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<div class="ph">
+  <div class="ph-left">
+    <h1>BATTERY ENERGY STORAGE<br>SYSTEM PROPOSAL</h1>
+    <div class="sub">Professional Energy Storage Solution</div>
+    <div class="tq">TrueQuote™ Verified &bull; Source-Backed Pricing</div>
+  </div>
+  <div class="ph-right">
+    <div class="bn">MERLIN</div>
+    <div class="bt">Energy Solutions</div>
+    <img src="${MERLIN_ICON_BASE64}" alt="Merlin" />
+  </div>
+</div>
+${watermarkText ? `<div class="wm">${watermarkText}</div>` : ""}
+
+<!-- ══ META STRIP ══ -->
+<div class="ms">
+  <div class="ms-cell"><div class="ml">Client</div><div class="mv">${data.projectName?.replace(/—.*/, "").trim() || "Commercial Client"}</div></div>
+  <div class="ms-cell"><div class="ml">Location</div><div class="mv">${data.location || "—"}</div></div>
+  <div class="ms-cell"><div class="ml">Industry</div><div class="mv">${data.useCase || "Commercial"}</div></div>
+  <div class="ms-cell"><div class="ml">Quote Ref</div><div class="mv">${data.quoteNumber}</div></div>
+  <div class="ms-cell"><div class="ml">Date</div><div class="mv">${data.quoteDate}</div></div>
+  <div class="ms-cell"><div class="ml">Grid</div><div class="mv">${data.gridConnection || "On-Grid"}</div></div>
+</div>
+
+<!-- ══ TrueQuote strip ══ -->
+<div class="tqs">
+  <strong>✓ TrueQuote™ Verified</strong> — Every number in this proposal is traceable to an authoritative source (NREL, EIA, IEEE, IRA 2022). No black-box estimates.
+  ${data.trueQuoteConfidence ? `<span style="color:#64748b;font-size:8.5pt;"> &nbsp;|&nbsp; Confidence: <strong>${confidenceText}</strong></span>` : ""}
+</div>
+
+<!-- ══ 01. EXECUTIVE SUMMARY ══ -->
+${sectionH("01", "Executive Summary")}
+${bodyP(`This proposal presents a turnkey ${storageMWh.toFixed(1)} MWh Battery Energy Storage System (BESS) designed for your ${data.useCase} facility in ${data.location || "your area"}. The system delivers measurable cost reductions through peak demand shaving, energy arbitrage, and demand charge management while providing backup power resilience.`)}
+
+<div class="hmg">
+  <div class="hmc"><div class="hl">Total Investment</div><div class="hv">${fmtCurrency(data.systemCost)}</div></div>
+  ${itcAmount > 0 ? `<div class="hmc"><div class="hl">${itcLabel}</div><div class="hv green">– ${fmtCurrency(itcAmount)}</div></div>` : ""}
+  ${netCost !== data.systemCost ? `<div class="hmc"><div class="hl">Net After Incentives</div><div class="hv green">${fmtCurrency(netCost)}</div></div>` : ""}
+  ${annualSavings > 0 ? `<div class="hmc"><div class="hl">Annual Savings</div><div class="hv green">${fmtCurrencyShort(annualSavings)}/yr</div></div>` : ""}
+  ${paybackYears > 0 ? `<div class="hmc"><div class="hl">Simple Payback</div><div class="hv">${paybackYears.toFixed(1)} years</div></div>` : ""}
+  ${roi10Year > 0 ? `<div class="hmc"><div class="hl">10-Year ROI</div><div class="hv green">${fmtPct(roi10Year)}</div></div>` : ""}
+  ${lifetimeSavings > 0 ? `<div class="hmc"><div class="hl">10-Year Savings</div><div class="hv">${fmtCurrencyShort(lifetimeSavings)}</div></div>` : ""}
+  <div class="hmc"><div class="hl">System Capacity</div><div class="hv">${storageMWh.toFixed(1)} MWh</div></div>
+  <div class="hmc"><div class="hl">Power Rating</div><div class="hv">${data.storageSizeMW.toFixed(2)} MW</div></div>
+  <div class="hmc"><div class="hl">Warranty</div><div class="hv">${data.warrantyYears} Years</div></div>
+</div>
+
+<!-- ══ 02. SYSTEM SPECIFICATIONS ══ -->
+${sectionH("02", "System Specifications")}
+${subH("Battery Energy Storage")}
+${tableHtml(
+  ["Parameter", "Specification"],
+  [
+    ["Energy Capacity", `${storageMWh.toFixed(1)} MWh (${fmtNum(Math.round(storageKWh))} kWh)`],
+    ["Power Rating", `${data.storageSizeMW.toFixed(2)} MW (${fmtNum(Math.round(storageKW))} kW)`],
+    ["Duration", `${data.durationHours} hours at rated power`],
+    ["Battery Chemistry", data.chemistry || "LiFePO₄ (Lithium Iron Phosphate)"],
+    ["Round-Trip Eff.", `${data.roundTripEfficiency || 90}%`],
+    ["Design Cycles", `${fmtNum(data.cyclesPerYear || 365)} cycles/year`],
+    ["System Warranty", `${data.warrantyYears || 10} years`],
+    ["Expected Lifespan", "25+ years"],
+    ["Install Type", data.installationType || "Containerized"],
+  ]
+    .map(([l, v]) => twoColRow(l, v))
+    .join("")
+)}
+
+${subH("Power Conversion & Electrical")}
+${tableHtml(
+  ["Component", "Specification"],
+  [
+    [
+      "Inverter / PCS",
+      `${data.numberOfInverters || 1}× ${fmtNum(data.inverterRating || Math.round(storageKW))} kW — ${data.inverterType || "Bidirectional PCS"}`,
+    ],
+    ["Inverter Efficiency", `${data.inverterEfficiency || 97.5}%`],
+    ["AC System Voltage", `${data.systemVoltage || 480}V, 3-phase`],
+    ["DC Bus Voltage", `${data.dcVoltage || 1000}V nominal`],
+    [
+      "Switchgear",
+      `${data.switchgearType || "AC Switchgear"} — ${fmtNum(Math.round(data.switchgearRating || storageKW * 1.25))} kW rated`,
+    ],
+    ["BMS", `${data.bmsType || "Integrated"} Battery Management System`],
+    ...(data.transformerRequired
+      ? [
+          [
+            "Transformer",
+            `${data.transformerVoltage || "480V/12.47kV"} — ${fmtNum(Math.round(data.transformerRating || storageKW))} kVA`,
+          ],
+        ]
+      : []),
+  ]
+    .map(([l, v]) => twoColRow(l, v))
+    .join("")
+)}
+
+${
+  data.solarPVIncluded ||
+  data.dieselGenIncluded ||
+  data.naturalGasGenIncluded ||
+  data.fuelCellIncluded
+    ? `
+${subH("Integrated Generation Assets")}
+${tableHtml(
+  ["Asset", "Capacity", "Details"],
+  [
+    ...(data.solarPVIncluded && data.solarCapacityKW
+      ? [
+          [
+            `Solar PV Array`,
+            `${fmtNum(data.solarCapacityKW)} kW`,
+            `${data.solarPanelType || "Monocrystalline"} — ${data.solarPanelEfficiency || 21}% eff.`,
+          ],
+        ]
+      : []),
+    ...(data.naturalGasGenIncluded && data.naturalGasCapacityKW
+      ? [[`Nat. Gas Generator`, `${fmtNum(data.naturalGasCapacityKW)} kW`, "Backup / peak shaving"]]
+      : []),
+    ...(data.dieselGenIncluded && data.dieselGenCapacityKW
+      ? [[`Diesel Generator`, `${fmtNum(data.dieselGenCapacityKW)} kW`, "Emergency backup"]]
+      : []),
+    ...(data.fuelCellIncluded && data.fuelCellCapacityKW
+      ? [
+          [
+            `Fuel Cell`,
+            `${fmtNum(data.fuelCellCapacityKW)} kW`,
+            `${data.fuelCellType || "Hydrogen"} fuel cell`,
+          ],
+        ]
+      : []),
+  ]
+    .map(([a, b, c]) => threeColRow(a, b, c))
+    .join("")
+)}`
+    : ""
+}
+
+<!-- ══ 03. LOAD PROFILE & SIZING ══ -->
+${sectionH("03", "Load Profile & Sizing")}
+${
+  contributorEntries.length > 0
+    ? `
+${bodyP("Your facility's power demand was analyzed using industry-specific load modeling. Each contributor below has been independently sized using authoritative standards.")}
+${subH("Load Breakdown — TrueQuote™ Verified")}
+${tableHtml(
+  ["Load Component", "Peak Demand (kW)", "Share of Total"],
+  contributorEntries
+    .map(([key, kw]) => {
+      const sharePct = totalContributorKW > 0 ? (kw / totalContributorKW) * 100 : 0;
+      const label = key
+        .replace(/_/g, " ")
+        .replace(/([A-Z])/g, " $1")
+        .replace(/^./, (s: string) => s.toUpperCase())
+        .trim();
+      return threeColRow(label, `${fmtNum(Math.round(kw))} kW`, fmtPct(sharePct));
+    })
+    .join("") +
+    (data.trueQuoteValidation?.dutyCycle != null
+      ? `<tr class="total-row"><td colspan="2">Facility Duty Cycle</td><td>${fmtPct(data.trueQuoteValidation.dutyCycle * 100)}</td></tr>`
+      : "")
+)}`
+    : bodyP(
+        `The BESS is sized at ${data.storageSizeMW.toFixed(2)} MW / ${data.durationHours}hr based on your facility's estimated peak demand and operational requirements.`
+      )
+}
+
+${
+  data.loadProfile
+    ? `
+${subH("Load Summary")}
+${tableHtml(
+  ["Parameter", "Value"],
+  [
+    ["Base Load", `${fmtNum(Math.round(data.loadProfile.baseLoadKW))} kW`],
+    ["Peak Load", `${fmtNum(Math.round(data.loadProfile.peakLoadKW))} kW`],
+    ["Daily Energy", `${fmtNum(Math.round(data.loadProfile.energyKWhPerDay))} kWh/day`],
+    [
+      "Annual Consumption",
+      `${fmtNum(Math.round(data.loadProfile.energyKWhPerDay * 365))} kWh/year`,
+    ],
+  ]
+    .map(([l, v]) => twoColRow(l, v))
+    .join("")
+)}`
+    : ""
+}
+
+${
+  data.trueQuoteValidation?.assumptions?.length
+    ? `
+${subH("Sizing Methodology & Sources")}
+<ul class="bul">${data.trueQuoteValidation.assumptions.map((a: string) => `<li>${a}</li>`).join("")}</ul>`
+    : ""
+}
+
+<!-- ══ 04. FINANCIAL ANALYSIS ══ -->
+${sectionH("04", "Financial Analysis")}
+${bodyP("The financial model reflects current market pricing (NREL ATB 2024), federal incentives under the Inflation Reduction Act (IRA 2022), and location-specific utility rates.")}
+
+${subH("Investment Summary")}
+${tableHtml(
+  ["Line Item", "Amount"],
+  [
+    ["Gross System Cost", fmtCurrency(data.systemCost)],
+    ...(itcAmount > 0 ? [[itcLabel, `– ${fmtCurrency(itcAmount)}`]] : []),
+    ...(netCost !== data.systemCost ? [["Net Cost After Incentives", fmtCurrency(netCost)]] : []),
+  ]
+    .map(([l, v]) => twoColRow(l, v))
+    .join("") +
+    `<tr class="total-row"><td class="lc">Net Investment</td><td class="vc green">${fmtCurrency(netCost)}</td></tr>`
+)}
+
+${
+  data.equipmentCosts?.totalEquipmentCost
+    ? `
+${subH("Equipment Cost Breakdown")}
+${tableHtml(
+  ["Component", "Cost", "Unit Rate"],
+  [
+    ...(data.equipmentCosts.batteryCost
+      ? [
+          [
+            "Battery Storage (LFP)",
+            fmtCurrencyShort(data.equipmentCosts.batteryCost),
+            data.equipmentCosts.batteryPerKWh
+              ? `${fmtCurrencyShort(data.equipmentCosts.batteryPerKWh)}/kWh`
+              : "—",
+          ],
+        ]
+      : []),
+    ...(data.equipmentCosts.inverterCost
+      ? [
+          [
+            "Power Conversion (PCS)",
+            fmtCurrencyShort(data.equipmentCosts.inverterCost),
+            data.equipmentCosts.inverterPerKW
+              ? `${fmtCurrencyShort(data.equipmentCosts.inverterPerKW)}/kW`
+              : "—",
+          ],
+        ]
+      : []),
+    ...(data.equipmentCosts.transformerCost
+      ? [["Transformer", fmtCurrencyShort(data.equipmentCosts.transformerCost), "—"]]
+      : []),
+    ...(data.equipmentCosts.switchgearCost
+      ? [["Switchgear", fmtCurrencyShort(data.equipmentCosts.switchgearCost), "—"]]
+      : []),
+    ...(data.equipmentCosts.solarCost
+      ? [
+          [
+            "Solar Array",
+            fmtCurrencyShort(data.equipmentCosts.solarCost),
+            data.equipmentCosts.solarPerWatt
+              ? `$${data.equipmentCosts.solarPerWatt.toFixed(2)}/W`
+              : "—",
+          ],
+        ]
+      : []),
+    ...(data.equipmentCosts.generatorCost
+      ? [
+          [
+            "Backup Generator",
+            fmtCurrencyShort(data.equipmentCosts.generatorCost),
+            data.equipmentCosts.generatorPerKW
+              ? `${fmtCurrencyShort(data.equipmentCosts.generatorPerKW)}/kW`
+              : "—",
+          ],
+        ]
+      : []),
+    ...(data.equipmentCosts.installationCost
+      ? [["Installation / BOS / EPC", fmtCurrencyShort(data.equipmentCosts.installationCost), "—"]]
+      : []),
+  ]
+    .map(([a, b, c]) => threeColRow(a, b, c))
+    .join("") +
+    `<tr class="total-row"><td>Base Equipment Total</td><td>${fmtCurrencyShort(data.equipmentCosts.totalEquipmentCost)}</td><td>${data.equipmentCosts.allInPerKWh ? `${fmtCurrencyShort(data.equipmentCosts.allInPerKWh)}/kWh` : "—"}</td></tr>`
+)}`
+    : ""
+}
+
+${subH("Savings & Returns")}
+${tableHtml(
+  ["Metric", "Value", "Notes"],
+  [
+    [
+      `Annual Energy Savings`,
+      `${fmtCurrencyShort(annualSavings)}/yr`,
+      "Energy arbitrage + peak shaving",
+    ],
+    ...(demandChargeSavings > 0
+      ? [
+          [
+            `Demand Charge Reduction`,
+            `${fmtCurrencyShort(demandChargeSavings)}/yr`,
+            `At $${data.demandCharge}/kW`,
+          ],
+        ]
+      : []),
+    ...(paybackYears > 0
+      ? [
+          [
+            `Simple Payback Period`,
+            `${paybackYears.toFixed(1)} years`,
+            netCost > 0 ? "Net cost basis" : "Gross cost basis",
+          ],
+        ]
+      : []),
+    ...(roi10Year !== 0 ? [[`10-Year ROI`, fmtPct(roi10Year), "Net of initial investment"]] : []),
+    ...(lifetimeSavings > 0
+      ? [[`10-Year Cumulative Savings`, fmtCurrencyShort(lifetimeSavings), "Undiscounted"]]
+      : []),
+    ...(data.financialAnalysis?.npv != null
+      ? [
+          [
+            `Net Present Value (NPV)`,
+            fmtCurrencyShort(data.financialAnalysis.npv),
+            "8% discount rate",
+          ],
+        ]
+      : []),
+    ...(data.financialAnalysis?.irr != null
+      ? [[`Internal Rate of Return`, fmtPct(data.financialAnalysis.irr * 100), "Project-level IRR"]]
+      : []),
+  ]
+    .map(([a, b, c]) => threeColRow(a, b, c))
+    .join("")
+)}
+
+${subH("Utility Rate Assumptions")}
+${tableHtml(
+  ["Parameter", "Value", "Source"],
+  [
+    ["Commercial Electricity Rate", `$${data.utilityRate.toFixed(4)}/kWh`, "EIA / Local Utility"],
+    ["Demand Charge", `$${data.demandCharge.toFixed(2)}/kW`, "EIA / Local Utility"],
+    ["Annual Rate Escalation", "2.5%", "EIA Annual Energy Outlook"],
+    ["Discount Rate", "8.0%", "Industry standard (C&I)"],
+  ]
+    .map(([a, b, c]) => threeColRow(a, b, c))
+    .join("")
+)}
+
+${
+  annualSavings > 0
+    ? `
+${subH("Projected Cash Flow (Years 1–5)")}
+${tableHtml(
+  ["Year", "Annual Savings", "Cumulative Savings", "Net Position"],
+  Array.from({ length: 5 }, (_, i) => {
+    const yr = i + 1;
+    const yrSavings = annualSavings * Math.pow(1.025, yr - 1);
+    const cumulative = annualSavings * ((Math.pow(1.025, yr) - 1) / 0.025);
+    const netPos = cumulative - netCost;
+    return fourColRow(
+      `Year ${yr}`,
+      fmtCurrencyShort(Math.round(yrSavings)),
+      fmtCurrencyShort(Math.round(cumulative)),
+      `<span class="${netPos >= 0 ? "cf-positive" : "cf-negative"}">${netPos >= 0 ? "+" : ""}${fmtCurrencyShort(Math.round(netPos))}</span>`
+    );
+  }).join("")
+)}
+${bodyP("Note: Savings projections include 2.5% annual utility rate escalation. Actual results may vary based on usage patterns, rate changes, and system performance.")}
+`
+    : ""
+}
+
+<!-- ══ 05. IMPLEMENTATION ══ -->
+${sectionH("05", "Implementation")}
+${subH("Project Timeline")}
+${tableHtml(
+  ["Phase", "Duration", "Activities"],
+  [
+    ["1. Engineering & Design", "4–6 weeks", "Site assessment, electrical engineering, permitting"],
+    ["2. Procurement", "8–12 weeks", "Equipment ordering, logistics, staging"],
+    ["3. Installation", "4–8 weeks", "Foundation, equipment placement, electrical connections"],
+    ["4. Commissioning", "1–2 weeks", "Testing, calibration, utility interconnection"],
+    ["5. Operations", "Ongoing", "Remote monitoring, optimization, maintenance"],
+  ]
+    .map(([a, b, c]) => threeColRow(a, b, c))
+    .join("")
+)}
+
+${subH("Standards & Certifications")}
+<ul class="bul">
+  <li><strong>UL 9540 / UL 9540A</strong> — Energy Storage System Safety</li>
+  <li><strong>IEEE 1547</strong> — Interconnection and interoperability of distributed energy resources</li>
+  <li><strong>NFPA 855</strong> — Standard for the installation of stationary energy storage systems</li>
+  <li><strong>NEC Article 706</strong> — Energy storage systems</li>
+  <li><strong>IRA 2022</strong> — All equipment is domestic content eligible where available</li>
+</ul>
+
+<!-- ══ 06. TRUEQUOTE™ METHODOLOGY ══ -->
+${sectionH("06", "TrueQuote™ Methodology")}
+${bodyP("Every number in this proposal is traceable to an authoritative, published source. TrueQuote™ is Merlin's proprietary methodology that eliminates black-box estimates and provides full transparency into how your quote was generated.")}
+${subH("Data Sources")}
+<ul class="bul">
+  <li><strong>NREL ATB 2024:</strong> National Renewable Energy Laboratory Annual Technology Baseline — Battery and solar cost benchmarks</li>
+  <li><strong>NREL Q1 2024:</strong> Cost Benchmark for Utility-Scale Battery Storage — Installation and BOS costs</li>
+  <li><strong>IRA 2022:</strong> Inflation Reduction Act (Public Law 117-169) — ITC rates and bonus credits</li>
+  <li><strong>EIA:</strong> U.S. Energy Information Administration — State-level commercial electricity rates</li>
+  <li><strong>IEEE/MDPI:</strong> IEEE 446-1995, IEEE 4538388 — Industry-standard sizing ratios</li>
+</ul>
+
+${
+  data.trueQuoteConfidence
+    ? `
+${subH("Quote Confidence Assessment")}
+${tableHtml(
+  ["Parameter", "Value"],
+  [
+    [
+      `Overall Confidence`,
+      `<span class="cb ${data.trueQuoteConfidence.overall}">${data.trueQuoteConfidence.overall === "high" ? "✓ HIGH" : data.trueQuoteConfidence.overall === "medium" ? "◐ MEDIUM" : "○ LOW"}</span>`,
+    ],
+    [
+      "Industry Model",
+      data.trueQuoteConfidence.industry === "v1"
+        ? "Industry-Specific (TrueQuote™ v1)"
+        : "General Facility Estimate",
+    ],
+    [
+      "Profile Completeness",
+      `${data.trueQuoteConfidence.profileCompleteness}% (${data.trueQuoteConfidence.userInputs} inputs, ${data.trueQuoteConfidence.defaultsUsed} defaults)`,
+    ],
+    ...(data.pricingSnapshotId
+      ? [["Pricing Snapshot ID", data.pricingSnapshotId.slice(0, 16)]]
+      : []),
+  ]
+    .map(([l, v]) => twoColRow(l, v))
+    .join("")
+)}`
+    : ""
+}
+
+<!-- ══ 07. NEXT STEPS ══ -->
+${sectionH("07", "Next Steps")}
+<div class="cta">
+  <strong>Ready to move forward?</strong>
+  <p>1. Review this proposal and contact your Merlin advisor with any questions.<br>
+  2. Schedule a site assessment to finalize engineering specifications.<br>
+  3. Sign the contract and initiate equipment procurement.<br>
+  4. Typical time to commissioning: 4–6 months from contract signing.</p>
+</div>
+${tableHtml(
+  ["Contact", "Details"],
+  [
+    ["Website", "merlinenergy.net"],
+    ["Sales Inquiries", "sales@merlinenergy.net"],
+    ["Quote Valid For", "30 days from issue date"],
+    ["Payment Terms", "50% deposit on signing · 50% on commissioning"],
+    ["Warranty", `${data.warrantyYears} year comprehensive warranty included`],
+  ]
+    .map(([l, v]) => twoColRow(l, v))
+    .join("")
+)}
+
+<!-- ══ FOOTER ══ -->
+<div class="pf">
+  <p>• All equipment pricing reflects current market conditions (NREL ATB 2024, IRA 2022) as of ${data.quoteDate}.</p>
+  <p>• Quote #${data.quoteNumber} &nbsp;|&nbsp; <strong>merlinenergy.net</strong> &bull; sales@merlinenergy.net</p>
+  <div class="disc">This proposal was generated by Merlin Energy Solutions using TrueQuote™ methodology. All numbers are sourced from NREL, EIA, IEEE, and other authoritative industry standards. Final pricing may vary based on site assessment, permitting, and interconnection requirements. &copy; ${new Date().getFullYear()} Merlin Energy Solutions.</div>
+</div>
+
+</body>
+</html>`;
+
+  // Open in new tab → browser print dialog → "Save as PDF"
   const printWindow = window.open("", "_blank");
   if (printWindow) {
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.focus();
-
-    // Wait for content to load, then print
     setTimeout(() => {
       printWindow.print();
-      // Note: User will need to "Save as PDF" in print dialog
-    }, 500);
+    }, 600);
   } else {
-    alert("Please allow popups to download PDF");
+    alert("Please allow popups to download the PDF");
   }
 }
 
