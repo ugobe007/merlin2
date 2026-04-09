@@ -208,7 +208,7 @@ describe("Step 3 Schema Renderer Contract", () => {
   });
 
   describe("Critical industry smoke tests", () => {
-    it("car-wash: all 26 questions renderable", () => {
+    it("car-wash: all 30 questions renderable", () => {
       const schema = resolveStep3Schema("car-wash");
       expect(schema.questions.length).toBeGreaterThanOrEqual(25);
 

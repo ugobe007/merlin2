@@ -93,6 +93,11 @@ const CONSUMED_KEYS = [
   "exteriorSignage",
   "hvacBuilding",
   "waterHeaterType",
+  // Billing / Utility (P1 additions — override calc estimates when provided)
+  "demandChargeApplies",
+  "peakDemandKw",
+  "demandChargeRate",
+  "monthlyKwh",
 ] as const;
 
 // ============================================================================
@@ -367,7 +372,7 @@ function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): Norma
     kWPerUnit: signKWEach,
   });
 
-  // ── ZONE A: Controls / Kiosks ──
+  // ── ZONE E: Controls / Kiosks ──
   // kioskControls = type_then_quantity { type: "yes"|"no", quantity: count }
   const kioskRaw = answers.kioskControls;
   const kioskHasKiosks = ttnType(kioskRaw, "yes") !== "no";
@@ -378,6 +383,30 @@ function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): Norma
     kW: 1.5 + kioskCount * 0.8, // base PLC + per-kiosk
     dutyCycle: 1.0,
   });
+
+  // ── Baked-in: Chemical Dosing Pumps (2–5 kW continuous, not worth a question) ──
+  processLoads.push({
+    category: "process",
+    label: "Chemical Dosing System",
+    kW: 3,
+    dutyCycle: 0.95,
+  });
+
+  // ── Billing / Utility overrides ──
+  // When the user provides real bill data, it overrides the equipment estimate.
+  // Precedence: peakDemandKw (from bill) > dutyCycle-weighted equipment calc.
+  const demandChargeApplies = String(answers.demandChargeApplies ?? "unsure");
+  const peakDemandKwRaw = answers.peakDemandKw != null ? Number(answers.peakDemandKw) : 0;
+  const peakDemandOverride = peakDemandKwRaw > 0 ? peakDemandKwRaw : undefined;
+
+  const demandChargeRateRaw = answers.demandChargeRate;
+  const demandChargeRate =
+    demandChargeRateRaw != null && String(demandChargeRateRaw) !== "unsure"
+      ? Number(demandChargeRateRaw)
+      : undefined; // undefined = caller uses national default ($15/kW-mo)
+
+  const monthlyKwhRaw = answers.monthlyKwh != null ? Number(answers.monthlyKwh) : 0;
+  const monthlyEnergyKWh = monthlyKwhRaw > 0 ? monthlyKwhRaw : undefined;
 
   // ── Architecture ──
   const gridRaw = String(answers.gridConnection || "on-grid");
@@ -410,11 +439,16 @@ function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): Norma
       gridConnection,
       criticality: "none",
     },
+    peakDemandOverrideKW: peakDemandOverride,
+    monthlyEnergyKWh: monthlyEnergyKWh,
     _rawExtensions: {
       dailyVehicles: answers.dailyVehicles != null ? Number(answers.dailyVehicles) : 300,
       peakCarsPerHour: peakCPH,
       dutyCycle,
       carWashType: washType,
+      demandChargeApplies,
+      demandChargeRate,
+      monthlyKwh: monthlyEnergyKWh,
     },
   };
 }
