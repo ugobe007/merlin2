@@ -223,95 +223,256 @@ export function calculateEnergyProfile(answers: Record<string, any>): EnergyProf
 export function calculateEquipmentLoads(answers: Record<string, any>): EquipmentLoads {
   const { HP_TO_KW, EQUIPMENT } = CONSTANTS;
 
-  // Derive blower count + heated flag from dryerConfiguration (schema question)
-  // Falls back to legacy answers.blowerCount / answers.heatedDryers if present
-  const dryerConfig = String(answers.dryerConfiguration || "blowers");
-  const resolvedBlowerCount =
-    answers.blowerCount != null
-      ? parseInt(String(answers.blowerCount))
-      : dryerConfig === "blowers"
-        ? 6
-        : dryerConfig === "heated"
-          ? 4
-          : dryerConfig === "hybrid"
-            ? 5
-            : dryerConfig === "none"
-              ? 0
-              : 10;
-  const resolvedHeatedDryers =
-    answers.heatedDryers != null
-      ? Boolean(answers.heatedDryers)
-      : dryerConfig === "heated" || dryerConfig === "hybrid";
+  // Helper: extract .type from a type_then_quantity answer object
+  const ttnType = (raw: unknown, fallback: string): string => {
+    if (typeof raw === "object" && raw !== null)
+      return String((raw as Record<string, unknown>).type ?? fallback);
+    return String(raw ?? fallback);
+  };
+  const ttnQty = (raw: unknown, fallback: string): string => {
+    if (typeof raw === "object" && raw !== null)
+      return String((raw as Record<string, unknown>).quantity ?? fallback);
+    return fallback;
+  };
 
-  // Derive kW-per-pump from pumpConfiguration (schema question)
-  const pumpConfig = String(answers.pumpConfiguration || "standard");
-  const pumpKWEach =
-    pumpConfig === "vfd"
-      ? EQUIPMENT.HIGH_PRESSURE_PUMP * HP_TO_KW * 0.75
-      : pumpConfig === "high_pressure"
-        ? EQUIPMENT.HIGH_PRESSURE_PUMP * HP_TO_KW
-        : pumpConfig === "multiple"
-          ? EQUIPMENT.HIGH_PRESSURE_PUMP * HP_TO_KW * 0.85
-          : EQUIPMENT.HIGH_PRESSURE_PUMP * HP_TO_KW * 0.67; // standard 10HP
+  // ── Blower / Dryer Producers (v2 field: blowerMotorSize) ──
+  // Backward compat: also handles legacy dryerConfiguration string answers
+  const blowerRaw = answers.blowerMotorSize;
+  const legacyDryerConfig = String(answers.dryerConfiguration || "blowers");
+  let resolvedBlowerCount: number;
+  let resolvedBlowerHP: number;
+  if (blowerRaw != null) {
+    // New v2 field: type_then_quantity { type: HP, quantity: count }
+    resolvedBlowerHP = Number(ttnType(blowerRaw, "10"));
+    resolvedBlowerCount = Number(ttnQty(blowerRaw, "10")) || 10;
+  } else {
+    // Legacy fallback
+    resolvedBlowerHP = EQUIPMENT.BLOWER;
+    resolvedBlowerCount =
+      answers.blowerCount != null
+        ? parseInt(String(answers.blowerCount))
+        : legacyDryerConfig === "blowers"
+          ? 6
+          : legacyDryerConfig === "heated"
+            ? 4
+            : legacyDryerConfig === "hybrid"
+              ? 5
+              : legacyDryerConfig === "none"
+                ? 0
+                : 10;
+  }
+
+  // ── High-Pressure Pumps (v2 field: highPressurePumps) ──
+  const pumpsRaw = answers.highPressurePumps;
+  let resolvedPumpKW: number;
+  if (pumpsRaw != null) {
+    // New v2 field: type_then_quantity { type: HP, quantity: count }
+    const pumpHP = Number(ttnType(pumpsRaw, "10"));
+    const pumpCount = Number(ttnQty(pumpsRaw, "3")) || 3;
+    resolvedPumpKW = pumpHP * HP_TO_KW * pumpCount;
+  } else {
+    // Legacy: pumpConfiguration + highPressurePumpCount
+    const pumpConfig = String(answers.pumpConfiguration || "standard");
+    const pumpKWEach =
+      pumpConfig === "vfd"
+        ? EQUIPMENT.HIGH_PRESSURE_PUMP * HP_TO_KW * 0.75
+        : pumpConfig === "high_pressure"
+          ? EQUIPMENT.HIGH_PRESSURE_PUMP * HP_TO_KW
+          : EQUIPMENT.HIGH_PRESSURE_PUMP * HP_TO_KW * 0.67;
+    resolvedPumpKW = (parseInt(String(answers.highPressurePumpCount)) || 3) * pumpKWEach;
+  }
+
+  // ── Brush Motors (v2 branching: brushDriveType) ──
+  let resolvedBrushKW: number;
+  if (answers.brushDriveType != null) {
+    const brushDriveType = String(answers.brushDriveType);
+    if (brushDriveType === "electric") {
+      const hp = answers.brushElectricHP != null ? Number(answers.brushElectricHP) : 1.5;
+      const count = answers.brushElectricCount != null ? Number(answers.brushElectricCount) : 10;
+      resolvedBrushKW = hp * HP_TO_KW * count;
+    } else {
+      const hp = answers.brushHydraulicPackHP != null ? Number(answers.brushHydraulicPackHP) : 10;
+      const count =
+        answers.brushHydraulicPackCount != null ? Number(answers.brushHydraulicPackCount) : 1;
+      resolvedBrushKW = hp * HP_TO_KW * count;
+    }
+  } else {
+    // Legacy brushMotorCount
+    resolvedBrushKW =
+      (parseInt(String(answers.brushMotorCount)) || 15) * EQUIPMENT.BRUSH_MOTOR * HP_TO_KW;
+  }
+
+  // ── Vacuum (v2: vacuumType branching) ──
+  let resolvedVacuumKW: number;
+  if (answers.vacuumType != null) {
+    const vacType = String(answers.vacuumType);
+    if (vacType === "central") {
+      const hp = answers.vacuumCentralHP != null ? Number(answers.vacuumCentralHP) : 25;
+      const count =
+        answers.vacuumCentralMotorCount != null ? Number(answers.vacuumCentralMotorCount) : 1;
+      resolvedVacuumKW = hp * HP_TO_KW * count;
+    } else {
+      const stalls = answers.vacuumStalls != null ? Number(answers.vacuumStalls) : 10;
+      resolvedVacuumKW = stalls * 3 * 1.6 * HP_TO_KW;
+    }
+  } else {
+    resolvedVacuumKW = (parseInt(String(answers.centralVacuumHP)) || 30) * HP_TO_KW;
+  }
+
+  // ── Conveyor (v2: type_then_quantity with HP + chain/dual_belt) ──
+  let resolvedConveyorKW: number;
+  const convRaw = answers.conveyorMotorSize;
+  if (convRaw != null) {
+    const convHP = Number(ttnType(convRaw, "20"));
+    const convMotorCount = ttnQty(convRaw, "chain") === "dual_belt" ? 2 : 1;
+    resolvedConveyorKW = convHP * HP_TO_KW * convMotorCount;
+  } else {
+    resolvedConveyorKW = 0;
+  }
+
+  // ── Air Compressor (v2: airCompressorSize, legacy: airCompressor) ──
+  let resolvedCompressorKW: number;
+  const compRaw = answers.airCompressorSize ?? answers.airCompressor;
+  if (compRaw != null) {
+    const compHP = Number(ttnType(compRaw, "10"));
+    const compCount = Number(ttnQty(compRaw, "1")) || 1;
+    resolvedCompressorKW = compHP * HP_TO_KW * compCount;
+  } else {
+    resolvedCompressorKW = 10 * HP_TO_KW;
+  }
+
+  // ── Water Heater (v2: explicit fuel type) ──
+  const WATER_HEATER_LOAD: Record<string, number> = {
+    gas: 0,
+    natural_gas: 0,
+    electric: 40,
+    tankless_electric: 35,
+    heat_pump: 15,
+  };
+  const resolvedWaterHeaterKW = WATER_HEATER_LOAD[String(answers.waterHeaterType ?? "gas")] ?? 0;
+
+  // ── HVAC (v2: hvacBuilding fuel type) ──
+  const HVAC_LOAD: Record<string, number> = {
+    none: 0,
+    gas_furnace: 0,
+    electric_heat_pump: 15,
+  };
+  const resolvedHvacKW = HVAC_LOAD[String(answers.hvacBuilding ?? "none")] ?? 0;
+
+  // ── Lighting ──
+  const LIGHTING_LOAD: Record<string, number> = {
+    led: 5,
+    mixed: 8,
+    fluorescent: 12,
+    basic: 5,
+    enhanced: 8,
+    premium: 15,
+  };
+  const lightingKW =
+    LIGHTING_LOAD[String(answers.lightingType ?? answers.tunnelLighting ?? "led")] ?? 8;
+
+  // ── Signage (v2: type_then_quantity) ──
+  const signRaw = answers.exteriorSignage;
+  const signType = ttnType(signRaw, "standard");
+  const signCount = Number(ttnQty(signRaw, "1")) || 1;
+  const SIGN_KW: Record<string, number> = {
+    standard: 5,
+    large_led: 10,
+    basic: 5,
+    premium: 10,
+    signature: 20,
+  };
+  const resolvedSignageKW = (SIGN_KW[signType] ?? 5) * signCount;
+
+  // ── EV Charging (v2: evChargingExisting) ──
+  const evRaw = answers.evChargingExisting ?? answers.evCharging;
+  const resolvedEvKW =
+    evRaw != null
+      ? (() => {
+          const evType = ttnType(evRaw, "none");
+          if (evType === "none") return 0;
+          const evCount = Number(ttnQty(evRaw, "0")) || 0;
+          return evCount * (evType === "dcfc" ? 50 : 7.2);
+        })()
+      : getEVChargingLoad(answers.evCharging);
+
+  // ── Kiosks ──
+  const kioskRaw = answers.kioskControls ?? answers.paymentKiosks;
+  let resolvedKioskKW: number;
+  if (kioskRaw != null && typeof kioskRaw === "object") {
+    const hasKiosks = ttnType(kioskRaw, "yes") !== "no";
+    const count = hasKiosks ? Number(ttnQty(kioskRaw, "2")) || 2 : 0;
+    resolvedKioskKW = count * EQUIPMENT.PAYMENT_KIOSK;
+  } else {
+    resolvedKioskKW = (parseInt(String(answers.paymentKiosks)) || 2) * EQUIPMENT.PAYMENT_KIOSK;
+  }
 
   return {
     // High-Pressure Pumps (20-30% of total load)
-    highPressurePumps: (parseInt(String(answers.highPressurePumpCount)) || 3) * pumpKWEach,
+    highPressurePumps: resolvedPumpKW,
 
-    // RO Pump
-    roPump: getRoPumpLoad(answers.roSystemPump),
+    // RO Pump (v2: roSystem yes/no; legacy: roSystemPump size)
+    roPump:
+      answers.roSystem != null
+        ? String(answers.roSystem) === "yes"
+          ? 4
+          : 0
+        : getRoPumpLoad(answers.roSystemPump),
 
-    // Water Heater (only electric)
-    waterHeater: answers.waterHeaterType === "electric" ? 50 : 0,
+    // Water Heater
+    waterHeater: resolvedWaterHeaterKW,
 
-    // Reclaim Pumps
-    reclaimPumps: getReclaimPumpLoad(answers.waterReclamation),
+    // Reclaim Pumps (v2: reclaimSystem; legacy: waterReclamation)
+    reclaimPumps:
+      answers.reclaimSystem != null
+        ? answers.reclaimSystem === "full_vfd"
+          ? 11
+          : answers.reclaimSystem === "none"
+            ? 0
+            : 7
+        : getReclaimPumpLoad(answers.waterReclamation),
 
     // Conveyor
-    conveyor: answers.conveyorMotorSize
-      ? parseInt(String(answers.conveyorMotorSize)) * HP_TO_KW
-      : 0,
+    conveyor: resolvedConveyorKW,
 
     // Brush Motors
-    brushMotors:
-      (parseInt(String(answers.brushMotorCount)) || 15) * EQUIPMENT.BRUSH_MOTOR * HP_TO_KW,
+    brushMotors: resolvedBrushKW,
 
-    // Blowers (40-50% of total load!) — derived from dryerConfiguration
-    blowers: resolvedBlowerCount * EQUIPMENT.BLOWER * HP_TO_KW,
+    // Blowers (50-60% of total load — v2 uses blowerMotorSize)
+    blowers: resolvedBlowerHP * HP_TO_KW * resolvedBlowerCount,
 
-    // Heated Dryers (additional load) — derived from dryerConfiguration
-    heatedDryers: resolvedHeatedDryers ? EQUIPMENT.HEATED_DRYER_BONUS : 0,
+    // Heated Dryers (legacy only — v2 folds into blower HP selection)
+    heatedDryers: 0,
 
-    // Central Vacuum
-    centralVacuum: (parseInt(String(answers.centralVacuumHP)) || 30) * HP_TO_KW,
+    // Vacuum
+    centralVacuum: resolvedVacuumKW,
 
-    // Vacuum Stations
-    vacuumStations:
-      (parseInt(String(answers.vacuumStations)) || 8) * EQUIPMENT.VACUUM_STATION * HP_TO_KW,
+    // Vacuum Stations (legacy field — v2 absorbed into vacuumType)
+    vacuumStations: 0,
 
     // Air Compressor
-    airCompressor: (parseInt(String(answers.airCompressor)) || 10) * HP_TO_KW,
+    airCompressor: resolvedCompressorKW,
 
     // Dosing Pumps (estimate)
     dosingPumps: 5 * EQUIPMENT.DOSING_PUMP,
 
     // Payment Kiosks
-    paymentKiosks: (parseInt(String(answers.paymentKiosks)) || 2) * EQUIPMENT.PAYMENT_KIOSK,
+    paymentKiosks: resolvedKioskKW,
 
     // Tunnel Lighting
-    tunnelLighting: getLightingLoad(answers.tunnelLighting),
+    tunnelLighting: lightingKW,
 
     // Exterior Signage
-    exteriorSignage: getSignageLoad(answers.exteriorSignage),
+    exteriorSignage: resolvedSignageKW,
 
-    // Office Facilities
-    officeFacilities: getOfficeFacilitiesLoad(answers.officeFacilities),
+    // HVAC (new v2 field)
+    officeFacilities: resolvedHvacKW + getOfficeFacilitiesLoad(answers.officeFacilities),
 
     // Security Cameras (estimate)
     securityCameras: 0.5,
 
     // EV Charging
-    evCharging: getEVChargingLoad(answers.evCharging),
+    evCharging: resolvedEvKW,
   };
 }
 

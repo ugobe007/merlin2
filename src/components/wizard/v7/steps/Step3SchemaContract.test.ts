@@ -208,7 +208,7 @@ describe("Step 3 Schema Renderer Contract", () => {
   });
 
   describe("Critical industry smoke tests", () => {
-    it("car-wash: all 25 questions renderable", () => {
+    it("car-wash: all 26 questions renderable", () => {
       const schema = resolveStep3Schema("car-wash");
       expect(schema.questions.length).toBeGreaterThanOrEqual(25);
 
@@ -229,15 +229,16 @@ describe("Step 3 Schema Renderer Contract", () => {
       }
     });
 
-    it("car-wash: pumpConfiguration renders as grid (not number)", () => {
+    it("car-wash: highPressurePumps renders as type_then_quantity", () => {
       const schema = resolveStep3Schema("car-wash");
-      const pumpQ = schema.questions.find((q) => q.id === "pumpConfiguration");
+      const pumpQ = schema.questions.find((q) => q.id === "highPressurePumps");
 
-      expect(pumpQ, "pumpConfiguration question should exist").toBeDefined();
+      expect(pumpQ, "highPressurePumps question should exist").toBeDefined();
       if (pumpQ) {
         const renderer = chooseRendererForQuestion(pumpQ);
         expect(renderer).not.toBe("number");
-        expect(renderer).toBe("grid"); // 4 options
+        // type_then_quantity → rendered as grid for the type-selection step
+        expect(["grid", "compact_grid", "type_then_quantity"]).toContain(renderer);
       }
     });
 

@@ -97,14 +97,15 @@ const INDUSTRY_TESTS: IndustryTestCase[] = [
     name: "Car Wash (4-bay tunnel)",
     calculatorId: "car_wash_load_v1",
     curatedInputs: {
-      facilityType: "express_tunnel", // curated ID → adapter bridges to carWashType=tunnel
-      tunnelOrBayCount: 4, // curated ID → adapter bridges to bayTunnelCount
+      facilityType: "express_tunnel",
+      tunnelOrBayCount: 1,
       operatingHours: 12,
       daysPerWeek: 7,
-      dailyVehicles: 200, // curated ID → adapter bridges to averageWashesPerDay
-      waterHeaterType: "natural_gas",
-      dryerConfiguration: "high_volume",
-      pumpConfiguration: "high_pressure",
+      dailyVehicles: 300,
+      peakCarsPerHour: 40,
+      waterHeaterType: "gas",
+      blowerMotorSize: { type: "10", quantity: "10" },
+      highPressurePumps: { type: "10", quantity: "3" },
     },
     expectedPeakKWRange: [50, 500],
     minContributors: 3,

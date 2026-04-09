@@ -1,29 +1,27 @@
 /**
- * CAR WASH INDUSTRY ADAPTER
- * =========================
+ * CAR WASH INDUSTRY ADAPTER — v2
+ * ================================
  *
- * Created: February 8, 2026
- * Gold-standard adapter: car-wash has a curated-complete schema (21+ questions)
- *
+ * Updated: April 2026 (Vineet Kapila PE market research restructure)
  * Maps car wash questionnaire answers → NormalizedLoadInputs.
  *
  * QUESTION IDs consumed (from carwash-questions-complete.config.ts):
- *   facilityType, tunnelOrBayCount, operatingHours, daysPerWeek, dailyVehicles,
- *   waterHeaterType, pumpConfiguration, waterReclamation,
- *   dryerConfiguration, vacuumStations, evCharging, evChargingType, paymentKiosks,
- *   conveyorMotorSize, brushMotorCount, centralVacuumHP, highPressurePumpCount, roSystemPump,
- *   airCompressor, tunnelLighting, exteriorSignage, officeFacilities
+ *   Facility:   facilityType, tunnelOrBayCount, operatingHours, daysPerWeek,
+ *               dailyVehicles, peakCarsPerHour
+ *   Zone A:     kioskControls, conveyorMotorSize
+ *   Zone B:     highPressurePumps, brushDriveType, brushElectricHP,
+ *               brushElectricCount, brushHydraulicPackHP, brushHydraulicPackCount,
+ *               reclaimSystem, roSystem
+ *   Zone C:     blowerMotorSize   ← PRIMARY BESS TARGET (50–60% of total draw)
+ *   Zone D:     vacuumStalls, vacuumType, vacuumCentralHP, vacuumCentralMotorCount,
+ *               airCompressorSize, evChargingExisting
+ *   Zone E:     lightingType, exteriorSignage, hvacBuilding, waterHeaterType
  *
- * NOT consumed (UI-conditional gate only, does not affect load):
- *   naturalGasLine  ← only drives waterHeaterType option visibility in Step 3 UI
- *
- * DERIVED (not direct schema questions):
- *   blowerCount   ← derived from dryerConfiguration (blowers=6, heated=4, hybrid=5, none=0)
- *   heatedDryers  ← derived from dryerConfiguration (heated|hybrid → true)
- *   kWPerPump     ← derived from pumpConfiguration  (vfd=5.6, high_pressure=11.2, multiple=9.3, standard=7.5)
- *
- * CALCULATOR: car_wash_load_v1 (reads: bayTunnelCount, averageWashesPerDay,
- *             operatingHours, carWashType, primaryEquipment)
+ * PHYSICS:
+ *   HP_TO_KW = 0.746 (applied to EVERY HP input — no exceptions)
+ *   dutyCycle = min(peakCarsPerHour / TUNNEL_CAPACITY[facilityType], 1.0)
+ *   Variable loads (scale with car volume): blowers, pumps, brushes
+ *   Always-on loads (constant): conveyor, lighting, signage, controls, HVAC, water heater
  *
  * SSOT ALIASES (ssotInputAliases.ts):
  *   bayTunnelCount → bayCount
@@ -36,14 +34,34 @@ import { registerAdapter } from "../step3Compute";
 // CONSTANTS
 // ============================================================================
 
+const HP_TO_KW = 0.746;
+
 /** Car wash type → typical operating profile */
 const WASH_TYPE_SCHEDULE: Record<string, { hoursPerDay: number; daysPerWeek: number }> = {
+  express_tunnel: { hoursPerDay: 12, daysPerWeek: 7 },
+  flex_service: { hoursPerDay: 10, daysPerWeek: 6 },
+  mini_tunnel: { hoursPerDay: 12, daysPerWeek: 7 },
+  in_bay_automatic: { hoursPerDay: 14, daysPerWeek: 7 },
+  self_serve: { hoursPerDay: 16, daysPerWeek: 7 },
+  // legacy aliases kept for backward compatibility
   tunnel: { hoursPerDay: 12, daysPerWeek: 7 },
   automatic: { hoursPerDay: 14, daysPerWeek: 7 },
-  self_service: { hoursPerDay: 16, daysPerWeek: 7 },
-  "self-service": { hoursPerDay: 16, daysPerWeek: 7 },
   full_service: { hoursPerDay: 10, daysPerWeek: 6 },
   "full-service": { hoursPerDay: 10, daysPerWeek: 6 },
+  self_service: { hoursPerDay: 16, daysPerWeek: 7 },
+  "self-service": { hoursPerDay: 16, daysPerWeek: 7 },
+};
+
+/** Standard rated capacity (cars/hr) by facility type — drives duty cycle */
+const TUNNEL_CAPACITY: Record<string, number> = {
+  express_tunnel: 50,
+  flex_service: 30,
+  mini_tunnel: 40,
+  in_bay_automatic: 15,
+  self_serve: 10,
+  tunnel: 50,
+  automatic: 15,
+  full_service: 30,
 };
 
 /** All question IDs this adapter reads */
@@ -53,23 +71,28 @@ const CONSUMED_KEYS = [
   "operatingHours",
   "daysPerWeek",
   "dailyVehicles",
-  "waterHeaterType",
-  "pumpConfiguration",
-  "waterReclamation",
-  "dryerConfiguration",
-  "vacuumStations",
-  "evCharging",
-  "evChargingType",
-  "paymentKiosks",
+  "peakCarsPerHour",
+  "kioskControls",
   "conveyorMotorSize",
-  "brushMotorCount",
-  "centralVacuumHP",
-  "highPressurePumpCount",
-  "roSystemPump",
-  "airCompressor",
-  "tunnelLighting",
+  "highPressurePumps",
+  "brushDriveType",
+  "brushElectricHP",
+  "brushElectricCount",
+  "brushHydraulicPackHP",
+  "brushHydraulicPackCount",
+  "reclaimSystem",
+  "roSystem",
+  "blowerMotorSize",
+  "vacuumStalls",
+  "vacuumType",
+  "vacuumCentralHP",
+  "vacuumCentralMotorCount",
+  "airCompressorSize",
+  "evChargingExisting",
+  "lightingType",
   "exteriorSignage",
-  "officeFacilities",
+  "hvacBuilding",
+  "waterHeaterType",
 ] as const;
 
 // ============================================================================
@@ -78,8 +101,8 @@ const CONSUMED_KEYS = [
 
 function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): NormalizedLoadInputs {
   // ── Scale ──
-  const bayCount = answers.tunnelOrBayCount != null ? Number(answers.tunnelOrBayCount) : 4;
-  const washType = String(answers.facilityType || "tunnel").toLowerCase();
+  const bayCount = answers.tunnelOrBayCount != null ? Number(answers.tunnelOrBayCount) : 1;
+  const washType = String(answers.facilityType || "express_tunnel").toLowerCase();
 
   // ── Schedule ──
   const defaultSchedule = WASH_TYPE_SCHEDULE[washType] ?? { hoursPerDay: 12, daysPerWeek: 7 };
@@ -88,166 +111,232 @@ function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): Norma
   const daysPerWeek =
     answers.daysPerWeek != null ? Number(answers.daysPerWeek) : defaultSchedule.daysPerWeek;
 
-  // ── Process Loads ──
-  // Car wash has very detailed equipment questions — map each to a ProcessLoad
+  // ── Duty Cycle from peak throughput (Vineet spec — drives BESS sizing delta) ──
+  const tunnelCap = TUNNEL_CAPACITY[washType] ?? 50;
+  const peakCPH =
+    answers.peakCarsPerHour != null ? Number(answers.peakCarsPerHour) : tunnelCap * 0.7;
+  const dutyCycle = Math.min(peakCPH / tunnelCap, 1.0);
+
   const processLoads: ProcessLoad[] = [];
 
-  // Blowers / Dryers (dominant load: 62.5% of total per industry standard)
-  // Derive from dryerConfiguration (schema question) → blowerCount + heatedDryers
-  // dryerConfiguration is a type_then_quantity → stored as { type, quantity } object
-  const dryerConfigRaw = answers.dryerConfiguration;
-  const dryerConfig =
-    typeof dryerConfigRaw === "object" && dryerConfigRaw !== null
-      ? String((dryerConfigRaw as Record<string, unknown>).type || "blowers")
-      : String(dryerConfigRaw || "blowers");
-  const dryerQty =
-    typeof dryerConfigRaw === "object" && dryerConfigRaw !== null
-      ? String((dryerConfigRaw as Record<string, unknown>).quantity || "")
-      : "";
-  // Map quantity tier (from quantityOptions) → number of blowers
-  const DRYER_QTY_COUNT: Record<string, number> = {
-    standard: 4,
-    premium: 6,
-    heated: 4,
-    none: 0,
-  };
-  const blowerCount =
-    answers.blowerCount != null
-      ? Number(answers.blowerCount)
-      : DRYER_QTY_COUNT[dryerQty] != null
-        ? DRYER_QTY_COUNT[dryerQty]
-        : dryerConfig === "blowers"
-          ? 6
-          : dryerConfig === "heated"
-            ? 4
-            : dryerConfig === "hybrid"
-              ? 5
-              : dryerConfig === "none"
-                ? 0
-                : 6;
-  const heatedDryers =
-    answers.heatedDryers != null
-      ? toBool(answers.heatedDryers)
-      : dryerConfig === "heated" || dryerConfig === "hybrid";
-  const kWPerBlower = heatedDryers ? 25 : 15; // Heated = 25kW, ambient = 15kW
+  const isTunnel =
+    washType === "express_tunnel" ||
+    washType === "mini_tunnel" ||
+    washType === "flex_service" ||
+    washType === "tunnel";
+
+  // ── ZONE C: Blower / Dryer Producers (50–60% of draw — PRIMARY BESS TARGET) ──
+  // blowerMotorSize = type_then_quantity { type: HP string, quantity: count string }
+  const blowerRaw = answers.blowerMotorSize;
+  const blowerHP = Number(ttnType(blowerRaw, "10"));
+  const blowerCount = Number(ttnQty(blowerRaw, "10")) || 10;
+  const blowerKWEach = blowerHP * HP_TO_KW;
   processLoads.push({
     category: "process",
-    label: heatedDryers ? "Heated Blower/Dryers" : "Ambient Blower/Dryers",
-    kW: blowerCount * kWPerBlower,
-    dutyCycle: 0.6,
+    label: "Blower / Dryer Producers",
+    kW: blowerKWEach * blowerCount * dutyCycle,
+    dutyCycle,
     quantity: blowerCount,
-    kWPerUnit: kWPerBlower,
+    kWPerUnit: blowerKWEach,
   });
 
-  // High-pressure pumps
-  // pumpConfiguration drives kW-per-pump: VFD = 25% savings, high_pressure = 15HP, standard = 10HP
-  const pumpConfig = String(answers.pumpConfiguration || "standard");
-  const kWPerPump =
-    pumpConfig === "vfd"
-      ? 5.6 // 10HP × 0.746 × 0.75 (VFD 25% savings)
-      : pumpConfig === "high_pressure"
-        ? 11.2 // 15HP × 0.746
-        : pumpConfig === "multiple"
-          ? 9.3 // 12.5HP × 0.746 (staged system)
-          : 7.5; // standard 10HP × 0.746
-  const hpPumpCount =
-    answers.highPressurePumpCount != null ? Number(answers.highPressurePumpCount) : bayCount * 2;
-  processLoads.push({
-    category: "process",
-    label: "High-Pressure Wash Pumps",
-    kW: hpPumpCount * kWPerPump,
-    dutyCycle: 0.5,
-    quantity: hpPumpCount,
-    kWPerUnit: kWPerPump,
-  });
-
-  // Conveyor motor (tunnel only)
-  // conveyorMotorSize options are HP values ("5", "10", "15") — multiply by 0.746 for kW
-  if (washType === "tunnel") {
-    const conveyorKW =
-      answers.conveyorMotorSize != null ? Number(answers.conveyorMotorSize) * 0.746 : 7.5;
+  // ── ZONE A: Conveyor Motor (always-on — no dutyCycle scaling) ──
+  // conveyorMotorSize = type_then_quantity { type: HP, quantity: "chain"|"dual_belt" }
+  if (isTunnel) {
+    const convRaw = answers.conveyorMotorSize;
+    const convHP = Number(ttnType(convRaw, "20"));
+    const convMotorCount = ttnQty(convRaw, "chain") === "dual_belt" ? 2 : 1;
+    const convKWEach = convHP * HP_TO_KW;
     processLoads.push({
       category: "process",
       label: "Conveyor Motor",
-      kW: conveyorKW,
-      dutyCycle: 0.7,
-      quantity: 1,
-      kWPerUnit: conveyorKW,
+      kW: convKWEach * convMotorCount, // always-on: full load, no duty scaling
+      dutyCycle: 1.0,
+      quantity: convMotorCount,
+      kWPerUnit: convKWEach,
     });
   }
 
-  // Brush motors
-  const brushCount =
-    answers.brushMotorCount != null ? Number(answers.brushMotorCount) : bayCount * 2;
-  if (brushCount > 0) {
+  // ── ZONE B: High-Pressure Wash Pumps ──
+  // highPressurePumps = type_then_quantity { type: HP, quantity: count }
+  const pumpsRaw = answers.highPressurePumps;
+  const pumpHP = Number(ttnType(pumpsRaw, "10"));
+  const pumpCount = Number(ttnQty(pumpsRaw, "3")) || 3;
+  const pumpKWEach = pumpHP * HP_TO_KW;
+  processLoads.push({
+    category: "process",
+    label: "High-Pressure Wash Pumps",
+    kW: pumpKWEach * pumpCount * dutyCycle,
+    dutyCycle,
+    quantity: pumpCount,
+    kWPerUnit: pumpKWEach,
+  });
+
+  // ── ZONE B: Brush Motors — BRANCHING (electric gearmotor vs hydraulic pack) ──
+  const brushDriveType = String(answers.brushDriveType || "electric");
+  if (brushDriveType === "electric") {
+    const brushHP = answers.brushElectricHP != null ? Number(answers.brushElectricHP) : 1.5;
+    const brushCount = answers.brushElectricCount != null ? Number(answers.brushElectricCount) : 10;
+    const brushKWEach = brushHP * HP_TO_KW;
     processLoads.push({
       category: "process",
-      label: "Brush Motors",
-      kW: brushCount * 3, // ~3kW per brush motor
-      dutyCycle: 0.5,
+      label: "Brush Motors (Electric Gearmotors)",
+      kW: brushKWEach * brushCount * dutyCycle,
+      dutyCycle,
       quantity: brushCount,
-      kWPerUnit: 3,
+      kWPerUnit: brushKWEach,
+    });
+  } else {
+    // Hydraulic power pack drives all brushes via hydraulic lines
+    const packHP = answers.brushHydraulicPackHP != null ? Number(answers.brushHydraulicPackHP) : 10;
+    const packCount =
+      answers.brushHydraulicPackCount != null ? Number(answers.brushHydraulicPackCount) : 1;
+    const packKWEach = packHP * HP_TO_KW;
+    processLoads.push({
+      category: "process",
+      label: "Brush Motors (Hydraulic Power Pack)",
+      kW: packKWEach * packCount * dutyCycle,
+      dutyCycle,
+      quantity: packCount,
+      kWPerUnit: packKWEach,
     });
   }
 
-  // RO system pump (water reclamation)
-  if (toBool(answers.roSystemPump) || answers.waterReclamation === "full") {
+  // ── ZONE B: Water Reclamation System ──
+  const reclaimSys = String(answers.reclaimSystem || "none");
+  if (reclaimSys !== "none") {
+    const reclaimKW = reclaimSys === "full_vfd" ? 11 : 7; // Full+VFD = 11 kW, partial = 7 kW
     processLoads.push({
       category: "process",
-      label: "RO / Water Reclamation System",
-      kW: 5,
+      label: "Water Reclamation System",
+      kW: reclaimKW,
       dutyCycle: 0.8,
     });
   }
 
-  // Vacuum stations
-  const vacStations = answers.vacuumStations != null ? Number(answers.vacuumStations) : 4;
-  if (vacStations > 0) {
-    const centralVacHP = answers.centralVacuumHP != null ? Number(answers.centralVacuumHP) : 30; // slider smartDefault = 30 HP (min 20, max 50)
-    const vacKW = centralVacHP * 0.746; // HP to kW conversion
+  // ── ZONE B: RO System ──
+  if (toBool(answers.roSystem) && reclaimSys !== "none") {
     processLoads.push({
       category: "process",
-      label: "Vacuum System",
-      kW: vacKW,
-      dutyCycle: 0.4,
-      quantity: vacStations,
+      label: "RO System (Spot-Free Rinse)",
+      kW: 4, // NCS PurClean E3: ~3.7 kW
+      dutyCycle: 0.8,
     });
   }
 
-  // Water heater (if electric)
-  const waterHeater = String(answers.waterHeaterType || "gas");
-  if (waterHeater === "electric" || waterHeater === "heat-pump") {
+  // ── ZONE D: Vacuum System — BRANCHING (central vs individual stalls) ──
+  const vacStalls = answers.vacuumStalls != null ? Number(answers.vacuumStalls) : 10;
+  if (vacStalls > 0) {
+    const vacType = String(answers.vacuumType || "central");
+    if (vacType === "central") {
+      const centralHP = answers.vacuumCentralHP != null ? Number(answers.vacuumCentralHP) : 25;
+      const centralCount =
+        answers.vacuumCentralMotorCount != null ? Number(answers.vacuumCentralMotorCount) : 1;
+      const vacKWEach = centralHP * HP_TO_KW;
+      processLoads.push({
+        category: "process",
+        label: "Vacuum System (Central)",
+        kW: vacKWEach * centralCount,
+        dutyCycle: 0.4,
+        quantity: centralCount,
+        kWPerUnit: vacKWEach,
+      });
+    } else {
+      // Individual stalls: 3 motors × 1.6 HP per stall (JE Adams standard)
+      const indivKWPerStall = 3 * 1.6 * HP_TO_KW;
+      processLoads.push({
+        category: "process",
+        label: "Vacuum System (Individual Stalls)",
+        kW: indivKWPerStall * vacStalls,
+        dutyCycle: 0.4,
+        quantity: vacStalls,
+        kWPerUnit: indivKWPerStall,
+      });
+    }
+  }
+
+  // ── ZONE D: Air Compressor ──
+  // airCompressorSize = type_then_quantity { type: HP, quantity: count }
+  const compRaw = answers.airCompressorSize;
+  const compHP = Number(ttnType(compRaw, "10"));
+  const compCount = Number(ttnQty(compRaw, "1")) || 1;
+  const compKWEach = compHP * HP_TO_KW;
+  processLoads.push({
+    category: "process",
+    label: "Air Compressor",
+    kW: compKWEach * compCount,
+    dutyCycle: 0.5,
+    quantity: compCount,
+    kWPerUnit: compKWEach,
+  });
+
+  // ── ZONE D: EV Charging ──
+  // evChargingExisting = type_then_quantity { type: "none"|"l2"|"dcfc", quantity: count }
+  const evRaw = answers.evChargingExisting;
+  const evType = ttnType(evRaw, "none");
+  if (evType !== "none") {
+    const evCount = Number(ttnQty(evRaw, "0")) || 0;
+    if (evCount > 0) {
+      const kWPerCharger = evType === "dcfc" ? 50 : 7.2;
+      processLoads.push({
+        category: "charging",
+        label: `EV Chargers (${evType.toUpperCase()}, ${evCount} ports)`,
+        kW: evCount * kWPerCharger,
+        dutyCycle: 0.3,
+        quantity: evCount,
+        kWPerUnit: kWPerCharger,
+      });
+    }
+  }
+
+  // ── ZONE E: Building HVAC — Gas furnace = 0 kW electric; heat pump = 15 kW ──
+  const HVAC_LOAD: Record<string, number> = {
+    none: 0,
+    gas_furnace: 0, // gas doesn't hit electric meter
+    electric_heat_pump: 15, // 10–20 kW electric (use 15 kW conservative mid)
+  };
+  const hvacKW = HVAC_LOAD[String(answers.hvacBuilding ?? "none")] ?? 0;
+  if (hvacKW > 0) {
     processLoads.push({
       category: "process",
-      label: `Water Heater (${waterHeater})`,
-      kW: waterHeater === "heat-pump" ? 15 : 30,
+      label: "Building HVAC (Electric Heat Pump)",
+      kW: hvacKW,
+      dutyCycle: 0.7,
+    });
+  }
+
+  // ── ZONE E: Water Heater ──
+  const WATER_HEATER_LOAD: Record<string, number> = {
+    gas: 0,
+    natural_gas: 0,
+    electric: 40, // 30–50 kW; use 40 kW mid
+    tankless_electric: 35, // 25–40 kW; use 35 kW mid
+    heat_pump: 15, // 10–15 kW; use 15 kW conservative
+    // legacy aliases
+    "heat-pump": 15,
+  };
+  const waterHeaterKW = WATER_HEATER_LOAD[String(answers.waterHeaterType ?? "gas")] ?? 0;
+  if (waterHeaterKW > 0) {
+    processLoads.push({
+      category: "process",
+      label: `Water Heater (${answers.waterHeaterType})`,
+      kW: waterHeaterKW,
       dutyCycle: 0.6,
     });
   }
 
-  // Controls / POS
-  const kiosks = answers.paymentKiosks != null ? Number(answers.paymentKiosks) : bayCount;
-  processLoads.push({
-    category: "controls",
-    label: "PLC / Payment / Controls",
-    kW: 2 + kiosks * 0.3,
-    dutyCycle: 1.0,
-  });
-
-  // Air compressor — option value is HP as string ("5"/"10"/"15")
-  const compressorHP = answers.airCompressor != null ? Number(answers.airCompressor) : 10;
-  processLoads.push({
-    category: "process",
-    label: "Air Compressor",
-    kW: compressorHP * 0.746,
-    dutyCycle: 0.5,
-    quantity: 1,
-    kWPerUnit: compressorHP * 0.746,
-  });
-
-  // Tunnel lighting — option value is "basic"/"enhanced"/"premium"
+  // ── ZONE E: Tunnel Lighting (always-on) ──
+  const LIGHTING_LOAD: Record<string, number> = {
+    led: 5,
+    mixed: 8,
+    fluorescent: 12,
+    // legacy aliases
+    basic: 5,
+    enhanced: 8,
+    premium: 15,
+  };
   const lightingKW =
-    answers.tunnelLighting === "basic" ? 5 : answers.tunnelLighting === "premium" ? 15 : 8; // "enhanced" default
+    LIGHTING_LOAD[String(answers.lightingType ?? answers.tunnelLighting ?? "led")] ?? 8;
   processLoads.push({
     category: "lighting",
     label: "Tunnel Lighting",
@@ -255,55 +344,40 @@ function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): Norma
     dutyCycle: 1.0,
   });
 
-  // Exterior signage — option value is "basic"/"premium"/"signature"
-  const signageKW =
-    answers.exteriorSignage === "basic" ? 5 : answers.exteriorSignage === "signature" ? 20 : 10; // "premium" default
+  // ── ZONE E: Exterior Signage ──
+  // exteriorSignage = type_then_quantity { type: "standard"|"large_led", quantity: count }
+  const signRaw = answers.exteriorSignage;
+  const signType = ttnType(signRaw, "standard");
+  const signCount = Number(ttnQty(signRaw, "1")) || 1;
+  const SIGN_KW: Record<string, number> = {
+    standard: 5,
+    large_led: 10,
+    // legacy
+    basic: 5,
+    premium: 10,
+    signature: 20,
+  };
+  const signKWEach = SIGN_KW[signType] ?? 5;
   processLoads.push({
     category: "lighting",
     label: "Exterior Signage",
-    kW: signageKW,
+    kW: signKWEach * signCount,
     dutyCycle: 0.8,
+    quantity: signCount,
+    kWPerUnit: signKWEach,
   });
 
-  // Office facilities — multiselect array
-  const officeItems = Array.isArray(answers.officeFacilities)
-    ? (answers.officeFacilities as string[])
-    : [];
-  const officeFacilitiesKW: Record<string, number> = {
-    office: 2,
-    break_room: 3,
-    bathrooms: 1,
-    security: 0.5,
-  };
-  const officeKW = officeItems.reduce((sum, item) => sum + (officeFacilitiesKW[item] ?? 0), 0);
-  if (officeKW > 0) {
-    processLoads.push({
-      category: "controls",
-      label: "Office Facilities",
-      kW: officeKW,
-      dutyCycle: 0.8,
-    });
-  }
-
-  // EV charging — evCharging is a count (stepper), evChargingType drives kW per port
-  const evChargerCount = answers.evCharging != null ? Number(answers.evCharging) : 0;
-  if (evChargerCount > 0) {
-    const evType = String(answers.evChargingType || "level2");
-    const kWPerCharger =
-      evType === "dcfast"
-        ? 50 // DC Fast: 50–150 kW (use conservative 50)
-        : evType === "both"
-          ? 28.6 // Mixed fleet: avg of L2 (7.2) and DCFC (50)
-          : 7.2; // Level 2: 7.2 kW (standard J1772)
-    processLoads.push({
-      category: "charging",
-      label: `EV Chargers (${evType}, ${evChargerCount} ports)`,
-      kW: evChargerCount * kWPerCharger,
-      dutyCycle: 0.3,
-      quantity: evChargerCount,
-      kWPerUnit: kWPerCharger,
-    });
-  }
+  // ── ZONE A: Controls / Kiosks ──
+  // kioskControls = type_then_quantity { type: "yes"|"no", quantity: count }
+  const kioskRaw = answers.kioskControls;
+  const kioskHasKiosks = ttnType(kioskRaw, "yes") !== "no";
+  const kioskCount = kioskHasKiosks ? Number(ttnQty(kioskRaw, "2")) || 2 : 0;
+  processLoads.push({
+    category: "controls",
+    label: "Controls / POS / Kiosks",
+    kW: 1.5 + kioskCount * 0.8, // base PLC + per-kiosk
+    dutyCycle: 1.0,
+  });
 
   // ── Architecture ──
   const gridRaw = String(answers.gridConnection || "on-grid");
@@ -327,7 +401,7 @@ function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): Norma
       subType: washType,
     },
     hvac: {
-      class: "none", // Car washes are outdoor/minimal HVAC
+      class: "none",
       heatingType: "none",
       coolingType: "none",
     },
@@ -337,7 +411,9 @@ function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): Norma
       criticality: "none",
     },
     _rawExtensions: {
-      dailyVehicles: answers.dailyVehicles != null ? Number(answers.dailyVehicles) : 200,
+      dailyVehicles: answers.dailyVehicles != null ? Number(answers.dailyVehicles) : 300,
+      peakCarsPerHour: peakCPH,
+      dutyCycle,
       carWashType: washType,
     },
   };
@@ -346,17 +422,29 @@ function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): Norma
 function getDefaultInputs(): NormalizedLoadInputs {
   return mapAnswers(
     {
-      facilityType: "tunnel",
-      tunnelOrBayCount: 4,
+      facilityType: "express_tunnel",
+      tunnelOrBayCount: 1,
       operatingHours: 12,
       daysPerWeek: 7,
-      dailyVehicles: 200,
-      blowerCount: 6,
-      heatedDryers: "no",
-      highPressurePumpCount: 8,
-      brushMotorCount: 8,
-      vacuumStations: 4,
-      centralVacuumHP: 15,
+      dailyVehicles: 300,
+      peakCarsPerHour: 40,
+      blowerMotorSize: { type: "10", quantity: "10" },
+      conveyorMotorSize: { type: "20", quantity: "chain" },
+      highPressurePumps: { type: "10", quantity: "3" },
+      brushDriveType: "electric",
+      brushElectricHP: "1.5",
+      brushElectricCount: "10",
+      reclaimSystem: "partial",
+      roSystem: "yes",
+      vacuumStalls: 10,
+      vacuumType: "central",
+      vacuumCentralHP: "25",
+      vacuumCentralMotorCount: "1",
+      airCompressorSize: { type: "10", quantity: "1" },
+      evChargingExisting: { type: "none", quantity: "0" },
+      lightingType: "led",
+      exteriorSignage: { type: "standard", quantity: "1" },
+      hvacBuilding: "none",
       waterHeaterType: "gas",
       gridConnection: "on-grid",
     },
@@ -367,6 +455,22 @@ function getDefaultInputs(): NormalizedLoadInputs {
 // ============================================================================
 // HELPERS
 // ============================================================================
+
+/** Extract .type from a type_then_quantity answer object, or coerce to string */
+function ttnType(raw: unknown, fallback: string): string {
+  if (typeof raw === "object" && raw !== null) {
+    return String((raw as Record<string, unknown>).type ?? fallback);
+  }
+  return String(raw ?? fallback);
+}
+
+/** Extract .quantity from a type_then_quantity answer object */
+function ttnQty(raw: unknown, fallback: string): string {
+  if (typeof raw === "object" && raw !== null) {
+    return String((raw as Record<string, unknown>).quantity ?? fallback);
+  }
+  return fallback;
+}
 
 function toBool(val: unknown): boolean {
   if (val === true || val === "yes" || val === "true" || val === 1) return true;
