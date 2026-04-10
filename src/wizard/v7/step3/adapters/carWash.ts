@@ -447,8 +447,8 @@ function mapAnswers(answers: Record<string, unknown>, _schemaKey: string): Norma
       dutyCycle,
       carWashType: washType,
       demandChargeApplies,
-      demandChargeRate,
-      monthlyKwh: monthlyEnergyKWh,
+      ...(demandChargeRate !== undefined ? { demandChargeRate } : {}),
+      ...(monthlyEnergyKWh !== undefined ? { monthlyKwh: monthlyEnergyKWh } : {}),
     },
   };
 }
