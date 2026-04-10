@@ -944,9 +944,10 @@ export const EQUIPMENT_PRODUCTS: VendorProduct[] = [
     category: "battery",
     name: "Great Power MAGNA-UTL Energy Storage Cabinet",
     description:
-      "Pre-assembled indoor/outdoor C&I BESS cabinet, 52–418 kWh per unit. LFP chemistry with integrated liquid cooling/heating. Up to 16 cabinets in parallel (6.7 MWh). Right-sized for car wash, hotel, retail, and light industrial applications.",
+      "Pre-assembled indoor/outdoor C&I BESS cabinet targeting the under-2MW segment (52 kW–2 MW). Single cabinet ships 52–418 kWh; scale to 15 cabinets or multiple clusters up to 2 MW without changing products. LFP with integrated liquid cooling/heating. Designed for car wash, hotel, retail, and light industrial applications.",
     specs: {
       Chemistry: "LiFePO₄ (LFP)",
+      "Market Segment": "Under 2 MW C&I (52 kW – 2 MW)",
       "Energy Range": "52–418 kWh per cabinet",
       "Models (SKUs)":
         "UTL-52 / UTL-104 / UTL-157 / UTL-209 / UTL-261 / UTL-313 / UTL-366 / UTL-418",
@@ -975,6 +976,7 @@ export const EQUIPMENT_PRODUCTS: VendorProduct[] = [
       Warranty: "20 years or 10,000 cycles",
     },
     features: [
+      "Under-2MW market segment: 52 kW (single UTL-52) up to 2 MW (multi-cluster) — one product family covers the full C&I range",
       "Eight cabinet sizes: 52 / 104 / 157 / 209 / 261 / 313 / 366 / 418 kWh — right-size any C&I project",
       "Scale to 15 cabinets in parallel (6.4 MWh) — no new product needed as load grows",
       "96% round-trip efficiency — highest in class for LFP cabinets",
