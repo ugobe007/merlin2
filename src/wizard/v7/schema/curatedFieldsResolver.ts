@@ -121,8 +121,11 @@ const TIER1_BLOCKERS: Record<string, string[]> = {
     "daysPerWeek", // Core: annual energy driver
     "peakCarsPerHour", // Core: duty cycle multiplier → BESS sizing delta
     "blowerMotorSize", // CRITICAL: 50-60% of bill (blower zone)
+    "blowerCount", // CRITICAL: count × HP = total dryer kW (50% of bill)
+    "blowerHeated", // CRITICAL: heated blowers add 3-8 kW per unit to electric peak
     "waterHeaterType", // Load driver: 0/15/35/40 kW depending on fuel type
     "highPressurePumps", // CRITICAL: 20-30% of bill
+    "kioskCount", // Entry controls load
     "demandChargeApplies", // Billing gate: unlocks most-impactful BESS ROI path
     "peakDemandKw", // Billing override: real bill peak > equipment estimate
   ],

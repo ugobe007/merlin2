@@ -200,7 +200,7 @@ export const carWashQuestionsComplete: Question[] = [
     range: { min: 20, max: 80, step: 5 },
     smartDefault: 40,
     unit: " cars/hr",
-    merlinTip: "Typical express: 30–50 cars/hr · High-volume PE sites: 60–80 cars/hr",
+    merlinTip: "Typical express tunnel: 30–50 cars/hr · High-volume express: 60–80 cars/hr",
     validation: { required: true, min: 20, max: 80 },
     impactsCalculations: ["peakDemand", "bessSize", "demandCharges"],
   },
@@ -210,21 +210,39 @@ export const carWashQuestionsComplete: Question[] = [
   // ============================================================================
   {
     id: "kioskControls",
-    type: "type_then_quantity",
+    type: "buttons",
     section: "equipment",
-    title: "Payment kiosks / LPR system?",
-    subtitle: "Entry control: kiosks, license plate recognition, or cashier",
+    title: "Entry kiosk / control system?",
+    subtitle: "Payment kiosk, swipe card reader, safety gates, sensors & cameras at lane entry",
+    merlinTip:
+      "Each entry lane typically has 1 kiosk plus safety gate, sensors, and cameras — all drawing continuous power",
     options: [
-      { value: "yes", label: "Yes", description: "LPR + kiosk system" },
-      { value: "no", label: "No Kiosks", description: "Cashier only" },
-    ],
-    quantityOptions: [
-      { value: "1", label: "1 Kiosk", description: "~1 kW" },
-      { value: "2", label: "2 Kiosks", description: "~2 kW" },
-      { value: "3", label: "3 Kiosks", description: "~3 kW" },
+      { value: "no", label: "No Kiosks", description: "Cashier / attendant only" },
+      { value: "yes", label: "Has Kiosks", description: "LPR + kiosk system" },
     ],
     smartDefault: "yes",
     validation: { required: true },
+    impactsCalculations: ["controlsLoad"],
+  },
+  {
+    id: "kioskCount",
+    type: "buttons",
+    section: "equipment",
+    title: "How many entry kiosks?",
+    subtitle: "Count each payment/swipe kiosk — safety gates and cameras are included per lane",
+    merlinTip:
+      "Most express tunnels run 1–2 kiosks (1 per lane) · High-volume sites may add a 3rd for a dedicated membership lane",
+    options: [
+      { value: "1", label: "1", description: "~1 kW" },
+      { value: "2", label: "2", description: "~2 kW" },
+      { value: "3", label: "3", description: "~3 kW" },
+    ],
+    smartDefault: "1",
+    conditionalLogic: {
+      dependsOn: "kioskControls",
+      showIf: (val) => val === "yes",
+    },
+    validation: { required: false },
     impactsCalculations: ["controlsLoad"],
   },
   {
@@ -234,7 +252,7 @@ export const carWashQuestionsComplete: Question[] = [
     title: "Conveyor motor size?",
     subtitle: "Main drive motor(s) for tunnel conveyor",
     merlinTip:
-      "Tommy, AutoBrite, and most PE operators run 15–25 HP drives. Dual-belt = 2 motors = built-in backup.",
+      "Most express tunnel operators run 15–25 HP drives. Dual-belt = 2 motors = built-in backup.",
     options: [
       { value: "15", label: "15 HP", description: "11.2 kW" },
       { value: "20", label: "20 HP", description: "14.9 kW" },
@@ -261,7 +279,8 @@ export const carWashQuestionsComplete: Question[] = [
     section: "equipment",
     title: "High-pressure wash pumps?",
     subtitle: "HP pump selection drives 20–30% of your total electric bill",
-    merlinTip: "Tommy pump station: 3/7.5/15 HP · CAT 1050: 15 HP max",
+    merlinTip:
+      "Pump HP drives 20–30% of your total electric bill · Common sizes: 3, 7.5, 10, and 15 HP",
     options: [
       { value: "3", label: "3 HP", description: "2.2 kW each" },
       { value: "5", label: "5 HP", description: "3.7 kW each" },
@@ -286,7 +305,7 @@ export const carWashQuestionsComplete: Question[] = [
     title: "Brush motor drive type?",
     subtitle: "Electric gearmotors (1–2 HP each) vs hydraulic power pack (5–15 HP, 1–2 packs)",
     merlinTip:
-      "Tommy Car Wash: 1.5 HP gearmotors on ALL brushes · 3E Car Wash: 5 HP hydraulic packs · American CWS: 10 HP pack",
+      "Electric gearmotors: 1–2 HP each on all brushes · Hydraulic packs: 5–15 HP per pack driving multiple brushes",
     options: [
       { value: "electric", label: "Electric Gearmotors", description: "1–2 HP per brush" },
       { value: "hydraulic", label: "Hydraulic Power Pack", description: "5–15 HP per pack" },
@@ -303,7 +322,7 @@ export const carWashQuestionsComplete: Question[] = [
     subtitle: "Individual motor size — multiply by count below",
     options: [
       { value: "1", label: "1 HP", description: "0.75 kW each" },
-      { value: "1.5", label: "1.5 HP", description: "1.1 kW each (Tommy standard)" },
+      { value: "1.5", label: "1.5 HP", description: "1.1 kW each (industry standard)" },
       { value: "2", label: "2 HP", description: "1.5 kW each" },
     ],
     smartDefault: "1.5",
@@ -341,9 +360,9 @@ export const carWashQuestionsComplete: Question[] = [
     title: "HP per hydraulic power pack?",
     subtitle: "One pack drives multiple brushes via hydraulic lines",
     options: [
-      { value: "5", label: "5 HP", description: "3.7 kW (3E Car Wash standard)" },
+      { value: "5", label: "5 HP", description: "3.7 kW" },
       { value: "10", label: "10 HP", description: "7.5 kW" },
-      { value: "15", label: "15 HP", description: "11.2 kW (American CWS)" },
+      { value: "15", label: "15 HP", description: "11.2 kW" },
     ],
     smartDefault: "10",
     conditionalLogic: {
@@ -377,7 +396,7 @@ export const carWashQuestionsComplete: Question[] = [
     title: "Water reclamation system?",
     subtitle: "Reclaim adds pump load but reduces water costs significantly",
     merlinTip:
-      "Starwash: 85% reclaim · Rocket Express: 100% reclaim · Full+VFD adds 7–11 kW to electric load",
+      "Partial reclaim adds ~7 kW pump load · Full+VFD adds ~11 kW but significantly reduces water costs",
     options: [
       { value: "none", label: "No Reclaim", description: "Fresh water only" },
       { value: "partial", label: "Partial Reclaim", description: "30–60% recycled, ~7 kW" },
@@ -392,7 +411,7 @@ export const carWashQuestionsComplete: Question[] = [
     type: "buttons",
     section: "equipment",
     title: "RO (Reverse Osmosis) system?",
-    subtitle: "For spot-free rinse water — NCS PurClean E3 standard",
+    subtitle: "For spot-free rinse water — reverse osmosis produces mineral-free final rinse",
     options: [
       { value: "yes", label: "Yes", description: "3–5 kW pump" },
       { value: "no", label: "No", description: "Tap water rinse" },
@@ -413,22 +432,84 @@ export const carWashQuestionsComplete: Question[] = [
     title: "Blower / dryer motor size?",
     subtitle: "Dryer zone is 50–60% of total electric draw — largest BESS target",
     merlinTip:
-      "Tommy: 16×10 HP · American CWS 80ft: 8×15 HP · Sonny's: 8–13 producers, up to 150 HP total · WashX: 7.5/10/15 HP",
+      "Common configurations: 8×15 HP (short tunnel) · 10×10 HP (standard express) · 16×10 HP (high-volume) · total dryer kW = count × HP × 0.746",
     options: [
       { value: "7.5", label: "7.5 HP", description: "5.6 kW each" },
-      { value: "10", label: "10 HP", description: "7.5 kW each (Tommy standard)" },
-      { value: "15", label: "15 HP", description: "11.2 kW each (American CWS)" },
+      { value: "10", label: "10 HP", description: "7.5 kW each (standard)" },
+      { value: "15", label: "15 HP", description: "11.2 kW each (high-power)" },
     ],
     quantityOptions: [
       { value: "8", label: "8 Producers", description: "Short tunnel / mini" },
       { value: "10", label: "10 Producers", description: "Standard express" },
       { value: "12", label: "12 Producers", description: "Full express" },
       { value: "14", label: "14 Producers", description: "High volume" },
-      { value: "16", label: "16 Producers", description: "Max (Tommy, Sonny's)" },
+      { value: "16", label: "16 Producers", description: "Max / high-volume" },
     ],
     smartDefault: "10",
     validation: { required: true },
     impactsCalculations: ["dryerLoad", "peakDemand"],
+  },
+  {
+    id: "blowerCount",
+    type: "buttons",
+    section: "equipment",
+    title: "How many blowers / dryer producers?",
+    subtitle: "Blowers are ~50% of total energy draw — count drives BESS sizing",
+    merlinTip:
+      "Short tunnel: 6–8 producers · Standard express: 10–12 producers · High-volume: 14–16 producers · Total kW = count × HP × 0.746",
+    options: [
+      { value: "6", label: "6", description: "Mini / short tunnel" },
+      { value: "8", label: "8", description: "Short tunnel" },
+      { value: "10", label: "10", description: "Standard express" },
+      { value: "12", label: "12", description: "Full express" },
+      { value: "14", label: "14", description: "High volume" },
+      { value: "16", label: "16", description: "Max / high-volume express" },
+    ],
+    smartDefault: "10",
+    validation: { required: true },
+    impactsCalculations: ["dryerLoad", "peakDemand"],
+  },
+  {
+    id: "blowerHeated",
+    type: "buttons",
+    section: "equipment",
+    title: "Are the blowers / dryers heated?",
+    subtitle:
+      "Heated blowers add significant electric load — this directly impacts BESS sizing and annual savings",
+    merlinTip:
+      "Heated dryers are common in cold climates to prevent water freeze on vehicles · Electric heat elements add 3–8 kW per producer to the load",
+    options: [
+      { value: "no", label: "No", description: "Unheated — ambient air only" },
+      { value: "yes", label: "Yes", description: "Heated blowers" },
+    ],
+    smartDefault: "no",
+    validation: { required: true },
+    impactsCalculations: ["dryerLoad", "peakDemand"],
+  },
+  {
+    id: "blowerHeatSource",
+    type: "buttons",
+    section: "equipment",
+    title: "Blower heat source?",
+    subtitle: "Electric resistance adds directly to peak demand · Gas-fired adds no electric load",
+    merlinTip:
+      "Electric heated dryers: add 3–8 kW per producer to peak electric demand — highest BESS impact · Gas-fired: 0 kW electric, but still has ignition controls",
+    options: [
+      {
+        value: "electric",
+        label: "Electric",
+        description: "3–8 kW per blower added to electric peak",
+      },
+      { value: "gas", label: "Natural Gas", description: "0 kW electric — gas burner" },
+      { value: "mixed", label: "Mixed", description: "Some electric, some gas" },
+    ],
+    smartDefault: "electric",
+    conditionalLogic: {
+      dependsOn: "blowerHeated",
+      showIf: (val) => val === "yes",
+    },
+    validation: { required: false },
+    impactsCalculations: ["dryerLoad", "heatingLoad", "peakDemand"],
   },
   // Zone D — Exit
   {
@@ -436,7 +517,7 @@ export const carWashQuestionsComplete: Question[] = [
     type: "increment_box",
     section: "equipment",
     title: "Free-standing vacuum stalls?",
-    subtitle: "Self-service vacuum islands (El Car Wash: 10–14 free stalls)",
+    subtitle: "Free-standing self-service vacuum islands at exit",
     range: { min: 0, max: 20, step: 1 },
     smartDefault: 10,
     unit: " stalls",
@@ -448,8 +529,9 @@ export const carWashQuestionsComplete: Question[] = [
     type: "buttons",
     section: "equipment",
     title: "Vacuum system type?",
-    subtitle: "Central systems (PE-backed express) vs individual stall units",
-    merlinTip: "El Car Wash: central, 35–50 HP · JE Adams: individual 2–3×1.6 HP motors per stall",
+    subtitle: "Central systems vs individual stall units",
+    merlinTip:
+      "Central systems: 1–3 large motors (10–25 HP each) · Individual stalls: 2–3×1.6 HP motors per stall",
     options: [
       {
         value: "central",
@@ -475,7 +557,7 @@ export const carWashQuestionsComplete: Question[] = [
     type: "buttons",
     section: "equipment",
     title: "HP per central vacuum motor?",
-    subtitle: "El Car Wash document specifies 35–50 HP per motor",
+    subtitle: "Typical range: 10–25 HP per central vacuum motor",
     options: [
       { value: "10", label: "10 HP", description: "7.5 kW" },
       { value: "15", label: "15 HP", description: "11.2 kW" },
@@ -514,7 +596,8 @@ export const carWashQuestionsComplete: Question[] = [
     section: "equipment",
     title: "Air compressor size?",
     subtitle: "For soap foaming, chemical dosing, pneumatic equipment",
-    merlinTip: "American Car Wash Solutions: 10 HP, 120-gal tank · El Car Wash doc: 15 HP",
+    merlinTip:
+      "Standard: 10 HP / 120-gal tank · High-capacity sites: 15 HP · Duty cycle ~40% so actual average draw is lower than peak",
     options: [
       { value: "7.5", label: "7.5 HP", description: "5.6 kW" },
       { value: "10", label: "10 HP", description: "7.5 kW (standard)" },
@@ -556,7 +639,8 @@ export const carWashQuestionsComplete: Question[] = [
     section: "equipment",
     title: "Tunnel lighting type?",
     subtitle: "Interior wash tunnel illumination",
-    merlinTip: "El Car Wash: LED light show confirmed",
+    merlinTip:
+      "LED is now standard for new builds — lower wattage and longer life · Light-show installations add ~3 kW over basic LED",
     options: [
       { value: "led", label: "LED", description: "5 kW (most efficient)" },
       { value: "mixed", label: "LED + Effects", description: "8 kW" },
@@ -572,7 +656,8 @@ export const carWashQuestionsComplete: Question[] = [
     section: "equipment",
     title: "Exterior signage?",
     subtitle: "Illuminated brand signs and pricing displays",
-    merlinTip: "El Car Wash doc: 8–12 kW per branded sign",
+    merlinTip:
+      "Large illuminated monument signs: 8–12 kW each · Standard channel-letter LED: 3–5 kW each",
     options: [
       { value: "standard", label: "Standard LED", description: "5 kW each" },
       { value: "large_led", label: "Large / Signature LED", description: "10 kW each" },
@@ -610,7 +695,7 @@ export const carWashQuestionsComplete: Question[] = [
     title: "Water heating system?",
     subtitle: "Electric water heaters add 30–50 kW continuous load",
     merlinTip:
-      "El Car Wash site model: water heating listed as 'Must-Have' missing data · 67% of US car washes use natural gas",
+      "~67% of US car washes use natural gas for water heating (0 kW on electric meter) · Electric tankless adds 25–50 kW continuous to peak demand",
     options: [
       { value: "gas", label: "Natural Gas", description: "0 kW electric" },
       { value: "electric", label: "Electric", description: "30–50 kW" },
