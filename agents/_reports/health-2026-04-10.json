@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-04-10T13:00:05.693Z",
+  "overall": "critical",
+  "score": 47,
+  "checks": [
+    {
+      "name": "Frontend (merlinpro.energy)",
+      "status": "fail",
+      "value": 339,
+      "threshold": "< 3000ms",
+      "message": "OFFLINE — status: timeout",
+      "severity": "critical"
+    },
+    {
+      "name": "Partner API (/v1/health)",
+      "status": "fail",
+      "value": 305,
+      "threshold": "< 1000ms",
+      "message": "API unhealthy — undefined",
+      "severity": "critical"
+    },
+    {
+      "name": "Server Error Rate (last 500 log lines)",
+      "status": "pass",
+      "value": 1,
+      "threshold": "< 10 errors",
+      "message": "1 errors, 0 criticals in recent logs",
+      "severity": "info"
+    },
+    {
+      "name": "Build Freshness (dist/)",
+      "status": "pass",
+      "value": "8h old",
+      "threshold": "< 24h for production",
+      "message": "Last build was 8 hours ago",
+      "severity": "info"
+    },
+    {
+      "name": "Dependencies",
+      "status": "pass",
+      "value": "20 prod, 42 dev",
+      "message": "20 production dependencies. Run \"npm audit\" for security check.",
+      "severity": "info"
+    },
+    {
+      "name": "SSOT Integrity (unifiedQuoteCalculator.ts)",
+      "status": "warn",
+      "value": "1011 lines",
+      "message": "WARNING: SSOT markers missing from file",
+      "severity": "warning"
+    },
+    {
+      "name": "Agent Change Log",
+      "status": "warn",
+      "value": "6 unreviewed",
+      "message": "6 total agent changes. 6 awaiting review.",
+      "severity": "warning"
+    }
+  ],
+  "summary": "Merlin Health Score: 47/100 (CRITICAL) — 2 critical, 2 warnings",
+  "actionItems": [
+    "🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout",
+    "🚨 CRITICAL: Partner API (/v1/health) — API unhealthy — undefined",
+    "⚠️ WARNING: SSOT Integrity (unifiedQuoteCalculator.ts) — WARNING: SSOT markers missing from file",
+    "⚠️ WARNING: Agent Change Log — 6 total agent changes. 6 awaiting review."
+  ]
+}
