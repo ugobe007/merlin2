@@ -8,6 +8,7 @@
 --
 --   1. MAGNA-UTL Energy Storage Cabinet  (52–418 kWh, 8 SKUs)
 --      Indoor / outdoor C&I cabinet, liquid-cooled.
+--      Market segment: UNDER 2 MW — 52 kW (single UTL-52) up to 2 MW (multi-cluster).
 --      Target: car wash, hotel, retail, light industrial.
 --      UTL-209 (209 kWh) ← right-sized for WOW Car Wash 198 kWh load.
 --
