@@ -42,6 +42,7 @@ const AnalyticsDashboard = lazy(() => import("./pages/AnalyticsDashboard"));
 const WidgetDemo = lazy(() => import("./pages/WidgetDemo"));
 const WidgetDocs = lazy(() => import("./pages/WidgetDocs"));
 const PartnerDashboard = lazy(() => import("./pages/PartnerDashboard"));
+const PartnerDemo = lazy(() => import("./pages/PartnerDemo"));
 const EnergyNews = lazy(() => import("./pages/EnergyNews"));
 const ElCarWashLanding = lazy(() => import("./pages/ElCarWashLanding"));
 const OpportunitiesDashboard = lazy(() => import("./pages/OpportunitiesDashboard"));
@@ -531,6 +532,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <ElCarWashLanding />
+      </Suspense>
+    );
+  }
+
+  // Partner Demo — /demo /demo/capex /demo/discovery
+  if (pathname === "/demo" || pathname.startsWith("/demo/")) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <PartnerDemo />
       </Suspense>
     );
   }
