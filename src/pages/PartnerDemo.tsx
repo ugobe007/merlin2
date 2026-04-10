@@ -36,36 +36,70 @@ interface PartnerConfig {
   name: string;
   greeting: string;
   tagline: string;
+  about: string;
   accentColor: string;
   showInvestorSection: boolean;
   defaultIndustry: string;
   callToAction: string;
   calLink: string;
+  partnershipHeadline: string;
+  partnershipBody: string;
+  partnerBullets: string[];
+  networkLabel: string; // e.g. "CI network" or "EPC network"
 }
 
 const PARTNER_CONFIGS: Record<string, PartnerConfig> = {
   capex: {
     name: "CapEX Power",
-    greeting: "Built for CapEX Power",
+    greeting: "Merlin Energy × CapEX Power",
     tagline:
-      "See how Merlin turns a 90-second customer conversation into a bankable BESS proposal — and how CapEX Power can close more deals with it.",
+      "CapEX Power delivers mission-critical transformers, switchgear, and HV infrastructure in 15 weeks. Merlin gives your EPC and developer clients the bankable BESS sizing study that gets projects to procurement — fast.",
+    about:
+      "Founded by veterans of Jinko, Schneider Electric, WSP, and Jackery, CapEX Power solves the global grid-equipment bottleneck — cutting transformer lead times from 140 weeks to 20. They serve data centers, utilities, industrial EPCs, and distributed generation developers across EMEA, APAC, and the US.",
     accentColor: "#3ECF8E",
     showInvestorSection: true,
-    defaultIndustry: "hotel",
+    defaultIndustry: "data-center",
     callToAction: "Schedule a call with Robert",
     calLink:
       "mailto:robert@merlinenergy.net?subject=CapEX Power x Merlin — Partnership & Investment",
+    partnershipHeadline: "The Merlin + CapEX Power stack",
+    partnershipBody:
+      "CapEX Power's EPCs and developers need accurate BESS load studies before they can specify switchgear, transformers, and grid-tie packages. Today that study takes weeks and a consultant. Merlin produces a bankable TrueQuote™ in 90 seconds — feeding directly into CapEX Power's quote pipeline with the right kW, kWh, and peak demand numbers.",
+    partnerBullets: [
+      "EPCs get a bankable load study before procurement — zero consultant lag",
+      "Data center, industrial, and C&I verticals: all modeled with ASHRAE/CBECS benchmarks",
+      "Merlin's peak kW output maps directly to transformer and switchgear sizing",
+      "White-label Merlin inside CapEX Power's client portal — your brand, your pipeline",
+      "Revenue share on every BESS deal that runs through Merlin",
+      "CapEX Power's speed-to-power mission + Merlin's speed-to-quote = full-stack advantage",
+    ],
+    networkLabel: "EPC & developer network",
   },
   discovery: {
-    name: "Discovery Power",
-    greeting: "Built for Discovery Power",
+    name: "Discover Energy Systems",
+    greeting: "Merlin Energy × Discover Energy Systems",
     tagline:
-      "See how Merlin's TrueQuote™ engine generates certified BESS proposals in under 90 seconds — and how Discovery Power can white-label it for your customers.",
+      "Discover Energy Systems has 75+ years in batteries and a global CI network. Merlin gives every installer and integrator in that network the ability to quote BESS in 90 seconds — with load accuracy no spreadsheet can match.",
+    about:
+      "In business since 1949, Discover Energy Systems (Vancouver, Canada) builds lithium batteries and power electronics for residential solar and commercial & industrial applications. They go to market through a worldwide network of distributors, dealers, solar installers, and system integrators — with closed-loop inverter partnerships across Megarevo, Sol-Ark, Solis, Schneider Electric, Victron, and more.",
     accentColor: "#3ECF8E",
     showInvestorSection: false,
     defaultIndustry: "car-wash",
     callToAction: "Schedule a call with Robert",
-    calLink: "mailto:robert@merlinenergy.net?subject=Discovery Power x Merlin — Partnership",
+    calLink:
+      "mailto:robert@merlinenergy.net?subject=Discover Energy Systems x Merlin — Partnership",
+    partnershipHeadline: "The Merlin + Discover Energy Systems stack",
+    partnershipBody:
+      "Discover's CI and dealer network installs the batteries. The bottleneck today is the front-end: sizing the system, modeling the savings, and getting the customer to say yes. Merlin closes that gap — a 90-second TrueQuote™ that produces bankable load profiles, financial models, and proposal PDFs, all branded for your dealers. More quotes out the door means more Discover batteries in the field.",
+    partnerBullets: [
+      "Every CI and dealer in Discover's network can quote BESS in 90 seconds — no engineering needed",
+      "Load profiles built on ASHRAE/CBECS + equipment-level data (car wash, hotel, C&I, EV charging)",
+      "Financial model outputs: NPV, IRR, payback, ITC — bankable for project finance",
+      "White-label for Discover's dealer portal — your brand drives the quote",
+      "Closed-loop inverter data (Sol-Ark, Victron, Solis) can feed directly into system sizing",
+      "Residential solar + C&I both covered — one platform for your full product line",
+    ],
+    networkLabel: "CI & dealer network",
   },
 };
 
@@ -73,11 +107,16 @@ const GENERIC_CONFIG: PartnerConfig = {
   name: "Your Team",
   greeting: "Merlin Energy — Live Demo",
   tagline: "BESS proposals in 90 seconds. Every number traces to NREL, IEEE, and IRA 2022.",
+  about: "",
   accentColor: "#3ECF8E",
   showInvestorSection: false,
   defaultIndustry: "hotel",
   callToAction: "Get in touch",
   calLink: "mailto:robert@merlinenergy.net",
+  partnershipHeadline: "The partnership",
+  partnershipBody: "Merlin runs as an embeddable widget or REST API inside your existing workflow.",
+  partnerBullets: [],
+  networkLabel: "partner network",
 };
 
 // ─── Data ────────────────────────────────────────────────────────────────────
@@ -123,11 +162,12 @@ const METRICS = [
 ];
 
 const INVESTOR_BULLETS = [
-  "Partners earn revenue share on every BESS deal closed through Merlin",
-  "API + white-label tiers already built — zero integration risk",
-  "Car wash vertical live: 50% of energy bill is blower load (now modeled)",
-  "TrueQuote™ is a defensible moat — load accuracy no competitor matches",
-  "Next: 3 additional verticals in Q2 (truck stop, cold storage, indoor farm)",
+  "CapEX Power's EPC pipeline becomes Merlin's distribution — instant market access",
+  "Strategic co-investor = preferred partner status + revenue share on all referred deals",
+  "Merlin's load accuracy is a defensible moat — no competitor models equipment-level kW at this depth",
+  "API + white-label already built — zero integration risk, deploy in days",
+  "Data center vertical is live and tuned for the hyperscale/edge market CapEX Power serves",
+  "Raising seed round now — CapEX Power pedigree (Jinko, Schneider, WSP) adds institutional credibility",
 ];
 
 const HOW_IT_WORKS = [
@@ -258,6 +298,16 @@ export default function PartnerDemo() {
           ))}
         </div>
 
+        {/* ── About partner ── */}
+        {partner.about && (
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8 md:p-10 space-y-4">
+            <div className="text-xs font-semibold uppercase tracking-widest text-[#3ECF8E]/70">
+              About {partner.name}
+            </div>
+            <p className="text-white/65 leading-relaxed max-w-3xl">{partner.about}</p>
+          </div>
+        )}
+
         {/* ── Live Demo ── */}
         <div className="space-y-6">
           <div className="text-center space-y-2">
@@ -322,12 +372,33 @@ export default function PartnerDemo() {
           </div>
         </div>
 
-        {/* ── Why Partner ── */}
+        {/* ── The Partnership ── */}
+        <div className="space-y-8">
+          <h2 className="text-3xl font-bold text-center">{partner.partnershipHeadline}</h2>
+          <div className="grid md:grid-cols-2 gap-8 items-start">
+            <p className="text-white/60 leading-relaxed text-base">{partner.partnershipBody}</p>
+            <ul className="space-y-3">
+              {(partner.partnerBullets.length
+                ? partner.partnerBullets
+                : WHY_PARTNER.map((f) => f.title + " — " + f.body)
+              ).map((b) => (
+                <li key={b} className="flex items-start gap-3 text-sm text-white/70">
+                  <CheckCircle className="w-4 h-4 text-[#3ECF8E] flex-shrink-0 mt-0.5" />
+                  {b}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* ── Platform capabilities ── */}
         <div className="space-y-8">
           <div className="text-center space-y-2">
-            <h2 className="text-3xl font-bold">Why {partner.name} + Merlin</h2>
+            <h2 className="text-3xl font-bold">
+              What Merlin brings to your {partner.networkLabel}
+            </h2>
             <p className="text-white/50 text-sm max-w-xl mx-auto">
-              Everything your team needs to quote, close, and deliver BESS projects faster.
+              The full stack — from customer conversation to bankable proposal.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-5">
