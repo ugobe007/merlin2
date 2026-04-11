@@ -506,8 +506,21 @@ export interface SavingsBreakdown {
   demandChargeSavings: number;
   touArbitrageSavings: number;
   solarSavings: number;
-  evChargingRevenue: number;
+  evChargingRevenue: number; // net session revenue AFTER dcfcDemandPenalty deduction
   generatorBackupValue: number;
+  /**
+   * Cost-reduction subtotal — demand charge savings + TOU arbitrage + solar + generator backup.
+   * Excludes evChargingRevenue, which is a new business income stream, not an energy cost reduction.
+   * Use this for honest energy-only payback and to separate utility-bill savings from EV revenue.
+   */
+  energySavings: number;
+  /**
+   * Demand charges that DCFC chargers create beyond what the BESS can offset.
+   * Source: Wood Mackenzie / RMI "EV Fleet Charging and Demand Charges" 2023.
+   * Each 50 kW DCFC charger adds demand spikes; BESS offsets proportional to capacity.
+   * Already deducted from evChargingRevenue before grossAnnualSavings is computed.
+   */
+  dcfcDemandPenalty: number;
   grossAnnualSavings: number;
 
   // Annual costs/reserves
@@ -574,6 +587,21 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
     evChargingRevenue = inputs.evChargers * l2NetPerSession * 1.5 * 300;
   }
 
+  // DCFC Demand Charge Penalty (Wood Mackenzie / RMI — demand impact of EV fast charging)
+  // Each 50 kW DCFC charger creates demand spikes that add to the facility's peak demand.
+  // The BESS can offset a fraction proportional to its capacity vs. the DCFC peak load:
+  //   bessOffset = min(0.75, (bessKW / dcfcPeakKW) × 0.75)
+  // i.e., if BESS is >= DCFC peak, full 75% effectiveness; if smaller, scales proportionally.
+  // This penalty is already deducted from evChargingRevenue so grossAnnualSavings stays correct.
+  const dcfcPeakKW = (inputs.dcfcChargers ?? 0) * 50; // SAE J1772 CCS: 50 kW per DCFC port
+  let dcfcDemandPenalty = 0;
+  if (dcfcPeakKW > 0) {
+    const bessOffset = Math.min(0.75, (inputs.bessKW / dcfcPeakKW) * 0.75);
+    dcfcDemandPenalty = dcfcPeakKW * (1 - bessOffset) * inputs.demandCharge * 12;
+    // Net EV revenue after accounting for the demand charges DCFC creates
+    evChargingRevenue = Math.max(0, evChargingRevenue - dcfcDemandPenalty);
+  }
+
   // Generator Backup Value (avoided downtime costs)
   // For hospitals (NEC 517 / NFPA 99 critical facilities), a backup generator
   // actively avoids costs from regulatory fines, life-safety events, and lost
@@ -585,6 +613,11 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
     inputs.industry === "hospital" && inputs.generatorKW > 0
       ? 2 * 4 * 7500 // 2 events/yr × 4 hr/event × $7,500/hr = $60,000/yr
       : 0;
+
+  // Energy cost-reduction subtotal — utility-bill savings only, EV revenue excluded.
+  // Basis for honest energy-only payback (Fix A — structural savings separation).
+  const energySavings =
+    demandChargeSavings + touArbitrageSavings + solarSavings + generatorBackupValue;
 
   const grossAnnualSavings =
     demandChargeSavings +
@@ -601,8 +634,10 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
     demandChargeSavings: Math.round(demandChargeSavings),
     touArbitrageSavings: Math.round(touArbitrageSavings),
     solarSavings: Math.round(solarSavings),
-    evChargingRevenue: Math.round(evChargingRevenue),
+    evChargingRevenue: Math.round(evChargingRevenue), // net of dcfcDemandPenalty
     generatorBackupValue: Math.round(generatorBackupValue),
+    energySavings: Math.round(energySavings),
+    dcfcDemandPenalty: Math.round(dcfcDemandPenalty),
     grossAnnualSavings: Math.round(grossAnnualSavings),
     annualReserves: Math.round(annualReserves),
     netAnnualSavings: Math.round(netAnnualSavings),
@@ -615,6 +650,13 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
 
 export interface ROIMetrics {
   paybackYears: number;
+  /**
+   * Payback based on energy cost-reductions only — excludes EV charging revenue.
+   * Present when energySavingsOnly param is passed to calculateROI.
+   * Allows the quote to show: "energy-only: X yrs" vs "all-in with EV: Y yrs"
+   * so customers can evaluate the BESS/solar investment independent of new EV business income.
+   */
+  paybackYearsEnergyOnly?: number;
   year1ROI: number; // First year ROI %
   roi10Year: number; // 10-year ROI %
   roi25Year: number; // 25-year ROI %
@@ -627,13 +669,15 @@ export interface ROIMetrics {
 export function calculateROI(
   netInvestment: number,
   netAnnualSavings: number,
-  discountRate: number = 0.05 // 5% discount rate for NPV
+  discountRate: number = 0.05, // 5% discount rate for NPV
+  energySavingsOnly?: number // optional: net energy cost-reductions only (excl. EV revenue) for dual payback
 ): ROIMetrics {
   // Validation: prevent division by zero and negative values
   if (netInvestment <= 0) {
     console.warn("⚠️ Invalid netInvestment (<=0), returning default metrics");
     return {
       paybackYears: 999,
+      paybackYearsEnergyOnly: energySavingsOnly != null && energySavingsOnly > 0 ? 999 : undefined,
       year1ROI: 0,
       roi10Year: 0,
       roi25Year: 0,
@@ -645,6 +689,7 @@ export function calculateROI(
     console.warn("⚠️ Invalid netAnnualSavings (<=0), system will not pay back");
     return {
       paybackYears: 999,
+      paybackYearsEnergyOnly: energySavingsOnly != null && energySavingsOnly > 0 ? 999 : undefined,
       year1ROI: -100,
       roi10Year: -100,
       roi25Year: -100,
@@ -652,8 +697,15 @@ export function calculateROI(
     };
   }
 
-  // Simple payback
+  // Simple payback (all-in: energy savings + EV revenue)
   const paybackYears = netInvestment / netAnnualSavings;
+
+  // Energy-only payback — how long does the BESS/solar pay back without EV revenue contribution?
+  // Only present when energySavingsOnly is supplied and positive.
+  const paybackYearsEnergyOnly: number | undefined =
+    energySavingsOnly != null && energySavingsOnly > 0
+      ? Math.round((netInvestment / energySavingsOnly) * 10) / 10
+      : undefined;
 
   // Year 1 ROI
   const year1ROI = (netAnnualSavings / netInvestment) * 100;
@@ -674,6 +726,7 @@ export function calculateROI(
 
   return {
     paybackYears: Math.round(paybackYears * 10) / 10, // 1 decimal place
+    paybackYearsEnergyOnly,
     year1ROI: Math.round(year1ROI),
     roi10Year: Math.round(roi10Year),
     roi25Year: Math.round(roi25Year),

@@ -770,6 +770,13 @@ export default function Step5V8({ state, actions }: Props) {
                 <span className="text-sm text-slate-300">
                   Payback in{" "}
                   <strong className="text-[#3ECF8E]">{Math.round(tier.paybackYears)} years</strong>
+                  {tier.paybackYearsEnergyOnly != null &&
+                    tier.evRevenuePerYear > 0 &&
+                    tier.paybackYearsEnergyOnly > tier.paybackYears + 0.5 && (
+                      <span className="text-xs text-slate-500 ml-1">
+                        ({tier.paybackYearsEnergyOnly.toFixed(1)} yr energy-only)
+                      </span>
+                    )}
                 </span>
                 <span className="text-slate-600">|</span>
                 <span className="text-sm text-slate-300">
@@ -1382,6 +1389,29 @@ export default function Step5V8({ state, actions }: Props) {
                       )}
                     </div>
                   )}
+                  {/* EV Revenue Disclosure — shown when EV charging meaningfully shortens payback */}
+                  {tier.paybackYearsEnergyOnly != null &&
+                    tier.evRevenuePerYear > 0 &&
+                    tier.paybackYearsEnergyOnly > tier.paybackYears + 0.5 && (
+                      <div className="mt-3 pt-3 border-t border-white/[0.04]">
+                        <div className="flex items-start gap-1.5 text-[11px] text-slate-400">
+                          <span className="text-cyan-400 mt-0.5 shrink-0">⚡</span>
+                          <span>
+                            <strong className="text-cyan-300">EV charging revenue</strong>{" "}
+                            contributes to payback. Energy-only payback (BESS + solar without EV):{" "}
+                            <strong className="text-white">
+                              {tier.paybackYearsEnergyOnly.toFixed(1)} yrs
+                            </strong>
+                            . All-in with EV revenue:{" "}
+                            <strong className="text-[#3ECF8E]">
+                              {tier.paybackYears.toFixed(1)} yrs
+                            </strong>
+                            . EV revenue is a new business income stream — not an energy cost
+                            reduction.
+                          </span>
+                        </div>
+                      </div>
+                    )}
                 </div>
 
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">

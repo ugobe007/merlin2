@@ -859,7 +859,16 @@ function buildOneTier(
 
   // ── V4.5 SSOT ROI / NPV ────────────────────────────────────────────────
   // calculateROI uses pricingServiceV45 net cost + v45 savings for consistency.
-  const v45ROI = calculateROI(netCost, annualSavings);
+  // Pass energySavingsOnly so calculateROI can produce a dual payback:
+  //   paybackYears          = all-in (energy cost reductions + EV revenue)
+  //   paybackYearsEnergyOnly = energy savings alone (no EV revenue contribution)
+  const energySavingsNet = Math.max(0, v45Savings.energySavings - annualReserves);
+  const v45ROI = calculateROI(
+    netCost,
+    annualSavings,
+    0.05,
+    energySavingsNet > 0 ? energySavingsNet : undefined
+  );
   const paybackYears = v45ROI.paybackYears;
   const roi10Year = v45ROI.roi10Year;
 
@@ -938,7 +947,10 @@ function buildOneTier(
     // Use v45Savings.evChargingRevenue when EV chargers are configured (Step 3.5 path sets
     // dcfcChargers/level2Chargers directly — state.evRevenuePerYear stays 0 in that flow).
     evRevenuePerYear: evChargerCount > 0 ? v45Savings.evChargingRevenue : evRevenuePerYear,
+    energySavings: v45Savings.energySavings,
+    dcfcDemandPenalty: v45Savings.dcfcDemandPenalty,
     paybackYears,
+    paybackYearsEnergyOnly: v45ROI.paybackYearsEnergyOnly,
     roi10Year,
     npv: v45ROI.npv25Year, // 25-year NPV, 5% discount rate (pricingServiceV45.calculateROI)
     // V4.5 margin transparency (from pricingServiceV45 tiered Merlin fee)
@@ -1109,7 +1121,13 @@ function recalcWithoutGenerator(tier: QuoteTier, state: WizardState): QuoteTier 
       ? newSavings.grossAnnualSavings
       : newSavings.grossAnnualSavings + tier.evRevenuePerYear;
   const newAnnualSavings = newGrossAnnualSavings - newSavings.annualReserves;
-  const newROI = calculateROI(newCosts.netInvestment, newAnnualSavings);
+  const newEnergySavingsNet = Math.max(0, newSavings.energySavings - newSavings.annualReserves);
+  const newROI = calculateROI(
+    newCosts.netInvestment,
+    newAnnualSavings,
+    0.05,
+    newEnergySavingsNet > 0 ? newEnergySavingsNet : undefined
+  );
 
   return {
     ...tier,
@@ -1120,7 +1138,10 @@ function recalcWithoutGenerator(tier: QuoteTier, state: WizardState): QuoteTier 
     grossAnnualSavings: newGrossAnnualSavings,
     annualReserves: newSavings.annualReserves,
     annualSavings: newAnnualSavings,
+    energySavings: newSavings.energySavings,
+    dcfcDemandPenalty: newSavings.dcfcDemandPenalty,
     paybackYears: newROI.paybackYears,
+    paybackYearsEnergyOnly: newROI.paybackYearsEnergyOnly,
     roi10Year: newROI.roi10Year,
     npv: newROI.npv25Year,
     equipmentSubtotal: newCosts.equipmentSubtotal,
@@ -1197,7 +1218,13 @@ function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
       ? newSavings.grossAnnualSavings
       : newSavings.grossAnnualSavings + tier.evRevenuePerYear;
   const newAnnualSavings = newGrossAnnualSavings - newSavings.annualReserves;
-  const newROI = calculateROI(newCosts.netInvestment, newAnnualSavings);
+  const minBessEnergySavingsNet = Math.max(0, newSavings.energySavings - newSavings.annualReserves);
+  const newROI = calculateROI(
+    newCosts.netInvestment,
+    newAnnualSavings,
+    0.05,
+    minBessEnergySavingsNet > 0 ? minBessEnergySavingsNet : undefined
+  );
 
   return {
     ...tier,
@@ -1209,7 +1236,10 @@ function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
     grossAnnualSavings: newGrossAnnualSavings,
     annualReserves: newSavings.annualReserves,
     annualSavings: newAnnualSavings,
+    energySavings: newSavings.energySavings,
+    dcfcDemandPenalty: newSavings.dcfcDemandPenalty,
     paybackYears: newROI.paybackYears,
+    paybackYearsEnergyOnly: newROI.paybackYearsEnergyOnly,
     roi10Year: newROI.roi10Year,
     npv: newROI.npv25Year,
     equipmentSubtotal: newCosts.equipmentSubtotal,
