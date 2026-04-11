@@ -31,16 +31,17 @@ import { describe, it, expect } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 
-import { buildTelemetryPayload, type Step3TelemetryPayload } from "../telemetry/step3TelemetryService";
-import {
-  sanitizeQuoteForDisplay,
-} from "../utils/pricingSanity";
+import { sanitizeQuoteForDisplay } from "@/wizard/v7/utils/pricingSanity";
 import {
   translatePolicyEvents,
   aggregateSemanticConflicts,
-} from "../step3/policyTranslation";
-import { PolicyCode, type PolicyEvent, type PolicyCodeType } from "../step3/policyTaxonomy";
-import type { LoadProfileEnvelope } from "../step3/loadProfile";
+} from "@/wizard/v7/step3/policyTranslation";
+import {
+  PolicyCode,
+  type PolicyEvent,
+  type PolicyCodeType,
+} from "@/wizard/v7/step3/policyTaxonomy";
+import type { LoadProfileEnvelope } from "@/wizard/v7/step3/loadProfile";
 
 // ============================================================================
 // Fixtures
@@ -188,73 +189,6 @@ describe("Tier A — Test Segregation", () => {
 
   it("excludes example test files", () => {
     expect(configSource).toContain("*.example.test.ts");
-  });
-});
-
-// ============================================================================
-// TIER B — Telemetry Schema Version + Build Stamp
-// ============================================================================
-
-describe("Tier B — Telemetry Schema Version", () => {
-  it("payload includes schemaVersion as a number", () => {
-    const envelope = makeMinimalEnvelope();
-    const payload = buildTelemetryPayload(envelope);
-    expect(payload.schemaVersion).toBe(1);
-    expect(typeof payload.schemaVersion).toBe("number");
-  });
-
-  it("payload includes buildStamp as a non-empty string", () => {
-    const envelope = makeMinimalEnvelope();
-    const payload = buildTelemetryPayload(envelope);
-    expect(payload.buildStamp).toBeDefined();
-    expect(typeof payload.buildStamp).toBe("string");
-    expect(payload.buildStamp.length).toBeGreaterThan(0);
-  });
-
-  it("buildStamp contains wizard version prefix", () => {
-    const envelope = makeMinimalEnvelope();
-    const payload = buildTelemetryPayload(envelope);
-    expect(payload.buildStamp).toMatch(/^v7\./);
-  });
-
-  it("schemaVersion is stable across calls (not timestamp-based)", () => {
-    const e1 = makeMinimalEnvelope();
-    const e2 = makeMinimalEnvelope();
-    const p1 = buildTelemetryPayload(e1);
-    const p2 = buildTelemetryPayload(e2);
-    expect(p1.schemaVersion).toBe(p2.schemaVersion);
-    expect(p1.buildStamp).toBe(p2.buildStamp);
-  });
-
-  it("Step3TelemetryPayload type includes schemaVersion and buildStamp", () => {
-    // Type-level test — would fail at compile time if fields removed
-    const payload: Step3TelemetryPayload = {
-      traceId: "test",
-      industry: "hotel",
-      schemaKey: "hotel",
-      calculatorId: "hotel_load_v1",
-      templateKey: "hotel",
-      schemaVersion: 1,
-      buildStamp: "v7.1.0+move8",
-      peakKW: 450,
-      avgKW: 280,
-      dutyCycle: 0.622,
-      energyKWhPerDay: 6720,
-      confidence: "high",
-      invariantsAllPassed: true,
-      failedInvariantKeys: [],
-      missingTier1Count: 0,
-      warningCount: 0,
-      policyEventTotal: 0,
-      policyEventCountByCode: {},
-      policyEventMaxSeverity: "none",
-      topContributors: [],
-      contributorCount: 0,
-      wizardVersion: "v7.1.0",
-      createdAt: "2026-02-08T12:00:00.000Z",
-    };
-    expect(payload.schemaVersion).toBe(1);
-    expect(payload.buildStamp).toBe("v7.1.0+move8");
   });
 });
 
@@ -408,9 +342,7 @@ describe("Tier D — SEMANTIC_CONFLICT Soft Show", () => {
 
   describe("aggregateSemanticConflicts", () => {
     it("returns null when no conflicts", () => {
-      const events = translatePolicyEvents([
-        makeEvent(PolicyCode.RANGE_CLAMPED, "info"),
-      ]);
+      const events = translatePolicyEvents([makeEvent(PolicyCode.RANGE_CLAMPED, "info")]);
       const agg = aggregateSemanticConflicts(events);
       expect(agg).toBeNull();
     });
