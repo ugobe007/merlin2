@@ -332,6 +332,12 @@ export interface QuoteTier {
    */
   energySavings?: number;
   /**
+   * Demand charge savings component of energySavings.
+   * bessKW × demandCharge × 12 × 0.75 (peak shaving factor).
+   * Surfaced prominently in quote UI: the #1 savings lever for spiky-load industries.
+   */
+  demandChargeSavings?: number;
+  /**
    * Demand charges that DCFC fast-chargers create, net of BESS offset.
    * Already deducted from evRevenuePerYear before grossAnnualSavings is computed.
    * Surfaced for transparency in quote notes and savings breakdowns.
@@ -446,6 +452,8 @@ export interface WizardState {
 
   // ── Step 1: Add-on Preferences (asked upfront for optimization) ─────────
   wantsSolar: boolean; // User wants solar in their quote
+  /** 'standard' = best cost/kWh from DB (default). 'premium' = highest-efficiency panel (≥23%) for fixed-roof area maximization. */
+  solarPanelTier: "standard" | "premium";
   wantsEVCharging: boolean; // User wants EV charging in their quote
   wantsGenerator: boolean; // User wants backup generator
 
@@ -585,6 +593,7 @@ export function initialState(): WizardState {
     criticalLoadKW: 0, // Critical loads for generator sizing
     evRevenuePerYear: 0,
     wantsSolar: false,
+    solarPanelTier: "standard",
     wantsEVCharging: false,
     wantsGenerator: false,
     // Addon config defaults (Step 3.5)

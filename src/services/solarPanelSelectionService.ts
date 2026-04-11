@@ -245,11 +245,22 @@ export async function getApprovedSolarPanels(): Promise<SolarPanelSpec[]> {
  */
 export async function selectOptimalPanel(
   _projectState?: string,
-  _solarKW?: number
+  _solarKW?: number,
+  /** 'premium' biases toward highest-efficiency panels (≥22.5%) for fixed-roof
+   *  area sites where more Wp per sqft directly means more kWh (car wash, etc).
+   *  'standard' (default) picks the best cost/lifetime-yield score. */
+  panelTier?: "standard" | "premium" | string
 ): Promise<SolarPanelSpec> {
   try {
     const ranked = await getApprovedSolarPanels();
-    return ranked[0]; // already sorted by score descending
+    if (panelTier === "premium") {
+      // Premium: sort by efficiency descending, fall back to score if tied
+      const premiumRanked = [...ranked].sort(
+        (a, b) => b.efficiencyPct - a.efficiencyPct || b.score - a.score
+      );
+      return premiumRanked[0] ?? SSOT_FALLBACK_PANEL;
+    }
+    return ranked[0]; // default: best cost/lifetime-yield score
   } catch {
     return SSOT_FALLBACK_PANEL;
   }

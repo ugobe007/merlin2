@@ -948,6 +948,7 @@ function buildOneTier(
     // dcfcChargers/level2Chargers directly — state.evRevenuePerYear stays 0 in that flow).
     evRevenuePerYear: evChargerCount > 0 ? v45Savings.evChargingRevenue : evRevenuePerYear,
     energySavings: v45Savings.energySavings,
+    demandChargeSavings: v45Savings.demandChargeSavings,
     dcfcDemandPenalty: v45Savings.dcfcDemandPenalty,
     paybackYears,
     paybackYearsEnergyOnly: v45ROI.paybackYearsEnergyOnly,
@@ -1418,7 +1419,11 @@ export async function buildTiers(state: WizardState): Promise<[QuoteTier, QuoteT
 
   const [selectedPanelFull, selectedBESSFull] = await Promise.all([
     state.wantsSolar
-      ? selectOptimalPanel(state.location.state)
+      ? selectOptimalPanel(
+          state.location.state,
+          undefined,
+          (state as WizardState & { solarPanelTier?: string }).solarPanelTier
+        )
       : (await import("@/services/solarPanelSelectionService")).SSOT_FALLBACK_PANEL,
     estKWh > 0
       ? selectOptimalBESS(estKWh, estKW)

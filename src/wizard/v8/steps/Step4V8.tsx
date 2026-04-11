@@ -986,24 +986,68 @@ export default function Step4V8({ state, actions }: Props) {
                     className={`text-3xl md:text-4xl font-bold ${config.accentColor} savings-number`}
                     style={{ fontFamily: "Outfit, sans-serif" }}
                   >
-                    {formatCurrency(tier.annualSavings)}
+                    {/* When EV revenue > $500/yr, headline shows energy-only savings; EV is a separate line */}
+                    {(tier.evRevenuePerYear ?? 0) > 500
+                      ? formatCurrency(tier.annualSavings - (tier.evRevenuePerYear ?? 0))
+                      : formatCurrency(tier.annualSavings)}
                   </p>
-                  {/* EV revenue breakout — shown when chargers contribute to total */}
-                  {(tier.evRevenuePerYear ?? 0) > 500 && (
-                    <div className="mt-1 space-y-0.5">
-                      <p className="text-[10px] text-blue-400/80">
-                        ⚡ {formatCurrency(tier.evRevenuePerYear)} EV charging revenue
+                  {/* ── Savings breakdown ─────────────────────────────────── */}
+                  {(tier.evRevenuePerYear ?? 0) > 500 ? (
+                    /* Two-business-case split: energy savings vs EV revenue */
+                    <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 space-y-1.5">
+                      <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+                        Savings breakdown
                       </p>
-                      <p className="text-[10px] text-slate-500">
-                        + {formatCurrency(tier.annualSavings - (tier.evRevenuePerYear ?? 0))} energy
-                        savings
+                      {(tier.demandChargeSavings ?? 0) > 500 && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">⚡ Demand charge reduction</span>
+                          <span className="text-emerald-400 font-medium">
+                            {formatCurrency(tier.demandChargeSavings!)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">☀️ Solar + TOU savings</span>
+                        <span className="text-emerald-400 font-medium">
+                          {formatCurrency(
+                            (tier.energySavings ??
+                              tier.annualSavings - (tier.evRevenuePerYear ?? 0)) -
+                              (tier.demandChargeSavings ?? 0)
+                          )}
+                        </span>
+                      </div>
+                      <div className="border-t border-white/10 pt-1 flex justify-between text-xs font-semibold">
+                        <span className="text-slate-300">Energy savings subtotal</span>
+                        <span className="text-emerald-300">
+                          {formatCurrency(tier.annualSavings - (tier.evRevenuePerYear ?? 0))}
+                        </span>
+                      </div>
+                      <div className="border-t border-blue-500/20 pt-1 flex justify-between text-xs">
+                        <span className="text-blue-400">⚡ EV charging revenue*</span>
+                        <span className="text-blue-300 font-medium">
+                          {formatCurrency(tier.evRevenuePerYear!)}
+                        </span>
+                      </div>
+                      <p className="text-[9px] text-slate-600 leading-tight">
+                        *Net of demand charges, network fees &amp; maintenance. Separate business
+                        case — verify with local utilization data.
+                        {tier.dcfcDemandPenalty && tier.dcfcDemandPenalty > 0
+                          ? ` DCFC demand penalty: −${formatCurrency(tier.dcfcDemandPenalty)}/yr already deducted.`
+                          : ""}
                       </p>
                     </div>
-                  )}
-                </div>
-
-                {/* Equipment Strip */}
-                <div className="mb-3">
+                  ) : (tier.demandChargeSavings ?? 0) > 500 ? (
+                    /* No EV: show demand vs solar split */
+                    <div className="mt-1 space-y-0.5">
+                      <p className="text-[10px] text-emerald-400/70">
+                        ⚡ {formatCurrency(tier.demandChargeSavings!)} demand reduction
+                      </p>
+                      <p className="text-[10px] text-slate-500">
+                        + {formatCurrency(tier.annualSavings - (tier.demandChargeSavings ?? 0))}{" "}
+                        solar / TOU
+                      </p>
+                    </div>
+                  ) : null}
                   <p
                     className={`text-[10px] uppercase tracking-widest mb-2 text-center ${isPerfectFit ? "text-emerald-400/50" : "text-slate-500"}`}
                   >
