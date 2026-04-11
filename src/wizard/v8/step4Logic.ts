@@ -86,7 +86,6 @@ import {
   EQUIPMENT_UNIT_COSTS,
 } from "@/services/pricingServiceV45";
 import { validateAddonConfig } from "@/services/addonGuardrails";
-import { hasGeneratorIntent } from "./addonIntent";
 import { CalculationValidator, type ValidationInput } from "@/services/calculationValidator";
 import { selectOptimalPanel } from "@/services/solarPanelSelectionService";
 import { selectOptimalBESS, type BESSSpec } from "@/services/bessSelectionService";
@@ -135,12 +134,14 @@ const GOAL_GUIDANCE: Record<GoalChoice, GoalGuidance> = {
   },
   save_most: {
     // Balanced for optimal NPV. Solar at high penetration (best ROI driver).
-    // Generator when critical loads are substantial (≥ 50%).
+    // Generator only when explicitly requested by the user (opt-in, not auto-included).
+    // Rationale (Vineet, April 2026): generator adds cost with no savings improvement
+    // for typical commercial facilities. Must be a conscious user choice.
     // INDUSTRY NOTE: C2 (2h) is the commercial BESS standard. Extended coverage
     // comes from solar recharge between peaks + generator bridge — not raw battery hours.
     solarPenetration: { starter: 0.5, recommended: 0.85, complete: 1.0 },
     durationHours: { starter: 2, recommended: 2, complete: 2 },
-    generatorPolicy: "if_critical",
+    generatorPolicy: "if_requested",
     auditNote: "Goal: Save Most — bias toward optimal NPV and return on investment.",
   },
   full_power: {
@@ -675,13 +676,12 @@ function buildOneTier(
     generatorFuelType,
   } = state;
 
-  // Step 3.5 visited flag: when set, the user explicitly toggled each addon.
-  // Gate solar/generator on their explicit choices; when not visited, fall back
-  // to goal-policy + hasGeneratorIntent (original behavior preserved).
+  // Generator is opt-in only: only include when user explicitly enables it in Step 3.5.
+  // hasGeneratorIntent() reads Step 3 signals (gridReliability, backupCritical, etc.) but
+  // those should pre-populate the UI default, NOT force generator inclusion in quotes.
+  // Rationale: generator adds cost with $0 savings improvement for most commercial facilities.
   const step35Visited = Boolean(state.step3Answers?.step3_5Visited);
-  const generatorEnabled = step35Visited
-    ? state.wantsGenerator || hasGeneratorIntent(state.step3Answers)
-    : state.wantsGenerator || hasGeneratorIntent(state.step3Answers);
+  const generatorEnabled = state.wantsGenerator === true;
 
   // Tier scaling for configured addons (user values from Step 3.5 = Recommended baseline)
   const tierAddonScale = tierLabel === "Starter" ? 0.7 : tierLabel === "Complete" ? 1.3 : 1.0;
@@ -950,6 +950,8 @@ function buildOneTier(
     energySavings: v45Savings.energySavings,
     demandChargeSavings: v45Savings.demandChargeSavings,
     dcfcDemandPenalty: v45Savings.dcfcDemandPenalty,
+    dcfcPeakKW: v45Savings.dcfcPeakKW,
+    dcfcBessOffsetPct: v45Savings.dcfcBessOffsetPct,
     paybackYears,
     paybackYearsEnergyOnly: v45ROI.paybackYearsEnergyOnly,
     roi10Year,

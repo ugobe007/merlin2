@@ -343,6 +343,18 @@ export interface QuoteTier {
    * Surfaced for transparency in quote notes and savings breakdowns.
    */
   dcfcDemandPenalty?: number;
+  /**
+   * Total DCFC peak demand spike: dcfcChargers × 50 kW (SAE J1772 CCS).
+   * E.g., 4 DCFC = 200 kW peak spike added to facility demand.
+   * Used in UI to show per-charger demand impact.
+   */
+  dcfcPeakKW?: number;
+  /**
+   * Fraction of DCFC peak demand offset by BESS (0–75%).
+   * bessOffset = min(0.75, bessKW / dcfcPeakKW × 0.75).
+   * The unoffset remainder drives dcfcDemandPenalty.
+   */
+  dcfcBessOffsetPct?: number;
   paybackYears: number;
   /**
    * Payback based on energy savings only — excludes EV charging revenue.

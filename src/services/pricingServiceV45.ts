@@ -521,6 +521,10 @@ export interface SavingsBreakdown {
    * Already deducted from evChargingRevenue before grossAnnualSavings is computed.
    */
   dcfcDemandPenalty: number;
+  /** Total DCFC peak demand spike: dcfcChargers × 50 kW (SAE J1772 CCS standard). */
+  dcfcPeakKW: number;
+  /** Fraction of DCFC peak demand offset by BESS (0–0.75). 0 when no DCFC. */
+  dcfcBessOffsetPct: number;
   grossAnnualSavings: number;
 
   // Annual costs/reserves
@@ -595,8 +599,10 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
   // This penalty is already deducted from evChargingRevenue so grossAnnualSavings stays correct.
   const dcfcPeakKW = (inputs.dcfcChargers ?? 0) * 50; // SAE J1772 CCS: 50 kW per DCFC port
   let dcfcDemandPenalty = 0;
+  let dcfcBessOffsetPct = 0;
   if (dcfcPeakKW > 0) {
     const bessOffset = Math.min(0.75, (inputs.bessKW / dcfcPeakKW) * 0.75);
+    dcfcBessOffsetPct = Math.round(bessOffset * 100);
     dcfcDemandPenalty = dcfcPeakKW * (1 - bessOffset) * inputs.demandCharge * 12;
     // Net EV revenue after accounting for the demand charges DCFC creates
     evChargingRevenue = Math.max(0, evChargingRevenue - dcfcDemandPenalty);
@@ -638,6 +644,8 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
     generatorBackupValue: Math.round(generatorBackupValue),
     energySavings: Math.round(energySavings),
     dcfcDemandPenalty: Math.round(dcfcDemandPenalty),
+    dcfcPeakKW: Math.round(dcfcPeakKW),
+    dcfcBessOffsetPct,
     grossAnnualSavings: Math.round(grossAnnualSavings),
     annualReserves: Math.round(annualReserves),
     netAnnualSavings: Math.round(netAnnualSavings),
