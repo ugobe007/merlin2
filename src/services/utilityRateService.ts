@@ -69,6 +69,27 @@ export interface UtilityInfo {
   utilityType: "investor-owned" | "municipal" | "cooperative" | "federal";
 }
 
+/**
+ * Rate schedule tier for demand-charge-aware tariff lookup.
+ * Commercial customers land on different tariff schedules based on peak demand.
+ * Sources: state PUC rate filings, utility published tariffs (2025).
+ * Note: Car washes / hotels / gas stations (50–500 kW) land in "medium commercial"
+ * brackets — which typically carry the HIGHEST $/kW demand charges.
+ */
+export interface CommercialRateSchedule {
+  name: string;          // "D3.2" / "GS-65" / "E-19"
+  label: string;         // "Medium General Service"
+  minKW: number;         // lower bound (inclusive, kW)
+  maxKW: number;         // upper bound (exclusive; Infinity for top tier)
+  demandCharge: number;  // $/kW/month
+  peakDemandCharge?: number;
+  commercialRate?: number; // $/kWh override if different for this schedule
+  hasTOU?: boolean;
+  peakRate?: number;
+  offPeakRate?: number;
+  peakHours?: string;
+}
+
 export interface ZipCodeUtilityData {
   zipCode: string;
   city: string;
@@ -95,6 +116,9 @@ const CACHE_DURATION_MS = 24 * 60 * 60 * 1000;
 
 // Rate cache
 const rateCache = new Map<string, { data: ZipCodeUtilityData; timestamp: number }>();
+
+// URDB-specific cache (separate from hardcoded rate cache)
+const urdbCache = new Map<string, { data: { demandCharge: number; rateName: string; rateSchedule: string }; timestamp: number }>();
 
 // ============================================
 // EIA STATE AVERAGE RATES (2024 Data)
@@ -1151,6 +1175,210 @@ const UTILITY_SPECIFIC_RATES: Record<string, Partial<UtilityRate>> = {
   },
 };
 
+// ═══════════════════════════════════════════════════════════════════════════
+// RATE SCHEDULE TIERS BY PEAK DEMAND (Tier 2 — tariff-aware lookup)
+// Each utility has multiple commercial tariff schedules based on peak kW.
+// Sources: state PUC rate filings, utility published tariffs (2025).
+// Car washes/hotels/gas stations (50–500 kW) land in the medium bracket.
+// ═══════════════════════════════════════════════════════════════════════════
+const UTILITY_RATE_SCHEDULES: Record<string, CommercialRateSchedule[]> = {
+  // ── MICHIGAN ──
+  dte: [
+    { name: "D3.1", label: "Small Commercial General Service", minKW: 0, maxKW: 100, demandCharge: 11, commercialRate: 0.143, hasTOU: false },
+    { name: "D3.2", label: "Medium Commercial General Service", minKW: 100, maxKW: 1000, demandCharge: 14, commercialRate: 0.151, hasTOU: true, peakRate: 0.19, offPeakRate: 0.11, peakHours: "11am-8pm" },
+    { name: "D3.3", label: "Large Power Service", minKW: 1000, maxKW: Infinity, demandCharge: 9, hasTOU: true },
+  ],
+  consumers: [
+    { name: "D-1", label: "Small General Service", minKW: 0, maxKW: 50, demandCharge: 9, hasTOU: false },
+    { name: "D-3", label: "General Service", minKW: 50, maxKW: 1000, demandCharge: 11, hasTOU: true, peakRate: 0.15, offPeakRate: 0.09, peakHours: "2pm-7pm" },
+    { name: "D-15", label: "Large Power Service", minKW: 1000, maxKW: Infinity, demandCharge: 8, hasTOU: true },
+  ],
+  // ── ARIZONA ──
+  aps: [
+    { name: "SGS", label: "Small General Service", minKW: 0, maxKW: 30, demandCharge: 8, commercialRate: 0.125, hasTOU: false },
+    { name: "GS-65", label: "General Service", minKW: 30, maxKW: 300, demandCharge: 14, commercialRate: 0.142, hasTOU: true, peakRate: 0.21, offPeakRate: 0.10, peakHours: "3pm-8pm" },
+    { name: "GS-90", label: "Large General Service", minKW: 300, maxKW: 3000, demandCharge: 17, commercialRate: 0.128, hasTOU: true, peakRate: 0.20, offPeakRate: 0.09, peakHours: "3pm-8pm" },
+    { name: "LGS-1", label: "Extra Large Power", minKW: 3000, maxKW: Infinity, demandCharge: 12, hasTOU: true },
+  ],
+  srp: [
+    { name: "E-36", label: "Small General Service", minKW: 0, maxKW: 40, demandCharge: 8, hasTOU: false },
+    { name: "E-32", label: "General Service", minKW: 40, maxKW: 3000, demandCharge: 15, hasTOU: true, peakRate: 0.22, offPeakRate: 0.08, peakHours: "3pm-8pm" },
+    { name: "E-26", label: "Large Power", minKW: 3000, maxKW: Infinity, demandCharge: 10, hasTOU: true },
+  ],
+  // ── CALIFORNIA ──
+  pge: [
+    { name: "B-6", label: "Small Business", minKW: 0, maxKW: 75, demandCharge: 0, commercialRate: 0.26, hasTOU: false },
+    { name: "E-19", label: "Medium Commercial TOU", minKW: 75, maxKW: 1000, demandCharge: 22, commercialRate: 0.24, hasTOU: true, peakRate: 0.42, offPeakRate: 0.18, peakHours: "4pm-9pm" },
+    { name: "A-6", label: "Large Commercial TOU", minKW: 1000, maxKW: Infinity, demandCharge: 25, hasTOU: true },
+  ],
+  sce: [
+    { name: "TOU-GS-1", label: "Small General Service TOU", minKW: 0, maxKW: 30, demandCharge: 8, commercialRate: 0.20, hasTOU: true, peakRate: 0.38, offPeakRate: 0.13, peakHours: "4pm-9pm" },
+    { name: "TOU-GS-2", label: "Medium General Service TOU", minKW: 30, maxKW: 500, demandCharge: 20, commercialRate: 0.22, hasTOU: true, peakRate: 0.38, offPeakRate: 0.16, peakHours: "4pm-9pm" },
+    { name: "TOU-GS-3", label: "Large General Service TOU", minKW: 500, maxKW: 2000, demandCharge: 22, hasTOU: true, peakRate: 0.36, offPeakRate: 0.14, peakHours: "4pm-9pm" },
+  ],
+  sdge: [
+    { name: "AX", label: "Small Commercial", minKW: 0, maxKW: 30, demandCharge: 15, commercialRate: 0.26, hasTOU: false },
+    { name: "AL-TOU", label: "Medium Commercial TOU", minKW: 30, maxKW: 200, demandCharge: 22, commercialRate: 0.28, hasTOU: true, peakRate: 0.52, offPeakRate: 0.18, peakHours: "4pm-9pm" },
+    { name: "AL-TOU-L", label: "Large Commercial TOU", minKW: 200, maxKW: Infinity, demandCharge: 25, hasTOU: true, peakRate: 0.48, offPeakRate: 0.18, peakHours: "4pm-9pm" },
+  ],
+  ladwp: [
+    { name: "A-2", label: "Small General Service", minKW: 0, maxKW: 30, demandCharge: 8, hasTOU: false },
+    { name: "A-3", label: "Medium General Service", minKW: 30, maxKW: 1000, demandCharge: 16, hasTOU: true, peakRate: 0.28, offPeakRate: 0.10, peakHours: "1pm-5pm" },
+    { name: "A-4", label: "Large Power", minKW: 1000, maxKW: Infinity, demandCharge: 13, hasTOU: true },
+  ],
+  smud: [
+    { name: "GS-1", label: "Small General Service", minKW: 0, maxKW: 30, demandCharge: 7, hasTOU: false },
+    { name: "GS-3", label: "Medium General Service", minKW: 30, maxKW: 500, demandCharge: 12, hasTOU: true, peakRate: 0.26, offPeakRate: 0.09, peakHours: "5pm-8pm" },
+  ],
+  // ── TEXAS (ERCOT — deregulated; distribution-only tariffs) ──
+  oncor: [
+    { name: "Commercial-CS", label: "Small Commercial", minKW: 0, maxKW: 20, demandCharge: 7, hasTOU: false },
+    { name: "Secondary-SD", label: "Secondary Delivery", minKW: 20, maxKW: 250, demandCharge: 10, hasTOU: true, peakRate: 0.18, offPeakRate: 0.06, peakHours: "1pm-7pm" },
+    { name: "Primary-D", label: "Primary Delivery", minKW: 250, maxKW: Infinity, demandCharge: 8, hasTOU: true },
+  ],
+  centerpoint: [
+    { name: "SGS", label: "Small General Service", minKW: 0, maxKW: 20, demandCharge: 5, hasTOU: false },
+    { name: "Commercial", label: "Commercial Service", minKW: 20, maxKW: 200, demandCharge: 11, hasTOU: true, peakRate: 0.19, offPeakRate: 0.07, peakHours: "1pm-7pm" },
+    { name: "Large-CS", label: "Large Commercial", minKW: 200, maxKW: Infinity, demandCharge: 9, hasTOU: true },
+  ],
+  cps_energy: [
+    { name: "GS-15", label: "General Service Small", minKW: 0, maxKW: 15, demandCharge: 6, hasTOU: false },
+    { name: "GS-150", label: "General Service", minKW: 15, maxKW: 1500, demandCharge: 10, hasTOU: true, peakRate: 0.14, offPeakRate: 0.06, peakHours: "2pm-8pm" },
+  ],
+  // ── NEW YORK ──
+  coned: [
+    { name: "SC-9-I", label: "Small Commercial Service", minKW: 0, maxKW: 50, demandCharge: 20, hasTOU: true },
+    { name: "SC-9-II", label: "Commercial Service", minKW: 50, maxKW: 750, demandCharge: 25, hasTOU: true, peakRate: 0.35, offPeakRate: 0.12, peakHours: "8am-12am" },
+    { name: "SC-9-III", label: "Large Commercial Service", minKW: 750, maxKW: Infinity, demandCharge: 30, hasTOU: true },
+  ],
+  nyseg: [
+    { name: "SC-2", label: "Small Commercial", minKW: 0, maxKW: 50, demandCharge: 9, hasTOU: false },
+    { name: "SC-3", label: "Medium Commercial", minKW: 50, maxKW: 500, demandCharge: 14, hasTOU: true, peakRate: 0.20, offPeakRate: 0.08, peakHours: "2pm-6pm" },
+    { name: "SC-3-L", label: "Large Commercial", minKW: 500, maxKW: Infinity, demandCharge: 11, hasTOU: true },
+  ],
+  nationalgrid_ny: [
+    { name: "SC-3B", label: "Small General Service", minKW: 0, maxKW: 75, demandCharge: 12, hasTOU: false },
+    { name: "SC-3C", label: "Medium General Service", minKW: 75, maxKW: 1000, demandCharge: 16, hasTOU: true, peakRate: 0.24, offPeakRate: 0.09, peakHours: "2pm-7pm" },
+  ],
+  // ── FLORIDA ──
+  fpl: [
+    { name: "GSLD-1", label: "General Service Low Demand", minKW: 0, maxKW: 200, demandCharge: 10, commercialRate: 0.11, hasTOU: true },
+    { name: "GSLD-2", label: "General Service Large Demand", minKW: 200, maxKW: 2000, demandCharge: 13, hasTOU: true, peakRate: 0.14, offPeakRate: 0.08, peakHours: "12pm-9pm" },
+    { name: "SL-1", label: "Substation Service", minKW: 2000, maxKW: Infinity, demandCharge: 9, hasTOU: true },
+  ],
+  duke_fl: [
+    { name: "GS-2", label: "Small General Service", minKW: 0, maxKW: 100, demandCharge: 8, hasTOU: false },
+    { name: "GS-3", label: "Medium General Service", minKW: 100, maxKW: 1000, demandCharge: 11, hasTOU: true, peakRate: 0.16, offPeakRate: 0.08, peakHours: "12pm-9pm" },
+  ],
+  teco: [
+    { name: "GS-1", label: "General Service", minKW: 0, maxKW: 200, demandCharge: 9, hasTOU: false },
+    { name: "LGS", label: "Large General Service", minKW: 200, maxKW: Infinity, demandCharge: 12, hasTOU: true, peakRate: 0.15, offPeakRate: 0.07, peakHours: "12pm-9pm" },
+  ],
+  // ── SOUTHEAST ──
+  georgia_power: [
+    { name: "SGLP", label: "Small Light & Power", minKW: 0, maxKW: 50, demandCharge: 0, commercialRate: 0.115, hasTOU: false },
+    { name: "MGLP", label: "Medium General Service", minKW: 50, maxKW: 900, demandCharge: 11, hasTOU: true, peakRate: 0.13, offPeakRate: 0.07 },
+    { name: "LGLP", label: "Large General Power", minKW: 900, maxKW: Infinity, demandCharge: 9, hasTOU: true },
+  ],
+  alabama_power: [
+    { name: "LPT", label: "Light & Power Service", minKW: 0, maxKW: 30, demandCharge: 7, hasTOU: false },
+    { name: "LPM", label: "Medium Light & Power", minKW: 30, maxKW: 750, demandCharge: 10, hasTOU: true },
+    { name: "LPL", label: "Large Light & Power", minKW: 750, maxKW: Infinity, demandCharge: 8, hasTOU: true },
+  ],
+  duke_carolinas: [
+    { name: "GS-2", label: "Small General Service", minKW: 0, maxKW: 100, demandCharge: 8, hasTOU: false },
+    { name: "GS-3", label: "Medium General Service", minKW: 100, maxKW: 750, demandCharge: 12, hasTOU: true, peakRate: 0.14, offPeakRate: 0.08 },
+    { name: "GS-4", label: "Large General Service", minKW: 750, maxKW: Infinity, demandCharge: 10, hasTOU: true },
+  ],
+  dominion: [
+    { name: "Schedule 1", label: "Small General Service", minKW: 0, maxKW: 30, demandCharge: 8, hasTOU: false },
+    { name: "Schedule 3", label: "Medium General Service", minKW: 30, maxKW: 500, demandCharge: 12, hasTOU: true },
+    { name: "Schedule 5", label: "Large General Service", minKW: 500, maxKW: Infinity, demandCharge: 10, hasTOU: true },
+  ],
+  // ── PENNSYLVANIA ──
+  peco: [
+    { name: "GS-1", label: "Small General Service", minKW: 0, maxKW: 100, demandCharge: 8, hasTOU: false },
+    { name: "HT-L", label: "High-Tension Large Power", minKW: 100, maxKW: 500, demandCharge: 14, hasTOU: true },
+    { name: "GP", label: "General Power", minKW: 500, maxKW: Infinity, demandCharge: 12, hasTOU: true },
+  ],
+  ppl: [
+    { name: "GS-2", label: "General Service", minKW: 0, maxKW: 100, demandCharge: 9, hasTOU: false },
+    { name: "LP-4", label: "Large Power", minKW: 100, maxKW: 500, demandCharge: 13, hasTOU: true },
+    { name: "LP-5", label: "Transmission Power", minKW: 500, maxKW: Infinity, demandCharge: 10, hasTOU: true },
+  ],
+  // ── ILLINOIS ──
+  comed: [
+    { name: "DS-1", label: "Small Commercial", minKW: 0, maxKW: 100, demandCharge: 9, hasTOU: true },
+    { name: "DS-2", label: "Medium Commercial", minKW: 100, maxKW: 4000, demandCharge: 14, hasTOU: true, peakRate: 0.18, offPeakRate: 0.09 },
+    { name: "DS-3", label: "Large Commercial", minKW: 4000, maxKW: Infinity, demandCharge: 11, hasTOU: true },
+  ],
+  ameren_il: [
+    { name: "BTES", label: "Small Commercial Service", minKW: 0, maxKW: 10, demandCharge: 0, hasTOU: false },
+    { name: "RTPF-1", label: "Medium Commercial", minKW: 10, maxKW: 1000, demandCharge: 11, hasTOU: true },
+    { name: "RTPF-2", label: "Large Commercial", minKW: 1000, maxKW: Infinity, demandCharge: 9, hasTOU: true },
+  ],
+  // ── OHIO ──
+  aep_ohio: [
+    { name: "Standard-S", label: "Small Commercial", minKW: 0, maxKW: 50, demandCharge: 8, hasTOU: false },
+    { name: "Commercial-C", label: "Commercial", minKW: 50, maxKW: 1000, demandCharge: 11, hasTOU: true },
+    { name: "Industrial-I", label: "Industrial", minKW: 1000, maxKW: Infinity, demandCharge: 8, hasTOU: true },
+  ],
+  firstenergy_oh: [
+    { name: "GS-1", label: "General Service", minKW: 0, maxKW: 100, demandCharge: 9, hasTOU: false },
+    { name: "GS-2", label: "Large General Service", minKW: 100, maxKW: 1000, demandCharge: 13, hasTOU: true },
+  ],
+  // ── NEW ENGLAND ──
+  eversource: [
+    { name: "G-1", label: "Small General Service", minKW: 0, maxKW: 50, demandCharge: 11, hasTOU: false },
+    { name: "G-2", label: "Medium General Service", minKW: 50, maxKW: 500, demandCharge: 17, hasTOU: true, peakRate: 0.28, offPeakRate: 0.10 },
+    { name: "G-3", label: "Large General Service", minKW: 500, maxKW: Infinity, demandCharge: 14, hasTOU: true },
+  ],
+  nationalgrid_ne: [
+    { name: "G-01", label: "Small Commercial", minKW: 0, maxKW: 30, demandCharge: 10, hasTOU: false },
+    { name: "G-02", label: "Medium Commercial", minKW: 30, maxKW: 500, demandCharge: 15, hasTOU: true },
+  ],
+  // ── MIDWEST ──
+  xcel: [
+    { name: "Small-Cg", label: "Small Commercial General Service", minKW: 0, maxKW: 50, demandCharge: 8, hasTOU: false },
+    { name: "Cg", label: "Commercial General Service", minKW: 50, maxKW: 500, demandCharge: 13, hasTOU: true, peakRate: 0.19, offPeakRate: 0.08 },
+    { name: "SG", label: "Large General Service", minKW: 500, maxKW: Infinity, demandCharge: 9, hasTOU: true },
+  ],
+  alliant: [
+    { name: "GS-1", label: "Small General Service", minKW: 0, maxKW: 50, demandCharge: 8, hasTOU: false },
+    { name: "GS-2", label: "General Service", minKW: 50, maxKW: 1000, demandCharge: 11, hasTOU: true },
+  ],
+  weenergies: [
+    { name: "Cg-1", label: "Small Commercial", minKW: 0, maxKW: 50, demandCharge: 7, hasTOU: false },
+    { name: "Cg-2", label: "Medium Commercial", minKW: 50, maxKW: 1000, demandCharge: 12, hasTOU: true },
+  ],
+  // ── WEST ──
+  pse: [
+    { name: "General-Small", label: "Small General Purpose", minKW: 0, maxKW: 75, demandCharge: 8, hasTOU: false },
+    { name: "Medium-GS", label: "Medium General Service", minKW: 75, maxKW: 500, demandCharge: 12, hasTOU: true },
+    { name: "Large-GS", label: "Large General Service", minKW: 500, maxKW: Infinity, demandCharge: 9, hasTOU: true },
+  ],
+  pge_oregon: [
+    { name: "Sch-22", label: "Small Commercial", minKW: 0, maxKW: 30, demandCharge: 7, hasTOU: false },
+    { name: "Sch-32", label: "Medium General Service", minKW: 30, maxKW: 1000, demandCharge: 12, hasTOU: true, peakRate: 0.16, offPeakRate: 0.07 },
+    { name: "Sch-48", label: "Large General Service", minKW: 1000, maxKW: Infinity, demandCharge: 9, hasTOU: true },
+  ],
+  rocky_mountain: [
+    { name: "Sch-6", label: "Small General Service", minKW: 0, maxKW: 100, demandCharge: 10, hasTOU: false },
+    { name: "Sch-8", label: "Medium General Service", minKW: 100, maxKW: 1000, demandCharge: 14, hasTOU: true },
+    { name: "Sch-9", label: "Large General Service", minKW: 1000, maxKW: Infinity, demandCharge: 11, hasTOU: true },
+  ],
+  nv_energy: [
+    { name: "GS-15", label: "Small General Service", minKW: 0, maxKW: 30, demandCharge: 8, hasTOU: false },
+    { name: "GS-Secondary", label: "General Service", minKW: 30, maxKW: 1000, demandCharge: 12, hasTOU: true },
+    { name: "GS-Primary", label: "Large Power", minKW: 1000, maxKW: Infinity, demandCharge: 9, hasTOU: true },
+  ],
+  heco: [
+    { name: "G", label: "Small General Service", minKW: 0, maxKW: 30, demandCharge: 15, hasTOU: false },
+    { name: "J", label: "General Service", minKW: 30, maxKW: 500, demandCharge: 21, commercialRate: 0.32, hasTOU: true, peakRate: 0.45, offPeakRate: 0.25, peakHours: "5pm-9pm" },
+    { name: "P", label: "Large Power", minKW: 500, maxKW: Infinity, demandCharge: 25, hasTOU: true },
+  ],
+};
+
 // ============================================
 // ZIP CODE TO UTILITY MAPPING (Major metros)
 // ============================================
@@ -1409,11 +1637,38 @@ export async function getUtilityRatesByZip(zipCode: string): Promise<ZipCodeUtil
 }
 
 /**
- * Get just the commercial rate by ZIP code (simplified API)
+ * Select the appropriate rate schedule for a given peak demand level.
+ * Returns null if no schedule data is available for this utility or peak kW is absent.
  */
-export async function getCommercialRateByZip(zipCode: string): Promise<{
+function resolveSchedule(
+  utilityId: string,
+  estimatedPeakKW: number
+): CommercialRateSchedule | null {
+  if (!utilityId || utilityId === "state-avg") return null;
+  const schedules = UTILITY_RATE_SCHEDULES[utilityId];
+  if (!schedules?.length || estimatedPeakKW <= 0) return null;
+  return schedules.find((s) => estimatedPeakKW >= s.minKW && estimatedPeakKW < s.maxKW) ?? null;
+}
+
+/**
+ * Get the commercial rate by ZIP code with optional schedule-tier-aware demand charge.
+ * Pass estimatedPeakKW (from Step 3) to get the tariff bracket matching this site's demand.
+ * Without estimatedPeakKW, returns the utility-level average demand charge.
+ *
+ * demandChargeSource tells callers how specific the data is:
+ *   'schedule'    — exact tariff tier matched by peak kW (most accurate)
+ *   'utility-avg' — utility-wide average from hardcoded UTILITY_SPECIFIC_RATES
+ *   'state-avg'   — EIA state average (no utility match found for ZIP)
+ */
+export async function getCommercialRateByZip(
+  zipCode: string,
+  estimatedPeakKW?: number
+): Promise<{
   rate: number;
   demandCharge: number;
+  rateName: string;
+  rateSchedule: string;
+  demandChargeSource: "schedule" | "utility-avg" | "state-avg";
   peakRate?: number;
   offPeakRate?: number;
   peakHours?: string;
@@ -1426,17 +1681,131 @@ export async function getCommercialRateByZip(zipCode: string): Promise<{
   if (!data || !data.recommendedRate) return null;
 
   const r = data.recommendedRate;
+  let demandCharge = r.demandCharge || 0;
+  let rateName = r.rateName || "Commercial General Service";
+  let rateSchedule = "";
+  let demandChargeSource: "schedule" | "utility-avg" | "state-avg" =
+    r.source === "eia" ? "state-avg" : "utility-avg";
+  let hasTOU = r.hasTOU;
+  let peakRate = r.peakRate;
+  let offPeakRate = r.offPeakRate;
+  let peakHours = r.peakHours;
+  let commercialRate = r.commercialRate;
+
+  // Tier 2: Select the tariff bracket matching this site's peak demand
+  if (estimatedPeakKW && estimatedPeakKW > 0) {
+    const schedule = resolveSchedule(r.utilityId, estimatedPeakKW);
+    if (schedule) {
+      demandCharge = schedule.demandCharge;
+      rateName = `${schedule.name} \u2014 ${schedule.label}`;
+      rateSchedule = schedule.name;
+      demandChargeSource = "schedule";
+      if (schedule.hasTOU !== undefined) hasTOU = schedule.hasTOU;
+      if (schedule.peakRate !== undefined) peakRate = schedule.peakRate;
+      if (schedule.offPeakRate !== undefined) offPeakRate = schedule.offPeakRate;
+      if (schedule.peakHours !== undefined) peakHours = schedule.peakHours;
+      if (schedule.commercialRate !== undefined) commercialRate = schedule.commercialRate;
+    }
+  }
+
   return {
-    rate: r.commercialRate,
-    demandCharge: r.demandCharge || 0,
-    peakRate: r.peakRate,
-    offPeakRate: r.offPeakRate,
-    peakHours: r.peakHours,
+    rate: commercialRate,
+    demandCharge,
+    rateName,
+    rateSchedule,
+    demandChargeSource,
+    peakRate,
+    offPeakRate,
+    peakHours,
     utilityName: r.utilityName,
     state: data.state,
-    hasTOU: r.hasTOU,
+    hasTOU,
     source: r.source,
   };
+}
+
+/**
+ * Tier 3: Live NREL Utility Rate Database (URDB) lookup.
+ * Fires as a background enhancement after the initial hardcoded data loads.
+ * Returns a more specific demand charge from the utility's filed tariff when available.
+ *
+ * API: https://openei.org/services/doc/rest/util_rates/ (CORS-enabled)
+ * Rate limit: 1,000 req/day (DEMO_KEY), 10,000/day (registered key)
+ * Cached 24h per ZIP to stay within limits.
+ */
+export async function fetchNRELURDB(
+  zipCode: string
+): Promise<{ demandCharge: number; rateName: string; rateSchedule: string } | null> {
+  const normalizedZip = zipCode.substring(0, 5);
+
+  // Check URDB cache first
+  const cached = urdbCache.get(normalizedZip);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION_MS) {
+    return cached.data;
+  }
+
+  try {
+    const url = new URL("https://api.openei.org/utility_rates");
+    url.searchParams.set("version", "8");
+    url.searchParams.set("format", "json");
+    url.searchParams.set("api_key", NREL_API_KEY);
+    url.searchParams.set("address", normalizedZip);
+    url.searchParams.set("sector", "Commercial");
+    url.searchParams.set("limit", "5");
+
+    // AbortController for 4s timeout (compatible across all environments)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    let res: Response;
+    try {
+      res = await fetch(url.toString(), { signal: controller.signal });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    if (!res.ok) return null;
+
+    const json = (await res.json()) as {
+      items?: Array<{
+        name?: string;
+        eiaid?: number;
+        peakkwcapacitycharge?: number;
+        flatdemandstructure?: Array<Array<{ rate?: number }>>;
+      }>;
+    };
+
+    if (!json.items?.length) return null;
+
+    // Prefer rates that actually have a demand charge value
+    const withDemand = json.items.filter(
+      (item) =>
+        (item.peakkwcapacitycharge ?? 0) > 0 ||
+        item.flatdemandstructure?.some((tier) => tier.some((p) => (p.rate ?? 0) > 0))
+    );
+    const best = withDemand[0] ?? json.items[0];
+    if (!best) return null;
+
+    let demandCharge = best.peakkwcapacitycharge ?? 0;
+    // Fallback: parse flatdemandstructure if peakkwcapacitycharge not set
+    if (!demandCharge && best.flatdemandstructure?.length) {
+      demandCharge = best.flatdemandstructure[0]?.[0]?.rate ?? 0;
+    }
+    if (!demandCharge || demandCharge <= 0) return null;
+
+    const result = {
+      demandCharge: Math.round(demandCharge * 100) / 100,
+      rateName: best.name ?? "Published Tariff",
+      rateSchedule: best.name ?? "",
+    };
+
+    // Cache 24h to stay within NREL rate limits
+    urdbCache.set(normalizedZip, { data: result, timestamp: Date.now() });
+    return result;
+  } catch {
+    // Network error, CORS issue, timeout, or rate limit — all fail silently
+    return null;
+  }
 }
 
 /**
@@ -1718,6 +2087,7 @@ function getStateName(stateCode: string): string {
  */
 export function clearRateCache(): void {
   rateCache.clear();
+  urdbCache.clear();
 }
 
 /**

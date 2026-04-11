@@ -292,6 +292,9 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
           utilityProvider: u.provider ?? "",
           hasTOU: u.hasTOU ?? false,
           peakRate: u.peakRate,
+          rateName: u.rateName,
+          rateSchedule: u.rateSchedule,
+          demandChargeSource: u.demandChargeSource,
           utilityStatus: "ready",
         },
       });
@@ -387,6 +390,66 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   }, []);
 
   /**
+   * Schedule-refinement effect — fires when the user enters peakLoadKW in Step 3.
+   *
+   * On first intel load (ZIP entry) we don't yet know peak kW, so the demand charge
+   * defaults to utility-avg or state-avg. Once Step 3 is complete and peakLoadKW > 0,
+   * we re-call fetchUtility with that value to resolve the correct tariff tier
+   * (e.g. APS GS-65 vs SGS based on whether the site is over 30 kW).
+   *
+   * After the synchronous schedule resolution settles, we also fire fetchNRELURDB
+   * in the background (no await on critical path) as the Tier 3 enrichment — if
+   * it returns a more specific demand charge we patch intel a second time.
+   */
+  useEffect(() => {
+    const zip = state.location?.zip;
+    const peakKW = state.peakLoadKW;
+    if (!zip || zip.length !== 5 || !peakKW || peakKW <= 0) return;
+    if (state.intelStatus?.utility !== "ready") return;
+
+    // Re-run schedule lookup with actual peak kW now that we know it
+    void (async () => {
+      try {
+        const refined = await fetchUtility(zip, undefined, peakKW);
+        if (refined) {
+          dispatch({
+            type: "PATCH_INTEL",
+            patch: {
+              demandCharge: refined.demandCharge ?? state.intel?.demandCharge ?? 0,
+              rateName: refined.rateName,
+              rateSchedule: refined.rateSchedule,
+              demandChargeSource: refined.demandChargeSource,
+            },
+          });
+        }
+      } catch {
+        // fail-soft: keep existing demand charge
+      }
+
+      // Tier 3: NREL URDB background enrichment — fires after schedule resolution
+      // Non-blocking: if URDB has a better (live-tariff) value, patch once more.
+      try {
+        const { fetchNRELURDB } = await import("@/services/utilityRateService");
+        const urdb = await fetchNRELURDB(zip);
+        if (urdb) {
+          dispatch({
+            type: "PATCH_INTEL",
+            patch: {
+              demandCharge: urdb.demandCharge,
+              rateName: urdb.rateName,
+              rateSchedule: urdb.rateSchedule,
+              demandChargeSource: "schedule",
+            },
+          });
+        }
+      } catch {
+        // URDB failure is always silent — local schedule data already set above
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.peakLoadKW, state.location?.zip]);
+
+  /**
    * submitLocation — geocode the typed ZIP/postal code to a named location card.
    * NO LONGER auto-advances to Step 2 — waits for business confirmation.
    * @param countryCode - US ZIP or 2-letter country code (e.g., "CA", "GB", "NZ")
@@ -456,6 +519,9 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
               utilityProvider: utilityData.provider ?? "",
               hasTOU: utilityData.hasTOU ?? false,
               peakRate: utilityData.peakRate,
+              rateName: utilityData.rateName,
+              rateSchedule: utilityData.rateSchedule,
+              demandChargeSource: utilityData.demandChargeSource,
               utilityStatus: "ready",
             },
           });
