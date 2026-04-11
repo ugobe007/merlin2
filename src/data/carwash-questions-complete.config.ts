@@ -709,42 +709,22 @@ export const carWashQuestionsComplete: Question[] = [
   // ============================================================================
   // SECTION 3: BILLING & UTILITY (Q23–Q26)
   // Actual bill data overrides calc estimates — most impactful for BESS ROI accuracy
+  // Note: demand charge applicability + rate are now auto-detected from your ZIP/utility.
+  //       The questions below let you confirm or override our estimate.
   // ============================================================================
-  {
-    id: "demandChargeApplies",
-    type: "buttons",
-    section: "billing",
-    title: "Does your utility bill include a demand charge?",
-    subtitle:
-      "Demand charges ($/kW-month) are separate from energy charges and are the #1 target for BESS savings",
-    helpText:
-      "Look for 'Demand Charge', 'Peak Demand', or 'kW Charge' on your bill. Most commercial/industrial accounts over 50 kW have them.",
-    options: [
-      { value: "yes", label: "Yes", description: "I see it on my bill" },
-      { value: "no", label: "No", description: "Energy charges only" },
-      { value: "unsure", label: "Not Sure", description: "Skip — we'll estimate" },
-    ],
-    smartDefault: "unsure",
-    validation: { required: true },
-    impactsCalculations: ["bessROI", "demandSavings"],
-  },
   {
     id: "peakDemandKw",
     type: "slider",
     section: "billing",
     title: "What's your highest peak demand on a recent bill?",
     subtitle:
-      "Found under 'Peak Demand' or 'Billing Demand' — typically the highest kW in the last 12 months",
+      "Found under 'Peak Demand' or 'Billing Demand' — typically the highest kW in the last 12 months. We'll use it to match the exact tariff tier for your utility.",
     helpText:
       "This single number drives 60–80% of BESS savings. Even an approximate figure gives us a far more accurate quote than our equipment estimate alone.",
     range: { min: 0, max: 500, step: 5 },
     smartDefault: 0,
     unit: " kW",
     merlinTip: "A typical express tunnel runs 150–300 kW peak · Flex/full-service: 200–400 kW",
-    conditionalLogic: {
-      dependsOn: "demandChargeApplies",
-      showIf: (val) => val === "yes",
-    },
     validation: { required: false, min: 0, max: 500 },
     impactsCalculations: ["bessROI", "bessSize", "demandSavings"],
   },
@@ -753,21 +733,18 @@ export const carWashQuestionsComplete: Question[] = [
     type: "buttons",
     section: "billing",
     title: "Demand charge rate?",
-    subtitle: "The $/kW-month rate on your bill — multiplied by peak kW each month",
+    subtitle:
+      "We've pre-filled your utility's rate below — confirm or override if your bill shows a different number",
     options: [
       { value: "10", label: "$10", description: "/kW-mo" },
       { value: "15", label: "$15", description: "/kW-mo" },
       { value: "20", label: "$20", description: "/kW-mo" },
       { value: "25", label: "$25", description: "/kW-mo" },
       { value: "30", label: "$30", description: "/kW-mo" },
-      { value: "unsure", label: "Not Sure", description: "Use national avg" },
+      { value: "unsure", label: "Use Auto", description: "Keep detected rate" },
     ],
     smartDefault: "unsure",
     merlinTip: "U.S. commercial average: $15–20/kW-mo · Southwest utilities can hit $25–35",
-    conditionalLogic: {
-      dependsOn: "demandChargeApplies",
-      showIf: (val) => val === "yes",
-    },
     validation: { required: false },
     impactsCalculations: ["bessROI", "demandSavings"],
   },

@@ -1443,6 +1443,38 @@ export default function Step5V8({ state, actions }: Props) {
                 </div>
               </div>
 
+              {/* Rate Basis — utility tariff provenance */}
+              {state.intel && (
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                    Rate Basis
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    <div className="text-sm font-semibold text-white">
+                      {state.intel.utilityProvider}
+                    </div>
+                    {state.intel.rateSchedule && (
+                      <div className="text-xs text-slate-400">{state.intel.rateName}</div>
+                    )}
+                    <div className="flex gap-3 mt-1.5 text-xs tabular-nums">
+                      <span className="text-emerald-400">
+                        ${state.intel.utilityRate.toFixed(3)}/kWh
+                      </span>
+                      <span className="text-amber-400">
+                        ${state.intel.demandCharge}/kW-mo demand
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-slate-600 mt-1.5">
+                      {state.intel.demandChargeSource === "schedule"
+                        ? `Matched to ${state.intel.rateSchedule} tariff by estimated peak demand`
+                        : state.intel.demandChargeSource === "utility-avg"
+                        ? "Utility-level average · enter peak kW in Step 3 to refine"
+                        : "EIA state average · utility not yet mapped"}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={() => setShowFinancialModal(true)}
                 className="w-full rounded-2xl border border-amber-500/20 bg-[linear-gradient(135deg,rgba(245,158,11,0.12),rgba(15,23,42,0.85))] px-4 py-4 text-left hover:border-amber-400/35 hover:bg-[linear-gradient(135deg,rgba(245,158,11,0.18),rgba(15,23,42,0.92))] transition-all group"

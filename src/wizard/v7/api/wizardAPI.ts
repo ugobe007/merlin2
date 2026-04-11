@@ -118,13 +118,17 @@ export async function resolveLocation(input: string, signal?: AbortSignal): Prom
  */
 export async function fetchUtility(
   zipOrInput: string,
-  countryCode?: string
+  countryCode?: string,
+  estimatedPeakKW?: number
 ): Promise<{
   rate?: number;
   demandCharge?: number;
   provider?: string;
   hasTOU?: boolean;
   peakRate?: number;
+  rateName?: string;
+  rateSchedule?: string;
+  demandChargeSource?: "schedule" | "utility-avg" | "state-avg";
 }> {
   const zip = zipOrInput.replace(/\D/g, "").slice(0, 5);
 
@@ -133,7 +137,7 @@ export async function fetchUtility(
     try {
       // Wire to real utilityRateService
       const { getCommercialRateByZip } = await import("@/services/utilityRateService");
-      const data = await getCommercialRateByZip(zip);
+      const data = await getCommercialRateByZip(zip, estimatedPeakKW);
 
       if (data) {
         return {
@@ -142,6 +146,9 @@ export async function fetchUtility(
           provider: data.utilityName,
           hasTOU: data.hasTOU,
           peakRate: data.peakRate,
+          rateName: data.rateName,
+          rateSchedule: data.rateSchedule,
+          demandChargeSource: data.demandChargeSource,
         };
       }
     } catch (e) {

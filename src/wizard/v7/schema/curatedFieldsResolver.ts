@@ -126,7 +126,7 @@ const TIER1_BLOCKERS: Record<string, string[]> = {
     "waterHeaterType", // Load driver: 0/15/35/40 kW depending on fuel type
     "highPressurePumps", // CRITICAL: 20-30% of bill
     "kioskCount", // Entry controls load
-    "demandChargeApplies", // Billing gate: unlocks most-impactful BESS ROI path
+    // demandChargeApplies retired — demand charge now auto-detected from ZIP/utility data
     "peakDemandKw", // Billing override: real bill peak > equipment estimate
   ],
   hotel: [

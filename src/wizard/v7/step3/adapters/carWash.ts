@@ -94,7 +94,7 @@ const CONSUMED_KEYS = [
   "hvacBuilding",
   "waterHeaterType",
   // Billing / Utility (P1 additions — override calc estimates when provided)
-  "demandChargeApplies",
+  // Note: demandChargeApplies removed — demand charge now auto-detected from ZIP/utility
   "peakDemandKw",
   "demandChargeRate",
   "monthlyKwh",

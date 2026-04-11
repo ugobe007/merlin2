@@ -167,6 +167,9 @@ export interface LocationIntel {
   utilityRate: number; // $/kWh, e.g. 0.10
   demandCharge: number; // $/kW/month, e.g. 10.00
   utilityProvider: string; // "NV Energy"
+  rateName?: string; // "D3.2 — Medium Commercial General Service"
+  rateSchedule?: string; // "D3.2" (tariff schedule ID)
+  demandChargeSource?: "schedule" | "utility-avg" | "state-avg"; // data provenance indicator
   // TOU rate data (from utilityRateService hasTOU flag)
   hasTOU: boolean; // true when utility offers Time-of-Use rates (enables BESS arbitrage)
   peakRate?: number; // $/kWh peak rate (for TOU arbitrage spread calc); defaults to utilityRate + 0.05
