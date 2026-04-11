@@ -446,7 +446,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
         // URDB failure is always silent — local schedule data already set above
       }
     })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.peakLoadKW, state.location?.zip]);
 
   /**
@@ -1141,6 +1141,8 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     (
       config: Partial<{
         solarKW: number;
+        solarPanelTier: "standard" | "premium";
+        solarStructureType: "rooftop" | "carport_new" | "carport_retrofit";
         generatorKW: number;
         generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
         linearGeneratorKW: number;

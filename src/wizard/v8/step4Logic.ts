@@ -1421,11 +1421,7 @@ export async function buildTiers(state: WizardState): Promise<[QuoteTier, QuoteT
 
   const [selectedPanelFull, selectedBESSFull] = await Promise.all([
     state.wantsSolar
-      ? selectOptimalPanel(
-          state.location.state,
-          undefined,
-          (state as WizardState & { solarPanelTier?: string }).solarPanelTier
-        )
+      ? selectOptimalPanel(state.location.state, undefined, state.solarPanelTier)
       : (await import("@/services/solarPanelSelectionService")).SSOT_FALLBACK_PANEL,
     estKWh > 0
       ? selectOptimalBESS(estKWh, estKW)
@@ -1464,7 +1460,16 @@ export async function buildTiers(state: WizardState): Promise<[QuoteTier, QuoteT
       };
 
   // Effective $/W from supplier DB (or SSOT fallback $1.00/W)
-  const solarPricePerWatt = selectedPanelFull.effectivePricePerWatt;
+  // Add carport structural steel cost when the customer selected a non-rooftop installation type.
+  // carport_new   (+$0.40/W): greenfield construction — structural steel in new-build budget.
+  // carport_retrofit (+$1.75/W): add steel structure over existing paving (incl. frost-line footings).
+  const STRUCTURE_COST_ADDER: Record<WizardState["solarStructureType"], number> = {
+    rooftop: 0,
+    carport_new: 0.4,
+    carport_retrofit: 1.75,
+  };
+  const structureAdder = STRUCTURE_COST_ADDER[state.solarStructureType] ?? 0;
+  const solarPricePerWatt = selectedPanelFull.effectivePricePerWatt + structureAdder;
 
   const starter = applyPaybackGuardrail(
     buildOneTier(state, goal, "Starter", baseNotes, solarPricePerWatt, selectedBESSFull),

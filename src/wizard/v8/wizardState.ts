@@ -466,6 +466,12 @@ export interface WizardState {
   wantsSolar: boolean; // User wants solar in their quote
   /** 'standard' = best cost/kWh from DB (default). 'premium' = highest-efficiency panel (≥23%) for fixed-roof area maximization. */
   solarPanelTier: "standard" | "premium";
+  /**
+   * 'rooftop' = standard C&I rooftop ($1.00/W equip, $0.51/W labor).
+   * 'carport_new' = greenfield construction — structural steel in new-build budget (+$0.40/W).
+   * 'carport_retrofit' = add steel structure over existing paving (+$1.75/W, incl. frost-line footings).
+   */
+  solarStructureType: "rooftop" | "carport_new" | "carport_retrofit";
   wantsEVCharging: boolean; // User wants EV charging in their quote
   wantsGenerator: boolean; // User wants backup generator
 
@@ -539,6 +545,8 @@ export type WizardIntent =
       type: "SET_ADDON_CONFIG";
       config: Partial<{
         solarKW: number;
+        solarPanelTier: "standard" | "premium";
+        solarStructureType: "rooftop" | "carport_new" | "carport_retrofit";
         generatorKW: number;
         generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
         linearGeneratorKW: number;
@@ -606,6 +614,7 @@ export function initialState(): WizardState {
     evRevenuePerYear: 0,
     wantsSolar: false,
     solarPanelTier: "standard",
+    solarStructureType: "rooftop",
     wantsEVCharging: false,
     wantsGenerator: false,
     // Addon config defaults (Step 3.5)
@@ -961,6 +970,8 @@ export interface WizardActions {
   setAddonConfig: (
     config: Partial<{
       solarKW: number;
+      solarPanelTier: "standard" | "premium";
+      solarStructureType: "rooftop" | "carport_new" | "carport_retrofit";
       generatorKW: number;
       generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
       linearGeneratorKW: number;
