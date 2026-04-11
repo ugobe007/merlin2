@@ -702,13 +702,14 @@ describe("Scenario 4 — Phoenix AZ car wash + pkg_pro EV (6 L2 + 2 DCFC)", () =
     expect(tiers[1].bessKW).toBeGreaterThan(75);
   });
 
-  it("annual savings boosted by EV revenue (~$33,912/yr net at $0.12/kWh — corrected from old gross $34,800)", async () => {
+  it("annual savings boosted by EV revenue (~$10,838/yr net at $0.12/kWh — 3 sess/day minus op costs & demand penalty)", async () => {
     if (!tiers) tiers = await buildTiers(state);
     for (const t of tiers) {
       expect(t.annualSavings).toBeGreaterThan(30000);
-      // tier.evRevenuePerYear must be the computed net value (not state.evRevenuePerYear)
-      expect(t.evRevenuePerYear).toBeGreaterThan(25000);
-      expect(t.evRevenuePerYear).toBeLessThan(40000); // net, not old gross
+      // tier.evRevenuePerYear: new model (3 sess/day, 15% network + 3.5% CC + $1K maint)
+      // 6 L2 + 2 DCFC at $0.12/kWh: L2 ~$6,934 + DCFC net ~$5,029 ≈ $11,963 total
+      expect(t.evRevenuePerYear).toBeGreaterThan(8000);
+      expect(t.evRevenuePerYear).toBeLessThan(25000); // far below old gross $34,800
     }
   });
 
@@ -982,12 +983,14 @@ describe("Scenario 6 — WOW Car Wash (1 tunnel + 24 vacuums, solar + EV + gener
     expect(tiers[1].generatorKW).toBeLessThanOrEqual(50);
   });
 
-  it("annual savings boosted by EV revenue (~$33,086/yr net at $0.13/kWh — corrected from old gross $34,800)", async () => {
+  it("annual savings boosted by EV revenue (~$12,390/yr net at $0.13/kWh — 3 sess/day minus op costs & demand penalty)", async () => {
     if (!tiers) tiers = await buildTiers(state);
     for (const t of tiers) {
-      expect(t.annualSavings).toBeGreaterThan(30000);
-      expect(t.evRevenuePerYear).toBeGreaterThan(25000);
-      expect(t.evRevenuePerYear).toBeLessThan(40000);
+      // annualSavings = demand shaving + solar + EV revenue (all net)
+      expect(t.annualSavings).toBeGreaterThan(20000);
+      // 6 L2 + 2 DCFC at $0.13/kWh with 113 kW BESS: L2 ~$6,836 + DCFC net ~$5,554 ≈ $12,390
+      expect(t.evRevenuePerYear).toBeGreaterThan(8000);
+      expect(t.evRevenuePerYear).toBeLessThan(30000); // far below old gross $34,800
     }
   });
 
