@@ -322,7 +322,26 @@ export interface QuoteTier {
   annualReserves: number; // insurance, inverter replacement, degradation (V4.5)
   annualSavings: number; // NET savings (gross - reserves) for honest payback
   evRevenuePerYear: number; // subset of grossAnnualSavings (for display isolation)
+  /**
+   * Energy cost-reduction subtotal: demand charge savings + TOU arbitrage + solar + generator backup.
+   * Excludes evRevenuePerYear — different economic category (new business income, not utility savings).
+   * Use for energy-only payback and savings breakdown disclosures.
+   */
+  energySavings?: number;
+  /**
+   * Demand charges that DCFC fast-chargers create, net of BESS offset.
+   * Already deducted from evRevenuePerYear before grossAnnualSavings is computed.
+   * Surfaced for transparency in quote notes and savings breakdowns.
+   */
+  dcfcDemandPenalty?: number;
   paybackYears: number;
+  /**
+   * Payback based on energy savings only — excludes EV charging revenue.
+   * Allows the quote to show customers how long the BESS/solar pays back
+   * independent of any new EV business income they may or may not realize.
+   * Present only when evRevenuePerYear > 0.
+   */
+  paybackYearsEnergyOnly?: number;
   roi10Year: number; // percent, e.g. 185.0
   npv: number;
   // Margin policy (V4.5 transparency)

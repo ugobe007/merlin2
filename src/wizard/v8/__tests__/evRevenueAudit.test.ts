@@ -82,6 +82,27 @@ function hpcAnnualRevenue(count: number, rate: number) {
   return Math.round(count * hpcNetPerSession(rate) * 8 * 300);
 }
 
+/**
+ * Mirror of pricingServiceV45 DCFC demand charge penalty.
+ * DCFC chargers create demand spikes; BESS offsets a portion.
+ * bessOffset = min(0.75, (bessKW / dcfcPeakKW) × 0.75)
+ * penalty = dcfcPeakKW × (1 − bessOffset) × demandCharge × 12
+ */
+function dcfcDemandPenaltyForTest(dcfcCount: number, bessKW: number, demandCharge: number): number {
+  const dcfcPeakKW = dcfcCount * 50;
+  if (dcfcPeakKW === 0) return 0;
+  const bessOffset = Math.min(0.75, (bessKW / dcfcPeakKW) * 0.75);
+  return Math.round(dcfcPeakKW * (1 - bessOffset) * demandCharge * 12);
+}
+
+/** Net DCFC annual revenue after demand penalty (BASE_SAVINGS_INPUTS params) */
+function dcfcNetRevenue(count: number, rate: number, bessKW = 95, demandCharge = 15): number {
+  return Math.max(
+    0,
+    dcfcAnnualRevenue(count, rate) - dcfcDemandPenaltyForTest(count, bessKW, demandCharge)
+  );
+}
+
 const BASE_SAVINGS_INPUTS: SavingsInputs = {
   bessKW: 95,
   bessKWh: 380,
@@ -186,36 +207,41 @@ describe("A. EV net revenue math — pricingServiceV45.calculateAnnualSavings", 
   });
 
   describe("DCFC chargers", () => {
-    it("1 DCFC at $0.15/kWh: net/session = $12 − (25 × 0.15) = $8.25, 5 sess/day × 300 days = $12,375/yr", () => {
+    it("1 DCFC at $0.15/kWh: net/session = $8.25, less DCFC demand penalty → $10,125/yr", () => {
       const result = calculateAnnualSavings(
         { ...BASE_SAVINGS_INPUTS, evChargers: 0, dcfcChargers: 1, electricityRate: 0.15 },
         0
       );
-      const expected = dcfcAnnualRevenue(1, 0.15); // 12375
+      // Raw: 12375; penalty = 50 × 0.25 × 15 × 12 = 2,250; net = 10,125
+      const expected = dcfcNetRevenue(1, 0.15); // 10125
       expect(result.evChargingRevenue).toBe(expected);
-      expect(result.evChargingRevenue).toBeGreaterThan(12000);
-      expect(result.evChargingRevenue).toBeLessThan(13000);
+      expect(result.evChargingRevenue).toBeGreaterThan(9000);
+      expect(result.evChargingRevenue).toBeLessThan(12375); // must be below raw pre-penalty value
     });
 
-    it("4 DCFC at $0.15/kWh = $49,500/yr (not the old gross $72,000/yr)", () => {
+    it("4 DCFC at $0.15/kWh: net $49,500 minus DCFC demand penalty → $26,325/yr (not the old gross $72,000/yr)", () => {
       const result = calculateAnnualSavings(
         { ...BASE_SAVINGS_INPUTS, evChargers: 0, dcfcChargers: 4, electricityRate: 0.15 },
         0
       );
-      const expected = dcfcAnnualRevenue(4, 0.15); // 4 × 12375 = 49500
+      // Raw net: 49500; penalty = 200 × 0.64375 × 15 × 12 = 23,175; net = 26,325
+      const expected = dcfcNetRevenue(4, 0.15); // 26325
       expect(result.evChargingRevenue).toBe(expected);
-      // Explicitly guard against the old gross value ($72K)
-      expect(result.evChargingRevenue).toBeLessThan(60000);
+      // Explicitly guard against the old gross value ($72K) and pre-penalty net ($49.5K)
+      expect(result.evChargingRevenue).toBeLessThan(49500);
+      expect(result.evChargingRevenue).not.toBe(72000);
     });
 
-    it("4 DCFC at $0.12/kWh (APS Phoenix rate): net = $12 − $3 = $9/session = $54,000/yr", () => {
+    it("4 DCFC at $0.12/kWh (APS Phoenix rate): $54,000 raw minus DCFC demand penalty → $30,825/yr", () => {
       const result = calculateAnnualSavings(
         { ...BASE_SAVINGS_INPUTS, evChargers: 0, dcfcChargers: 4, electricityRate: 0.12 },
         0
       );
-      const expected = dcfcAnnualRevenue(4, 0.12); // 4 × 9 × 5 × 300 = 54000
+      // Raw: 54000; demand penalty same 23175 (demandCharge-dependent, not rate); net = 30825
+      const expected = dcfcNetRevenue(4, 0.12); // 30825
       expect(result.evChargingRevenue).toBe(expected);
-      expect(result.evChargingRevenue).toBeGreaterThanOrEqual(54000);
+      expect(result.evChargingRevenue).toBeLessThan(54000); // demand penalty deducted
+      expect(result.evChargingRevenue).toBeGreaterThan(25000);
     });
 
     it("DCFC net revenue goes to $0 when rate > $0.48/kWh (fee = $12 / 25 kWh)", () => {
@@ -241,7 +267,7 @@ describe("A. EV net revenue math — pricingServiceV45.calculateAnnualSavings", 
   });
 
   describe("Mixed L2 + DCFC", () => {
-    it("6 L2 + 2 DCFC at $0.12/kWh: total = L2 revenue + DCFC revenue", () => {
+    it("6 L2 + 2 DCFC at $0.12/kWh: total = L2 revenue + DCFC net-of-demand-penalty revenue", () => {
       const result = calculateAnnualSavings(
         {
           ...BASE_SAVINGS_INPUTS,
@@ -252,11 +278,12 @@ describe("A. EV net revenue math — pricingServiceV45.calculateAnnualSavings", 
         },
         0
       );
-      const expected = l2AnnualRevenue(6, 0.12) + dcfcAnnualRevenue(2, 0.12);
+      // L2 revenue unaffected; DCFC revenue net of demand penalty
+      const expected = l2AnnualRevenue(6, 0.12) + dcfcNetRevenue(2, 0.12);
       expect(result.evChargingRevenue).toBe(expected);
     });
 
-    it("L2 + DCFC + HPC: all three contribute independently", () => {
+    it("L2 + DCFC + HPC: L2 and HPC unaffected; DCFC revenue net of demand penalty", () => {
       const rate = 0.14;
       const result = calculateAnnualSavings(
         {
@@ -269,8 +296,9 @@ describe("A. EV net revenue math — pricingServiceV45.calculateAnnualSavings", 
         },
         0
       );
+      // L2 and HPC revenues unaffected; only DCFC revenue net of demand penalty
       const expected =
-        l2AnnualRevenue(4, rate) + dcfcAnnualRevenue(2, rate) + hpcAnnualRevenue(1, rate);
+        l2AnnualRevenue(4, rate) + dcfcNetRevenue(2, rate) + hpcAnnualRevenue(1, rate);
       expect(result.evChargingRevenue).toBe(expected);
     });
   });
@@ -350,10 +378,11 @@ describe("B. tier.evRevenuePerYear isolation — computed value, not state.evRev
       },
     });
     const tiers = await buildTiers(state);
-    const expectedEVRevenue = dcfcAnnualRevenue(dcfc, rate);
     for (const tier of tiers) {
-      // Must equal the computed net value — NOT 999999 (stale state field)
-      expect(tier.evRevenuePerYear).toBe(expectedEVRevenue);
+      // Must be computed net value (with demand penalty) — NOT 999999 (stale state field)
+      // DCFC demand penalty means evRevenuePerYear < raw dcfcAnnualRevenue
+      expect(tier.evRevenuePerYear).toBeGreaterThan(0);
+      expect(tier.evRevenuePerYear).toBeLessThan(dcfcAnnualRevenue(dcfc, rate)); // penalty applied
       expect(tier.evRevenuePerYear).not.toBe(999999);
     }
   });
@@ -378,9 +407,11 @@ describe("B. tier.evRevenuePerYear isolation — computed value, not state.evRev
       },
     });
     const tiers = await buildTiers(state);
-    const expected = l2AnnualRevenue(l2, rate) + dcfcAnnualRevenue(dcfc, rate);
+    const rawExpected = l2AnnualRevenue(l2, rate) + dcfcAnnualRevenue(dcfc, rate);
     for (const tier of tiers) {
-      expect(tier.evRevenuePerYear).toBe(expected);
+      // DCFC demand penalty is deducted, so tier value < raw combined revenue
+      expect(tier.evRevenuePerYear).toBeGreaterThan(0);
+      expect(tier.evRevenuePerYear).toBeLessThan(rawExpected); // demand penalty applied to DCFC portion
       // Old gross was $34,800 — must no longer appear
       expect(tier.evRevenuePerYear).not.toBe(34800);
     }
@@ -414,10 +445,12 @@ describe("B. tier.evRevenuePerYear isolation — computed value, not state.evRev
     });
     const [, withEV] = await buildTiers(stateWithEV);
     const [, noEV] = await buildTiers(stateNoEV);
-    const expectedEVRevenue = dcfcAnnualRevenue(dcfc, rate);
-    // grossAnnualSavings should be higher by approximately the EV revenue
+    // grossAnnualSavings should be higher by the tier's actual EV revenue (net of demand penalty)
+    // The demand penalty is BESS-size dependent, so compare using tier's own evRevenuePerYear
     const delta = withEV.grossAnnualSavings - noEV.grossAnnualSavings;
-    expect(delta).toBeCloseTo(expectedEVRevenue, -2); // within $100
+    expect(delta).toBeCloseTo(withEV.evRevenuePerYear, -2); // within $100 of tier's EV revenue
+    expect(withEV.evRevenuePerYear).toBeGreaterThan(0);
+    expect(withEV.evRevenuePerYear).toBeLessThan(dcfcAnnualRevenue(dcfc, rate)); // demand penalty applied
   });
 });
 
@@ -444,9 +477,9 @@ describe("C. Generator + EV stability — annualSavings must not collapse when g
     const [, baseRec] = await buildTiers(baseState);
     const [, genRec] = await buildTiers(withGenState);
 
-    // EV revenue must be preserved in both scenarios
-    const expectedEVRevenue = dcfcAnnualRevenue(4, 0.15);
-    expect(baseRec.evRevenuePerYear).toBe(expectedEVRevenue);
+    // EV revenue must be preserved in both scenarios (with demand penalty applied)
+    expect(baseRec.evRevenuePerYear).toBeGreaterThan(0);
+    expect(baseRec.evRevenuePerYear).toBeLessThan(dcfcAnnualRevenue(4, 0.15)); // demand penalty applied
 
     // annualSavings should be the same or very close (generator adds $0 non-hospital savings)
     // Allow small variance from tier-scaling (generator changes generatorKW scale)
@@ -478,9 +511,9 @@ describe("C. Generator + EV stability — annualSavings must not collapse when g
     const [, evGenRec] = await buildTiers(withEVWithGen);
 
     // EV+generator scenario must save substantially MORE than BESS+solar alone
-    const expectedEVRevenue = dcfcAnnualRevenue(4, 0.15);
+    // Use tier's own evRevenuePerYear (net of demand penalty) instead of raw dcfcAnnualRevenue
     expect(evGenRec.annualSavings).toBeGreaterThan(
-      noEVRec.annualSavings + expectedEVRevenue * 0.8 // at least 80% of EV revenue additive
+      noEVRec.annualSavings + evGenRec.evRevenuePerYear * 0.8 // at least 80% of net EV revenue additive
     );
   });
 
@@ -492,9 +525,10 @@ describe("C. Generator + EV stability — annualSavings must not collapse when g
       generatorKW: 125,
     });
     const tiers = await buildTiers(state);
-    const expectedEVRevenue = dcfcAnnualRevenue(4, 0.15);
     for (const tier of tiers) {
-      expect(tier.evRevenuePerYear).toBe(expectedEVRevenue);
+      // EV revenue preserved (net of demand penalty)
+      expect(tier.evRevenuePerYear).toBeGreaterThan(0);
+      expect(tier.evRevenuePerYear).toBeLessThan(dcfcAnnualRevenue(4, 0.15)); // demand penalty applied
     }
   });
 
@@ -530,13 +564,14 @@ describe("D. Payback guardrail preserves EV revenue when generator removed", () 
     });
 
     const tiers = await buildTiers(state);
-    const expectedEVRevenue = dcfcAnnualRevenue(2, 0.15);
+    const rawEVRevenue = dcfcAnnualRevenue(2, 0.15);
 
     for (const tier of tiers) {
-      // Regardless of whether guardrail fired, EV revenue must be present
-      expect(tier.evRevenuePerYear).toBe(expectedEVRevenue);
+      // Regardless of whether guardrail fired, EV revenue must be present (net of demand penalty)
+      expect(tier.evRevenuePerYear).toBeGreaterThan(0);
+      expect(tier.evRevenuePerYear).toBeLessThanOrEqual(rawEVRevenue); // ≤ raw (penalty may deduct)
       expect(tier.annualSavings).toBeGreaterThan(
-        expectedEVRevenue * 0.8 // EV revenue should be the dominant savings driver
+        tier.evRevenuePerYear * 0.8 // EV revenue should be the dominant savings driver
       );
     }
   });
@@ -587,14 +622,20 @@ describe("E. Multi-charger combinations", () => {
         },
       });
       const tiers = await buildTiers(state);
-      const expected =
+      // Raw expected (pre-penalty), used as upper bound for DCFC combos
+      const rawExpected =
         l2AnnualRevenue(l2, rate) + dcfcAnnualRevenue(dcfc, rate) + hpcAnnualRevenue(hpc, rate);
       for (const tier of tiers) {
         if (totalChargers === 0) {
           // Zero chargers → evRevenuePerYear === state.evRevenuePerYear (0)
           expect(tier.evRevenuePerYear).toBe(0);
+        } else if (dcfc > 0) {
+          // DCFC demand penalty deducted — tier value < raw combined revenue
+          expect(tier.evRevenuePerYear).toBeGreaterThan(0);
+          expect(tier.evRevenuePerYear).toBeLessThan(rawExpected);
         } else {
-          expect(tier.evRevenuePerYear).toBe(expected);
+          // No DCFC — no demand penalty; L2/HPC revenue is exact
+          expect(tier.evRevenuePerYear).toBe(rawExpected);
         }
       }
     });
@@ -660,22 +701,26 @@ describe("F. Electricity rate sensitivity — EV revenue decreases as rate rises
 // =============================================================================
 
 describe("G. Regression guard — old gross values must not reappear", () => {
-  it("4 DCFC at $0.15/kWh must NOT return $72,000/yr (old gross) — must be $49,500/yr", () => {
+  it("4 DCFC at $0.15/kWh must NOT return $72,000/yr (old gross) — must be demand-penalty-adjusted net", () => {
     const result = calculateAnnualSavings(
       { ...BASE_SAVINGS_INPUTS, evChargers: 0, dcfcChargers: 4, electricityRate: 0.15 },
       0
     );
     expect(result.evChargingRevenue).not.toBe(72000); // old gross (4 × 12 × 5 × 300)
-    expect(result.evChargingRevenue).toBe(49500); // new net (4 × 8.25 × 5 × 300)
+    expect(result.evChargingRevenue).not.toBe(49500); // pre-penalty net (now superseded by demand penalty)
+    expect(result.evChargingRevenue).toBe(dcfcNetRevenue(4, 0.15)); // net of demand penalty = 26325
+    expect(result.evChargingRevenue).toBeLessThan(49500);
   });
 
-  it("1 DCFC at $0.15/kWh must NOT return $18,000/yr (old gross) — must be $12,375/yr", () => {
+  it("1 DCFC at $0.15/kWh must NOT return $18,000/yr (old gross) — must be demand-penalty-adjusted net", () => {
     const result = calculateAnnualSavings(
       { ...BASE_SAVINGS_INPUTS, evChargers: 0, dcfcChargers: 1, electricityRate: 0.15 },
       0
     );
     expect(result.evChargingRevenue).not.toBe(18000); // old gross (1 × 12 × 5 × 300)
-    expect(result.evChargingRevenue).toBe(12375); // new net (1 × 8.25 × 5 × 300)
+    expect(result.evChargingRevenue).not.toBe(12375); // pre-penalty net (now superseded by demand penalty)
+    expect(result.evChargingRevenue).toBe(dcfcNetRevenue(1, 0.15)); // net of demand penalty = 10125
+    expect(result.evChargingRevenue).toBeLessThan(12375);
   });
 
   it("tier.evRevenuePerYear must never equal state.evRevenuePerYear when chargers are configured", async () => {
