@@ -373,28 +373,48 @@ export const EQUIPMENT_KEYWORDS: Record<string, string[]> = {
 // ============================================================================
 
 export const PRICE_PATTERNS = {
-  // BESS: $XXX/kWh, $XXX per kWh - ENHANCED
+  // BESS: $XXX/kWh, $XXX per kWh
   bess_kwh: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*k[Ww]h/gi,
   // BESS: Battery costs fell/dropped/declined to $XXX
-  bess_cost: /(?:battery|bess|storage)\s+(?:cost|price|pricing)s?\s+(?:fell|dropped|declined|reached|at|to|of)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k[Ww]h/gi,
+  bess_cost:
+    /(?:battery|bess|storage)\s+(?:cost|price|pricing)s?\s+(?:fell|dropped|declined|reached|at|to|of)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k[Ww]h/gi,
   // BESS: $XXX/kW installed
   bess_kw: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kW(?!h)\s*(?:installed)?/gi,
-  // Solar: $X.XX/W, $X.XX per watt - ENHANCED  
+  // BESS: $XXX/MWh — wholesale/grid-scale press releases often quote $/MWh
+  bess_mwh: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*M[Ww]h/gi,
+  // BESS: levelized cost of storage / LCOS at $XXX/MWh or $/kWh
+  lcos: /(?:lcos|levelized\s+cost\s+of\s+(?:storage|energy|electricity))\s*(?:of|at|:)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:to\s+\$?\s*\d+(?:,\d{3})*(?:\.\d{1,2})?)?\s*(?:\/|per|a)?\s*[Mk][Ww]h/gi,
+  // Project cost + capacity: "$50 million 200 MWh" → derive $/kWh = 50M/200000 = $250
+  project_mwh:
+    /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:million|billion|M|B)\s+(?:[\w\s,]+)?\s*(\d+(?:\.\d{1,2})?)\s*[Mm][Ww]h/gi,
+  // Solar: $X.XX/W, $X.XX per watt
   solar_watt: /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*[Ww](?:att)?/gi,
   // Solar: module pricing at $X.XX/W
-  solar_module: /(?:module|panel|solar)\s+(?:cost|price|pricing)s?\s+(?:at|of|to|reached)\s+\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*[Ww](?:att)?/gi,
-  // Solar: $XXX/kW - ENHANCED
+  solar_module:
+    /(?:module|panel|solar)\s+(?:cost|price|pricing)s?\s+(?:at|of|to|reached)\s+\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*[Ww](?:att)?/gi,
+  // Solar: $XXX/kW
   solar_kw: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kW(?!h)\s*(?:installed)?/gi,
+  // Solar: $X/W DC from auction / PPA results
+  solar_ppa:
+    /(?:ppa|auction|bid|contract)\s+(?:price|rate|at)\s+\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per)\s*[Ww](?:att)?/gi,
   // Inverter: $XXX/kW
-  inverter_kw: /(?:inverter|pcs)\s+(?:cost|price|pricing)s?\s+(?:at|of|to|reached)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*kW(?!h)/gi,
-  // General: $X million, $X billion - ENHANCED
-  project_cost: /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:million|billion|M|B)(?:\s+(?:project|investment|contract|deal))?/gi,
-  // EV: $X,XXX per charger/unit - ENHANCED
+  inverter_kw:
+    /(?:inverter|pcs)\s+(?:cost|price|pricing)s?\s+(?:at|of|to|reached)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*kW(?!h)/gi,
+  // General: $X million / $X billion project/investment
+  project_cost:
+    /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:million|billion|M|B)(?:\s+(?:project|investment|contract|deal|facility))?/gi,
+  // EV: $X,XXX per charger/unit
   ev_unit: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*(?:charger|unit|station|port)/gi,
   // General percentage
   percentage: /(\d+(?:\.\d{1,2})?)\s*%/gi,
   // Transformer/switchgear: $XXX,XXX per unit
   equipment_unit: /\$\s*(\d+(?:,\d{3})*)\s*(?:per|\/)\s*(?:transformer|unit|switchgear)/gi,
+  // Wind: $X,XXX/kW installed capacity
+  wind_kw:
+    /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kW(?!h)\s*(?:of\s+)?(?:wind|installed)/gi,
+  // EV charger: $XX,XXX per DCFC / Level 2
+  ev_dcfc:
+    /(?:dcfc|fast\s*charg|level\s*2)\s+(?:cost|price|pricing)s?\s+(?:at|of|to|reached)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)/gi,
 };
 
 // ============================================================================
@@ -710,9 +730,14 @@ function preprocessTextForPrices(text: string): string {
 
 function detectEquipmentFromText(text: string): string[] {
   const equipment: string[] = [];
-  if (text.includes("battery") || text.includes("bess") || text.includes("energy storage") ||
-      text.includes("utility-scale storage") || text.includes("c&i storage") ||
-      (text.includes("storage") && (text.includes("/kwh") || text.includes("per kwh"))))
+  if (
+    text.includes("battery") ||
+    text.includes("bess") ||
+    text.includes("energy storage") ||
+    text.includes("utility-scale storage") ||
+    text.includes("c&i storage") ||
+    (text.includes("storage") && (text.includes("/kwh") || text.includes("per kwh")))
+  )
     equipment.push("bess");
   if (text.includes("solar") || text.includes("photovoltaic") || text.includes("pv "))
     equipment.push("solar");
@@ -746,22 +771,25 @@ export function extractPrices(text: string, equipment: string[]): ExtractedPrice
       PRICE_PATTERNS.bess_kwh,
       PRICE_PATTERNS.bess_cost,
       PRICE_PATTERNS.bess_kw,
+      PRICE_PATTERNS.bess_mwh, // ← NEW: $/MWh → converted to $/kWh ÷ 1000
+      PRICE_PATTERNS.lcos, // ← NEW: LCOS figures from analyst reports
       /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*kwh/gi,
       /(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*dollars?\s*(?:per|\/|a)\s*kwh/gi,
       /(?:cost|price|priced|pricing|priced\s+at)\s*(?:at|of|is|are|to)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*kwh/gi,
       /battery.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
       /storage.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
       /bess.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
-      // "costs fell to $120 per kilowatt-hour"
       /costs?\s+(?:fell|dropped|declined|decreased|reduced|dropped\s+to)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|a)\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
-      // "at $350/kWh installed"  
       /at\s+\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kwh\s*installed/gi,
     ];
     for (const pattern of bessPatterns) {
       pattern.lastIndex = 0;
       let match;
       while ((match = pattern.exec(cleanText)) !== null) {
-        const price = parseFloat(match[1].replace(/,/g, ""));
+        const rawPrice = parseFloat(match[1].replace(/,/g, ""));
+        // $/MWh → convert to $/kWh by dividing by 1000
+        const isMWh = match[0].toLowerCase().includes("mwh");
+        const price = isMWh ? rawPrice / 1000 : rawPrice;
         if (price > 50 && price < 2000) {
           const context = cleanText.slice(
             Math.max(0, match.index - 100),
@@ -778,7 +806,36 @@ export function extractPrices(text: string, equipment: string[]): ExtractedPrice
               unit: "kWh",
               currency: "USD",
               context,
-              confidence: 0.8,
+              confidence: isMWh ? 0.75 : 0.8,
+            });
+          }
+        }
+      }
+    }
+
+    // ── Project-cost-derived $/kWh: "$50 million 200 MWh" → $250/kWh ────────
+    {
+      const projPattern = PRICE_PATTERNS.project_mwh;
+      projPattern.lastIndex = 0;
+      let match;
+      while ((match = projPattern.exec(cleanText)) !== null) {
+        const dollarAmt = parseFloat(match[1]);
+        const mwhAmt = parseFloat(match[2]);
+        const multiplier = match[0].toLowerCase().includes("billion") ? 1e9 : 1e6;
+        if (dollarAmt > 0 && mwhAmt > 0) {
+          const pricePerKwh = (dollarAmt * multiplier) / (mwhAmt * 1000);
+          if (pricePerKwh > 50 && pricePerKwh < 2000) {
+            const context = cleanText.slice(
+              Math.max(0, match.index - 80),
+              Math.min(cleanText.length, match.index + match[0].length + 80)
+            );
+            prices.push({
+              equipment: "bess",
+              price: Math.round(pricePerKwh),
+              unit: "kWh",
+              currency: "USD",
+              context: `[derived] ${context}`,
+              confidence: 0.6,
             });
           }
         }
@@ -797,6 +854,7 @@ export function extractPrices(text: string, equipment: string[]): ExtractedPrice
       PRICE_PATTERNS.solar_watt,
       PRICE_PATTERNS.solar_module,
       PRICE_PATTERNS.solar_kw,
+      PRICE_PATTERNS.solar_ppa, // ← NEW: auction/PPA bid prices
       /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*[Ww](?:att)?/gi,
       /(\d+(?:\.\d{1,2})?)\s*dollars?\s*(?:per|\/|a)\s*[Ww](?:att)?/gi,
       /(?:cost|price|priced|pricing|priced\s+at)\s*(?:at|of|is|are|to)?\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*[Ww](?:att)?/gi,
@@ -804,9 +862,7 @@ export function extractPrices(text: string, equipment: string[]): ExtractedPrice
       /module.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*[Ww](?:att)?/gi,
       /panel.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*[Ww](?:att)?/gi,
       /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*kw(?!h)\s*(?:installed)?/gi,
-      // "module prices at $0.25/W"
       /prices?\s+(?:at|of|reached)\s+\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*[Ww](?:att)?/gi,
-      // "solar pricing: $1.51/W"
       /pricing[:\s]+\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*[Ww](?:att)?/gi,
     ];
     for (const pattern of solarPatterns) {
