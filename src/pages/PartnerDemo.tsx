@@ -59,9 +59,8 @@ const PARTNER_CONFIGS: Record<string, PartnerConfig> = {
     accentColor: "#3ECF8E",
     showInvestorSection: true,
     defaultIndustry: "data-center",
-    callToAction: "Schedule a call with Robert",
-    calLink:
-      "mailto:robert@merlinenergy.net?subject=CapEX Power x Merlin — Partnership & Investment",
+    callToAction: "Schedule a call",
+    calLink: "mailto:bob@merlinenergy.net?subject=CapEX Power x Merlin — Partnership & Investment",
     partnershipHeadline: "The Merlin + CapEX Power stack",
     partnershipBody:
       "CapEX Power's EPCs and developers need accurate BESS load studies before they can specify switchgear, transformers, and grid-tie packages. Today that study takes weeks and a consultant. Merlin produces a bankable TrueQuote™ in 90 seconds — feeding directly into CapEX Power's quote pipeline with the right kW, kWh, and peak demand numbers.",
@@ -85,9 +84,8 @@ const PARTNER_CONFIGS: Record<string, PartnerConfig> = {
     accentColor: "#3ECF8E",
     showInvestorSection: false,
     defaultIndustry: "car-wash",
-    callToAction: "Schedule a call with Robert",
-    calLink:
-      "mailto:robert@merlinenergy.net?subject=Discover Energy Systems x Merlin — Partnership",
+    callToAction: "Schedule a call",
+    calLink: "mailto:bob@merlinenergy.net?subject=Discover Energy Systems x Merlin — Partnership",
     partnershipHeadline: "The Merlin + Discover Energy Systems stack",
     partnershipBody:
       "Discover's CI and dealer network installs the batteries. The bottleneck today is the front-end: sizing the system, modeling the savings, and getting the customer to say yes. Merlin closes that gap — a 90-second TrueQuote™ that produces bankable load profiles, financial models, and proposal PDFs, all branded for your dealers. More quotes out the door means more Discover batteries in the field.",
@@ -112,7 +110,7 @@ const GENERIC_CONFIG: PartnerConfig = {
   showInvestorSection: false,
   defaultIndustry: "hotel",
   callToAction: "Get in touch",
-  calLink: "mailto:robert@merlinenergy.net",
+  calLink: "mailto:bob@merlinenergy.net",
   partnershipHeadline: "The partnership",
   partnershipBody: "Merlin runs as an embeddable widget or REST API inside your existing workflow.",
   partnerBullets: [],
@@ -254,13 +252,21 @@ export default function PartnerDemo() {
               </>
             )}
           </div>
-          <a
-            href={partner.calLink}
-            className="h-8 px-4 rounded-lg bg-[#3ECF8E] hover:bg-[#3ECF8E]/90 text-black font-semibold text-xs flex items-center gap-1.5 transition-colors"
-          >
-            {partner.callToAction}
-            <ArrowRight className="w-3 h-3" />
-          </a>
+          <div className="flex items-center gap-4">
+            <a href="/" className="text-xs text-white/50 hover:text-white transition-colors">
+              Home
+            </a>
+            <a href="/wizard" className="text-xs text-white/50 hover:text-white transition-colors">
+              Wizard
+            </a>
+            <a
+              href={partner.calLink}
+              className="h-8 px-4 rounded-lg bg-[#3ECF8E] hover:bg-[#3ECF8E]/90 text-black font-semibold text-xs flex items-center gap-1.5 transition-colors"
+            >
+              {partner.callToAction}
+              <ArrowRight className="w-3 h-3" />
+            </a>
+          </div>
         </div>
       </nav>
 
@@ -285,7 +291,7 @@ export default function PartnerDemo() {
               href={partner.calLink}
               className="h-12 px-6 rounded-xl border border-white/15 hover:bg-white/[0.05] text-white font-semibold text-sm flex items-center gap-2 transition-colors"
             >
-              Talk to Robert
+              Schedule a call
               <ChevronRight className="w-4 h-4" />
             </a>
           </div>
@@ -298,13 +304,66 @@ export default function PartnerDemo() {
           ))}
         </div>
 
-        {/* ── About partner ── */}
+        {/* ── Intro recognition panel ── */}
         {partner.about && (
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8 md:p-10 space-y-4">
-            <div className="text-xs font-semibold uppercase tracking-widest text-[#3ECF8E]/70">
-              About {partner.name}
+          <div className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-5">
+              {/* Merlin card */}
+              <div className="p-7 rounded-2xl border border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.03] space-y-3">
+                <div className="flex items-center gap-2.5 mb-1">
+                  <MerlinBatteryLogo size={22} />
+                  <span className="font-bold text-sm tracking-tight">Merlin Energy</span>
+                </div>
+                <div className="text-xs font-semibold uppercase tracking-widest text-[#3ECF8E]/70">
+                  Who we are
+                </div>
+                <p className="text-white/65 text-sm leading-relaxed">
+                  Merlin Energy is an AI-powered BESS quoting platform that turns a 90-second
+                  customer conversation into a bankable proposal. Our TrueQuote™ engine models load
+                  profiles for 15 commercial verticals using ASHRAE/CBECS benchmarks, live utility
+                  rates, and IRA 2022 incentive data — producing full NPV, IRR, and payback analysis
+                  with no engineering team required.
+                </p>
+                <div className="pt-1 flex flex-wrap gap-2">
+                  {[
+                    "15 verticals",
+                    "90-sec quote",
+                    "TrueQuote™",
+                    "IRA 2022 ITC",
+                    "White-label API",
+                  ].map((t) => (
+                    <span
+                      key={t}
+                      className="px-2.5 py-1 rounded-full text-xs border border-[#3ECF8E]/25 text-[#3ECF8E]/80 bg-[#3ECF8E]/[0.05]"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Partner card */}
+              <div className="p-7 rounded-2xl border border-white/[0.08] bg-white/[0.02] space-y-3">
+                <div className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-1">
+                  Our partner
+                </div>
+                <div className="font-bold text-base">{partner.name}</div>
+                <div className="text-xs font-semibold uppercase tracking-widest text-[#3ECF8E]/70">
+                  Who they are
+                </div>
+                <p className="text-white/65 text-sm leading-relaxed">{partner.about}</p>
+              </div>
             </div>
-            <p className="text-white/65 leading-relaxed max-w-3xl">{partner.about}</p>
+
+            {/* How we work together */}
+            <div className="p-7 rounded-2xl border border-white/[0.08] bg-white/[0.02] space-y-3">
+              <div className="text-xs font-semibold uppercase tracking-widest text-[#3ECF8E]/70">
+                How we work together
+              </div>
+              <p className="text-white/65 text-sm leading-relaxed max-w-3xl">
+                {partner.partnershipBody}
+              </p>
+            </div>
           </div>
         )}
 
@@ -490,8 +549,7 @@ export default function PartnerDemo() {
         <div className="text-center space-y-5 py-8">
           <h2 className="text-3xl font-bold">Ready to move forward?</h2>
           <p className="text-white/50 text-sm max-w-md mx-auto">
-            Robert is available this week. Let's talk through what a {partner.name} + Merlin
-            partnership looks like in practice.
+            Let's talk through what a {partner.name} + Merlin partnership looks like in practice.
           </p>
           <a
             href={partner.calLink}
