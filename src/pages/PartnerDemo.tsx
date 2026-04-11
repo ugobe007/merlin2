@@ -225,8 +225,8 @@ function FeatureCard({
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function PartnerDemo() {
-  const pathname = window.location.pathname; // e.g. /demo/capex
-  const slug = pathname.split("/").pop()?.toLowerCase() ?? "";
+  const pathname = window.location.pathname; // e.g. /demo/capex or /demo/capex/
+  const slug = pathname.split("/").filter(Boolean).pop()?.toLowerCase() ?? "";
   const partner = PARTNER_CONFIGS[slug] ?? GENERIC_CONFIG;
 
   const [showWizard, setShowWizard] = useState(false);
