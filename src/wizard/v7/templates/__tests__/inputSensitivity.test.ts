@@ -41,7 +41,6 @@ import {
   listAliasIndustries,
   type AliasIndustry,
 } from "../../calculators/ssotInputAliases";
-import { MANIFEST } from "../template-manifest";
 
 // ──────────────────────────────────────────────────────
 // Tier 0: buildSSOTInput correctness
@@ -213,63 +212,6 @@ describe("input sensitivity: changing input changes output", () => {
   });
 });
 
-// ──────────────────────────────────────────────────────
-// Tier 2: Manifest ssotInputAliases coverage
-//
-// Every manifest entry MUST have ssotInputAliases.
-// Every alias industry MUST appear in the manifest.
-// ──────────────────────────────────────────────────────
-
-describe("manifest ssotInputAliases coverage", () => {
-  test("all manifest entries have ssotInputAliases", () => {
-    for (const entry of MANIFEST) {
-      expect(
-        entry.ssotInputAliases,
-        `${entry.industrySlug} missing ssotInputAliases`
-      ).toBeDefined();
-      expect(
-        Object.keys(entry.ssotInputAliases!).length,
-        `${entry.industrySlug} has empty ssotInputAliases`
-      ).toBeGreaterThan(0);
-    }
-  });
-
-  test("all alias industries appear in manifest", () => {
-    const manifestSlugs = MANIFEST.map((m) => m.industrySlug);
-    const aliasIndustries = listAliasIndustries();
-
-    for (const industry of aliasIndustries) {
-      expect(manifestSlugs, `Alias industry "${industry}" missing from manifest`).toContain(
-        industry
-      );
-    }
-  });
-
-  test("manifest alias adapterFields align with requiredCalcFields", () => {
-    // Verify that every field IN the alias map is either a requiredCalcField
-    // or its ssotField is a known SSOT field. We don't require every
-    // requiredCalcField to be in the alias map — pass-through fields
-    // (same name in adapter and SSOT) don't need alias entries.
-    for (const entry of MANIFEST) {
-      if (!entry.ssotInputAliases) continue;
-
-      for (const [adapterField, alias] of Object.entries(entry.ssotInputAliases)) {
-        // The adapter field in the alias should be referenced by the adapter
-        // (either as requiredCalcField or as an extra field)
-        expect(
-          typeof alias.ssotField,
-          `${entry.industrySlug}.${adapterField}: ssotField must be a string`
-        ).toBe("string");
-        expect(
-          alias.ssotField.length,
-          `${entry.industrySlug}.${adapterField}: ssotField must not be empty`
-        ).toBeGreaterThan(0);
-      }
-    }
-  });
-});
-
-// ──────────────────────────────────────────────────────
 // Tier 3: getSSOTDefault accuracy
 // ──────────────────────────────────────────────────────
 

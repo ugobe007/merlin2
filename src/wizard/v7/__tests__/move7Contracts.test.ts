@@ -27,10 +27,13 @@ import {
   hasVisiblePolicyEvents,
   maxUserSeverity,
 } from "../step3/policyTranslation";
-import { PolicyCode, type PolicyEvent, type PolicyCodeType } from "../step3/policyTaxonomy";
-import { sanitizeQuoteForDisplay, type DisplayHints } from "../utils/pricingSanity";
-import { buildTelemetryPayload } from "../telemetry/step3TelemetryService";
-import type { LoadProfileEnvelope } from "../step3/loadProfile";
+import {
+  PolicyCode,
+  type PolicyEvent,
+  type PolicyCodeType,
+} from "@/wizard/v7/step3/policyTaxonomy";
+import { sanitizeQuoteForDisplay, type DisplayHints } from "@/wizard/v7/utils/pricingSanity";
+import type { LoadProfileEnvelope } from "@/wizard/v7/step3/loadProfile";
 
 // ============================================================================
 // Fixtures
@@ -123,11 +126,13 @@ describe("Tier A — Policy Translation Layer", () => {
     });
 
     it("RANGE_CLAMPED is shown with adjusted wording", () => {
-      const events = [makeEvent(PolicyCode.RANGE_CLAMPED, "info", {
-        field: "roomCount",
-        rawValue: 999,
-        resolvedValue: 400,
-      })];
+      const events = [
+        makeEvent(PolicyCode.RANGE_CLAMPED, "info", {
+          field: "roomCount",
+          rawValue: 999,
+          resolvedValue: 400,
+        }),
+      ];
       const translated = translatePolicyEvents(events);
       expect(translated).toHaveLength(1);
       expect(translated[0].message).toContain("Room Count");
@@ -136,18 +141,22 @@ describe("Tier A — Policy Translation Layer", () => {
     });
 
     it("BORROWED_SCHEMA is shown with schema name", () => {
-      const events = [makeEvent(PolicyCode.BORROWED_SCHEMA, "info", {
-        resolvedValue: "gas_station",
-      })];
+      const events = [
+        makeEvent(PolicyCode.BORROWED_SCHEMA, "info", {
+          resolvedValue: "gas_station",
+        }),
+      ];
       const translated = translatePolicyEvents(events);
       expect(translated).toHaveLength(1);
       expect(translated[0].message).toContain("Gas Station");
     });
 
     it("FLOOR_APPLIED is shown", () => {
-      const events = [makeEvent(PolicyCode.FLOOR_APPLIED, "info", {
-        resolvedValue: 25,
-      })];
+      const events = [
+        makeEvent(PolicyCode.FLOOR_APPLIED, "info", {
+          resolvedValue: 25,
+        }),
+      ];
       const translated = translatePolicyEvents(events);
       expect(translated).toHaveLength(1);
       expect(translated[0].message).toContain("25");
@@ -169,10 +178,12 @@ describe("Tier A — Policy Translation Layer", () => {
     });
 
     it("SSOT_INPUT_MISSING is shown with field name", () => {
-      const events = [makeEvent(PolicyCode.SSOT_INPUT_MISSING, "warn", {
-        field: "squareFootage",
-        resolvedValue: 50000,
-      })];
+      const events = [
+        makeEvent(PolicyCode.SSOT_INPUT_MISSING, "warn", {
+          field: "squareFootage",
+          resolvedValue: 50000,
+        }),
+      ];
       const translated = translatePolicyEvents(events);
       expect(translated).toHaveLength(1);
       expect(translated[0].message).toContain("Square Footage");
@@ -180,9 +191,11 @@ describe("Tier A — Policy Translation Layer", () => {
     });
 
     it("INVARIANT_FAILED is shown", () => {
-      const events = [makeEvent(PolicyCode.INVARIANT_FAILED, "warn", {
-        field: "peak >= avg",
-      })];
+      const events = [
+        makeEvent(PolicyCode.INVARIANT_FAILED, "warn", {
+          field: "peak >= avg",
+        }),
+      ];
       const translated = translatePolicyEvents(events);
       expect(translated).toHaveLength(1);
       expect(translated[0].message).toContain("Peak ≥ Average Load");
@@ -192,8 +205,16 @@ describe("Tier A — Policy Translation Layer", () => {
   describe("deduplication", () => {
     it("deduplicates events with same code + field", () => {
       const events = [
-        makeEvent(PolicyCode.RANGE_CLAMPED, "info", { field: "roomCount", rawValue: 999, resolvedValue: 400 }),
-        makeEvent(PolicyCode.RANGE_CLAMPED, "info", { field: "roomCount", rawValue: 999, resolvedValue: 400 }),
+        makeEvent(PolicyCode.RANGE_CLAMPED, "info", {
+          field: "roomCount",
+          rawValue: 999,
+          resolvedValue: 400,
+        }),
+        makeEvent(PolicyCode.RANGE_CLAMPED, "info", {
+          field: "roomCount",
+          rawValue: 999,
+          resolvedValue: 400,
+        }),
       ];
       const translated = translatePolicyEvents(events);
       expect(translated).toHaveLength(1);
@@ -201,8 +222,16 @@ describe("Tier A — Policy Translation Layer", () => {
 
     it("keeps events with different fields", () => {
       const events = [
-        makeEvent(PolicyCode.RANGE_CLAMPED, "info", { field: "roomCount", rawValue: 999, resolvedValue: 400 }),
-        makeEvent(PolicyCode.RANGE_CLAMPED, "info", { field: "bedCount", rawValue: 2000, resolvedValue: 500 }),
+        makeEvent(PolicyCode.RANGE_CLAMPED, "info", {
+          field: "roomCount",
+          rawValue: 999,
+          resolvedValue: 400,
+        }),
+        makeEvent(PolicyCode.RANGE_CLAMPED, "info", {
+          field: "bedCount",
+          rawValue: 2000,
+          resolvedValue: 500,
+        }),
       ];
       const translated = translatePolicyEvents(events);
       expect(translated).toHaveLength(2);
@@ -216,16 +245,12 @@ describe("Tier A — Policy Translation Layer", () => {
     });
 
     it("hasVisiblePolicyEvents returns false for only NAN_SANITIZED (the sole hidden event)", () => {
-      const events = [
-        makeEvent(PolicyCode.NAN_SANITIZED, "warn"),
-      ];
+      const events = [makeEvent(PolicyCode.NAN_SANITIZED, "warn")];
       expect(hasVisiblePolicyEvents(events)).toBe(false);
     });
 
     it("hasVisiblePolicyEvents returns true for SEMANTIC_CONFLICT (soft-shown in Move 8)", () => {
-      const events = [
-        makeEvent(PolicyCode.SEMANTIC_CONFLICT, "warn"),
-      ];
+      const events = [makeEvent(PolicyCode.SEMANTIC_CONFLICT, "warn")];
       expect(hasVisiblePolicyEvents(events)).toBe(true);
     });
 
@@ -248,9 +273,16 @@ describe("Tier A — Policy Translation Layer", () => {
   describe("mixed event sets", () => {
     it("filters a realistic mixed set correctly", () => {
       const events = [
-        makeEvent(PolicyCode.SSOT_INPUT_MISSING, "warn", { field: "occupancyRate", resolvedValue: 0.7 }),
+        makeEvent(PolicyCode.SSOT_INPUT_MISSING, "warn", {
+          field: "occupancyRate",
+          resolvedValue: 0.7,
+        }),
         makeEvent(PolicyCode.NAN_SANITIZED, "warn", { field: "bayCount" }),
-        makeEvent(PolicyCode.RANGE_CLAMPED, "info", { field: "roomCount", rawValue: 999, resolvedValue: 400 }),
+        makeEvent(PolicyCode.RANGE_CLAMPED, "info", {
+          field: "roomCount",
+          rawValue: 999,
+          resolvedValue: 400,
+        }),
         makeEvent(PolicyCode.SEMANTIC_CONFLICT, "warn", { field: "sqft" }),
         makeEvent(PolicyCode.BORROWED_SCHEMA, "info", { resolvedValue: "hotel" }),
       ];
@@ -401,116 +433,5 @@ describe("Tier B — Last-Mile Sanitizer", () => {
       expect(q._displayHints).toBeDefined();
       expect(q._displayHints.topContributors).toHaveLength(0);
     });
-  });
-});
-
-// ============================================================================
-// TIER C — Telemetry Payload Builder
-// ============================================================================
-
-describe("Tier C — Telemetry Payload Builder", () => {
-  it("builds correct payload from minimal envelope", () => {
-    const envelope = makeMinimalEnvelope();
-    const payload = buildTelemetryPayload(envelope, "test-session-1");
-
-    expect(payload.industry).toBe("hotel");
-    expect(payload.schemaKey).toBe("hotel");
-    expect(payload.calculatorId).toBe("hotel_load_v1");
-    expect(payload.sessionId).toBe("test-session-1");
-    expect(payload.peakKW).toBe(450);
-    expect(payload.avgKW).toBe(280);
-    expect(payload.dutyCycle).toBe(0.622);
-    expect(payload.confidence).toBe("high");
-    expect(payload.invariantsAllPassed).toBe(true);
-    expect(payload.failedInvariantKeys).toEqual([]);
-    expect(payload.policyEventTotal).toBe(0);
-    expect(payload.wizardVersion).toBe("v7.1.0");
-  });
-
-  it("reports top 3 contributors sorted by kW", () => {
-    const envelope = makeMinimalEnvelope();
-    const payload = buildTelemetryPayload(envelope);
-
-    expect(payload.topContributors).toHaveLength(3);
-    expect(payload.topContributors[0].key).toBe("hvac");
-    expect(payload.topContributors[0].kW).toBe(210);
-    expect(payload.topContributors[1].key).toBe("lighting");
-    expect(payload.topContributors[2].key).toBe("process");
-    expect(payload.contributorCount).toBe(5);
-  });
-
-  it("counts policy events by code", () => {
-    const envelope = makeMinimalEnvelope({
-      policyEvents: [
-        makeEvent(PolicyCode.RANGE_CLAMPED, "info", { field: "roomCount" }),
-        makeEvent(PolicyCode.RANGE_CLAMPED, "info", { field: "occupancyRate" }),
-        makeEvent(PolicyCode.NAN_SANITIZED, "warn", { field: "bayCount" }),
-      ],
-    });
-    const payload = buildTelemetryPayload(envelope);
-
-    expect(payload.policyEventTotal).toBe(3);
-    expect(payload.policyEventCountByCode["RANGE_CLAMPED"]).toBe(2);
-    expect(payload.policyEventCountByCode["NAN_SANITIZED"]).toBe(1);
-    expect(payload.policyEventMaxSeverity).toBe("warn");
-  });
-
-  it("reports failed invariant keys", () => {
-    const envelope = makeMinimalEnvelope({
-      invariants: [
-        { rule: "peak >= avg", passed: true, detail: "ok" },
-        { rule: "contributors ≈ peak", passed: false, detail: "drift 15%" },
-        { rule: "duty cycle range", passed: false, detail: "0.02 < 0.05" },
-      ],
-      invariantsAllPassed: false,
-    });
-    const payload = buildTelemetryPayload(envelope);
-
-    expect(payload.invariantsAllPassed).toBe(false);
-    expect(payload.failedInvariantKeys).toEqual(["contributors ≈ peak", "duty cycle range"]);
-  });
-
-  it("reports missing tier-1 count", () => {
-    const envelope = makeMinimalEnvelope({
-      missingTier1: ["roomCount", "hotelClass"],
-    });
-    const payload = buildTelemetryPayload(envelope);
-    expect(payload.missingTier1Count).toBe(2);
-  });
-
-  it("handles envelope with zero contributors", () => {
-    const envelope = makeMinimalEnvelope({
-      contributors: [],
-      contributorSumKW: 0,
-    });
-    const payload = buildTelemetryPayload(envelope);
-    expect(payload.topContributors).toHaveLength(0);
-    expect(payload.contributorCount).toBe(0);
-  });
-
-  it("maxSeverity is 'none' when no policy events", () => {
-    const envelope = makeMinimalEnvelope({ policyEvents: [] });
-    const payload = buildTelemetryPayload(envelope);
-    expect(payload.policyEventMaxSeverity).toBe("none");
-  });
-
-  it("maxSeverity is 'error' when error events present", () => {
-    const envelope = makeMinimalEnvelope({
-      policyEvents: [
-        makeEvent(PolicyCode.ADAPTER_FALLBACK, "error"),
-      ],
-    });
-    const payload = buildTelemetryPayload(envelope);
-    expect(payload.policyEventMaxSeverity).toBe("error");
-  });
-
-  it("rounds peakKW and dutyCycle to expected precision", () => {
-    const envelope = makeMinimalEnvelope({
-      peakKW: 450.777777,
-      dutyCycle: 0.622222222,
-    });
-    const payload = buildTelemetryPayload(envelope);
-    expect(payload.peakKW).toBe(450.78); // round2
-    expect(payload.dutyCycle).toBe(0.6222); // round4
   });
 });

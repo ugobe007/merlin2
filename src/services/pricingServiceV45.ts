@@ -556,20 +556,21 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
   //   HPC (150 kW × 30 min avg = 75 kWh/session):   $25.00 fee − elec cost
   // At $0.15/kWh: L2 net ≈ $2.46/session → ~$1,107/yr; DCFC net ≈ $8.25/session → ~$12,375/yr
   let evChargingRevenue: number;
+  const sanitizedElectricityRate = Math.max(0, inputs.electricityRate);
   if (inputs.l2Chargers != null || inputs.dcfcChargers != null || inputs.hpcChargers != null) {
     const l2 = inputs.l2Chargers ?? 0;
     const dcfc = inputs.dcfcChargers ?? 0;
     const hpc = inputs.hpcChargers ?? 0;
-    const l2NetPerSession = Math.max(0, 3 - 3.6 * inputs.electricityRate);
-    const dcfcNetPerSession = Math.max(0, 12 - 25 * inputs.electricityRate);
-    const hpcNetPerSession = Math.max(0, 25 - 75 * inputs.electricityRate);
+    const l2NetPerSession = Math.max(0, 3 - 3.6 * sanitizedElectricityRate);
+    const dcfcNetPerSession = Math.max(0, 12 - 25 * sanitizedElectricityRate);
+    const hpcNetPerSession = Math.max(0, 25 - 75 * sanitizedElectricityRate);
     evChargingRevenue =
       l2 * l2NetPerSession * 1.5 * 300 +
       dcfc * dcfcNetPerSession * 5 * 300 +
       hpc * hpcNetPerSession * 8 * 300;
   } else {
     // Fallback: treat all as L2 (conservative)
-    const l2NetPerSession = Math.max(0, 3 - 3.6 * inputs.electricityRate);
+    const l2NetPerSession = Math.max(0, 3 - 3.6 * sanitizedElectricityRate);
     evChargingRevenue = inputs.evChargers * l2NetPerSession * 1.5 * 300;
   }
 
