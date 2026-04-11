@@ -31,10 +31,17 @@ import { describe, it, expect } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 
-import { sanitizeQuoteForDisplay } from "../utils/pricingSanity";
-import { translatePolicyEvents, aggregateSemanticConflicts } from "../step3/policyTranslation";
-import { PolicyCode, type PolicyEvent, type PolicyCodeType } from "../step3/policyTaxonomy";
-import type { LoadProfileEnvelope } from "../step3/loadProfile";
+import { sanitizeQuoteForDisplay } from "@/wizard/v7/utils/pricingSanity";
+import {
+  translatePolicyEvents,
+  aggregateSemanticConflicts,
+} from "@/wizard/v7/step3/policyTranslation";
+import {
+  PolicyCode,
+  type PolicyEvent,
+  type PolicyCodeType,
+} from "@/wizard/v7/step3/policyTaxonomy";
+import type { LoadProfileEnvelope } from "@/wizard/v7/step3/loadProfile";
 
 // ============================================================================
 // Fixtures

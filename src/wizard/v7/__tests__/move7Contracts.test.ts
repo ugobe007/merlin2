@@ -27,9 +27,13 @@ import {
   hasVisiblePolicyEvents,
   maxUserSeverity,
 } from "../step3/policyTranslation";
-import { PolicyCode, type PolicyEvent, type PolicyCodeType } from "../step3/policyTaxonomy";
-import { sanitizeQuoteForDisplay, type DisplayHints } from "../utils/pricingSanity";
-import type { LoadProfileEnvelope } from "../step3/loadProfile";
+import {
+  PolicyCode,
+  type PolicyEvent,
+  type PolicyCodeType,
+} from "@/wizard/v7/step3/policyTaxonomy";
+import { sanitizeQuoteForDisplay, type DisplayHints } from "@/wizard/v7/utils/pricingSanity";
+import type { LoadProfileEnvelope } from "@/wizard/v7/step3/loadProfile";
 
 // ============================================================================
 // Fixtures
