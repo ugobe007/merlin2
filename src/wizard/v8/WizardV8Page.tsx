@@ -128,7 +128,7 @@ function getAdvisorContent(
               <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
                 Your local utility is {hi(intel.utilityProvider)} at{" "}
                 {hi(`$${intel.utilityRate.toFixed(2)}/kWh`)}. Solar grade is {hi(intel.solarGrade)}{" "}
-                — {intel.peakSunHours} peak sun hours per day.
+                — {intel.peakSunHours.toFixed(2)} peak sun hours per day.
               </div>
               <div
                 style={{
@@ -193,7 +193,7 @@ function getAdvisorContent(
                     {intel.solarGrade}
                   </div>
                   <div style={{ fontSize: 10, color: T.muted, marginTop: 2 }}>
-                    {intel.peakSunHours}h / day
+                    {intel.peakSunHours.toFixed(2)}h / day
                   </div>
                 </div>
               </div>

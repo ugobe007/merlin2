@@ -355,6 +355,19 @@ export interface QuoteTier {
    * The unoffset remainder drives dcfcDemandPenalty.
    */
   dcfcBessOffsetPct?: number;
+  /**
+   * Gross DCFC session revenue (price × sessions × operating days) before any deductions.
+   * Basis for network fees and CC processing fee calculations.
+   */
+  dcfcGrossRevenue?: number;
+  /** Charging network/software platform fee: 15% of gross session revenue. */
+  dcfcNetworkFees?: number;
+  /** DCFC charger maintenance cost: $1,000/unit/year (service contracts, repairs). */
+  dcfcMaintenanceCost?: number;
+  /** Credit card / payment processing fee: 3.5% of gross session revenue. */
+  dcfcCCFees?: number;
+  /** Assumed DCFC sessions per charger per operating day (transparency disclosure). */
+  dcfcSessionsPerDay?: number;
   paybackYears: number;
   /**
    * Payback based on energy savings only — excludes EV charging revenue.

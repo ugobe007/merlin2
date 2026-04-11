@@ -525,6 +525,19 @@ export interface SavingsBreakdown {
   dcfcPeakKW: number;
   /** Fraction of DCFC peak demand offset by BESS (0–0.75). 0 when no DCFC. */
   dcfcBessOffsetPct: number;
+  /**
+   * Gross DCFC session revenue before any deductions (price × sessions × days).
+   * Used with dcfcNetworkFees + dcfcMaintenanceCost + dcfcCCFees to show net margin breakdown.
+   */
+  dcfcGrossRevenue: number;
+  /** Network/software platform fee: 15% of gross session revenue (ChargePoint, Blink, NACS). */
+  dcfcNetworkFees: number;
+  /** Charger maintenance cost: $1,000/DCFC unit/year (service contracts, repairs). */
+  dcfcMaintenanceCost: number;
+  /** Credit card / payment processing fee: 3.5% of gross session revenue. */
+  dcfcCCFees: number;
+  /** Assumed DCFC sessions per charger per operating day (used for transparency disclosure). */
+  dcfcSessionsPerDay: number;
   grossAnnualSavings: number;
 
   // Annual costs/reserves
@@ -571,7 +584,15 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
   //   L2  (7.2 kW × 30 min avg = 3.6 kWh/session):  $3.00 fee − elec cost
   //   DCFC (50 kW × 30 min avg = 25 kWh/session):   $12.00 fee − elec cost
   //   HPC (150 kW × 30 min avg = 75 kWh/session):   $25.00 fee − elec cost
-  // At $0.15/kWh: L2 net ≈ $2.46/session → ~$1,107/yr; DCFC net ≈ $8.25/session → ~$12,375/yr
+  // At $0.15/kWh: L2 net ≈ $2.46/session → ~$1,107/yr; DCFC net ≈ $8.25/session → ~$4,000/yr (net of all fees)
+  //
+  // DCFC session utilization (Vineet, April 2026):
+  //   Highway corridor avg: 5–8 sessions/charger/day (Tesla Supercharger, Electrify America)
+  //   Non-highway commercial (car wash, hotel, retail): 2–4 sessions/charger/day
+  //   Conservative default for non-dedicated-charging-sites: 3 sessions/day
+  // Reference: Wood Mackenzie "EV Fast Charging Economics" 2024; BloombergNEF DCFC utilization index
+  const DCFC_SESSIONS_PER_DAY = 3; // conservative: car wash, hotel, retail destinations
+  const HPC_SESSIONS_PER_DAY = 8; // highway corridor / dedicated charging hub
   let evChargingRevenue: number;
   const sanitizedElectricityRate = Math.max(0, inputs.electricityRate);
   if (inputs.l2Chargers != null || inputs.dcfcChargers != null || inputs.hpcChargers != null) {
@@ -583,12 +604,29 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
     const hpcNetPerSession = Math.max(0, 25 - 75 * sanitizedElectricityRate);
     evChargingRevenue =
       l2 * l2NetPerSession * 1.5 * 300 +
-      dcfc * dcfcNetPerSession * 5 * 300 +
-      hpc * hpcNetPerSession * 8 * 300;
+      dcfc * dcfcNetPerSession * DCFC_SESSIONS_PER_DAY * 300 +
+      hpc * hpcNetPerSession * HPC_SESSIONS_PER_DAY * 300;
   } else {
     // Fallback: treat all as L2 (conservative)
     const l2NetPerSession = Math.max(0, 3 - 3.6 * sanitizedElectricityRate);
     evChargingRevenue = inputs.evChargers * l2NetPerSession * 1.5 * 300;
+  }
+
+  // DCFC Operating Cost Deductions (Vineet, April 2026)
+  // These represent the real cost of operating a commercial charging business.
+  // Applied BEFORE the demand penalty so each cost category is visible separately.
+  // Sources: RMI "Making the Business Case for EV Fast Charging" 2023;
+  //          ChargePoint/Blink network operator agreements; DOE AFDC maintenance data.
+  const dcfcCount = inputs.dcfcChargers ?? 0;
+  const dcfcGrossRevenue = dcfcCount * 12 * DCFC_SESSIONS_PER_DAY * 300; // gross (before elec deduction)
+  const dcfcNetworkFees = Math.round(dcfcGrossRevenue * 0.15); // 15% network/software platform fee
+  const dcfcCCFees = Math.round(dcfcGrossRevenue * 0.035); // 3.5% credit card / payment processing
+  const dcfcMaintenanceCost = dcfcCount * 1000; // $1,000/charger/year (service, repairs)
+  if (dcfcCount > 0) {
+    evChargingRevenue = Math.max(
+      0,
+      evChargingRevenue - dcfcNetworkFees - dcfcMaintenanceCost - dcfcCCFees
+    );
   }
 
   // DCFC Demand Charge Penalty (Wood Mackenzie / RMI — demand impact of EV fast charging)
@@ -640,12 +678,17 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
     demandChargeSavings: Math.round(demandChargeSavings),
     touArbitrageSavings: Math.round(touArbitrageSavings),
     solarSavings: Math.round(solarSavings),
-    evChargingRevenue: Math.round(evChargingRevenue), // net of dcfcDemandPenalty
+    evChargingRevenue: Math.round(evChargingRevenue), // net of all DCFC deductions + demand penalty
     generatorBackupValue: Math.round(generatorBackupValue),
     energySavings: Math.round(energySavings),
     dcfcDemandPenalty: Math.round(dcfcDemandPenalty),
     dcfcPeakKW: Math.round(dcfcPeakKW),
     dcfcBessOffsetPct,
+    dcfcGrossRevenue: Math.round(dcfcGrossRevenue),
+    dcfcNetworkFees: Math.round(dcfcNetworkFees),
+    dcfcMaintenanceCost: Math.round(dcfcMaintenanceCost),
+    dcfcCCFees: Math.round(dcfcCCFees),
+    dcfcSessionsPerDay: (inputs.dcfcChargers ?? 0) > 0 ? DCFC_SESSIONS_PER_DAY : 0,
     grossAnnualSavings: Math.round(grossAnnualSavings),
     annualReserves: Math.round(annualReserves),
     netAnnualSavings: Math.round(netAnnualSavings),
