@@ -935,7 +935,9 @@ function buildOneTier(
     grossAnnualSavings,
     annualReserves,
     annualSavings, // NET savings (gross - reserves)
-    evRevenuePerYear,
+    // Use v45Savings.evChargingRevenue when EV chargers are configured (Step 3.5 path sets
+    // dcfcChargers/level2Chargers directly — state.evRevenuePerYear stays 0 in that flow).
+    evRevenuePerYear: evChargerCount > 0 ? v45Savings.evChargingRevenue : evRevenuePerYear,
     paybackYears,
     roi10Year,
     npv: v45ROI.npv25Year, // 25-year NPV, 5% discount rate (pricingServiceV45.calculateROI)

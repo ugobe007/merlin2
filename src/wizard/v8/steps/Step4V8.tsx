@@ -988,6 +988,18 @@ export default function Step4V8({ state, actions }: Props) {
                   >
                     {formatCurrency(tier.annualSavings)}
                   </p>
+                  {/* EV revenue breakout — shown when chargers contribute to total */}
+                  {(tier.evRevenuePerYear ?? 0) > 500 && (
+                    <div className="mt-1 space-y-0.5">
+                      <p className="text-[10px] text-blue-400/80">
+                        ⚡ {formatCurrency(tier.evRevenuePerYear)} EV charging revenue
+                      </p>
+                      <p className="text-[10px] text-slate-500">
+                        + {formatCurrency(tier.annualSavings - (tier.evRevenuePerYear ?? 0))} energy
+                        savings
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Equipment Strip */}
@@ -1236,6 +1248,23 @@ export default function Step4V8({ state, actions }: Props) {
                     </span>
                   </div>
                 </div>
+
+                {/* Generator advisory — only for non-hospital (hospitals get $60K/yr avoided downtime credit) */}
+                {tier.generatorKW >= 1 && state.industry !== "hospital" && (
+                  <div className="mb-3 px-3 py-2 rounded-lg bg-amber-500/[0.06] border border-amber-500/20 flex items-start gap-2 text-[10px]">
+                    <span className="mt-0.5 text-amber-400">🏭</span>
+                    <div className="leading-relaxed text-amber-300/70">
+                      <span className="font-semibold text-amber-300/90">
+                        {Math.round(tier.generatorKW)} kW generator
+                      </span>
+                      {" · resilience investment (24h backup protection) · "}
+                      <span className="text-amber-400/80">$0 annual energy savings</span>
+                      {
+                        " — adds to project cost without improving payback. Add only if continuous uptime is required."
+                      }
+                    </div>
+                  </div>
+                )}
 
                 {/* Merlin vs Traditional EPC savings */}
                 {(() => {

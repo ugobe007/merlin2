@@ -549,19 +549,28 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
   const solarKWhProduced = inputs.solarKW * sunHoursPerDay * 365 * PR;
   const solarSavings = solarKWhProduced * inputs.electricityRate;
 
-  // EV Charging Revenue by charger type (DOE/EVI benchmarks, 300 operating days/yr)
-  // L2 (7.2 kW):    $3/session  × 1.5 sessions/day × 300 days = $1,350/charger/yr
-  // DCFC (50 kW):   $12/session × 5 sessions/day   × 300 days = $18,000/charger/yr
-  // HPC (150+ kW):  $25/session × 8 sessions/day   × 300 days = $60,000/charger/yr
+  // EV Charging NET Revenue (DOE/EVI session benchmarks, 300 operating days/yr)
+  // Gross session price minus electricity cost per session (kWh drawn × utility rate):
+  //   L2  (7.2 kW × 30 min avg = 3.6 kWh/session):  $3.00 fee − elec cost
+  //   DCFC (50 kW × 30 min avg = 25 kWh/session):   $12.00 fee − elec cost
+  //   HPC (150 kW × 30 min avg = 75 kWh/session):   $25.00 fee − elec cost
+  // At $0.15/kWh: L2 net ≈ $2.46/session → ~$1,107/yr; DCFC net ≈ $8.25/session → ~$12,375/yr
   let evChargingRevenue: number;
   if (inputs.l2Chargers != null || inputs.dcfcChargers != null || inputs.hpcChargers != null) {
     const l2 = inputs.l2Chargers ?? 0;
     const dcfc = inputs.dcfcChargers ?? 0;
     const hpc = inputs.hpcChargers ?? 0;
-    evChargingRevenue = l2 * 3 * 1.5 * 300 + dcfc * 12 * 5 * 300 + hpc * 25 * 8 * 300;
+    const l2NetPerSession = Math.max(0, 3 - 3.6 * inputs.electricityRate);
+    const dcfcNetPerSession = Math.max(0, 12 - 25 * inputs.electricityRate);
+    const hpcNetPerSession = Math.max(0, 25 - 75 * inputs.electricityRate);
+    evChargingRevenue =
+      l2 * l2NetPerSession * 1.5 * 300 +
+      dcfc * dcfcNetPerSession * 5 * 300 +
+      hpc * hpcNetPerSession * 8 * 300;
   } else {
-    // Fallback: treat all as L2 (conservative — avoids prior 4x overestimate)
-    evChargingRevenue = inputs.evChargers * 1350;
+    // Fallback: treat all as L2 (conservative)
+    const l2NetPerSession = Math.max(0, 3 - 3.6 * inputs.electricityRate);
+    evChargingRevenue = inputs.evChargers * l2NetPerSession * 1.5 * 300;
   }
 
   // Generator Backup Value (avoided downtime costs)
