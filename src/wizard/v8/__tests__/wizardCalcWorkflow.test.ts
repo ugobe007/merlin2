@@ -648,12 +648,15 @@ describe("E. EV charger calculation chain", () => {
   });
 
   it("EV revenue is additive to annualSavings when EV is wanted", async () => {
-    const revenue = 34800;
+    // NOTE: evRevenuePerYear in state is the LEGACY field and is ignored when
+    // level2Chargers/dcfcChargers are set. tier.evRevenuePerYear is computed
+    // from calculateAnnualSavings().evChargingRevenue (net session fee after
+    // electricity cost deduction) — not from state.evRevenuePerYear.
     const stateWithEV = makeState({
       wantsEVCharging: true,
       level2Chargers: 6,
       dcfcChargers: 2,
-      evRevenuePerYear: revenue,
+      evRevenuePerYear: 0, // legacy field — not used when charger counts are set
     });
     const stateNoEV = makeState({
       wantsEVCharging: false,
@@ -665,6 +668,9 @@ describe("E. EV charger calculation chain", () => {
     const [, recNo] = await buildTiers(stateNoEV);
     // Gross savings includes EV revenue; net savings = gross - reserves
     expect(recEV.grossAnnualSavings).toBeGreaterThan(recNo.grossAnnualSavings);
+    // tier.evRevenuePerYear must be the computed net value (> 0) when chargers set
+    expect(recEV.evRevenuePerYear).toBeGreaterThan(0);
+    expect(recNo.evRevenuePerYear).toBe(0);
   });
 
   it("BESS grows when EV load pre-merged into peakLoadKW", async () => {

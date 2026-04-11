@@ -15,17 +15,17 @@
  *                    Solar: expected ~0 kW (near PSH floor) | Generator: full
  *
  *   4. Phoenix AZ  + pkg_pro EV  — 6 L2 + 2 DCFC = 143 kW EV demand (+95 base)
- *                    Combined peak: 238 kW | EV revenue: $34,800/yr
+ *                    Combined peak: 238 kW | EV revenue: ~$33,912/yr NET at $0.12/kWh
  *
  *   5. Chicago IL  + pkg_basic EV — 4 L2 = 29 kW EV demand (+80 base)
- *                    Combined peak: 109 kW | EV revenue: $7,200/yr
+ *                    Combined peak: 109 kW | EV revenue: ~$4,396/yr NET at $0.155/kWh
  *
  *   6. WOW Car Wash (Scottsdale AZ) — 1 express tunnel + 24 vacuum stations
  *                    Tunnel: 110 kW + 24 vac × 1.2 kW = 140 kW car wash peak
  *                    Solar cap: 46 kW (32 kW roof + 14 kW vacuum canopy, opaque roof)
  *                    EV: pkg_pro (6 L2 + 2 DCFC = 143 kW) → combined peak 283 kW
  *                    BESS: 113 kW (283 kW × 0.40, above 75 kW floor)
- *                    Generator: 44 kW essential | EV revenue: $34,800/yr
+ *                    Generator: 44 kW essential | EV revenue: ~$33,086/yr NET at $0.13/kWh
  *
  * WHAT WE VERIFY:
  *   - Solar kW ≤ solarPhysicalCapKW (never exceeds physical cap)
@@ -608,7 +608,10 @@ describe("Scenario 4 — Phoenix AZ car wash + pkg_pro EV (6 L2 + 2 DCFC)", () =
   // EV: pkg_pro = 6 L2 + 2 DCFC = 6×7.2 + 2×50 = 43.2 + 100 = 143.2 → 143 kW
   // Combined peak: 95 (car wash) + 143 (EV) = 238 kW
   // BESS Recommended: max(75, round(238 × 0.40)) = max(75, 95) = 95 kW / 380 kWh
-  // EV revenue: $34,800/yr — additive to annualSavings in buildOneTier
+  // EV revenue (NET, after electricity cost): 6×L2 + 2×DCFC at $0.12/kWh
+  //   L2:   6 × ($3 − 3.6×0.12) × 1.5 × 300 = 6 × $2.568 × 1.5 × 300 ≈ $6,912/yr
+  //   DCFC: 2 × ($12 − 25×0.12) × 5 × 300  = 2 × $9 × 5 × 300     = $27,000/yr
+  //   Total net EV revenue: ~$33,912/yr (was $34,800 gross — corrected Apr 2026)
   // NOTE: EV load pre-merged into peakLoadKW (as Step 3 setBaseLoad() would in prod)
 
   const step3Answers = {
@@ -663,7 +666,9 @@ describe("Scenario 4 — Phoenix AZ car wash + pkg_pro EV (6 L2 + 2 DCFC)", () =
     wantsEVCharging: true,
     level2Chargers: evL2,
     dcfcChargers: evDCFC,
-    evRevenuePerYear: 34800,
+    // evRevenuePerYear intentionally omitted: when level2Chargers/dcfcChargers
+    // are set, tier.evRevenuePerYear is computed from calculateAnnualSavings()
+    // (net session fee after electricity cost), NOT from state.evRevenuePerYear.
   });
 
   let tiers: Awaited<ReturnType<typeof buildTiers>>;
@@ -697,10 +702,13 @@ describe("Scenario 4 — Phoenix AZ car wash + pkg_pro EV (6 L2 + 2 DCFC)", () =
     expect(tiers[1].bessKW).toBeGreaterThan(75);
   });
 
-  it("annual savings boosted by EV revenue ($34,800/yr additive)", async () => {
+  it("annual savings boosted by EV revenue (~$33,912/yr net at $0.12/kWh — corrected from old gross $34,800)", async () => {
     if (!tiers) tiers = await buildTiers(state);
     for (const t of tiers) {
       expect(t.annualSavings).toBeGreaterThan(30000);
+      // tier.evRevenuePerYear must be the computed net value (not state.evRevenuePerYear)
+      expect(t.evRevenuePerYear).toBeGreaterThan(25000);
+      expect(t.evRevenuePerYear).toBeLessThan(40000); // net, not old gross
     }
   });
 
@@ -731,7 +739,8 @@ describe("Scenario 5 — Chicago IL car wash + pkg_basic EV (4 L2, no DCFC)", ()
   // EV: pkg_basic = 4 L2 = 4×7.2 = 28.8 → 29 kW
   // Combined peak: 80 (car wash) + 29 (EV) = 109 kW
   // BESS Recommended: max(75, round(109 × 0.70)) = max(75, 76) = 76 kW / 304 kWh
-  // EV revenue: $7,200/yr — additive to annualSavings in buildOneTier
+  // EV revenue (NET at $0.155/kWh): 4 × ($3 − 3.6×0.155) × 1.5 × 300 = 4 × $2.442 × 450 ≈ $4,396/yr
+  // (was $7,200/yr in legacy state field — corrected Apr 2026, now computed from session net revenue)
 
   const step3Answers = {
     primaryBESSApplication: "backup_power",
@@ -785,7 +794,7 @@ describe("Scenario 5 — Chicago IL car wash + pkg_basic EV (4 L2, no DCFC)", ()
     wantsEVCharging: true,
     level2Chargers: evL2,
     dcfcChargers: evDCFC,
-    evRevenuePerYear: 7200,
+    // evRevenuePerYear intentionally omitted: computed from calculateAnnualSavings() net session revenue
   });
 
   let tiers: Awaited<ReturnType<typeof buildTiers>>;
@@ -857,7 +866,10 @@ describe("Scenario 6 — WOW Car Wash (1 tunnel + 24 vacuums, solar + EV + gener
   // EV — pkg_pro (6 L2 + 2 DCFC):
   //   6 × 7.2 = 43.2 kW + 2 × 50 = 100 kW → 143 kW EV demand
   //   Combined peak: 140 (car wash) + 143 (EV) = 283 kW
-  //   Revenue: $34,800/yr (additive to annualSavings)
+  //   Revenue (NET at $0.13/kWh):
+  //     L2:   6 × ($3 − 3.6×0.13) × 1.5 × 300 = 6 × $2.532 × 450 ≈ $6,836/yr
+  //     DCFC: 2 × ($12 − 25×0.13) × 5 × 300  = 2 × $8.75 × 1500 = $26,250/yr
+  //     Total: ~$33,086/yr (was $34,800 gross — corrected Apr 2026)
   //
   // BESS — peak_shaving (0.40 ratio):
   //   max(75, round(283 × 0.40)) = max(75, 113) = 113 kW Recommended
@@ -920,7 +932,7 @@ describe("Scenario 6 — WOW Car Wash (1 tunnel + 24 vacuums, solar + EV + gener
     wantsEVCharging: true,
     level2Chargers: evL2,
     dcfcChargers: evDCFC,
-    evRevenuePerYear: 34800,
+    // evRevenuePerYear intentionally omitted: computed from calculateAnnualSavings() net session revenue
   });
 
   let tiers: Awaited<ReturnType<typeof buildTiers>>;
@@ -970,10 +982,12 @@ describe("Scenario 6 — WOW Car Wash (1 tunnel + 24 vacuums, solar + EV + gener
     expect(tiers[1].generatorKW).toBeLessThanOrEqual(50);
   });
 
-  it("annual savings boosted by EV revenue ($34,800/yr additive)", async () => {
+  it("annual savings boosted by EV revenue (~$33,086/yr net at $0.13/kWh — corrected from old gross $34,800)", async () => {
     if (!tiers) tiers = await buildTiers(state);
     for (const t of tiers) {
       expect(t.annualSavings).toBeGreaterThan(30000);
+      expect(t.evRevenuePerYear).toBeGreaterThan(25000);
+      expect(t.evRevenuePerYear).toBeLessThan(40000);
     }
   });
 
