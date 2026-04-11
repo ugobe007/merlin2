@@ -785,6 +785,10 @@ function SolarCard({
   pendingExternalKW,
   onPendingConsumed,
   onCarportToggle,
+  solarPanelTier = "standard",
+  onPanelTierChange,
+  solarStructureType = "rooftop",
+  onStructureTypeChange,
 }: {
   maxKW: number;
   recKW: number;
@@ -804,6 +808,12 @@ function SolarCard({
   onPendingConsumed?: () => void;
   /** Parent-computed: fires BEFORE onCanopyChange, updates both solar kW and slider */
   onCarportToggle?: (nextVal: string, targetKW: number) => void;
+  /** Panel grade: 'standard' = best $/kWh, 'premium' = highest-efficiency. */
+  solarPanelTier?: "standard" | "premium";
+  onPanelTierChange?: (tier: "standard" | "premium") => void;
+  /** Carport installation type — shown when canopyInterest === 'yes'. */
+  solarStructureType?: "rooftop" | "carport_new" | "carport_retrofit";
+  onStructureTypeChange?: (type: "rooftop" | "carport_new" | "carport_retrofit") => void;
 }) {
   const safeMax = maxKW > 0 ? maxKW : 2000;
   // solarMin must always be < safeMax; 10% of max, floored at 1 kW
@@ -1232,9 +1242,220 @@ function SolarCard({
                   })()
                 : `Rooftop solar is always included. Tap "+ Add ${isCarWash ? "Carport" : "Canopy"}" to also cover your ${isCarWash ? "vacuum station canopies" : "parking area"} for +${(withCanopyKW - roofOnlyKW).toLocaleString()} kW more capacity.`}
             </div>
+
+            {/* ── Carport installation type (new build vs retrofit) ── */}
+            {canopyInterest === "yes" && (
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: "10px 0 2px",
+                  borderTop: "1px solid rgba(251,191,36,0.15)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "rgba(251,191,36,0.7)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    marginBottom: 7,
+                  }}
+                >
+                  Carport Installation Type
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {(
+                    [
+                      {
+                        id: "carport_new" as const,
+                        label: "New Build",
+                        sub: "Greenfield construction",
+                        cost: "~$1.75/W",
+                        hint: "Structural steel included in new-build budget.",
+                      },
+                      {
+                        id: "carport_retrofit" as const,
+                        label: "Retrofit",
+                        sub: "Added over existing lot",
+                        cost: "~$3.10/W",
+                        hint: "Steel structure + frost-line footings over existing paving.",
+                      },
+                    ] as const
+                  ).map(({ id, label, sub, cost }) => {
+                    const active = solarStructureType === id;
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => onStructureTypeChange?.(id)}
+                        style={{
+                          flex: 1,
+                          padding: "9px 6px",
+                          borderRadius: 8,
+                          border: active
+                            ? "2px solid rgba(251,191,36,0.9)"
+                            : "1px solid rgba(251,191,36,0.3)",
+                          background: active ? "rgba(251,191,36,0.07)" : "transparent",
+                          cursor: "pointer",
+                          textAlign: "center",
+                          transition: "border-color 0.15s, background 0.15s",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: active ? "#fbbf24" : "#fff",
+                          }}
+                        >
+                          {active ? `✓ ${label}` : label}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 10,
+                            color: "rgba(148,163,184,0.7)",
+                            marginTop: 2,
+                          }}
+                        >
+                          {sub}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: active ? "#fbbf24" : "rgba(251,191,36,0.7)",
+                            marginTop: 3,
+                          }}
+                        >
+                          {cost}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: "rgba(148,163,184,0.5)",
+                    marginTop: 5,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {solarStructureType === "carport_new"
+                    ? "Structural steel in new-build budget — lowest marginal cost for solar canopy."
+                    : solarStructureType === "carport_retrofit"
+                      ? "Adding steel structure over existing paving. Michigan frost-line footings add $0.25–$0.40/W."
+                      : "Select type to see accurate cost modeling in your quote."}
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
+
+      {/* ── Panel Grade Toggle ─────────────────────────────────────────── */}
+      <div
+        style={{
+          padding: "12px 16px 10px",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: "rgba(148,163,184,0.7)",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            marginBottom: 8,
+          }}
+        >
+          Panel Grade
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {(
+            [
+              {
+                id: "standard" as const,
+                emoji: "⚡",
+                label: "Standard",
+                sub: "Best $/kWh ratio",
+                spec: "~400W · $0.30/W",
+                accentColor: "rgba(16,185,129,",
+              },
+              {
+                id: "premium" as const,
+                emoji: "🏆",
+                label: "Premium",
+                sub: "Max roof yield",
+                spec: "REC Alpha · 22.3%",
+                accentColor: "rgba(139,92,246,",
+              },
+            ] as const
+          ).map(({ id, emoji, label, sub, spec, accentColor }) => {
+            const active = solarPanelTier === id;
+            const border = active
+              ? `2px solid ${accentColor}1.0)`
+              : "1px solid rgba(255,255,255,0.1)";
+            const bg = active ? `${accentColor}0.07)` : "transparent";
+            const labelColor = active ? `${accentColor}1.0)` : "#fff";
+            return (
+              <button
+                key={id}
+                onClick={() => onPanelTierChange?.(id)}
+                style={{
+                  flex: 1,
+                  padding: "10px 8px",
+                  borderRadius: 9,
+                  border,
+                  background: bg,
+                  cursor: "pointer",
+                  textAlign: "center",
+                  transition: "border-color 0.15s, background 0.15s",
+                }}
+              >
+                <div style={{ fontSize: 18, lineHeight: 1 }}>{emoji}</div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: labelColor,
+                    marginTop: 5,
+                  }}
+                >
+                  {active ? `✓ ${label}` : label}
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(148,163,184,0.7)", marginTop: 2 }}>
+                  {sub}
+                </div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: `${accentColor}0.85)`,
+                    marginTop: 3,
+                  }}
+                >
+                  {spec}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {solarPanelTier === "premium" && (
+          <div
+            style={{
+              fontSize: 11,
+              color: "rgba(139,92,246,0.75)",
+              marginTop: 7,
+              lineHeight: 1.5,
+            }}
+          >
+            Premium panels fit ~19% more capacity in the same roof area — ideal for tight rooftops.
+            Adds ~$0.16/W to project cost; incremental payback typically 1.5–3 yrs.
+          </div>
+        )}
+      </div>
 
       <div style={{ padding: "0 16px 14px" }}>
         <ConfirmBtn
@@ -2894,6 +3115,12 @@ export default function Step3_5V8({ state, actions }: Props) {
 
   const handleCanopyChange = (value: string) => actions.setAnswer(canopyFieldKey, value);
 
+  const handlePanelTierChange = (tier: "standard" | "premium") =>
+    actions.setAddonConfig({ solarPanelTier: tier });
+
+  const handleStructureTypeChange = (type: "rooftop" | "carport_new" | "carport_retrofit") =>
+    actions.setAddonConfig({ solarStructureType: type });
+
   // Carport toggle handler — lives in parent so it uses parent-scope sunFactor,
   // withCanopyCapKW, roofOnlyCapKW (no stale closure risk inside SolarCard).
   // targetKW is always ADDITIVE: rooftop-only cap → rooftop+carport cap (never subtract).
@@ -3032,6 +3259,10 @@ export default function Step3_5V8({ state, actions }: Props) {
           pendingExternalKW={pendingSolarKW}
           onPendingConsumed={() => setPendingSolarKW(null)}
           onCarportToggle={handleCarportToggle}
+          solarPanelTier={state.solarPanelTier}
+          onPanelTierChange={handlePanelTierChange}
+          solarStructureType={state.solarStructureType}
+          onStructureTypeChange={handleStructureTypeChange}
         />
       )}
       {wantsEV ? (
