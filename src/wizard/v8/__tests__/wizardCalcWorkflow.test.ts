@@ -512,10 +512,10 @@ describe("D. Generator calculation chain", () => {
     expect(complete.generatorKW).toBe(Math.round(200 * 1.3)); // 260 kW
   });
 
-  it("high critical load (≥50%) auto-includes generator in Recommended (save_most policy)", async () => {
+  it("high critical load (≥50%) does NOT auto-include generator — opt-in only (save_most policy)", async () => {
     const state = makeState({
       wantsGenerator: false,
-      criticalLoadPct: 0.55, // triggers if_critical policy
+      criticalLoadPct: 0.55, // previously triggered if_critical policy — no longer does
       peakLoadKW: 300,
       step3Answers: {
         primaryBESSApplication: "peak_shaving",
@@ -524,7 +524,8 @@ describe("D. Generator calculation chain", () => {
       },
     });
     const [, rec] = await buildTiers(state);
-    expect(rec.generatorKW).toBeGreaterThan(0);
+    // Generator is opt-in only — wantsGenerator=false → generatorKW must be 0
+    expect(rec.generatorKW).toBe(0);
   });
 
   it("essential scope: genKW ≈ peakLoadKW × criticalLoadPct × 1.25", () => {
@@ -808,11 +809,11 @@ describe("G. Multi-industry calculation scenarios", () => {
     expect(complete.solarKW).toBeLessThanOrEqual(225);
   });
 
-  it("Hotel (SF) — high critical load auto-includes generator in Recommended", async () => {
+  it("Hotel (SF) — high critical load does NOT auto-include generator (opt-in only)", async () => {
     const state = makeState({
       industry: "hotel",
       solarPhysicalCapKW: 225,
-      criticalLoadPct: 0.55, // ≥50% triggers if_critical
+      criticalLoadPct: 0.55, // previously triggered if_critical — no longer does
       baseLoadKW: 280,
       peakLoadKW: 450,
       wantsGenerator: false,
@@ -823,7 +824,8 @@ describe("G. Multi-industry calculation scenarios", () => {
       },
     });
     const [, rec] = await buildTiers(state);
-    expect(rec.generatorKW).toBeGreaterThan(0);
+    // Generator is opt-in only — must explicitly set wantsGenerator=true
+    expect(rec.generatorKW).toBe(0);
   });
 
   // ── Office: moderate solar, low critical load ───────────────────────────
@@ -954,7 +956,7 @@ describe("G. Multi-industry calculation scenarios", () => {
     expect(rec.bessKW).toBe(expected);
   });
 
-  it("Hospital — generator auto-included (criticalLoadPct=0.90, if_critical policy)", async () => {
+  it("Hospital — generator NOT auto-included without explicit opt-in (wantsGenerator=false)", async () => {
     const state = makeState({
       industry: "hospital",
       solarPhysicalCapKW: 120,
@@ -969,7 +971,9 @@ describe("G. Multi-industry calculation scenarios", () => {
       },
     });
     const [, rec] = await buildTiers(state);
-    expect(rec.generatorKW).toBeGreaterThan(0);
+    // Generator is opt-in only regardless of criticalLoadPct or industry
+    // wantsGenerator=false AND generatorNeed="none" → generatorKW = 0
+    expect(rec.generatorKW).toBe(0);
   });
 });
 

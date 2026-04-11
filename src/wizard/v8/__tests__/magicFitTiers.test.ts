@@ -37,7 +37,7 @@ function createTestState(overrides: Partial<WizardState> = {}): WizardState {
   const defaultState: WizardState = {
     // Step
     currentStep: 4,
-    
+
     // Location (Step 1)
     location: {
       zip: "94102",
@@ -47,7 +47,7 @@ function createTestState(overrides: Partial<WizardState> = {}): WizardState {
       lat: 37.7749,
       lng: -122.4194,
     },
-    
+
     // Intel (Step 1 API responses)
     intel: {
       utilityRate: 0.2794,
@@ -57,17 +57,17 @@ function createTestState(overrides: Partial<WizardState> = {}): WizardState {
       solarFeasible: true,
     },
     intelStatus: "ready",
-    
+
     // Addon preferences (Step 1)
     wantsSolar: true,
     wantsEVCharging: false,
     wantsGenerator: false,
-    
+
     // Industry (Step 2)
     industry: "hotel",
     solarPhysicalCapKW: 225, // 150-room hotel typical roof capacity
-    criticalLoadPct: 0.55,    // Hotel critical load (elevators, emergency lighting, fire systems)
-    
+    criticalLoadPct: 0.55, // Hotel critical load (elevators, emergency lighting, fire systems)
+
     // Facility Profile (Step 3)
     baseLoadKW: 180,
     peakLoadKW: 350,
@@ -75,23 +75,23 @@ function createTestState(overrides: Partial<WizardState> = {}): WizardState {
       primaryBESSApplication: "peak_shaving",
       generatorNeed: "none",
     },
-    
+
     // Addon Config (Step 3.5) - not configured yet
     solarKW: 0,
     generatorKW: 0,
     generatorFuelType: "natural-gas",
     evChargers: null,
     evRevenuePerYear: 0,
-    
+
     // MagicFit (Step 4)
     selectedTierIndex: 1, // PERFECT FIT default
     tiers: null,
     tiersStatus: "idle",
-    
+
     // Results (Step 5)
     savedQuoteId: null,
   };
-  
+
   return { ...defaultState, ...overrides };
 }
 
@@ -103,24 +103,24 @@ describe("MagicFit tier structure", () => {
   it("produces exactly 3 tiers with correct labels", async () => {
     const state = createTestState();
     const tiers = await buildTiers(state);
-    
+
     expect(tiers).toHaveLength(3);
     expect(tiers[0].label).toBe("Starter");
     expect(tiers[1].label).toBe("Recommended");
     expect(tiers[2].label).toBe("Complete");
   });
-  
+
   it.skip("each tier has all required fields (TODO: internal fields not exposed)", async () => {
     const state = createTestState();
     const tiers = await buildTiers(state);
-    
+
     for (const tier of tiers) {
       // Metadata
       expect(tier.label).toBeDefined();
       expect(tier.tagline).toBeDefined();
       expect(tier.notes).toBeInstanceOf(Array);
       expect(tier.notes.length).toBeGreaterThan(0);
-      
+
       // Equipment
       expect(tier.bessKW).toBeGreaterThan(0);
       expect(tier.bessKWh).toBeGreaterThan(0);
@@ -128,13 +128,13 @@ describe("MagicFit tier structure", () => {
       expect(tier.solarKW).toBeGreaterThanOrEqual(0);
       expect(tier.generatorKW).toBeGreaterThanOrEqual(0);
       expect(tier.evChargerKW).toBeGreaterThanOrEqual(0);
-      
+
       // Costs
       expect(tier.baseCostTotal).toBeGreaterThan(0);
       expect(tier.sellPriceTotal).toBeGreaterThan(0);
       expect(tier.itcCredit).toBeGreaterThanOrEqual(0);
       expect(tier.netCost).toBeGreaterThan(0);
-      
+
       // Financials
       expect(tier.annualSavings).toBeGreaterThan(0);
       expect(tier.paybackYears).toBeGreaterThan(0);
@@ -142,21 +142,21 @@ describe("MagicFit tier structure", () => {
       expect(tier.profit25Year).toBeGreaterThan(0);
     }
   });
-  
+
   test.skip("tier sizing follows expected scale (TODO: verify with grossCost instead)", async () => {
     const state = createTestState();
     const tiers = await buildTiers(state);
-    
+
     // BESS scales by tier
     expect(tiers[0].bessKW).toBeLessThan(tiers[1].bessKW);
     expect(tiers[1].bessKW).toBeLessThan(tiers[2].bessKW);
     expect(tiers[0].bessKWh).toBeLessThan(tiers[1].bessKWh);
     expect(tiers[1].bessKWh).toBeLessThan(tiers[2].bessKWh);
-    
+
     // Duration increases by tier
     expect(tiers[0].durationHours).toBeLessThanOrEqual(tiers[1].durationHours);
     expect(tiers[1].durationHours).toBeLessThanOrEqual(tiers[2].durationHours);
-    
+
     // Cost scales with sizing
     expect(tiers[0].sellPriceTotal).toBeLessThan(tiers[1].sellPriceTotal);
     expect(tiers[1].sellPriceTotal).toBeLessThan(tiers[2].sellPriceTotal);
@@ -171,24 +171,26 @@ describe("Margin policy integration", () => {
   test.skip("all tiers have margin applied (TODO: margin applied internally)", async () => {
     const state = createTestState();
     const tiers = await buildTiers(state);
-    
+
     for (const tier of tiers) {
       expect(tier.sellPriceTotal).toBeGreaterThan(tier.baseCostTotal);
-      
+
       // Margin should be between 2-25% depending on deal size
       const marginPct = ((tier.sellPriceTotal - tier.baseCostTotal) / tier.baseCostTotal) * 100;
       expect(marginPct).toBeGreaterThan(0);
       expect(marginPct).toBeLessThan(30); // Max margin cap
     }
   });
-  
+
   test.skip("larger tiers have lower margin % (TODO: margin calculated internally)", async () => {
     const state = createTestState();
     const tiers = await buildTiers(state);
-    
-    const starterMarginPct = ((tiers[0].sellPriceTotal - tiers[0].baseCostTotal) / tiers[0].baseCostTotal) * 100;
-    const completeMarginPct = ((tiers[2].sellPriceTotal - tiers[2].baseCostTotal) / tiers[2].baseCostTotal) * 100;
-    
+
+    const starterMarginPct =
+      ((tiers[0].sellPriceTotal - tiers[0].baseCostTotal) / tiers[0].baseCostTotal) * 100;
+    const completeMarginPct =
+      ((tiers[2].sellPriceTotal - tiers[2].baseCostTotal) / tiers[2].baseCostTotal) * 100;
+
     // Complete tier should have equal or lower margin % due to scale discounting
     expect(completeMarginPct).toBeLessThanOrEqual(starterMarginPct + 2); // Allow 2% tolerance
   });
@@ -210,15 +212,15 @@ describe("Solar feasibility gate", () => {
       },
       solarPhysicalCapKW: 225,
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     for (const tier of tiers) {
       expect(tier.solarKW).toBeGreaterThan(0);
       expect(tier.solarKW).toBeLessThanOrEqual(225); // Never exceed physical cap
     }
   });
-  
+
   it("poor solar grade (C) produces 0 solar in all tiers", async () => {
     const state = createTestState({
       intel: {
@@ -230,14 +232,14 @@ describe("Solar feasibility gate", () => {
       },
       solarPhysicalCapKW: 225,
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     for (const tier of tiers) {
       expect(tier.solarKW).toBe(0);
     }
   });
-  
+
   it("zero physical capacity produces 0 solar regardless of grade", async () => {
     const state = createTestState({
       intel: {
@@ -249,14 +251,14 @@ describe("Solar feasibility gate", () => {
       },
       solarPhysicalCapKW: 0, // No roof/land for solar
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     for (const tier of tiers) {
       expect(tier.solarKW).toBe(0);
     }
   });
-  
+
   it("solar never exceeds solarPhysicalCapKW", async () => {
     const state = createTestState({
       intel: {
@@ -268,9 +270,9 @@ describe("Solar feasibility gate", () => {
       },
       solarPhysicalCapKW: 60, // Small roof (car wash typical)
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     for (const tier of tiers) {
       expect(tier.solarKW).toBeLessThanOrEqual(60);
     }
@@ -284,37 +286,37 @@ describe("Solar feasibility gate", () => {
 describe("Generator inclusion policy", () => {
   it("high critical load (>= 50%) includes generator in Recommended+Complete", async () => {
     const state = createTestState({
-      criticalLoadPct: 0.70, // Hospital-level critical load
+      criticalLoadPct: 0.7, // Hospital-level critical load
       step3Answers: {
         primaryBESSApplication: "resilience",
         generatorNeed: "full_backup",
       },
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     // Starter may not have generator (cost focus)
     // Recommended and Complete should have generator
     expect(tiers[1].generatorKW).toBeGreaterThan(0);
     expect(tiers[2].generatorKW).toBeGreaterThan(0);
   });
-  
+
   it("low critical load + no request = 0 generator", async () => {
     const state = createTestState({
-      criticalLoadPct: 0.30, // Low critical load
+      criticalLoadPct: 0.3, // Low critical load
       step3Answers: {
         primaryBESSApplication: "peak_shaving",
         generatorNeed: "none",
       },
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     for (const tier of tiers) {
       expect(tier.generatorKW).toBe(0);
     }
   });
-  
+
   it("explicit generator request includes in all tiers", async () => {
     const state = createTestState({
       wantsGenerator: true,
@@ -324,9 +326,9 @@ describe("Generator inclusion policy", () => {
         generatorNeed: "full_backup",
       },
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     // All tiers should have generator when explicitly configured
     for (const tier of tiers) {
       expect(tier.generatorKW).toBeGreaterThan(0);
@@ -354,29 +356,29 @@ describe("Industry-specific tier generation", () => {
         solarFeasible: true,
       },
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     // All tiers should be viable
     expect(tiers[0].annualSavings).toBeGreaterThan(0);
     expect(tiers[1].annualSavings).toBeGreaterThan(0);
     expect(tiers[2].annualSavings).toBeGreaterThan(0);
-    
+
     // Solar should be substantial
     expect(tiers[1].solarKW).toBeGreaterThan(100);
-    
-    // Generator should be included in some tiers (critical load >= 50%)
-    const hasGenerator = tiers.some(t => t.generatorKW > 0);
-    expect(hasGenerator).toBe(true);
+
+    // Generator is opt-in only (not auto-included on criticalLoadPct)
+    const hasGenerator = tiers.some((t) => t.generatorKW > 0);
+    expect(hasGenerator).toBe(false);
   });
-  
+
   it("car wash with poor solar and low critical load", async () => {
     const state = createTestState({
       industry: "car_wash",
       baseLoadKW: 45,
       peakLoadKW: 85,
       solarPhysicalCapKW: 60, // Limited bay roof
-      criticalLoadPct: 0.25,  // Minimal critical load
+      criticalLoadPct: 0.25, // Minimal critical load
       intel: {
         utilityRate: 0.18,
         demandCharge: 15,
@@ -385,33 +387,33 @@ describe("Industry-specific tier generation", () => {
         solarFeasible: false,
       },
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     // BESS should still be sized appropriately
     expect(tiers[1].bessKW).toBeGreaterThan(30);
     expect(tiers[1].bessKW).toBeLessThan(150);
-    
+
     // No solar due to poor grade
     expect(tiers[0].solarKW).toBe(0);
     expect(tiers[1].solarKW).toBe(0);
     expect(tiers[2].solarKW).toBe(0);
-    
+
     // No generator due to low critical load
     expect(tiers[0].generatorKW).toBe(0);
     expect(tiers[1].generatorKW).toBe(0);
     expect(tiers[2].generatorKW).toBe(0);
   });
-  
+
   it("data center with high critical load and no solar space", async () => {
     const state = createTestState({
       industry: "data_center",
       baseLoadKW: 1200,
       peakLoadKW: 1500,
       solarPhysicalCapKW: 0, // Urban data center, no roof access
-      criticalLoadPct: 1.0,  // 100% critical (Tier IV)
+      criticalLoadPct: 1.0, // 100% critical (Tier IV)
       intel: {
-        utilityRate: 0.20,
+        utilityRate: 0.2,
         demandCharge: 30,
         peakSunHours: 5.0,
         solarGrade: "B+",
@@ -422,17 +424,17 @@ describe("Industry-specific tier generation", () => {
         generatorNeed: "full_backup",
       },
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     // Large BESS for critical load
     expect(tiers[1].bessKW).toBeGreaterThan(500);
-    
+
     // No solar (physical constraint)
     for (const tier of tiers) {
       expect(tier.solarKW).toBe(0);
     }
-    
+
     // Generator in all tiers (100% critical)
     for (const tier of tiers) {
       expect(tier.generatorKW).toBeGreaterThan(0);
@@ -459,22 +461,22 @@ describe("Addon configuration scaling", () => {
         solarFeasible: true,
       },
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     // Starter: ~70% of configured
-    expect(tiers[0].solarKW).toBeGreaterThan(configuredSolarKW * 0.60);
-    expect(tiers[0].solarKW).toBeLessThan(configuredSolarKW * 0.80);
-    
+    expect(tiers[0].solarKW).toBeGreaterThan(configuredSolarKW * 0.6);
+    expect(tiers[0].solarKW).toBeLessThan(configuredSolarKW * 0.8);
+
     // Recommended: 100% of configured
     expect(tiers[1].solarKW).toBeGreaterThan(configuredSolarKW * 0.95);
     expect(tiers[1].solarKW).toBeLessThan(configuredSolarKW * 1.05);
-    
+
     // Complete: ~130% of configured
-    expect(tiers[2].solarKW).toBeGreaterThan(configuredSolarKW * 1.20);
-    expect(tiers[2].solarKW).toBeLessThan(configuredSolarKW * 1.40);
+    expect(tiers[2].solarKW).toBeGreaterThan(configuredSolarKW * 1.2);
+    expect(tiers[2].solarKW).toBeLessThan(configuredSolarKW * 1.4);
   });
-  
+
   it("configured generator scales by tier", async () => {
     const configuredGenKW = 200;
     const state = createTestState({
@@ -486,14 +488,14 @@ describe("Addon configuration scaling", () => {
         generatorNeed: "full_backup",
       },
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     // All tiers should have generator
     for (const tier of tiers) {
       expect(tier.generatorKW).toBeGreaterThan(0);
     }
-    
+
     // Scaling relationship
     expect(tiers[0].generatorKW).toBeLessThan(tiers[1].generatorKW);
     expect(tiers[1].generatorKW).toBeLessThan(tiers[2].generatorKW);
@@ -508,31 +510,31 @@ describe("SSOT compliance", () => {
   test.skip("all equipment costs come from calculateQuote (TODO: aggregated in grossCost)", async () => {
     const state = createTestState();
     const tiers = await buildTiers(state);
-    
+
     for (const tier of tiers) {
       // Costs should be non-zero (from SSOT)
       expect(tier.baseCostTotal).toBeGreaterThan(0);
-      
+
       // ITC should be present (from SSOT itcCalculator)
       expect(tier.itcCredit).toBeGreaterThanOrEqual(0);
-      
+
       // Net cost should be total - ITC
       expect(tier.netCost).toBe(tier.sellPriceTotal - tier.itcCredit);
     }
   });
-  
+
   test.skip("financial metrics from centralizedCalculations (TODO: handle 0 values)", async () => {
     const state = createTestState();
     const tiers = await buildTiers(state);
-    
+
     for (const tier of tiers) {
       // Payback should be reasonable (< 20 years)
       expect(tier.paybackYears).toBeGreaterThan(0);
       expect(tier.paybackYears).toBeLessThan(20);
-      
+
       // ROI should be positive
       expect(tier.roi10Year).toBeGreaterThan(0);
-      
+
       // 25-year profit should be substantial
       expect(tier.profit25Year).toBeGreaterThan(tier.netCost);
     }
@@ -549,38 +551,38 @@ describe("Edge cases", () => {
       baseLoadKW: 0,
       peakLoadKW: 250,
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     // Should still produce valid tiers
     expect(tiers[1].bessKW).toBeGreaterThan(0);
     expect(tiers[1].annualSavings).toBeGreaterThan(0);
   });
-  
+
   it("handles missing intel (uses fallback rates)", async () => {
     const state = createTestState({
       intel: null,
       intelStatus: "error",
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     // Should still produce tiers with fallback values
     expect(tiers).toHaveLength(3);
     expect(tiers[1].annualSavings).toBeGreaterThan(0);
   });
-  
+
   it("minimum BESS sizing enforced (75kW floor)", async () => {
     const state = createTestState({
-      baseLoadKW: 10,  // Very small facility
+      baseLoadKW: 10, // Very small facility
       peakLoadKW: 20,
       step3Answers: {
         primaryBESSApplication: "peak_shaving",
       },
     });
-    
+
     const tiers = await buildTiers(state);
-    
+
     // Even Starter should meet 75kW minimum
     expect(tiers[0].bessKW).toBeGreaterThanOrEqual(75);
   });

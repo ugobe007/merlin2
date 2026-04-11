@@ -1028,12 +1028,36 @@ export default function Step4V8({ state, actions }: Props) {
                           {formatCurrency(tier.evRevenuePerYear!)}
                         </span>
                       </div>
+                      {/* DCFC demand impact breakdown */}
+                      {(tier.dcfcPeakKW ?? 0) > 0 && (
+                        <div className="rounded bg-slate-900/60 px-2 py-1.5 space-y-0.5">
+                          <p className="text-[9px] uppercase tracking-wider text-slate-500 mb-0.5">
+                            DCFC demand impact
+                          </p>
+                          <div className="flex justify-between text-[10px]">
+                            <span className="text-slate-500">
+                              {state.dcfcChargers} charger{state.dcfcChargers !== 1 ? "s" : ""} × 50
+                              kW
+                            </span>
+                            <span className="text-slate-400">{tier.dcfcPeakKW} kW spike</span>
+                          </div>
+                          <div className="flex justify-between text-[10px]">
+                            <span className="text-slate-500">BESS offsets</span>
+                            <span className="text-emerald-500">{tier.dcfcBessOffsetPct ?? 0}%</span>
+                          </div>
+                          {(tier.dcfcDemandPenalty ?? 0) > 0 && (
+                            <div className="flex justify-between text-[10px]">
+                              <span className="text-slate-500">Net demand cost (deducted)</span>
+                              <span className="text-orange-400">
+                                −{formatCurrency(tier.dcfcDemandPenalty!)}/yr
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <p className="text-[9px] text-slate-600 leading-tight">
                         *Net of demand charges, network fees &amp; maintenance. Separate business
                         case — verify with local utilization data.
-                        {tier.dcfcDemandPenalty && tier.dcfcDemandPenalty > 0
-                          ? ` DCFC demand penalty: −${formatCurrency(tier.dcfcDemandPenalty)}/yr already deducted.`
-                          : ""}
                       </p>
                     </div>
                   ) : (tier.demandChargeSavings ?? 0) > 500 ? (

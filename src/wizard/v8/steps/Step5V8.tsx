@@ -784,6 +784,30 @@ export default function Step5V8({ state, actions }: Props) {
                       {fmt$(tier.evRevenuePerYear!, countryCode)}/yr
                     </span>
                   </div>
+                  {/* DCFC demand impact — shown when fast chargers are present */}
+                  {(tier.dcfcPeakKW ?? 0) > 0 && (
+                    <div className="rounded bg-slate-900/50 px-3 py-1.5 space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                        DCFC demand impact
+                      </p>
+                      <div className="flex justify-between text-xs text-slate-400">
+                        <span>{tier.dcfcPeakKW} kW demand spike</span>
+                        <span className="text-emerald-500">
+                          {tier.dcfcBessOffsetPct ?? 0}% BESS offset
+                        </span>
+                      </div>
+                      {(tier.dcfcDemandPenalty ?? 0) > 0 && (
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-500">
+                            Net demand cost (deducted from EV revenue)
+                          </span>
+                          <span className="text-orange-400">
+                            −{fmt$(tier.dcfcDemandPenalty!, countryCode)}/yr
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {tier.paybackYearsEnergyOnly != null &&
                     tier.paybackYearsEnergyOnly > tier.paybackYears + 0.5 && (
                       <div className="border-t border-white/10 pt-2 text-xs text-slate-500">
