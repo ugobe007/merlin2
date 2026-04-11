@@ -760,9 +760,59 @@ export default function Step5V8({ state, actions }: Props) {
                 </span>
               </div>
               <div className="text-5xl md:text-6xl font-bold text-[#3ECF8E] leading-none">
-                {fmt$(tier.annualSavings, countryCode)}
+                {/* Hero number: energy-only savings when EV is present — honest baseline */}
+                {(tier.evRevenuePerYear ?? 0) > 500
+                  ? fmt$(tier.annualSavings - (tier.evRevenuePerYear ?? 0), countryCode)
+                  : fmt$(tier.annualSavings, countryCode)}
               </div>
-              <div className="text-lg text-slate-400 mt-1.5">per year</div>
+              <div className="text-lg text-slate-400 mt-1.5">
+                {(tier.evRevenuePerYear ?? 0) > 500 ? "per year — energy savings" : "per year"}
+              </div>
+
+              {/* ── Two-business-case callout when EV revenue is present ─── */}
+              {(tier.evRevenuePerYear ?? 0) > 500 && (
+                <div className="mt-4 w-full max-w-sm mx-auto rounded-xl border border-blue-500/20 bg-blue-950/20 px-4 py-3 text-left space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300">🔋 Energy savings (BESS + solar)</span>
+                    <span className="text-emerald-400 font-semibold">
+                      {fmt$(tier.annualSavings - (tier.evRevenuePerYear ?? 0), countryCode)}/yr
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300">⚡ EV charging revenue*</span>
+                    <span className="text-blue-400 font-semibold">
+                      {fmt$(tier.evRevenuePerYear!, countryCode)}/yr
+                    </span>
+                  </div>
+                  {tier.paybackYearsEnergyOnly != null &&
+                    tier.paybackYearsEnergyOnly > tier.paybackYears + 0.5 && (
+                      <div className="border-t border-white/10 pt-2 text-xs text-slate-500">
+                        Energy-only payback:{" "}
+                        <strong className="text-slate-300">
+                          {tier.paybackYearsEnergyOnly.toFixed(1)} yrs
+                        </strong>{" "}
+                        vs all-in:{" "}
+                        <strong className="text-slate-300">
+                          {tier.paybackYears.toFixed(1)} yrs
+                        </strong>
+                      </div>
+                    )}
+                  <p className="text-[9px] text-slate-600 leading-tight">
+                    *EV revenue is net of demand charges, network fees &amp; maintenance. Separate
+                    business case — evaluate independently with local utilization data.
+                  </p>
+                </div>
+              )}
+
+              {/* ── Demand charge callout (no EV) ─────────────────────────── */}
+              {(tier.evRevenuePerYear ?? 0) <= 500 && (tier.demandChargeSavings ?? 0) > 1000 && (
+                <div className="mt-3 text-sm text-slate-400">
+                  <span className="text-emerald-400 font-medium">
+                    {fmt$(tier.demandChargeSavings!, countryCode)}/yr
+                  </span>{" "}
+                  from demand charge reduction
+                </div>
+              )}
 
               {/* ROI snapshot below hero */}
               <div className="mt-5 inline-flex items-center gap-4 px-5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
@@ -1468,8 +1518,8 @@ export default function Step5V8({ state, actions }: Props) {
                       {state.intel.demandChargeSource === "schedule"
                         ? `Matched to ${state.intel.rateSchedule} tariff by estimated peak demand`
                         : state.intel.demandChargeSource === "utility-avg"
-                        ? "Utility-level average · enter peak kW in Step 3 to refine"
-                        : "EIA state average · utility not yet mapped"}
+                          ? "Utility-level average · enter peak kW in Step 3 to refine"
+                          : "EIA state average · utility not yet mapped"}
                     </div>
                   </div>
                 </div>

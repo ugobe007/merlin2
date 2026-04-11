@@ -321,6 +321,79 @@ export const VENDOR_TARGETS: VendorTarget[] = [
       datasheetUrl: "https://longi.com/en/products/modules/hi-mo-6/",
     },
   },
+  {
+    manufacturer: "Silfab Solar",
+    productCategory: "solar",
+    model: "SIL-590 BG",
+    url: "https://silfabsolar.com/commercial-modules/",
+    seed: {
+      powerKw: 0.59,
+      efficiencyPercent: 22.0,
+      warrantyYears: 30,
+      leadTimeWeeks: 10,
+      pricePerKw: 260, // US-made premium; higher than CN imports
+      certifications: ["IEC 61215", "IEC 61730", "UL 61730", "Made in USA"],
+      datasheetUrl: "https://silfabsolar.com/wp-content/uploads/SIL-590-BG.pdf",
+    },
+  },
+  {
+    manufacturer: "Silfab Solar",
+    productCategory: "solar",
+    model: "SIL-420 QN",
+    url: "https://silfabsolar.com/residential-modules/",
+    seed: {
+      powerKw: 0.42,
+      efficiencyPercent: 21.4,
+      warrantyYears: 25,
+      leadTimeWeeks: 8,
+      pricePerKw: 280,
+      certifications: ["IEC 61215", "IEC 61730", "UL 61730", "Made in USA"],
+    },
+  },
+  {
+    manufacturer: "Hanwha Q CELLS",
+    productCategory: "solar",
+    model: "Q.PEAK DUO BLK ML-G10+ 400",
+    url: "https://qcells.com/us/products/solar-modules/",
+    seed: {
+      powerKw: 0.4,
+      efficiencyPercent: 20.6,
+      warrantyYears: 25,
+      leadTimeWeeks: 10,
+      pricePerKw: 230,
+      certifications: ["IEC 61215", "IEC 61730", "UL 61730", "IEC 61701"],
+      datasheetUrl: "https://qcells.com/us/products/solar-modules/q-peak-duo-blk-ml-g10-plus/",
+    },
+  },
+  {
+    manufacturer: "REC Group",
+    productCategory: "solar",
+    model: "REC Alpha Pure-R 430W",
+    url: "https://www.recgroup.com/en/products/rec-alpha-pure-r",
+    seed: {
+      powerKw: 0.43,
+      efficiencyPercent: 22.3,
+      warrantyYears: 25,
+      leadTimeWeeks: 14,
+      pricePerKw: 290,
+      certifications: ["IEC 61215", "IEC 61730", "UL 61730"],
+      datasheetUrl: "https://www.recgroup.com/en/products/rec-alpha-pure-r",
+    },
+  },
+  {
+    manufacturer: "Mission Solar",
+    productCategory: "solar",
+    model: "MSE PERC 60 400W",
+    url: "https://www.missionsolar.com/products",
+    seed: {
+      powerKw: 0.4,
+      efficiencyPercent: 20.5,
+      warrantyYears: 25,
+      leadTimeWeeks: 8,
+      pricePerKw: 255, // US-made (San Antonio TX)
+      certifications: ["IEC 61215", "IEC 61730", "UL 61730", "Made in USA"],
+    },
+  },
 
   // ─── EV Chargers ──────────────────────────────────────────────────────
   {
