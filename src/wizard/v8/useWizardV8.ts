@@ -169,7 +169,6 @@ type TierBuildCache = {
 
 function createTierBuildKey(state: WizardState): string {
   return JSON.stringify({
-    step: state.step,
     location: state.location
       ? {
           zip: state.location.zip,
