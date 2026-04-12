@@ -81,31 +81,15 @@ jobs:
         with:
           version: '0.4.33'
 
-      # IMPORTANT: The Dockerfile uses --mount=type=secret (not ARG) so all
-      # VITE_ vars MUST be passed as --build-secret, not --build-arg.
-      # Matching scripts/deploy.sh exactly.
+      # Build secrets are injected via fly.toml [build.secrets] which maps
+      # Fly app secrets (stored with `fly secrets set`) to Docker BuildKit
+      # secret IDs. No --build-secret flags needed for --remote-only builds.
       - name: Deploy
         run: |
           flyctl deploy -a merlin2 --remote-only --wait-timeout 300 \
-            --build-arg "CACHEBUST=$(date +%s)" \
-            --build-secret "VITE_SUPABASE_URL=${VITE_SUPABASE_URL}" \
-            --build-secret "VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}" \
-            --build-secret "VITE_OPENAI_API_KEY=${VITE_OPENAI_API_KEY}" \
-            --build-secret "VITE_ENABLE_AI_ANALYSIS=${VITE_ENABLE_AI_ANALYSIS}" \
-            --build-secret "VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}" \
-            --build-secret "VITE_NREL_API_KEY=${VITE_NREL_API_KEY}" \
-            --build-secret "VITE_VISUAL_CROSSING_API_KEY=${VITE_VISUAL_CROSSING_API_KEY}" \
-            --build-secret "VITE_RESEND_API_KEY=${VITE_RESEND_API_KEY}"
+            --build-arg "CACHEBUST=$(date +%s)"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_OPENAI_API_KEY: ${{ secrets.VITE_OPENAI_API_KEY }}
-          VITE_ENABLE_AI_ANALYSIS: ${{ secrets.VITE_ENABLE_AI_ANALYSIS }}
-          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
-          VITE_NREL_API_KEY: ${{ secrets.VITE_NREL_API_KEY }}
-          VITE_VISUAL_CROSSING_API_KEY: ${{ secrets.VITE_VISUAL_CROSSING_API_KEY }}
-          VITE_RESEND_API_KEY: ${{ secrets.VITE_RESEND_API_KEY }}
 
       - name: Smoke test — verify site is up and Supabase URL is not placeholder
         run: |
