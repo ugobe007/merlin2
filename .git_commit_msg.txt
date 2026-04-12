@@ -1,0 +1,8 @@
+feat: BESS right-sized for DCFC demand shaving, generator opt-in only, demand charges in Step 3.5
+
+- computeBESSSizing: add DCFC floor so BESS >= dcfcCount x 50kW x 0.40 x tier scale (Vineet item 1)
+- computeBESSSizing: expose dcfcBessFloor + dcfcPeakKW in return for buildOneTier audit trail
+- computeGeneratorKW: gate "partial" generatorNeed on step3_5Visited so Step 3 smart-defaults do not trigger generator inclusion in Recommended tier (Vineet item 3)
+- Step3_5V8: amber demand charge callout after RoiIntelBanner when intel.demandCharge > 0 (Vineet item 2)
+
+43 test files / 2703 passing / 7 skipped / 0 failures / tsc clean

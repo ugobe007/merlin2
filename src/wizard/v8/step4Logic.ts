@@ -248,6 +248,11 @@ function computeGeneratorKW(state: WizardState, goal: GoalChoice, tierLabel: Tie
   // Step 3 generatorNeed fallback
   const generatorNeed = (step3Answers?.generatorNeed as string | undefined) ?? "none";
 
+  // Whether the user has actually visited Step 3.5 and made conscious choices.
+  // Step 3 sets generatorNeed = "partial" as a smart-default for some industries —
+  // that is NOT the same as the user requesting a generator.
+  const step3_5Visited = Boolean(step3Answers?.step3_5Visited);
+
   // Explicit Step 3.5 toggle: if user turned it ON, always include regardless of policy
   const explicitlyEnabled =
     wantsGenerator === true ||
@@ -263,7 +268,9 @@ function computeGeneratorKW(state: WizardState, goal: GoalChoice, tierLabel: Tie
         generatorNeed === "full_backup" ||
         generatorNeed === "resilience")) ||
     (guidance.generatorPolicy === "if_requested" &&
-      (generatorNeed === "partial" ||
+      // "partial" is a Step 3 smart-default — only treat it as real user intent
+      // when the user has actually visited Step 3.5 and confirmed it.
+      ((generatorNeed === "partial" && step3_5Visited) ||
         generatorNeed === "full_backup" ||
         generatorNeed === "resilience"));
 
@@ -592,7 +599,22 @@ function computeBESSSizing(
 
   // BESS power: peak × ratio × tier scale
   const rawBessKW = effectivePeakKW * ratio * TIER_BESS_SCALE[tierLabel];
-  const bessKW = Math.max(75, Math.round(rawBessKW)); // 75 kW commercial minimum floor
+
+  // DCFC demand shaving floor (Vineet, April 2026):
+  // Each DCFC charger creates a 50 kW demand spike. A BESS smaller than the
+  // DCFC peak cannot meaningfully offset those spikes — it gets saturated
+  // immediately and the demand charge penalty still hits the bill.
+  // Minimum BESS power = dcfcPeakKW × ratio × tier scale (same ratio as facility load).
+  // This ensures the BESS is proportionally sized to the DCFC load it's shaving,
+  // independently of whether the facility base load is large or small.
+  // Reference: Wood Mackenzie "BESS Sizing for EV Fast Charging" 2023.
+  const stateWithDCFC = state as WizardState & { dcfcChargers?: number };
+  const dcfcCount = stateWithDCFC.dcfcChargers ?? 0;
+  const dcfcPeakKW = dcfcCount * 50; // 50 kW per SAE J1772 CCS DCFC port
+  const dcfcBessFloor =
+    dcfcPeakKW > 0 ? Math.round(dcfcPeakKW * ratio * TIER_BESS_SCALE[tierLabel]) : 0;
+
+  const bessKW = Math.max(75, dcfcBessFloor, Math.round(rawBessKW)); // 75 kW commercial minimum floor
 
   // Duration from goal guidance
   const guidance = GOAL_GUIDANCE[goal];
@@ -609,6 +631,9 @@ function computeBESSSizing(
     bessKW,
     bessKWh,
     durationHours,
+    dcfcFloorApplied: dcfcBessFloor > Math.round(rawBessKW) && dcfcBessFloor > 75,
+    dcfcPeakKW,
+    dcfcBessFloor,
   };
 }
 
@@ -703,7 +728,7 @@ function buildOneTier(
     ? Math.round(generatorKW * tierAddonScale)
     : computeGeneratorKW(state, goal, tierLabel);
 
-  const { bessKW, bessKWh, durationHours } = computeBESSSizing(
+  const { bessKW, bessKWh, durationHours, dcfcBessFloor, dcfcPeakKW } = computeBESSSizing(
     state,
     goal,
     tierLabel,
@@ -883,7 +908,12 @@ function buildOneTier(
     ...baseNotes,
     GOAL_GUIDANCE[goal].auditNote,
     `Tier: ${tierLabel} (BESS scale ${TIER_BESS_SCALE[tierLabel]}×)`,
-    `BESS: ${bessKW} kW / ${bessKWh} kWh (${durationHours}h C2 spec — hybrid coverage: ${hybridCoverage.coverageSummary})`,
+    `BESS: ${bessKW} kW / ${bessKWh} kWh (${durationHours}h C2 spec — hybrid coverage: ${hybridCoverage.coverageSummary})${dcfc > 0 ? ` [DCFC floor: ${dcfcPeakKW} kW DCFC peak → ${dcfcBessFloor} kW BESS minimum]` : ""}`,
+    ...(dcfcBessFloor > Math.round(bessKW * 0.9) && dcfc > 0
+      ? [
+          `BESS floor set by DCFC demand: ${dcfc} chargers × 50 kW = ${dcfcPeakKW} kW DCFC peak → ${dcfcBessFloor} kW BESS floor (40% ratio × tier scale)`,
+        ]
+      : []),
     finalSolarKW > 0
       ? `Solar: ${finalSolarKW} kW AC${userConfiguredSolar ? ` (user selected ${solarKW} kW, scaled ${Math.round(tierAddonScale * 100)}% for ${tierLabel})` : ` (${intel?.peakSunHours.toFixed(1)} PSH × ${finalSolarKW}/${state.solarPhysicalCapKW} kW cap)`}`
       : `Solar: excluded (${intel?.solarFeasible ? "physical cap = 0" : `grade ${intel?.solarGrade ?? "unknown"} < B-`})`,

@@ -3240,6 +3240,41 @@ export default function Step3_5V8({ state, actions }: Props) {
           setPendingSolarKW(kw);
         }}
       />
+      {/* ── Demand Charge Callout ─────────────────────────────────────────── */}
+      {/* Show when we have a real demand charge rate from the ZIP-code intel.  */}
+      {/* Helps customers understand why BESS pays off beyond just solar.       */}
+      {(state.intel?.demandCharge ?? 0) > 0 && state.peakLoadKW > 0 && (
+        <div
+          style={{
+            borderRadius: 10,
+            background: "rgba(245,158,11,0.08)",
+            border: "1px solid rgba(245,158,11,0.25)",
+            padding: "12px 16px",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 10,
+          }}
+        >
+          <span style={{ fontSize: 18, lineHeight: 1 }}>⚡</span>
+          <div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: "rgba(251,191,36,0.95)",
+                marginBottom: 3,
+              }}
+            >
+              Your utility charges ${state.intel!.demandCharge}/kW in demand fees
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(203,213,225,0.7)", lineHeight: 1.5 }}>
+              At your {state.peakLoadKW.toLocaleString()} kW peak that&apos;s ~$
+              {Math.round(state.peakLoadKW * state.intel!.demandCharge * 12).toLocaleString()}/yr
+              before any BESS. Peak shaving can cut that by up to 40%.
+            </div>
+          </div>
+        </div>
+      )}
       {solarFeasible && (
         <SolarCard
           maxKW={solarEffectiveMaxKW}
