@@ -12,18 +12,10 @@ primary_region = 'lax'
 [build]
   dockerfile = "Dockerfile"
 
-  # All VITE_ keys are pulled from `fly secrets` at build time via Docker
-  # BuildKit secret mounts (--mount=type=secret). No plaintext keys here.
-  # To rotate a key: fly secrets set VITE_OPENAI_API_KEY=sk-...
-  [build.secrets]
-    VITE_SUPABASE_URL            = "VITE_SUPABASE_URL"
-    VITE_SUPABASE_ANON_KEY       = "VITE_SUPABASE_ANON_KEY"
-    VITE_RESEND_API_KEY          = "VITE_RESEND_API_KEY"
-    VITE_OPENAI_API_KEY          = "VITE_OPENAI_API_KEY"
-    VITE_ENABLE_AI_ANALYSIS      = "VITE_ENABLE_AI_ANALYSIS"
-    VITE_GOOGLE_MAPS_API_KEY     = "VITE_GOOGLE_MAPS_API_KEY"
-    VITE_NREL_API_KEY            = "VITE_NREL_API_KEY"
-    VITE_VISUAL_CROSSING_API_KEY = "VITE_VISUAL_CROSSING_API_KEY"
+  # VITE_ build secrets are passed via --build-secret flags in the CI/CD
+  # workflow (fly-deploy.yml) and via scripts/deploy.sh locally.
+  # Do NOT add [build.secrets] here — duplicate secret names between
+  # fly.toml and --build-secret CLI flags cause a conflict in flyctl ≥ 0.4.
 
 # Runtime environment — available to the Express server (port 3001) at run time.
 # Sensitive keys (GOOGLE_MAPS_API_KEY, STRIPE_SECRET_KEY, etc.) are managed via
