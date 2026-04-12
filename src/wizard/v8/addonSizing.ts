@@ -104,37 +104,52 @@ export function estimateGenKW(scope: GeneratorScopeId, state: WizardState): numb
 }
 
 /**
- * Industries that require a generator by operational / code necessity.
+ * Industries that require a generator as part of the baseline system design —
+ * not merely as an optional resilience add-on. The quote engine auto-includes
+ * it in Step 3.5 and the ROI guardrail never strips it.
  *
- * These facilities must include a generator as part of the baseline system
- * design — not merely as an optional resilience add-on. The quote engine
- * auto-includes it in Step 3.5 and the ROI guardrail never strips it.
- *
+ * GROUP 1 — Life-safety & code mandate
  *   hospital      — NEC 517 / NFPA 99: life-safety systems mandatory
  *   data_center   — Tier III/IV uptime standards: 100% IT load continuity
  *   airport       — FAA / TSA: critical operations + safety systems
  *   manufacturing — IEEE 446 Orange Book: process continuity & safety interlocks
  *
+ * GROUP 2 — Heavy 24/7 continuous process load (operational necessity)
+ *   truck_stop    — Loves/Pilot/Flying J: truck wash bays + DCFC banks + DEF
+ *                   pumps all run 24/7; grid blip = revenue loss + safety risk
+ *   cold_storage  — refrigeration compressors cannot tolerate interruption;
+ *                   inventory loss from a single outage dwarfs generator cost
+ *   logistics     — automated sortation, conveyor systems, freezer zones;
+ *                   downtime is quantified per-minute in SLA contracts
+ *   commercial_laundry — industrial washers/dryers run continuous cycles;
+ *                   mid-cycle interruption damages linens + chemicals
+ *
+ * Note: car_wash is NOT in this set — it is high-automation but not 24/7
+ * mission-critical; generator defaults to opt-in (not mandate).
+ *
  * Also covers any facility whose critical load fraction ≥ 50% — see
  * industryRequiresGenerator() below.
  */
 export const GENERATOR_DEFAULT_INDUSTRIES = new Set([
+  // Life-safety / code mandate
   "hospital",
   "data_center",
-  "data-center",
+  "data-center", // slug variant
   "airport",
   "manufacturing",
+  // Heavy 24/7 continuous process load
+  "truck_stop",
+  "cold_storage",
+  "logistics",
+  "commercial_laundry",
 ]);
 
 /**
  * Returns true when the industry mandates a generator as a baseline facility
  * requirement by code or operational necessity (not an optional add-on).
  *
- * Covered industries:
- *   hospital      — NEC 517 / NFPA 99: life-safety systems mandatory
- *   data_center   — Tier III/IV uptime standards: 100% IT load continuity
- *   airport       — FAA / TSA: critical operations + safety systems
- *   manufacturing — IEEE 446 Orange Book: process continuity & safety interlocks
+ * Code mandates: hospital, data_center, airport, manufacturing
+ * 24/7 continuous load: truck_stop, cold_storage, logistics, commercial_laundry
  *
  * Note: criticalLoadPct ≥ 50% is a POLICY trigger handled separately in
  * computeGeneratorKW (if_critical policy) — not a mandate override here.

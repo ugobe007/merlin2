@@ -997,6 +997,53 @@ describe("G. Multi-industry calculation scenarios", () => {
     const [, rec] = await buildTiers(state);
     expect(rec.generatorKW).toBe(0);
   });
+
+  // Heavy 24/7 continuous-load industries — generator mandate (operational necessity)
+  const heavyLoadIndustries: Array<{ industry: string; label: string }> = [
+    { industry: "truck_stop", label: "Truck stop (Loves/Pilot) — 24/7 wash + DCFC" },
+    { industry: "cold_storage", label: "Cold storage — refrigeration process continuity" },
+    { industry: "logistics", label: "Logistics/warehouse — automated conveyor + freezer zones" },
+    {
+      industry: "commercial_laundry",
+      label: "Commercial laundry — continuous industrial wash cycles",
+    },
+  ];
+
+  heavyLoadIndustries.forEach(({ industry, label }) => {
+    it(`${label} — generator auto-included by mandate (wantsGenerator=undefined)`, async () => {
+      const state = makeState({
+        industry,
+        baseLoadKW: 400,
+        peakLoadKW: 600,
+        criticalLoadPct: 0.6,
+        wantsGenerator: undefined, // not explicitly declined → mandate applies
+        step3Answers: {
+          primaryBESSApplication: "backup_power",
+          generatorNeed: "none",
+          step3_5Visited: false,
+        },
+      });
+      const [, rec] = await buildTiers(state);
+      expect(rec.generatorKW).toBeGreaterThan(0);
+    });
+
+    it(`${label} — generator excluded when user explicitly declines`, async () => {
+      const state = makeState({
+        industry,
+        baseLoadKW: 400,
+        peakLoadKW: 600,
+        criticalLoadPct: 0.6,
+        wantsGenerator: false, // explicit user override always wins
+        step3Answers: {
+          primaryBESSApplication: "backup_power",
+          generatorNeed: "none",
+          step3_5Visited: true,
+        },
+      });
+      const [, rec] = await buildTiers(state);
+      expect(rec.generatorKW).toBe(0);
+    });
+  });
 });
 
 // =============================================================================
