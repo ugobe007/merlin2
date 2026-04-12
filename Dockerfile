@@ -16,8 +16,9 @@ COPY package*.json ./
 # Install dependencies (no cache to ensure fresh install)
 RUN npm ci --no-audit --prefer-offline
 
-# Cache bust for source files
+# Cache bust for source files — ENV instruction consumes ARG so Docker actually busts cache
 ARG CACHEBUST=1
+ENV BUILD_CACHEBUST=${CACHEBUST}
 
 # Copy source code
 COPY . .
