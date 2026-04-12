@@ -163,9 +163,9 @@ async function walkIndustry(browser: Browser, industry: Industry): Promise<WalkR
     await confirmLocationBtn.click();
     await page.waitForTimeout(600);
 
-    // After geocoding resolves, Step1 shows the business name field with a "Skip" button.
-    // Clicking Skip calls actions.goToStep(2) — advances to Industry selection.
-    const skipBtn = page.locator('button:has-text("Skip")').first();
+    // After geocoding resolves, Step1 shows "Continue or Lookup your Business" button.
+    // Clicking it calls actions.goToStep(2) — advances to Industry selection.
+    const skipBtn = page.locator('button:has-text("Continue or Lookup")').first();
     await skipBtn.waitFor({ state: 'visible', timeout: 20_000 });
     await skipBtn.click();
     await page.waitForTimeout(800);
