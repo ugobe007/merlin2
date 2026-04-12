@@ -92,6 +92,7 @@ import { selectOptimalBESS, type BESSSpec } from "@/services/bessSelectionServic
 import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
 import type { WizardState, QuoteTier, TierLabel } from "./wizardState";
 import type { HybridCoverage, HybridStrategy, PowerSourceDescriptor } from "./wizardState";
+import { industryRequiresGenerator } from "./addonSizing";
 
 // Dev-only logging helper — compiled away in production bundles
 
@@ -133,10 +134,11 @@ const GOAL_GUIDANCE: Record<GoalChoice, GoalGuidance> = {
     auditNote: "Goal: Save More — bias toward smaller system and fast payback.",
   },
   save_most: {
-    // Balanced for optimal NPV. Solar at high penetration (best ROI driver).
-    // Generator only when explicitly requested by the user (opt-in, not auto-included).
-    // Rationale (Vineet, April 2026): generator adds cost with no savings improvement
-    // for typical commercial facilities. Must be a conscious user choice.
+    // Balanced for optimal NPV. Primary package: BESS + generator.
+    // Solar is an add-on when site has adequate roof/land area.
+    // Generator policy: auto-included for code-mandated industries (hospital,
+    // data_center, airport, manufacturing) or critical load ≥ 50% — see
+    // industryRequiresGenerator() in addonSizing.ts. Opt-in for all others.
     // INDUSTRY NOTE: C2 (2h) is the commercial BESS standard. Extended coverage
     // comes from solar recharge between peaks + generator bridge — not raw battery hours.
     solarPenetration: { starter: 0.5, recommended: 0.85, complete: 1.0 },
@@ -253,6 +255,13 @@ function computeGeneratorKW(state: WizardState, goal: GoalChoice, tierLabel: Tie
   // that is NOT the same as the user requesting a generator.
   const step3_5Visited = Boolean(step3Answers?.step3_5Visited);
 
+  // Industry/load mandate: hospital, data_center, airport, manufacturing and any
+  // facility with criticalLoadPct ≥ 50% require a generator regardless of goal
+  // policy or user opt-in. This reflects code requirements (NEC 517, NFPA 99,
+  // FAA, IEEE 446) and real-world quoting practice — these sites always get
+  // BESS + generator as the primary package; solar is the optional add-on.
+  const industryGen = industryRequiresGenerator(state.industry ?? undefined, criticalLoadPct);
+
   // Explicit Step 3.5 toggle: if user turned it ON, always include regardless of policy
   const explicitlyEnabled =
     wantsGenerator === true ||
@@ -260,9 +269,15 @@ function computeGeneratorKW(state: WizardState, goal: GoalChoice, tierLabel: Tie
     generatorScope === "full" ||
     generatorScope === "critical";
 
+  // explicitlyDeclined: user visited Step 3.5 and explicitly removed the generator.
+  // Respects user autonomy — even industry-mandated generators can be declined.
+  const explicitlyDeclined = wantsGenerator === false;
+
   // Goal-policy gating (used when Step 3.5 was not visited)
   const includeByPolicy =
     guidance.generatorPolicy === "always" ||
+    // Industry mandate: overridden only by an explicit user decline.
+    (industryGen && !explicitlyDeclined) ||
     (guidance.generatorPolicy === "if_critical" &&
       (criticalLoadPct >= 0.5 ||
         generatorNeed === "full_backup" ||
@@ -277,8 +292,13 @@ function computeGeneratorKW(state: WizardState, goal: GoalChoice, tierLabel: Tie
   const includeGenerator = explicitlyEnabled || includeByPolicy;
   if (!includeGenerator) return 0;
 
-  // Starter tier: skip unless explicitly requested (cost-focused goal)
-  if (tierLabel === "Starter" && !explicitlyEnabled && guidance.generatorPolicy !== "always") {
+  // Starter tier: skip unless explicitly requested OR industry mandates it
+  if (
+    tierLabel === "Starter" &&
+    !explicitlyEnabled &&
+    !industryGen &&
+    guidance.generatorPolicy !== "always"
+  ) {
     if (generatorNeed === "none" || generatorNeed === "ups") return 0;
   }
 
@@ -1325,12 +1345,17 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
   //      healthcare occupancies. Removing it would produce a code-violating design.
   //      Hospitals account for the generator cost via avoided downtime savings credit.
   // In those cases the generator is a necessity, not an optional ROI lever.
+  // Guard: never auto-strip a generator that is required by industry code /
+  // operational necessity or explicitly requested by the user.
+  // industryRequiresGenerator() covers hospital (NEC 517/NFPA 99), data_center,
+  // airport (FAA), manufacturing (IEEE 446).
+  // criticalLoadPct ≥ 50% is a separate safety threshold (IEEE 446 mandate).
   const generatorIsExplicitlyNeeded =
     state.wantsGenerator === true ||
     state.criticalLoadPct >= 0.5 ||
     state.step3Answers?.generatorNeed === "full_backup" ||
     state.step3Answers?.generatorNeed === "resilience" ||
-    state.industry === "hospital";
+    industryRequiresGenerator(state.industry ?? undefined);
 
   if (adjusted.generatorKW > 0 && !generatorIsExplicitlyNeeded) {
     const noGen = recalcWithoutGenerator(adjusted, state);

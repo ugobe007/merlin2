@@ -956,14 +956,17 @@ describe("G. Multi-industry calculation scenarios", () => {
     expect(rec.bessKW).toBe(expected);
   });
 
-  it("Hospital — generator NOT auto-included without explicit opt-in (wantsGenerator=false)", async () => {
+  it("Hospital — generator auto-included by industry mandate (NEC 517 / NFPA 99)", async () => {
+    // Hospital industry mandates a generator regardless of goal policy or
+    // whether Step 3.5 has been visited. wantsGenerator=undefined means the
+    // user has not explicitly declined it — the mandate fires automatically.
     const state = makeState({
       industry: "hospital",
       solarPhysicalCapKW: 120,
       criticalLoadPct: 0.9,
       baseLoadKW: 600,
       peakLoadKW: 900,
-      wantsGenerator: false,
+      wantsGenerator: undefined, // not explicitly declined → mandate applies
       step3Answers: {
         primaryBESSApplication: "backup_power",
         generatorNeed: "none",
@@ -971,8 +974,27 @@ describe("G. Multi-industry calculation scenarios", () => {
       },
     });
     const [, rec] = await buildTiers(state);
-    // Generator is opt-in only regardless of criticalLoadPct or industry
-    // wantsGenerator=false AND generatorNeed="none" → generatorKW = 0
+    // Hospital industry mandate → generator included automatically
+    expect(rec.generatorKW).toBeGreaterThan(0);
+  });
+
+  it("Hospital — generator excluded when user explicitly declines (wantsGenerator=false)", async () => {
+    // wantsGenerator=false is an explicit user choice (they removed it in Step 3.5).
+    // Even hospitals respect explicit declines — user autonomy overrides the mandate.
+    const state = makeState({
+      industry: "hospital",
+      solarPhysicalCapKW: 120,
+      criticalLoadPct: 0.9,
+      baseLoadKW: 600,
+      peakLoadKW: 900,
+      wantsGenerator: false, // explicit decline overrides mandate
+      step3Answers: {
+        primaryBESSApplication: "backup_power",
+        generatorNeed: "none",
+        step3_5Visited: true, // visited and declined
+      },
+    });
+    const [, rec] = await buildTiers(state);
     expect(rec.generatorKW).toBe(0);
   });
 });

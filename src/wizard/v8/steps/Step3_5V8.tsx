@@ -14,6 +14,7 @@ import {
   estimateGenKW,
   getEffectiveSolarCapKW,
   defaultGeneratorScope,
+  industryRequiresGenerator,
 } from "../addonSizing";
 import {
   getFacilityConstraints,
@@ -2963,12 +2964,18 @@ export default function Step3_5V8({ state, actions }: Props) {
   const [fuelType, setFuelType] = useState<FuelType>(
     (state.generatorFuelType as FuelType) ?? "natural-gas"
   );
-  // Generator is OPT-IN — defaults OFF unless grid is unreliable or user previously enabled it
+  // Generator defaults ON when:
+  //   • user previously enabled it
+  //   • grid is known unreliable / frequent outages
+  //   • industry requires it by code/operational mandate (hospital, data_center,
+  //     airport, manufacturing) or criticalLoadPct ≥ 50%
+  // For all other industries the user must opt-in via “+ Add Generator”.
   const [wantsGenerator, setWantsGenerator] = useState<boolean>(
     () =>
       state.wantsGenerator === true ||
       state.gridReliability === "frequent-outages" ||
-      state.gridReliability === "unreliable"
+      state.gridReliability === "unreliable" ||
+      industryRequiresGenerator(state.industry ?? undefined)
   );
   // EV charging is OPT-IN — defaults OFF unless user previously enabled it
   const [wantsEV, setWantsEV] = useState<boolean>(() => state.wantsEVCharging === true);
@@ -2987,6 +2994,14 @@ export default function Step3_5V8({ state, actions }: Props) {
       actions.setAddonPreference("solar", true);
       const recKW = estimateSolarKW("roof_canopy", state);
       if (recKW > 0) actions.setAddonConfig({ solarKW: recKW });
+    }
+    // Auto-enable generator for code/operationally-mandated industries on first visit.
+    // These facilities (hospital, data_center, airport, manufacturing)
+    // always include BESS + generator as the primary package; solar is the add-on.
+    if (industryRequiresGenerator(state.industry ?? undefined)) {
+      actions.setAddonPreference("generator", true);
+      const recGenKW = estimateGenKW(defaultGeneratorScope(state), state);
+      if (recGenKW > 0) actions.setAddonConfig({ generatorKW: recGenKW });
     }
     // EV is NOT auto-enabled — user must opt in
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
