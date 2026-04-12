@@ -449,7 +449,7 @@ function getAdvisorContent(
 function resolveCanGoNext(step: number, state: S): boolean {
   if (step === 3) return state.baseLoadKW > 0;
   if (step === 4) return true; // Add-ons: always continuable
-  if (step === 5) return state.selectedTierIndex !== null; // MagicFit: must pick a tier
+  if (step === 5) return state.selectedTierIndex !== null && state.tiersStatus === "ready"; // MagicFit: tier selected + build complete
   return false;
 }
 
@@ -646,7 +646,7 @@ export default function WizardV8Page() {
         stepLabels={STEP_LABELS}
         canGoBack={step > 0}
         canGoNext={resolveCanGoNext(step, state)}
-        isNextLoading={step === 4 && state.tiersStatus === "fetching"}
+        isNextLoading={(step === 4 || step === 5) && state.tiersStatus === "fetching"}
         onBack={actions.goBack}
         onNext={() => {
           if (step === 4) {
