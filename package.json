@@ -12,7 +12,7 @@
     "dev": "vite --port 5184 --strictPort",
     "build": "tsc -b && vite build",
     "build:analyze": "vite build --mode analyze",
-    "build:prod": "NODE_ENV=production vite build",
+    "build:prod": "vite build --mode production",
     "type-check": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "quote:diag": "npx vite-node scripts/quote-diag.ts",
