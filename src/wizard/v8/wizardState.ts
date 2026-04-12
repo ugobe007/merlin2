@@ -247,7 +247,7 @@ export interface PowerSourceDescriptor {
   /** Hours of outage coverage before refuel/resource constraint */
   outageBridgeHours: number;
   /** Optional fuel type for combustion sources */
-  fuelType?: "diesel" | "natural-gas" | "dual-fuel";
+  fuelType?: "diesel" | "natural-gas" | "dual-fuel" | "linear";
 }
 
 export type HybridStrategy = "bess_only" | "solar_boost" | "gen_extend" | "full_hybrid";
@@ -291,7 +291,7 @@ export interface QuoteTier {
   bessKW: number;
   solarKW: number; // 0 when not feasible or goal doesn't include solar
   generatorKW: number; // always > 0 (all tiers include generator)
-  generatorFuelType?: "diesel" | "natural-gas" | "dual-fuel"; // Fuel type from Step 3.5
+  generatorFuelType?: "diesel" | "natural-gas" | "dual-fuel" | "linear"; // Fuel type from Step 3.5
   linearGeneratorKW?: number; // Linear generator — continuous baseload, ~20% more fuel-efficient
   evChargerKW: number; // 0 if no EV configured
   durationHours: number; // Battery spec hours — always 2 (C2 industry standard)
@@ -491,7 +491,7 @@ export interface WizardState {
   // ── Step 4: Add-on Configuration (shown if any addon flags are true) ─────
   solarKW: number; // Solar array size in kW
   generatorKW: number; // Generator capacity in kW
-  generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
+  generatorFuelType: "diesel" | "natural-gas" | "dual-fuel" | "linear";
   linearGeneratorKW: number; // Linear generator — continuous baseload, ~20% more fuel-efficient
   level2Chargers: number; // Count of Level 2 EV chargers (7-22 kW)
   dcfcChargers: number; // Count of DC Fast Chargers (50-150 kW)
@@ -561,7 +561,7 @@ export type WizardIntent =
         solarPanelTier: "standard" | "premium";
         solarStructureType: "rooftop" | "carport_new" | "carport_retrofit";
         generatorKW: number;
-        generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
+        generatorFuelType: "diesel" | "natural-gas" | "dual-fuel" | "linear";
         linearGeneratorKW: number;
         level2Chargers: number;
         dcfcChargers: number;
@@ -986,7 +986,7 @@ export interface WizardActions {
       solarPanelTier: "standard" | "premium";
       solarStructureType: "rooftop" | "carport_new" | "carport_retrofit";
       generatorKW: number;
-      generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
+      generatorFuelType: "diesel" | "natural-gas" | "dual-fuel" | "linear";
       linearGeneratorKW: number;
       level2Chargers: number;
       dcfcChargers: number;

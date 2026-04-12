@@ -468,6 +468,7 @@ function buildPowerSources(
 function fuelLabel(fuelType: string): string {
   if (fuelType === "natural-gas") return "Natural Gas";
   if (fuelType === "dual-fuel") return "Dual-Fuel";
+  if (fuelType === "linear") return "Linear";
   return "Diesel";
 }
 
@@ -896,7 +897,10 @@ function buildOneTier(
     hpcCount: costHpc,
     generatorKW: finalGenKW,
     criticalLoadKW: state.peakLoadKW * state.criticalLoadPct,
-    fuelType: (generatorFuelType || "diesel") as "diesel" | "natural-gas" | "dual-fuel",
+    fuelType: ((generatorFuelType === "linear" ? "diesel" : generatorFuelType) || "diesel") as
+      | "diesel"
+      | "natural-gas"
+      | "dual-fuel",
   });
 
   // V4.5 honest TCO: gross = BESS + solar + EV revenue; net = gross − reserves

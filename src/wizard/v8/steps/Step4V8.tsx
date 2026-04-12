@@ -923,6 +923,7 @@ export default function Step4V8({ state, actions }: Props) {
                 relative rounded-2xl overflow-hidden cursor-pointer
                 ${config.cardBg} border-2 ${config.cardHover}
                 ${isSelected ? "border-emerald-500/60 card-selected" : config.cardBorder}
+                ${isPerfectFit ? "order-first lg:order-1" : "order-last lg:order-2"}
                 transition-all duration-300
               `}
             >
@@ -1145,7 +1146,6 @@ export default function Step4V8({ state, actions }: Props) {
                       </div>
                     )}
 
-                    {/* Linear Generator — Phase 2 */}
                     {(tier.linearGeneratorKW ?? 0) >= 1 && (
                       <div className={`equipment-chip ${config.chipBg} border border-cyan-500/30`}>
                         <span>🔄</span>

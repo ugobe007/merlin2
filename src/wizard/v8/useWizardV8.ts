@@ -1143,7 +1143,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
         solarPanelTier: "standard" | "premium";
         solarStructureType: "rooftop" | "carport_new" | "carport_retrofit";
         generatorKW: number;
-        generatorFuelType: "diesel" | "natural-gas" | "dual-fuel";
+        generatorFuelType: "diesel" | "natural-gas" | "dual-fuel" | "linear";
         linearGeneratorKW: number;
         level2Chargers: number;
         dcfcChargers: number;
