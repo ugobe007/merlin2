@@ -78,13 +78,15 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
+        with:
+          version: '0.4.33'
 
       # IMPORTANT: The Dockerfile uses --mount=type=secret (not ARG) so all
       # VITE_ vars MUST be passed as --build-secret, not --build-arg.
       # Matching scripts/deploy.sh exactly.
       - name: Deploy
         run: |
-          flyctl deploy -a merlin2 --remote-only \
+          flyctl deploy -a merlin2 --remote-only --wait-timeout 300 \
             --build-arg "CACHEBUST=$(date +%s)" \
             --build-secret "VITE_SUPABASE_URL=${VITE_SUPABASE_URL}" \
             --build-secret "VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}" \
