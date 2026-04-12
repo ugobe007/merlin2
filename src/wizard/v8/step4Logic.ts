@@ -260,7 +260,7 @@ function computeGeneratorKW(state: WizardState, goal: GoalChoice, tierLabel: Tie
   // policy or user opt-in. This reflects code requirements (NEC 517, NFPA 99,
   // FAA, IEEE 446) and real-world quoting practice — these sites always get
   // BESS + generator as the primary package; solar is the optional add-on.
-  const industryGen = industryRequiresGenerator(state.industry ?? undefined, criticalLoadPct);
+  const industryGen = industryRequiresGenerator(state.industry ?? undefined);
 
   // Explicit Step 3.5 toggle: if user turned it ON, always include regardless of policy
   const explicitlyEnabled =
@@ -585,7 +585,14 @@ function computeBESSSizing(
   tierLabel: TierLabel,
   _solarKW: number = 0,
   _generatorKW: number = 0
-): { bessKW: number; bessKWh: number; durationHours: number } {
+): {
+  bessKW: number;
+  bessKWh: number;
+  durationHours: number;
+  dcfcFloorApplied: boolean;
+  dcfcPeakKW: number;
+  dcfcBessFloor: number;
+} {
   // Use peakLoadKW as sizing basis. Fall back to baseLoadKW if peak not yet set.
   const effectivePeakKW = state.peakLoadKW > 0 ? state.peakLoadKW : state.baseLoadKW;
 
@@ -600,6 +607,9 @@ function computeBESSSizing(
       bessKW,
       bessKWh: Math.round(bessKW * durationHours),
       durationHours,
+      dcfcFloorApplied: false,
+      dcfcPeakKW: 0,
+      dcfcBessFloor: 0,
     };
   }
 
