@@ -210,3 +210,95 @@ export type EVPackageId = keyof typeof EV_PACKAGE_COUNTS;
 export function computeEVPackageKW(l2Count: number, dcfcCount: number, hpcCount = 0): number {
   return Math.round(l2Count * EV_KW.l2 + dcfcCount * EV_KW.dcfc + hpcCount * EV_KW.hpc);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Industry-aware solar panel tier recommendation
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Industries where premium high-efficiency panels are strongly recommended.
+ *
+ * Criteria: roof is space-constrained relative to load, so every W/sqft matters.
+ *   car_wash      — 4,000–8,000 sqft roof, very high energy density
+ *   restaurant    — 2,000–5,000 sqft roof, enormous kitchen/HVAC load
+ *   ev_charging   — canopy-only footprint; max kW from fixed canopy area
+ *   multifamily   — shared roof split across many units; $/unit improves with density
+ *   gym           — mid-size roof + HVAC-heavy load during peak class hours
+ */
+export const PREMIUM_PANEL_INDUSTRIES = new Set([
+  "car_wash",
+  "restaurant",
+  "ev_charging",
+  "ev_charging_hub",
+  "multifamily",
+  "apartment",
+  "gym",
+  "fitness",
+]);
+
+/**
+ * Industries where standard (best $/kWh) panels are the right call.
+ *
+ * Criteria: roof area far exceeds load — efficiency gain has negligible ROI.
+ *   warehouse / self_storage — 50,000–200,000 sqft with small loads
+ *   school        — large roof, daytime-only load, panel selection irrelevant
+ *   cold_storage  — big roof, flat refrigeration baseload
+ *   manufacturing — abundant roof, savings come from BESS demand shaving
+ */
+export const STANDARD_PANEL_INDUSTRIES = new Set([
+  "warehouse",
+  "self_storage",
+  "school",
+  "k12",
+  "k_12",
+  "cold_storage",
+  "manufacturing",
+]);
+
+/**
+ * Returns the recommended solar panel tier for an industry.
+ *
+ * - "premium"  → space-constrained: every W/sqft matters
+ * - "standard" → space-abundant: cheapest approved panel wins
+ *
+ * Falls back to "standard" for any industry not in either set.
+ */
+export function industryPanelTier(industry?: string): "standard" | "premium" {
+  if (!industry) return "standard";
+  if (PREMIUM_PANEL_INDUSTRIES.has(industry)) return "premium";
+  return "standard";
+}
+
+/**
+ * One-line rationale string shown in the Panel Grade selector UI.
+ * Explains WHY Merlin pre-selected this tier for the chosen industry.
+ */
+export function industryPanelTierReason(industry?: string): string | null {
+  if (!industry) return null;
+  if (PREMIUM_PANEL_INDUSTRIES.has(industry)) {
+    const reasons: Record<string, string> = {
+      car_wash: "Small roof (4–8K sqft) + high load — every W/sqft counts.",
+      restaurant: "Tiny roof (2–5K sqft) + kitchen/HVAC load — max density needed.",
+      ev_charging: "Canopy footprint is fixed — higher wattage = more kW offset.",
+      ev_charging_hub: "Canopy footprint is fixed — higher wattage = more kW offset.",
+      multifamily: "Shared roof across units — premium panels improve per-unit ROI.",
+      apartment: "Shared roof across units — premium panels improve per-unit ROI.",
+      gym: "Mid-size roof + HVAC peaks — premium boosts class-time offset.",
+      fitness: "Mid-size roof + HVAC peaks — premium boosts class-time offset.",
+    };
+    return reasons[industry] ?? "Space-constrained roof — premium panels maximize capacity.";
+  }
+  if (STANDARD_PANEL_INDUSTRIES.has(industry)) {
+    const reasons: Record<string, string> = {
+      warehouse: "Vast roof, low load — standard panels fill the need at best $/kWh.",
+      self_storage: "Massive roof, minimal load — efficiency premium adds no ROI.",
+      school: "Large roof, daytime-only load — standard panels are the right call.",
+      k12: "Large roof, daytime-only load — standard panels are the right call.",
+      k_12: "Large roof, daytime-only load — standard panels are the right call.",
+      cold_storage: "Large roof, flat refrigeration load — volume standard panels win.",
+      manufacturing: "Abundant roof — savings come from BESS demand shaving, not panel grade.",
+    };
+    return reasons[industry] ?? "Roof space is abundant — standard panels deliver best $/kWh.";
+  }
+  return null;
+}
