@@ -17,8 +17,13 @@ let _supabaseInstance: SupabaseClient<Database> | null = null;
 
 export const supabase = (() => {
   if (!_supabaseInstance) {
-    const url = supabaseUrl || "https://placeholder.supabase.co";
-    const key = supabaseAnonKey || "placeholder-key";
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error(
+        "Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY — check your build secrets."
+      );
+    }
+    const url = supabaseUrl;
+    const key = supabaseAnonKey;
     _supabaseInstance = createClient<Database>(url, key, {
       auth: {
         autoRefreshToken: true,
