@@ -38,6 +38,7 @@ RUN --mount=type=secret,id=VITE_SUPABASE_URL \
     --mount=type=secret,id=VITE_NREL_API_KEY \
     --mount=type=secret,id=VITE_VISUAL_CROSSING_API_KEY \
     sh -c '\
+      echo "Cache bust: ${CACHEBUST}"; \
       rm -f .env.production; \
       for KEY in VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY VITE_RESEND_API_KEY \
                  VITE_OPENAI_API_KEY VITE_ENABLE_AI_ANALYSIS VITE_GOOGLE_MAPS_API_KEY \
