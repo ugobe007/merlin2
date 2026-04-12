@@ -26,9 +26,9 @@ export type GeneratorScopeId = "essential" | "full" | "critical";
 
 /** Scope → solar penetration fraction */
 export const SOLAR_SCOPE_PENETRATION: Record<SolarScopeId, number> = {
-  roof_only:   0.55,
-  roof_canopy: 0.80,
-  maximum:     1.00,
+  roof_only: 0.55,
+  roof_canopy: 0.8,
+  maximum: 1.0,
 };
 
 /**
@@ -76,8 +76,8 @@ export function estimateSolarKW(scope: SolarScopeId, state: WizardState): number
   // Linear ramp 2.5→4.5 PSH → 0%→100%; floor at 40% for any viable site.
   // This prevents the old formula from crushing the recommendation to 1 kW
   // for moderate-sun states like Michigan (PSH ~4.0 GHI, ~3.1 system AC).
-  const sunFactor = Math.max(0.40, Math.min(1.0, (psh - 2.5) / 2.0));
-  const pen = SOLAR_SCOPE_PENETRATION[scope] ?? 0.80;
+  const sunFactor = Math.max(0.4, Math.min(1.0, (psh - 2.5) / 2.0));
+  const pen = SOLAR_SCOPE_PENETRATION[scope] ?? 0.8;
   // Matches step4Logic.computeSolarKW (both updated together).
   return Math.round(Math.min(cap * sunFactor * pen, cap));
 }
@@ -98,9 +98,49 @@ export function estimateGenKW(scope: GeneratorScopeId, state: WizardState): numb
   // Pull NEC reserve margin from SSOT — do not hardcode
   const { margin } = getGeneratorReserveMarginWithSource();
   if (scope === "essential") return Math.max(10, Math.round(peakLoadKW * criticalLoadPct * margin));
-  if (scope === "critical")  return Math.max(10, Math.round(peakLoadKW * 1.35));
+  if (scope === "critical") return Math.max(10, Math.round(peakLoadKW * 1.35));
   // "full" (default) — full facility + 10% headroom
-  return Math.max(10, Math.round(peakLoadKW * 1.10));
+  return Math.max(10, Math.round(peakLoadKW * 1.1));
+}
+
+/**
+ * Industries that require a generator by operational / code necessity.
+ *
+ * These facilities must include a generator as part of the baseline system
+ * design — not merely as an optional resilience add-on. The quote engine
+ * auto-includes it in Step 3.5 and the ROI guardrail never strips it.
+ *
+ *   hospital      — NEC 517 / NFPA 99: life-safety systems mandatory
+ *   data_center   — Tier III/IV uptime standards: 100% IT load continuity
+ *   airport       — FAA / TSA: critical operations + safety systems
+ *   manufacturing — IEEE 446 Orange Book: process continuity & safety interlocks
+ *
+ * Also covers any facility whose critical load fraction ≥ 50% — see
+ * industryRequiresGenerator() below.
+ */
+export const GENERATOR_DEFAULT_INDUSTRIES = new Set([
+  "hospital",
+  "data_center",
+  "data-center",
+  "airport",
+  "manufacturing",
+]);
+
+/**
+ * Returns true when the industry mandates a generator as a baseline facility
+ * requirement by code or operational necessity (not an optional add-on).
+ *
+ * Covered industries:
+ *   hospital      — NEC 517 / NFPA 99: life-safety systems mandatory
+ *   data_center   — Tier III/IV uptime standards: 100% IT load continuity
+ *   airport       — FAA / TSA: critical operations + safety systems
+ *   manufacturing — IEEE 446 Orange Book: process continuity & safety interlocks
+ *
+ * Note: criticalLoadPct ≥ 50% is a POLICY trigger handled separately in
+ * computeGeneratorKW (if_critical policy) — not a mandate override here.
+ */
+export function industryRequiresGenerator(industry?: string): boolean {
+  return !!(industry && GENERATOR_DEFAULT_INDUSTRIES.has(industry));
 }
 
 /** Smart default generator scope based on grid reliability answer */
@@ -122,9 +162,9 @@ export function defaultGeneratorScope(state: WizardState): GeneratorScopeId {
  * chargers like Electrify America (non-standard for most retail deployments).
  */
 export const EV_KW = {
-  l2:   7.2,
+  l2: 7.2,
   dcfc: 50,
-  hpc:  250,
+  hpc: 250,
 } as const;
 
 /**
@@ -141,13 +181,13 @@ export const EV_KW = {
  */
 export const EV_PACKAGE_COUNTS = {
   // Current package IDs
-  pkg_basic: { l2: 4,  dcfc: 0 },
-  pkg_pro:   { l2: 6,  dcfc: 2 },
-  pkg_fleet: { l2: 6,  dcfc: 4 },
+  pkg_basic: { l2: 4, dcfc: 0 },
+  pkg_pro: { l2: 6, dcfc: 2 },
+  pkg_fleet: { l2: 6, dcfc: 4 },
   // Legacy scope IDs (backward compat)
-  small:     { l2: 4,  dcfc: 0 },
-  medium:    { l2: 8,  dcfc: 2 },
-  large:     { l2: 12, dcfc: 4 },
+  small: { l2: 4, dcfc: 0 },
+  medium: { l2: 8, dcfc: 2 },
+  large: { l2: 12, dcfc: 4 },
 } as const;
 
 export type EVPackageId = keyof typeof EV_PACKAGE_COUNTS;
