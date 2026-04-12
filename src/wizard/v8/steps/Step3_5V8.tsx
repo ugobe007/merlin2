@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import type { WizardState, WizardActions, WizardStep } from "../wizardState";
 import {
   estimateSolarKW,
@@ -1652,18 +1653,19 @@ function PanelAssessmentModal({
 
   const AMP_OPTIONS = [200, 400, 600, 800, 1200];
 
-  return (
+  const modalContent = (
     <div
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 9999,
-        background: "rgba(0,0,0,0.80)",
-        backdropFilter: "blur(6px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: 16,
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
       }}
     >
       <div
@@ -1673,9 +1675,10 @@ function PanelAssessmentModal({
           background: "#0f1923",
           border: "1px solid rgba(167,139,250,0.30)",
           borderRadius: 16,
-          boxShadow: "0 0 60px rgba(167,139,250,0.20)",
+          boxShadow: "0 0 80px rgba(0,0,0,0.85), 0 0 60px rgba(167,139,250,0.25)",
           overflow: "hidden",
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
@@ -1949,6 +1952,8 @@ function PanelAssessmentModal({
       </div>
     </div>
   );
+
+  return ReactDOM.createPortal(modalContent, document.body);
 }
 
 // ── EV Charging Card ──────────────────────────────────────────────────────────
