@@ -16,6 +16,8 @@ import {
   getEffectiveSolarCapKW,
   defaultGeneratorScope,
   industryRequiresGenerator,
+  industryPanelTier,
+  industryPanelTierReason,
 } from "../addonSizing";
 import {
   getFacilityConstraints,
@@ -787,6 +789,7 @@ function SolarCard({
   pendingExternalKW,
   onPendingConsumed,
   onCarportToggle,
+  industry,
   solarPanelTier = "standard",
   onPanelTierChange,
   solarStructureType = "rooftop",
@@ -810,6 +813,8 @@ function SolarCard({
   onPendingConsumed?: () => void;
   /** Parent-computed: fires BEFORE onCanopyChange, updates both solar kW and slider */
   onCarportToggle?: (nextVal: string, targetKW: number) => void;
+  /** Industry slug — used for panel tier recommendation hint. */
+  industry?: string;
   /** Panel grade: 'standard' = best $/kWh, 'premium' = highest-efficiency. */
   solarPanelTier?: "standard" | "premium";
   onPanelTierChange?: (tier: "standard" | "premium") => void;
@@ -1444,19 +1449,48 @@ function SolarCard({
             );
           })}
         </div>
-        {solarPanelTier === "premium" && (
-          <div
-            style={{
-              fontSize: 11,
-              color: "rgba(139,92,246,0.75)",
-              marginTop: 7,
-              lineHeight: 1.5,
-            }}
-          >
-            Premium panels fit ~19% more capacity in the same roof area — ideal for tight rooftops.
-            Adds ~$0.16/W to project cost; incremental payback typically 1.5–3 yrs.
-          </div>
-        )}
+        {(() => {
+          const reason = industryPanelTierReason(industry);
+          if (reason) {
+            return (
+              <div
+                style={{
+                  fontSize: 11,
+                  color:
+                    solarPanelTier === "premium"
+                      ? "rgba(139,92,246,0.75)"
+                      : "rgba(16,185,129,0.75)",
+                  marginTop: 7,
+                  lineHeight: 1.5,
+                  display: "flex",
+                  gap: 5,
+                  alignItems: "flex-start",
+                }}
+              >
+                <span style={{ flexShrink: 0 }}>🧙</span>
+                <span>
+                  <strong>Merlin recommends {solarPanelTier}:</strong> {reason}
+                </span>
+              </div>
+            );
+          }
+          if (solarPanelTier === "premium") {
+            return (
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "rgba(139,92,246,0.75)",
+                  marginTop: 7,
+                  lineHeight: 1.5,
+                }}
+              >
+                Premium panels fit ~19% more capacity in the same roof area — ideal for tight
+                rooftops. Adds ~$0.16/W to project cost; incremental payback typically 1.5–3 yrs.
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
 
       <div style={{ padding: "0 16px 14px" }}>
@@ -2980,6 +3014,18 @@ export default function Step3_5V8({ state, actions }: Props) {
 
   const isFirstVisit = !state.step3Answers?.step3_5Visited;
 
+  // Auto-apply industry-aware panel tier recommendation on first visit.
+  // User can always override — this just pre-selects the smarter default.
+  useEffect(() => {
+    if (isFirstVisit) {
+      const rec = industryPanelTier(state.industry ?? undefined);
+      if (rec !== state.solarPanelTier) {
+        actions.setAddonConfig({ solarPanelTier: rec });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFirstVisit]);
+
   const [fuelType, setFuelType] = useState<FuelType>(() => {
     if ((state.generatorFuelType as string) === "linear") return "linear";
     // Legacy: if a linear gen was configured separately (no rotary), default to linear fuel type
@@ -3348,6 +3394,7 @@ export default function Step3_5V8({ state, actions }: Props) {
           pendingExternalKW={pendingSolarKW}
           onPendingConsumed={() => setPendingSolarKW(null)}
           onCarportToggle={handleCarportToggle}
+          industry={state.industry ?? ""}
           solarPanelTier={state.solarPanelTier}
           onPanelTierChange={handlePanelTierChange}
           solarStructureType={state.solarStructureType}
