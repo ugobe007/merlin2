@@ -253,11 +253,10 @@ serve(async (req) => {
               title: item.title,
               url: item.link,
               published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
-              summary: item.description?.slice(0, 500),
-              full_content: item.content,
+              excerpt: item.description?.slice(0, 500),
+              content: item.content,
               topics: classification.topics,
               equipment_mentioned: classification.equipment,
-              regions_mentioned: source.regions || ['global'],
               prices_extracted: prices,
               relevance_score: classification.relevanceScore,
               is_processed: true
