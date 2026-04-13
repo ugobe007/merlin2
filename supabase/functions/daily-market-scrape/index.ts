@@ -44,8 +44,14 @@ const EQUIPMENT_KEYWORDS: Record<string, string[]> = {
     'wind-solar', 'combined system', 'hybrid plant']
 };
 
-// ─── Noise filter: consumer/automotive content irrelevant to commercial energy ───
-// Articles matching these patterns are junk for a commercial energy quoting platform
+// ══════════════════════════════════════════════════════════════════════════════
+// 3-GATE PIPELINE
+//   Gate 1 — Junk Filter:          consumer/automotive noise → discard
+//   Gate 2 — Opportunity Check:    real company + real project/transaction → keep
+//   Gate 3 — Extraction Pipeline:  classify topics, extract prices, save to DB
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ─── Gate 1: Consumer / automotive noise ─────────────────────────────────────
 const CONSUMER_NOISE_PATTERNS: RegExp[] = [
   /\be-?bike\b/i,
   /\bscooter\b/i,
@@ -59,20 +65,83 @@ const CONSUMER_NOISE_PATTERNS: RegExp[] = [
   /\bpodcast\b.*\b(?:ev|tesla|electric\s+car)\b/i,
   /\bused\s+ev\b/i,
   /\bcharging\s+speed\b|\bmiles\s+of\s+range\b/i,
+  /\bhands.on\b|\bfirst\s+drive\b|\btest\s+drive\b|\blong.term\s+review\b/i,
+  /\bearnings\s+(?:call|report|beat|miss)\b|\bstock\s+(?:price|market|rally|drop)\b/i,
+  /\bshare\s+price\b|\bmarket\s+cap\b|\binvestor\s+day\b/i,
 ];
 
-/**
- * Returns true if the article is consumer/automotive noise
- * (irrelevant to commercial energy infrastructure quoting)
- */
+// Commercial signals that override the noise filter
+const COMMERCIAL_OVERRIDE = /\b(?:utility.scale|grid.scale|commercial|industrial|power\s+plant|mw\b|gw\b|gwh|mwh|capacity\s+factor|power\s+purchase|ppa|offtake|c&i|fleet\s+charg|workplace\s+charg|campus\s+charg)\b/i;
+
+/** Gate 1: true = junk, discard immediately */
 function isConsumerNoise(title: string, content: string): boolean {
   const combined = `${title} ${content.slice(0, 500)}`;
-  // If it matches any noise pattern AND has no commercial energy signal, skip it
-  const hasNoise = CONSUMER_NOISE_PATTERNS.some(p => p.test(combined));
-  if (!hasNoise) return false;
-  // Allow through if it also contains commercial/utility-scale signals
-  const commercialSignals = /\b(?:utility.scale|grid.scale|commercial|industrial|mw|gw|gwh|mwh|capacity\s+factor|power\s+purchase|ppa|offtake|c&i)\b/i;
-  return !commercialSignals.test(combined);
+  if (!CONSUMER_NOISE_PATTERNS.some(p => p.test(combined))) return false;
+  return !COMMERCIAL_OVERRIDE.test(combined);
+}
+
+// ─── Gate 2: Commercial opportunity validator ─────────────────────────────────
+// Signals that identify a real company operating in the energy space
+const COMPANY_SIGNALS = /\b(?:nextera|aes\b|orsted|rwe\b|enel\b|sunpower|first\s+solar|enphase|solarwinds|tesla\s+energy|fluence|powin|eos\b|stem\b|nec\s+energy|samsung\s+sdi|lg\s+energy|catl\b|byd\b|panasonic|siemens\s+energy|ge\s+vernova|schneider|abb\b|eaton\b|cummins\b|caterpillar\b|generac|pge\b|pg&e|sce\b|con\s*ed|duke\s+energy|dominion\b|entergy\b|exelon\b|constellation\b|nrg\b|vistra\b|talen\b|cleco\b|ica\s+fluor|bechtel\b|black\s+&\s+veatch|burn\s+stewart|strata\s+solar|cypress\s+creek|invenergy|clearway|sPower|engie\b|total\s*energies|bp\b|shell\s+energy|chevron\b|exxon\b|equinor\b|calpine\b|amp\s+solar|terra-gen|leeward|avangrid|berkshire\s+hathaway\s+energy|pattern\s+energy|sempra|xcel\s+energy|avista\b|idaho\s+power|evergy\b|aps\b|pso\b|swepco\b)\b/i;
+
+// Project-scale indicators (MW/GW + number, or MWh/GWh)
+const PROJECT_SCALE = /\b\d+(?:\.\d+)?\s*(?:mw|gw|gwh|mwh|kw|kwh)\b/i;
+
+// Commercial transaction signals
+const TRANSACTION_SIGNALS = /\b(?:contract|award(?:ed)?|ppa|power\s+purchase\s+agreement|offtake|procurement|tender|rfp|rfi|bid|selected|commissioned|broke\s+ground|financial\s+close|reached\s+cod|interconnection\s+agreement|grid\s+connection)\b/i;
+
+// Commercial buyer / facility type signals
+const BUYER_SIGNALS = /\b(?:data\s+center|hospital|municipality|school\s+district|campus|warehouse|manufacturing\s+facility|military\s+base|airport|port\b|commercial\s+building|office\s+park|industrial\s+park|shopping\s+center|grocery|hotel\b|resort\b|brewery|refinery|mine\b|mining\b|wastewater|water\s+treatment|transit\s+authority|transit\s+depot|bus\s+depot|fleet\s+depot|utility\s+customer|c&i\s+customer)\b/i;
+
+// Signals that confirm market/price data worth ingesting even without a named project
+const MARKET_DATA_SIGNALS = /\b(?:\$\s*\d+(?:\.\d+)?\s*(?:\/|per)\s*(?:kwh|mwh|kw|mw|watt|w\b)|lcoe|capex\s+(?:fell|rose|dropped|increased|declined)|module\s+price|battery\s+price|panel\s+cost|installation\s+cost|levelized\s+cost)\b/i;
+
+interface GateResult {
+  pass: boolean;
+  gate?: 1 | 2;
+  reason: string;
+}
+
+/**
+ * 3-Gate pipeline gate: decides whether to run the extraction pipeline.
+ * Returns { pass: true } if the article should be processed, or
+ * { pass: false, gate, reason } with the gate number that rejected it.
+ */
+function evaluatePipelineGates(title: string, content: string): GateResult {
+  const combined = `${title} ${content.slice(0, 800)}`;
+
+  // ── Gate 1: Junk filter ────────────────────────────────────────────────────
+  if (isConsumerNoise(title, content)) {
+    return { pass: false, gate: 1, reason: 'consumer-noise' };
+  }
+
+  // ── Gate 2: Is this a real commercial opportunity? ─────────────────────────
+  // Pass if ANY two of the five positive signal groups fire, OR if there is
+  // concrete market-price data (always worth ingesting for the pricing pipeline)
+  if (MARKET_DATA_SIGNALS.test(combined)) {
+    return { pass: true, reason: 'market-price-data' };
+  }
+
+  let positiveGroups = 0;
+  if (COMPANY_SIGNALS.test(combined))    positiveGroups++;
+  if (PROJECT_SCALE.test(combined))      positiveGroups++;
+  if (TRANSACTION_SIGNALS.test(combined)) positiveGroups++;
+  if (BUYER_SIGNALS.test(combined))      positiveGroups++;
+  // Also count equipment keywords as a positive group
+  const hasEquipment = Object.values(EQUIPMENT_KEYWORDS).some(kws =>
+    kws.some(kw => combined.toLowerCase().includes(kw.toLowerCase()))
+  );
+  if (hasEquipment) positiveGroups++;
+
+  if (positiveGroups < 2) {
+    return {
+      pass: false,
+      gate: 2,
+      reason: `insufficient-signals (${positiveGroups}/2 needed: company=${COMPANY_SIGNALS.test(combined)}, scale=${PROJECT_SCALE.test(combined)}, transaction=${TRANSACTION_SIGNALS.test(combined)}, buyer=${BUYER_SIGNALS.test(combined)}, equipment=${hasEquipment})`
+    };
+  }
+
+  return { pass: true, reason: `${positiveGroups}-positive-groups` };
 }
 
 function parseRSSFeed(xml: string): Array<{
@@ -284,6 +353,8 @@ serve(async (req) => {
     const results = {
       sourcesProcessed: 0,
       articlesFound: 0,
+      gate1Skipped: 0,
+      gate2Skipped: 0,
       articlesSaved: 0,
       pricesExtracted: 0,
       errors: [] as string[]
@@ -335,20 +406,21 @@ serve(async (req) => {
           
           const fullText = `${item.title} ${item.content}`;
 
-          // ── Junk filter ──────────────────────────────────────────
-          if (isConsumerNoise(item.title, item.content)) {
-            console.log(`  [SKIP] Consumer noise: ${item.title.slice(0, 60)}`);
+          // ══════════════════════════════════════════════════════════════
+          // 3-GATE PIPELINE
+          // ══════════════════════════════════════════════════════════════
+          // Gate 1 + Gate 2 evaluated together:
+          const gate = evaluatePipelineGates(item.title, item.content);
+          if (!gate.pass) {
+            console.log(`  [GATE ${gate.gate} SKIP] ${gate.reason}: ${item.title.slice(0, 60)}`);
+            if (gate.gate === 1) results.gate1Skipped++;
+            else results.gate2Skipped++;
             continue;
           }
-
+          // ── Gate 3: Extraction pipeline ──────────────────────────────
           const classification = classifyContent(fullText);
-
-          // Skip articles with zero relevance (no energy topics or equipment at all)
-          if (classification.relevanceScore === 0 && classification.equipment.length === 0 && classification.topics.length === 0) {
-            continue;
-          }
           const prices = extractPrices(fullText, classification.equipment);
-          
+
           const { error: insertError } = await supabase
             .from('scraped_articles')
             .insert({
