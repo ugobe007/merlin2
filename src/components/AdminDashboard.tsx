@@ -22,7 +22,7 @@ import {
   // Wrench, // Unused
   Layers,
 } from "lucide-react";
-import { PricingAdminDashboard } from "./PricingAdminDashboard";
+import { PricingAdminDashboard } from "./admin/PricingAdminDashboard";
 import UseCaseConfigManager from "./admin/UseCaseConfigManager";
 import SystemHealthDashboard from "./admin/SystemHealthDashboard";
 import MarketIntelligenceDashboard from "./admin/MarketIntelligenceDashboard";
