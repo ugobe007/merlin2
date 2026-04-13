@@ -311,7 +311,7 @@ export const CAR_WASH_QUESTIONS: Question[] = [
   {
     id: 17,
     section: 'solar',
-    field: 'carportInterest',
+    field: 'canopyInterest',
     question: 'Interested in solar carports over vacuum areas?',
     type: 'buttons',
     options: [
@@ -346,7 +346,7 @@ export const CAR_WASH_QUESTIONS: Question[] = [
     question: 'Approximate vacuum/parking area for carports?',
     type: 'area_input',
     smartDefault: { value: 1500, unit: 'sqft' },
-    showIf: (answers) => answers.carportInterest === 'yes' || answers.carportInterest === 'unsure',
+    showIf: (answers) => answers.canopyInterest === 'yes' || answers.canopyInterest === 'unsure',
     helpText: '100% of this area is usable for solar (no obstructions)',
     merlinTip: 'Carport structures provide 100% usable solar area - no HVAC units or vents to work around!'
   }
