@@ -22,7 +22,7 @@ import {
   // Wrench, // Unused
   Layers,
 } from "lucide-react";
-import { PricingAdminDashboard } from "./admin/PricingAdminDashboard";
+import { PricingAdminDashboard } from "./PricingAdminDashboard";
 import UseCaseConfigManager from "./admin/UseCaseConfigManager";
 import SystemHealthDashboard from "./admin/SystemHealthDashboard";
 import MarketIntelligenceDashboard from "./admin/MarketIntelligenceDashboard";
@@ -642,6 +642,10 @@ const AdminDashboard: React.FC = () => {
         {activeTab === "useCases" && <UseCaseConfigManager />}
 
         {activeTab === "pricing" && (
+          <AdminPricingTab onOpenPricingAdmin={() => setShowPricingAdmin(true)} />
+        )}
+
+        {activeTab === "pricingHealth" && (
           <AdminPricingTab onOpenPricingAdmin={() => setShowPricingAdmin(true)} />
         )}
 
