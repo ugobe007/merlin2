@@ -86,37 +86,11 @@ COMMENT ON COLUMN public.saved_quotes.use_case IS
 -- ============================================================================
 -- PART 2 — system_configuration
 -- ============================================================================
--- Key-value config store.  Read/written by pricingClient in supabaseClient.ts.
--- Also used to store admin-configurable flags (markup, feature toggles, etc.).
+-- Already handled: 20260210_fix_schema_gaps.sql created `system_config` as the
+-- base table and `system_configuration` as a VIEW alias over it.
+-- supabaseClient.ts reads/writes through the view — no further DDL needed here.
 -- ============================================================================
-
-CREATE TABLE IF NOT EXISTS public.system_configuration (
-  id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  config_key   TEXT        NOT NULL UNIQUE,
-  config_value JSONB       NOT NULL DEFAULT 'null'::jsonb,
-  description  TEXT,
-  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_by   TEXT
-);
-
-CREATE INDEX IF NOT EXISTS idx_system_configuration_key
-  ON public.system_configuration (config_key);
-
-ALTER TABLE public.system_configuration ENABLE ROW LEVEL SECURITY;
-
--- Anonymous users can read non-secret config (pricing display, feature flags)
-CREATE POLICY "system_configuration_public_read"
-  ON public.system_configuration FOR SELECT
-  USING (true);
-
--- Only service role (admin panel / server) can write
-CREATE POLICY "system_configuration_service_write"
-  ON public.system_configuration FOR ALL
-  USING (auth.role() = 'service_role');
-
-COMMENT ON TABLE public.system_configuration IS
-  'App-wide key-value config. Read by pricingClient.getSystemConfig(). '
-  'Keys include: default_markup_pct, feature_flags, pricing_overrides, etc.';
+-- (no-op — view exists, table exists, RLS is on system_config)
 
 
 -- ============================================================================
@@ -418,7 +392,7 @@ DECLARE
   tbl TEXT;
   tables TEXT[] := ARRAY[
     'saved_quotes',
-    'system_configuration',
+    -- system_configuration is a VIEW over system_config — excluded from table check
     'demo_requests',
     'download_leads',
     'quote_requests',
