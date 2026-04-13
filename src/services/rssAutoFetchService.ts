@@ -315,33 +315,91 @@ export async function fetchRSSFeedsForEquipment(equipmentType: string): Promise<
 }
 
 /**
- * Filter articles to find those likely containing pricing information
+ * Filter articles for commercial energy relevance.
+ * Excludes consumer EV / automotive noise; keeps commercial infrastructure content.
  */
+
+// Patterns that identify consumer/automotive noise irrelevant to commercial energy quoting
+const CONSUMER_NOISE_PATTERNS: RegExp[] = [
+  /\be-?bike\b/i,
+  /\bscooter\b/i,
+  /electric\s+(?:motorcycle|moped|skateboard|bicycle|boat|ferry|ship|plane|aircraft)\b/i,
+  /electric\s+(?:van|truck|car|suv|sedan|hatchback|pickup)\b(?!.*(?:fleet|commercial|utility))/i,
+  /\bFSD\b|\bfull\s+self.driving\b/i,
+  /\bTesla\s+(?:model\s+[sxy3]|cybertruck|roadster|semi|plaid)\b/i,
+  /(?:honda|hyundai|toyota|nissan|ford|chevy|bmw|audi|volvo|kia|volkswagen)\s+(?:ev|electric|ioniq|bz|leaf|bolt|mach)\b/i,
+  /\bEV\s+(?:sales|review|test\s+drive|range|ownership)\b/i,
+  /\bpodcast\b.*\b(?:ev|tesla)\b/i,
+  /\bused\s+ev\b/i,
+  /\bmiles\s+of\s+range\b/i,
+];
+
+// Keywords that confirm commercial energy relevance — override noise filter if present
+const COMMERCIAL_OVERRIDE =
+  /\b(?:utility.scale|grid.scale|commercial|industrial|mw\b|gw\b|gwh|mwh|capacity\s+factor|power\s+purchase|ppa|offtake|c&i|fleet\s+charging|workplace\s+charging)\b/i;
+
+function isConsumerNoise(title: string, content: string): boolean {
+  const combined = `${title} ${content.slice(0, 600)}`;
+  if (!CONSUMER_NOISE_PATTERNS.some((p) => p.test(combined))) return false;
+  return !COMMERCIAL_OVERRIDE.test(combined);
+}
+
 function filterForPricingArticles(articles: FetchedArticle[]): FetchedArticle[] {
-  const pricingKeywords = [
+  const commercialKeywords = [
     "price",
     "pricing",
     "cost",
-    "kwh",
     "$/kwh",
-    "mwh",
+    "$/mwh",
+    "$/w",
+    "per kwh",
+    "per mwh",
+    "capex",
+    "opex",
     "contract",
     "award",
-    "deal",
     "project",
     "installation",
     "deployment",
     "capacity",
-    "battery",
-    "storage",
+    "battery storage",
     "bess",
     "lfp",
     "lithium",
+    "solar farm",
+    "solar plant",
+    "wind farm",
+    "wind project",
+    "microgrid",
+    "grid storage",
+    "power purchase",
+    "ppa",
+    "interconnect",
+    "substation",
+    "grid-scale",
+    "utility-scale",
+    "mw ",
+    "mwh ",
+    "gw ",
+    "gwh ",
+    "commercial solar",
+    "industrial solar",
+    "financing",
+    "investment",
+    "tariff",
+    "incentive",
+    "itc",
+    "regulation",
+    "market trend",
+    "supply chain",
+    "manufacturing",
   ];
 
   return articles.filter((article) => {
+    // Drop consumer noise first
+    if (isConsumerNoise(article.title, article.content)) return false;
     const searchText = `${article.title} ${article.content}`.toLowerCase();
-    return pricingKeywords.some((keyword) => searchText.includes(keyword));
+    return commercialKeywords.some((keyword) => searchText.includes(keyword));
   });
 }
 

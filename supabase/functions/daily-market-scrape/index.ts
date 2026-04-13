@@ -20,19 +20,60 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
  */
 
 const EQUIPMENT_KEYWORDS: Record<string, string[]> = {
-  bess: ['battery energy storage', 'bess', 'battery storage', 'lithium-ion', 'lfp', 'nmc', 'megapack'],
-  solar: ['solar', 'pv', 'photovoltaic', 'solar panel', 'solar module'],
-  wind: ['wind turbine', 'wind farm', 'wind power', 'offshore wind'],
-  generator: ['generator', 'diesel generator', 'natural gas generator'],
-  'linear-generator': ['linear generator', 'mainspring', 'fuel cell'],
-  inverter: ['inverter', 'solar inverter', 'microinverter'],
-  transformer: ['transformer', 'power transformer'],
-  switchgear: ['switchgear', 'circuit breaker'],
-  'ev-charger': ['ev charger', 'charging station', 'dcfc', 'level 2'],
-  bms: ['battery management system', 'bms'],
-  microgrid: ['microgrid', 'micro-grid', 'islanded'],
-  'hybrid-system': ['hybrid system', 'solar+storage']
+  bess: ['battery energy storage', 'bess', 'battery storage', 'lithium-ion', 'lfp', 'nmc', 'megapack',
+    'energy storage system', 'grid storage', 'utility storage', 'mwh storage', 'gwh storage',
+    'four-hour storage', '4-hour storage', 'long duration storage', 'grid-scale battery'],
+  solar: ['solar', 'pv', 'photovoltaic', 'solar panel', 'solar module', 'solar farm', 'solar project',
+    'solar plant', 'solar array', 'bifacial', 'solar capex', 'solar installation',
+    'utility-scale solar', 'commercial solar', 'industrial solar', 'rooftop solar'],
+  wind: ['wind turbine', 'wind farm', 'wind power', 'offshore wind', 'onshore wind',
+    'wind energy', 'wind project', 'wind capacity', 'wind installation'],
+  generator: ['generator', 'diesel generator', 'natural gas generator', 'backup generator',
+    'standby generator', 'genset', 'emergency power', 'prime power'],
+  'linear-generator': ['linear generator', 'mainspring', 'fuel cell', 'hydrogen generator'],
+  inverter: ['inverter', 'solar inverter', 'microinverter', 'string inverter', 'central inverter',
+    'power converter', 'pcs', 'power conversion system'],
+  transformer: ['transformer', 'power transformer', 'distribution transformer', 'substation'],
+  switchgear: ['switchgear', 'circuit breaker', 'protection relay', 'electrical panel'],
+  'ev-charger': ['ev charger', 'charging station', 'dcfc', 'dc fast charge', 'level 2 charger',
+    'commercial ev charging', 'fleet charging', 'workplace charging', 'charging infrastructure'],
+  bms: ['battery management system', 'bms', 'battery monitoring', 'cell balancing'],
+  microgrid: ['microgrid', 'micro-grid', 'islanded', 'distributed energy', 'virtual power plant',
+    'vpp', 'demand response', 'behind-the-meter'],
+  'hybrid-system': ['hybrid system', 'solar+storage', 'solar-plus-storage', 'solar and storage',
+    'wind-solar', 'combined system', 'hybrid plant']
 };
+
+// ─── Noise filter: consumer/automotive content irrelevant to commercial energy ───
+// Articles matching these patterns are junk for a commercial energy quoting platform
+const CONSUMER_NOISE_PATTERNS: RegExp[] = [
+  /\be-?bike\b/i,
+  /\bscooter\b/i,
+  /electric\s+(?:motorcycle|moped|skateboard|bicycle|boat|ferry|ship|plane|aircraft|van|truck|car|suv|sedan|hatchback|pickup)\b/i,
+  /\bFSD\b|\bfull\s+self.driving\b/i,
+  /\bTesla\s+(?:model\s+[sxy3]|cybertruck|roadster|semi|plaid)\b/i,
+  /\brivian\s+r[12]\b/i,
+  /(?:honda|hyundai|toyota|nissan|ford|chevy|bmw|audi|volvo|kia|mazda|volkswagen|vw)\s+(?:ev|electric|ioniq|bz|leaf|bolt|mach)\b/i,
+  /\bEV\s+(?:sales|review|test\s+drive|range|ownership|rebate|tax\s+credit)\b/i,
+  /\bconsumer\s+(?:ev|electric)\b/i,
+  /\bpodcast\b.*\b(?:ev|tesla|electric\s+car)\b/i,
+  /\bused\s+ev\b/i,
+  /\bcharging\s+speed\b|\bmiles\s+of\s+range\b/i,
+];
+
+/**
+ * Returns true if the article is consumer/automotive noise
+ * (irrelevant to commercial energy infrastructure quoting)
+ */
+function isConsumerNoise(title: string, content: string): boolean {
+  const combined = `${title} ${content.slice(0, 500)}`;
+  // If it matches any noise pattern AND has no commercial energy signal, skip it
+  const hasNoise = CONSUMER_NOISE_PATTERNS.some(p => p.test(combined));
+  if (!hasNoise) return false;
+  // Allow through if it also contains commercial/utility-scale signals
+  const commercialSignals = /\b(?:utility.scale|grid.scale|commercial|industrial|mw|gw|gwh|mwh|capacity\s+factor|power\s+purchase|ppa|offtake|c&i)\b/i;
+  return !commercialSignals.test(combined);
+}
 
 function parseRSSFeed(xml: string): Array<{
   title: string;
@@ -114,15 +155,65 @@ function classifyContent(text: string): {
     }
   }
   
-  if (textLower.includes('price') || textLower.includes('cost') || textLower.includes('$/')) {
+  // Pricing topics
+  if (textLower.includes('price') || textLower.includes('cost') || textLower.includes('$/') ||
+      textLower.includes('capex') || textLower.includes('opex') || textLower.includes('per kwh') ||
+      textLower.includes('per mwh') || textLower.includes('per watt')) {
     topics.push('pricing');
     relevanceScore += 0.3;
   }
-  if (textLower.includes('regulation') || textLower.includes('policy') || textLower.includes('incentive')) {
+  // Policy / regulation
+  if (textLower.includes('regulation') || textLower.includes('policy') || textLower.includes('incentive') ||
+      textLower.includes('tariff') || textLower.includes('ira ') || textLower.includes('investment tax credit') ||
+      textLower.includes('itc') || textLower.includes('ceqa') || textLower.includes('ferc') ||
+      textLower.includes('legislation') || textLower.includes('mandate') || textLower.includes('subsidy')) {
     topics.push('policy');
     relevanceScore += 0.2;
   }
-  
+  // Grid / infrastructure
+  if (textLower.includes('grid') || textLower.includes('interconnect') || textLower.includes('substation') ||
+      textLower.includes('transmission') || textLower.includes('utility') || textLower.includes('iso ') ||
+      textLower.includes('rto ') || textLower.includes('capacity market') || textLower.includes('ancillary')) {
+    topics.push('grid');
+    relevanceScore += 0.15;
+  }
+  // Project / market news
+  if (textLower.includes('mw ') || textLower.includes('mwh ') || textLower.includes('gw ') ||
+      textLower.includes('gwh ') || textLower.includes('project') || textLower.includes('deployment') ||
+      textLower.includes('installation') || textLower.includes('contract') || textLower.includes('award') ||
+      textLower.includes('capacity')) {
+    topics.push('projects');
+    relevanceScore += 0.1;
+  }
+  // Market / supply chain
+  if (textLower.includes('supply chain') || textLower.includes('manufacturing') || textLower.includes('production') ||
+      textLower.includes('market share') || textLower.includes('shipment') || textLower.includes('gigafactory') ||
+      textLower.includes('factory') || textLower.includes('vendor') || textLower.includes('supplier')) {
+    topics.push('manufacturing');
+    relevanceScore += 0.1;
+  }
+  // Financing / investment
+  if (textLower.includes('financing') || textLower.includes('investment') || textLower.includes('ppa') ||
+      textLower.includes('power purchase') || textLower.includes('offtake') || textLower.includes('funding') ||
+      textLower.includes('loan') || textLower.includes('bond') || textLower.includes('equity')) {
+    topics.push('financing');
+    relevanceScore += 0.1;
+  }
+  // Performance / technology
+  if (textLower.includes('efficiency') || textLower.includes('performance') || textLower.includes('degradation') ||
+      textLower.includes('lifespan') || textLower.includes('cycle life') || textLower.includes('capacity factor') ||
+      textLower.includes('roundtrip') || textLower.includes('energy density')) {
+    topics.push('performance');
+    relevanceScore += 0.1;
+  }
+  // Sustainability / ESG
+  if (textLower.includes('carbon') || textLower.includes('emission') || textLower.includes('sustainability') ||
+      textLower.includes('net zero') || textLower.includes('decarboniz') || textLower.includes('renewable')) {
+    topics.push('sustainability');
+    relevanceScore += 0.05;
+  }
+
+  // No classification at all → score is 0, not a default 0.5
   return { equipment, topics, relevanceScore: Math.min(1, relevanceScore) };
 }
 
@@ -243,7 +334,19 @@ serve(async (req) => {
           if (existing) continue;
           
           const fullText = `${item.title} ${item.content}`;
+
+          // ── Junk filter ──────────────────────────────────────────
+          if (isConsumerNoise(item.title, item.content)) {
+            console.log(`  [SKIP] Consumer noise: ${item.title.slice(0, 60)}`);
+            continue;
+          }
+
           const classification = classifyContent(fullText);
+
+          // Skip articles with zero relevance (no energy topics or equipment at all)
+          if (classification.relevanceScore === 0 && classification.equipment.length === 0 && classification.topics.length === 0) {
+            continue;
+          }
           const prices = extractPrices(fullText, classification.equipment);
           
           const { error: insertError } = await supabase
