@@ -216,43 +216,75 @@ export function computeEVPackageKW(l2Count: number, dcfcCount: number, hpcCount 
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Industries where premium high-efficiency panels are strongly recommended.
+ * Industries where premium high-efficiency panels are strongly recommended
+ * on EXISTING sites (fixed footprint, space-constrained relative to load).
  *
- * Criteria: roof is space-constrained relative to load, so every W/sqft matters.
  *   car_wash      — 4,000–8,000 sqft roof, very high energy density
  *   restaurant    — 2,000–5,000 sqft roof, enormous kitchen/HVAC load
- *   ev_charging   — canopy-only footprint; max kW from fixed canopy area
- *   multifamily   — shared roof split across many units; $/unit improves with density
+ *   ev_charging   — canopy footprint is fixed; max kW from fixed area
+ *   gas_station   — small canopy + store footprint, high fuel-station load
+ *   apartment     — shared roof split across many units; $/unit improves with density
  *   gym           — mid-size roof + HVAC-heavy load during peak class hours
+ *   fitness_center — same profile as gym
+ *   hospital      — massive 24/7 load; roof area is limited vs energy demand
+ *   healthcare    — same profile as hospital
+ *   casino        — extreme 24/7 load density on a fixed entertainment footprint
+ *   data_center   — immense power draw, purpose-built roof rarely exceeds load
+ *   indoor_farm   — intensive lighting/HVAC load in constrained grow-space roof
+ *   hotel         — mid-rise or high-rise; roof area modest vs HVAC + guest load
+ *   residential   — small residential roof; every W/sqft directly improves offset
  */
 export const PREMIUM_PANEL_INDUSTRIES = new Set([
   "car_wash",
   "restaurant",
   "ev_charging",
-  "ev_charging_hub",
-  "multifamily",
+  "gas_station",
   "apartment",
   "gym",
-  "fitness",
+  "fitness_center",
+  "hospital",
+  "healthcare",
+  "casino",
+  "data_center",
+  "indoor_farm",
+  "hotel",
+  "residential",
 ]);
 
 /**
  * Industries where standard (best $/kWh) panels are the right call.
  *
- * Criteria: roof area far exceeds load — efficiency gain has negligible ROI.
- *   warehouse / self_storage — 50,000–200,000 sqft with small loads
- *   school        — large roof, daytime-only load, panel selection irrelevant
- *   cold_storage  — big roof, flat refrigeration baseload
- *   manufacturing — abundant roof, savings come from BESS demand shaving
+ * Criteria: roof or land area comfortably exceeds load — efficiency gain
+ * does not justify the premium-panel cost delta.
+ *
+ *   warehouse     — 50,000–200,000 sqft with modest operational loads
+ *   cold_storage  — large refrigerated roof, flat baseload
+ *   manufacturing — abundant roof; savings come from BESS demand shaving
+ *   truck_stop    — large canopy coverage, fuel-centric baseload
+ *   airport       — massive terminal / hangar roof, moderate load density
+ *   college       — sprawling campus; standard panels fill acres efficiently
+ *   government    — large public facilities with abundant roof
+ *   shopping_center — mall-scale roof, diverse tenant load, volume wins
+ *   agricultural  — vast land; ground-mount volume at standard cost
+ *   retail        — medium box-store roof, moderate load
+ *   office        — standard commercial roof, workday-only peaks
+ *   microgrid     — system topology, not a facility type — default standard
+ *   other         — catch-all fallback
  */
 export const STANDARD_PANEL_INDUSTRIES = new Set([
   "warehouse",
-  "self_storage",
-  "school",
-  "k12",
-  "k_12",
   "cold_storage",
   "manufacturing",
+  "truck_stop",
+  "airport",
+  "college",
+  "government",
+  "shopping_center",
+  "agricultural",
+  "retail",
+  "office",
+  "microgrid",
+  "other",
 ]);
 
 /**
@@ -261,10 +293,19 @@ export const STANDARD_PANEL_INDUSTRIES = new Set([
  * - "premium"  → space-constrained: every W/sqft matters
  * - "standard" → space-abundant: cheapest approved panel wins
  *
- * Falls back to "standard" for any industry not in either set.
+ * projectType override:
+ *   "greenfield" → always standard. You're designing the footprint from scratch,
+ *                  so there is no space constraint — optimize for cost.
+ *   "existing"   → normal industry logic applies (roof is fixed).
+ *   undefined    → normal industry logic (conservative default).
  */
-export function industryPanelTier(industry?: string): "standard" | "premium" {
+export function industryPanelTier(
+  industry?: string,
+  projectType?: "existing" | "greenfield"
+): "standard" | "premium" {
   if (!industry) return "standard";
+  // Greenfield: designer controls footprint — space constraint doesn't apply.
+  if (projectType === "greenfield") return "standard";
   if (PREMIUM_PANEL_INDUSTRIES.has(industry)) return "premium";
   return "standard";
 }
@@ -273,32 +314,55 @@ export function industryPanelTier(industry?: string): "standard" | "premium" {
  * One-line rationale string shown in the Panel Grade selector UI.
  * Explains WHY Merlin pre-selected this tier for the chosen industry.
  */
-export function industryPanelTierReason(industry?: string): string | null {
+export function industryPanelTierReason(
+  industry?: string,
+  projectType?: "existing" | "greenfield"
+): string | null {
   if (!industry) return null;
+
+  // Greenfield override — explain the logic
+  if (projectType === "greenfield") {
+    return "Greenfield build — design the roof/canopy size to fit the load, so standard panels optimize cost.";
+  }
+
   if (PREMIUM_PANEL_INDUSTRIES.has(industry)) {
     const reasons: Record<string, string> = {
-      car_wash: "Small roof (4–8K sqft) + high load — every W/sqft counts.",
-      restaurant: "Tiny roof (2–5K sqft) + kitchen/HVAC load — max density needed.",
-      ev_charging: "Canopy footprint is fixed — higher wattage = more kW offset.",
-      ev_charging_hub: "Canopy footprint is fixed — higher wattage = more kW offset.",
-      multifamily: "Shared roof across units — premium panels improve per-unit ROI.",
-      apartment: "Shared roof across units — premium panels improve per-unit ROI.",
-      gym: "Mid-size roof + HVAC peaks — premium boosts class-time offset.",
-      fitness: "Mid-size roof + HVAC peaks — premium boosts class-time offset.",
+      car_wash:      "Small roof (4–8K sqft) + high load — every W/sqft counts.",
+      restaurant:    "Tiny roof (2–5K sqft) + kitchen/HVAC load — max density needed.",
+      ev_charging:   "Canopy footprint is fixed — higher wattage = more kW offset.",
+      gas_station:   "Small canopy + store roof — premium packs more kW into tight footprint.",
+      apartment:     "Shared roof across units — premium panels improve per-unit ROI.",
+      gym:           "Mid-size roof + HVAC peaks — premium boosts class-time offset.",
+      fitness_center:"Mid-size roof + HVAC peaks — premium boosts class-time offset.",
+      hospital:      "Massive 24/7 load on limited roof — premium closes the gap.",
+      healthcare:    "High clinical load density — premium squeezes more kW from limited roof.",
+      casino:        "Extreme 24/7 load on fixed entertainment footprint — premium maximizes offset.",
+      data_center:   "Immense power draw, modest roof — premium captures every available kW.",
+      indoor_farm:   "Intensive grow-lights + HVAC on a constrained roof — premium is the right call.",
+      hotel:         "Mid-rise roof vs. HVAC + guest load — premium improves energy offset meaningfully.",
+      residential:   "Small roof — premium panels fit more capacity in limited residential area.",
     };
     return reasons[industry] ?? "Space-constrained roof — premium panels maximize capacity.";
   }
+
   if (STANDARD_PANEL_INDUSTRIES.has(industry)) {
     const reasons: Record<string, string> = {
-      warehouse: "Vast roof, low load — standard panels fill the need at best $/kWh.",
-      self_storage: "Massive roof, minimal load — efficiency premium adds no ROI.",
-      school: "Large roof, daytime-only load — standard panels are the right call.",
-      k12: "Large roof, daytime-only load — standard panels are the right call.",
-      k_12: "Large roof, daytime-only load — standard panels are the right call.",
-      cold_storage: "Large roof, flat refrigeration load — volume standard panels win.",
-      manufacturing: "Abundant roof — savings come from BESS demand shaving, not panel grade.",
+      warehouse:       "Vast roof, low load — standard panels fill the need at best $/kWh.",
+      cold_storage:    "Large roof, flat refrigeration load — volume standard panels win.",
+      manufacturing:   "Abundant roof — savings come from BESS demand shaving, not panel grade.",
+      truck_stop:      "Large canopy coverage — standard panels maximize kWh at lowest cost.",
+      airport:         "Massive terminal roof — standard panels generate volume offset efficiently.",
+      college:         "Sprawling campus roof — standard panels at volume deliver best $/kWh.",
+      government:      "Large public-facility roof — standard panels optimize taxpayer ROI.",
+      shopping_center: "Mall-scale roof — standard panels fill it cost-effectively.",
+      agricultural:    "Vast land for ground-mount — standard panels dominate on $/kWh.",
+      retail:          "Medium box-store roof — standard panels are the right cost call.",
+      office:          "Standard commercial roof, workday peaks — standard panels optimize ROI.",
+      microgrid:       "System design handles offset — standard panels cost-optimize generation.",
+      other:           "Roof space appears abundant — standard panels deliver best $/kWh.",
     };
     return reasons[industry] ?? "Roof space is abundant — standard panels deliver best $/kWh.";
   }
+
   return null;
 }
