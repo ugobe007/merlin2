@@ -791,6 +791,7 @@ function SolarCard({
   onPendingConsumed,
   onCarportToggle,
   industry,
+  projectType,
   solarPanelTier = "standard",
   onPanelTierChange,
   solarStructureType = "rooftop",
@@ -817,6 +818,8 @@ function SolarCard({
   onCarportToggle?: (nextVal: string, targetKW: number) => void;
   /** Industry slug — used for panel tier recommendation hint. */
   industry?: string;
+  /** Project type — greenfield suppresses premium recommendation. */
+  projectType?: "existing" | "greenfield";
   /** Panel grade: 'standard' = best $/kWh, 'premium' = highest-efficiency. */
   solarPanelTier?: "standard" | "premium";
   onPanelTierChange?: (tier: "standard" | "premium") => void;
@@ -1452,7 +1455,7 @@ function SolarCard({
           })}
         </div>
         {(() => {
-          const reason = industryPanelTierReason(industry);
+          const reason = industryPanelTierReason(industry, projectType);
           if (reason) {
             return (
               <div
@@ -3004,12 +3007,14 @@ export default function Step3_5V8({ state, actions }: Props) {
     !!(state.step3Answers?.roofArea as number | undefined);
 
   const isFirstVisit = !state.step3Answers?.step3_5Visited;
+  const projectType = state.step3Answers?.project_type as "existing" | "greenfield" | undefined;
 
   // Auto-apply industry-aware panel tier recommendation on first visit.
+  // Factors in project_type: greenfield → always standard (designer controls footprint).
   // User can always override — this just pre-selects the smarter default.
   useEffect(() => {
     if (isFirstVisit) {
-      const rec = industryPanelTier(state.industry ?? undefined);
+      const rec = industryPanelTier(state.industry ?? undefined, projectType);
       if (rec !== state.solarPanelTier) {
         actions.setAddonConfig({ solarPanelTier: rec });
       }
@@ -3386,6 +3391,7 @@ export default function Step3_5V8({ state, actions }: Props) {
           onPendingConsumed={() => setPendingSolarKW(null)}
           onCarportToggle={handleCarportToggle}
           industry={state.industry ?? ""}
+          projectType={projectType}
           solarPanelTier={state.solarPanelTier}
           onPanelTierChange={handlePanelTierChange}
           solarStructureType={state.solarStructureType}

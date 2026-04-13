@@ -646,12 +646,90 @@ export function Step3V8({ state, actions }: Props) {
     );
   }
 
+  // ── Project type selection ──────────────────────────────────────────────
+  const projectType = answers.project_type as "existing" | "greenfield" | undefined;
+
   return (
     <div style={{ background: "#0D1117", minHeight: "100vh" }}>
       <div
         ref={sectionTopRef}
         style={{ maxWidth: 920, margin: "0 auto", padding: "16px 24px 40px" }}
       >
+        {/* ── Universal: Project Type preamble ── */}
+        <div
+          style={{
+            marginBottom: 20,
+            padding: "16px 20px",
+            borderRadius: 14,
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.65)", marginBottom: 10, letterSpacing: "0.03em", textTransform: "uppercase" }}>
+            🏗️ Project Type
+          </div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", marginBottom: 12 }}>
+            Is this an existing operating facility, or a new build / ground-up project?
+            This shapes how Merlin models roof constraints and panel selection.
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            {(
+              [
+                {
+                  value: "existing" as const,
+                  emoji: "🏢",
+                  label: "Existing facility",
+                  sub: "Working with a real roof/canopy you already have",
+                  accentColor: "rgba(62,207,142,",
+                },
+                {
+                  value: "greenfield" as const,
+                  emoji: "🌱",
+                  label: "Greenfield / new build",
+                  sub: "Designing the footprint from scratch",
+                  accentColor: "rgba(99,179,237,",
+                },
+              ] as const
+            ).map(({ value, emoji, label, sub, accentColor }) => {
+              const active = projectType === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => actions.setAnswer("project_type", value)}
+                  style={{
+                    flex: 1,
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    border: active
+                      ? `2px solid ${accentColor}0.70)`
+                      : "1px solid rgba(255,255,255,0.10)",
+                    background: active ? `${accentColor}0.08)` : "transparent",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "border-color 0.15s, background 0.15s",
+                  }}
+                >
+                  <div style={{ fontSize: 20, marginBottom: 6 }}>{emoji}</div>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: active ? `${accentColor}1.0)` : "rgba(255,255,255,0.80)",
+                      marginBottom: 3,
+                    }}
+                  >
+                    {active ? `✓ ${label}` : label}
+                  </div>
+                  <div style={{ fontSize: 11, color: "rgba(148,163,184,0.70)", lineHeight: 1.4 }}>
+                    {sub}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* ── Section pill nav (only when multi-section) ── */}
         {orderedSections.length > 1 && (
           <div
