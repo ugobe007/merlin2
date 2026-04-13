@@ -319,88 +319,97 @@ export async function fetchRSSFeedsForEquipment(equipmentType: string): Promise<
  * Excludes consumer EV / automotive noise; keeps commercial infrastructure content.
  */
 
-// Patterns that identify consumer/automotive noise irrelevant to commercial energy quoting
-const CONSUMER_NOISE_PATTERNS: RegExp[] = [
+// ══════════════════════════════════════════════════════════════════════════════
+// 3-GATE PIPELINE
+//   Gate 1 — Junk Filter:          consumer/automotive noise → discard
+//   Gate 2 — Opportunity Check:    real company + real project/transaction → keep
+//   Gate 3 — Extraction Pipeline:  classify, extract prices, process
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ─── Gate 1 patterns ─────────────────────────────────────────────────────────
+const _CONSUMER_NOISE: RegExp[] = [
   /\be-?bike\b/i,
   /\bscooter\b/i,
-  /electric\s+(?:motorcycle|moped|skateboard|bicycle|boat|ferry|ship|plane|aircraft)\b/i,
-  /electric\s+(?:van|truck|car|suv|sedan|hatchback|pickup)\b(?!.*(?:fleet|commercial|utility))/i,
+  /electric\s+(?:motorcycle|moped|skateboard|bicycle|boat|ferry|ship|plane|aircraft|van|truck|car|suv|sedan|hatchback|pickup)\b/i,
   /\bFSD\b|\bfull\s+self.driving\b/i,
   /\bTesla\s+(?:model\s+[sxy3]|cybertruck|roadster|semi|plaid)\b/i,
-  /(?:honda|hyundai|toyota|nissan|ford|chevy|bmw|audi|volvo|kia|volkswagen)\s+(?:ev|electric|ioniq|bz|leaf|bolt|mach)\b/i,
-  /\bEV\s+(?:sales|review|test\s+drive|range|ownership)\b/i,
-  /\bpodcast\b.*\b(?:ev|tesla)\b/i,
+  /\brivian\s+r[12]\b/i,
+  /(?:honda|hyundai|toyota|nissan|ford|chevy|bmw|audi|volvo|kia|mazda|volkswagen|vw)\s+(?:ev|electric|ioniq|bz|leaf|bolt|mach)\b/i,
+  /\bEV\s+(?:sales|review|test\s+drive|range|ownership|rebate|tax\s+credit)\b/i,
+  /\bconsumer\s+(?:ev|electric)\b/i,
+  /\bpodcast\b.*\b(?:ev|tesla|electric\s+car)\b/i,
   /\bused\s+ev\b/i,
-  /\bmiles\s+of\s+range\b/i,
+  /\bcharging\s+speed\b|\bmiles\s+of\s+range\b/i,
+  /\bhands.on\b|\bfirst\s+drive\b|\btest\s+drive\b|\blong.term\s+review\b/i,
+  /\bearnings\s+(?:call|report|beat|miss)\b|\bstock\s+(?:price|market|rally|drop)\b/i,
+  /\bshare\s+price\b|\bmarket\s+cap\b|\binvestor\s+day\b/i,
 ];
+const _COMMERCIAL_OVERRIDE =
+  /\b(?:utility.scale|grid.scale|commercial|industrial|power\s+plant|mw\b|gw\b|gwh|mwh|capacity\s+factor|power\s+purchase|ppa|offtake|c&i|fleet\s+charg|workplace\s+charg|campus\s+charg)\b/i;
 
-// Keywords that confirm commercial energy relevance — override noise filter if present
-const COMMERCIAL_OVERRIDE =
-  /\b(?:utility.scale|grid.scale|commercial|industrial|mw\b|gw\b|gwh|mwh|capacity\s+factor|power\s+purchase|ppa|offtake|c&i|fleet\s+charging|workplace\s+charging)\b/i;
+// ─── Gate 2 signals ───────────────────────────────────────────────────────────
+const _COMPANY_SIGNALS =
+  /\b(?:nextera|aes\b|orsted|rwe\b|enel\b|sunpower|first\s+solar|enphase|fluence|powin|eos\b|stem\b|nec\s+energy|samsung\s+sdi|lg\s+energy|catl\b|byd\b|panasonic|siemens\s+energy|ge\s+vernova|schneider|abb\b|eaton\b|cummins\b|caterpillar\b|generac|pge\b|pg&e|sce\b|con\s*ed|duke\s+energy|dominion\b|entergy\b|exelon\b|constellation\b|nrg\b|vistra\b|talen\b|invenergy|clearway|engie\b|total\s*energies|bp\b|shell\s+energy|chevron\b|equinor\b|calpine\b|amp\s+solar|terra-gen|leeward|avangrid|pattern\s+energy|sempra|xcel\s+energy|evergy\b|cypress\s+creek)\b/i;
+const _PROJECT_SCALE = /\b\d+(?:\.\d+)?\s*(?:mw|gw|gwh|mwh|kw|kwh)\b/i;
+const _TRANSACTION =
+  /\b(?:contract|award(?:ed)?|ppa|power\s+purchase\s+agreement|offtake|procurement|tender|rfp|rfi|bid|selected|commissioned|broke\s+ground|financial\s+close|reached\s+cod|interconnection\s+agreement|grid\s+connection)\b/i;
+const _BUYER =
+  /\b(?:data\s+center|hospital|municipality|school\s+district|campus|warehouse|manufacturing\s+facility|military\s+base|airport|commercial\s+building|office\s+park|industrial\s+park|shopping\s+center|hotel\b|resort\b|brewery|refinery|mine\b|wastewater|water\s+treatment|transit\s+authority|bus\s+depot|fleet\s+depot|c&i\s+customer)\b/i;
+const _MARKET_PRICE =
+  /\b(?:\$\s*\d+(?:\.\d+)?\s*(?:\/|per)\s*(?:kwh|mwh|kw|mw|watt|w\b)|lcoe|capex\s+(?:fell|rose|dropped|increased|declined)|module\s+price|battery\s+price|panel\s+cost|installation\s+cost|levelized\s+cost)\b/i;
+const _EQUIPMENT_WORDS =
+  /\b(?:bess|battery\s+storage|energy\s+storage|solar\s+(?:farm|plant|array|project)|wind\s+(?:farm|turbine|project)|generator|inverter|transformer|switchgear|ev\s+charg|microgrid|hybrid\s+system|fuel\s+cell|lfp|lithium.ion|grid.scale\s+battery)\b/i;
 
-function isConsumerNoise(title: string, content: string): boolean {
-  const combined = `${title} ${content.slice(0, 600)}`;
-  if (!CONSUMER_NOISE_PATTERNS.some((p) => p.test(combined))) return false;
-  return !COMMERCIAL_OVERRIDE.test(combined);
+export interface PipelineGateResult {
+  pass: boolean;
+  gate?: 1 | 2;
+  reason: string;
 }
 
-function filterForPricingArticles(articles: FetchedArticle[]): FetchedArticle[] {
-  const commercialKeywords = [
-    "price",
-    "pricing",
-    "cost",
-    "$/kwh",
-    "$/mwh",
-    "$/w",
-    "per kwh",
-    "per mwh",
-    "capex",
-    "opex",
-    "contract",
-    "award",
-    "project",
-    "installation",
-    "deployment",
-    "capacity",
-    "battery storage",
-    "bess",
-    "lfp",
-    "lithium",
-    "solar farm",
-    "solar plant",
-    "wind farm",
-    "wind project",
-    "microgrid",
-    "grid storage",
-    "power purchase",
-    "ppa",
-    "interconnect",
-    "substation",
-    "grid-scale",
-    "utility-scale",
-    "mw ",
-    "mwh ",
-    "gw ",
-    "gwh ",
-    "commercial solar",
-    "industrial solar",
-    "financing",
-    "investment",
-    "tariff",
-    "incentive",
-    "itc",
-    "regulation",
-    "market trend",
-    "supply chain",
-    "manufacturing",
-  ];
+/**
+ * 3-Gate pipeline evaluator.
+ * Call before any expensive processing (AI, DB writes, price extraction).
+ *
+ * Gate 1 — Junk filter: consumer/automotive noise
+ * Gate 2 — Opportunity check: real company OR real project/transaction
+ * Gate 3 — (caller's responsibility) run classification + extraction pipeline
+ */
+export function evaluatePipelineGates(title: string, content: string): PipelineGateResult {
+  const combined = `${title} ${content.slice(0, 800)}`;
 
-  return articles.filter((article) => {
-    // Drop consumer noise first
-    if (isConsumerNoise(article.title, article.content)) return false;
-    const searchText = `${article.title} ${article.content}`.toLowerCase();
-    return commercialKeywords.some((keyword) => searchText.includes(keyword));
-  });
+  // ── Gate 1: Junk filter ────────────────────────────────────────────────────
+  if (_CONSUMER_NOISE.some((p) => p.test(combined)) && !_COMMERCIAL_OVERRIDE.test(combined)) {
+    return { pass: false, gate: 1, reason: "consumer-noise" };
+  }
+
+  // ── Gate 2: Real commercial opportunity? ──────────────────────────────────
+  // Concrete price data always passes (it feeds the pricing pipeline)
+  if (_MARKET_PRICE.test(combined)) {
+    return { pass: true, reason: "market-price-data" };
+  }
+
+  // Need at least 2 of 5 positive signal groups
+  let groups = 0;
+  const hasCompany = _COMPANY_SIGNALS.test(combined);
+  const hasScale = _PROJECT_SCALE.test(combined);
+  const hasTransaction = _TRANSACTION.test(combined);
+  const hasBuyer = _BUYER.test(combined);
+  const hasEquipment = _EQUIPMENT_WORDS.test(combined);
+  if (hasCompany) groups++;
+  if (hasScale) groups++;
+  if (hasTransaction) groups++;
+  if (hasBuyer) groups++;
+  if (hasEquipment) groups++;
+
+  if (groups < 2) {
+    return {
+      pass: false,
+      gate: 2,
+      reason: `insufficient-signals (${groups}/2: company=${hasCompany}, scale=${hasScale}, transaction=${hasTransaction}, buyer=${hasBuyer}, equipment=${hasEquipment})`,
+    };
+  }
+
+  return { pass: true, reason: `${groups}-positive-groups` };
 }
 
 /**
@@ -409,13 +418,30 @@ function filterForPricingArticles(articles: FetchedArticle[]): FetchedArticle[] 
  */
 export async function processRSSArticles(articles: FetchedArticle[]): Promise<void> {
   if (import.meta.env.DEV) {
-    console.log("🔍 Filtering articles for pricing information...");
+    console.log(`🔍 Running 3-gate pipeline on ${articles.length} articles...`);
   }
 
-  const pricingArticles = filterForPricingArticles(articles);
+  // ── 3-Gate Pipeline ────────────────────────────────────────────────────────
+  // Gate 1: Junk filter  Gate 2: Real commercial opportunity
+  const gate1Failed: string[] = [];
+  const gate2Failed: string[] = [];
+  const pricingArticles = articles.filter((article) => {
+    const result = evaluatePipelineGates(article.title, article.content);
+    if (!result.pass) {
+      if (result.gate === 1) gate1Failed.push(article.title.slice(0, 60));
+      else gate2Failed.push(article.title.slice(0, 60));
+      return false;
+    }
+    return true; // Gate 3: proceed to extraction pipeline
+  });
 
   if (import.meta.env.DEV) {
-    console.log(`📈 Found ${pricingArticles.length} articles with potential pricing info`);
+    console.log(
+      `✅ Pipeline: ${pricingArticles.length} passed | ` +
+        `Gate1 blocked ${gate1Failed.length} (noise) | ` +
+        `Gate2 blocked ${gate2Failed.length} (not a real opportunity)`
+    );
+    if (gate2Failed.length > 0) console.log("  Gate2 rejects:", gate2Failed.slice(0, 5));
   }
 
   // Convert to format for AI database processing
