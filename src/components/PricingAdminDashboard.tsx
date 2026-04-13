@@ -87,10 +87,67 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   const [databaseStats, setDatabaseStats] = useState<Record<string, any>>({});
   const [syncResult, setSyncResult] = useState<DatabaseSyncResult | null>(null);
 
+  // Load per-category pricing rows from pricing_configurations table and
+  // merge them into the section-based PricingConfiguration object so every
+  // form field shows the latest DB value instead of hardcoded defaults.
+  const loadFromPricingConfigurations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("pricing_configurations")
+        .select("config_category, config_data, updated_at")
+        .eq("is_active", true)
+        .order("updated_at", { ascending: false });
+
+      if (error || !data || data.length === 0) return;
+
+      // First entry per category is the most recent (sorted DESC)
+      const byCategory: Record<string, Record<string, any>> = {};
+      for (const row of data) {
+        if (!byCategory[row.config_category]) {
+          byCategory[row.config_category] = row.config_data as Record<string, any>;
+        }
+      }
+
+      const current = pricingConfigService.getConfiguration();
+      const merged: PricingConfiguration = {
+        ...current,
+        bess: byCategory.bess ? { ...current.bess, ...byCategory.bess } : current.bess,
+        solar: byCategory.solar ? { ...current.solar, ...byCategory.solar } : current.solar,
+        balanceOfPlant: byCategory.balance_of_plant
+          ? { ...current.balanceOfPlant, ...byCategory.balance_of_plant }
+          : current.balanceOfPlant,
+        generators: byCategory.generator
+          ? { ...current.generators, ...byCategory.generator }
+          : current.generators,
+        wind: byCategory.wind ? { ...current.wind, ...byCategory.wind } : current.wind,
+        powerElectronics: byCategory.power_electronics
+          ? { ...current.powerElectronics, ...byCategory.power_electronics }
+          : current.powerElectronics,
+        evCharging:
+          byCategory.ev_charger || byCategory.ev_charging
+            ? { ...current.evCharging, ...(byCategory.ev_charger ?? byCategory.ev_charging) }
+            : current.evCharging,
+        systemControls:
+          byCategory.system_controls || byCategory.controls
+            ? { ...current.systemControls, ...(byCategory.system_controls ?? byCategory.controls) }
+            : current.systemControls,
+      };
+
+      setConfig(merged);
+    } catch (err) {
+      console.warn("⚠️ Could not load from pricing_configurations:", err);
+      // Keep defaults - form still works
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
+      // Step 1: set defaults immediately (synchronous — no flicker)
       setConfig(pricingConfigService.getConfiguration());
       setHasChanges(false);
+
+      // Step 2: override with latest DB values per category
+      loadFromPricingConfigurations();
 
       // Load latest validation results
       const validationResults = dailyPricingValidator.getLatestValidationResults();

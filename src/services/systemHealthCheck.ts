@@ -281,12 +281,15 @@ async function checkParsingLogic(): Promise<HealthCheckResult> {
   const startTime = Date.now();
 
   try {
-    // Check recent scraped articles for parsing quality
+    // Check recent scraped articles for parsing quality.
+    // Exclude articles created in the last 30 min — they may not yet be classified.
+    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const { data: articles, error } = await supabase
       .from("scraped_articles")
       .select("id, title, prices_extracted, topics, equipment_mentioned")
+      .lt("created_at", thirtyMinAgo)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(100);
 
     if (error) {
       return {
