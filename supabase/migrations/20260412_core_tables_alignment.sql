@@ -60,9 +60,20 @@ ALTER TABLE public.saved_quotes
   ADD COLUMN IF NOT EXISTS use_case             TEXT;
 
 -- Backfill use_case from use_case_slug for any existing rows
-UPDATE public.saved_quotes
-SET use_case = use_case_slug
-WHERE use_case IS NULL AND use_case_slug IS NOT NULL;
+-- Guarded: only runs if use_case_slug column actually exists on this DB
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name   = 'saved_quotes'
+      AND column_name  = 'use_case_slug'
+  ) THEN
+    UPDATE public.saved_quotes
+    SET use_case = use_case_slug
+    WHERE use_case IS NULL AND use_case_slug IS NOT NULL;
+  END IF;
+END $$;
 
 COMMENT ON COLUMN public.saved_quotes.system_configuration IS
   'Full wizard export JSON — built by buildV8ExportData() in Step5V8.tsx';
