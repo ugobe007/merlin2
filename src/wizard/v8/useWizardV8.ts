@@ -866,13 +866,13 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     "generatorScope",
     "evScope",
     "step3_5Visited",
-    "carportInterest",
+    "canopyInterest",
   ]);
 
   // Stable string key of only the equipment-relevant answers.
   // Changes only when an answer that affects kW calculation changes.
   // Non-power keys (solarScope, generatorScope, evScope, step3_5Visited,
-  // carportInterest) are excluded so toggling add-ons or leaving the add-ons
+  // canopyInterest) are excluded so toggling add-ons or leaving the add-ons
   // step does NOT trigger a recalculation.
 
   const powerAnswersKey = useMemo(() => {
@@ -991,14 +991,14 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       // Pass cached panel spec so density uses actual Wp/sqft from supplier DB.
       const cachedPanel = getLastSelectedPanelSync();
       const baseCapKW = getCarWashSolarCapacity(
-        { ...(state.step3Answers ?? {}), carportInterest: "no" },
+        { ...(state.step3Answers ?? {}), canopyInterest: "no" },
         cachedPanel ?? undefined
       );
       const staticCap = getFacilityConstraints(state.industry)?.totalRealisticSolarKW ?? 60;
       const baseKW = baseCapKW > 0 ? baseCapKW : staticCap;
-      // carportInterest='yes' but carportArea not entered → getCarWashSolarCapacity returns 0
+      // canopyInterest='yes' but carportArea not entered → getCarWashSolarCapacity returns 0
       // for carport. Add SSOT canopyPotentialKW as the default carport contribution.
-      const carportInterest = (state.step3Answers?.carportInterest ?? "no") as string;
+      const carportInterest = (state.step3Answers?.canopyInterest ?? "no") as string;
       const carportArea = Number(state.step3Answers?.carportArea ?? 0);
       const canopyDefault = getFacilityConstraints("car_wash")?.canopyPotentialKW ?? 54;
       if (carportInterest === "yes") {
@@ -1066,7 +1066,6 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     state.step3Answers?.facilityType,
     state.step3Answers?.roofType,
     state.step3Answers?.vacuumStations,
-    state.step3Answers?.carportInterest,
     state.step3Answers?.carportArea,
   ]);
 

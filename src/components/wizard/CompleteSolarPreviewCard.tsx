@@ -10,13 +10,13 @@ import { ChevronDown, ChevronUp, Sun, Zap } from 'lucide-react';
 interface CompleteSolarPreviewCardProps {
   roofArea: number;
   carportArea?: number;
-  carportInterest?: string;
+  canopyInterest?: string;
 }
 
 export function CompleteSolarPreviewCard({
   roofArea,
   carportArea = 0,
-  carportInterest
+  canopyInterest
 }: CompleteSolarPreviewCardProps) {
   const [showDetails, setShowDetails] = useState(false);
 
@@ -35,7 +35,7 @@ export function CompleteSolarPreviewCard({
   const roofSolarKW = roofUsableArea * SOLAR_DENSITY;
 
   // Carport calculations
-  const includeCarport = carportInterest === 'yes' && carportArea > 0;
+  const includeCarport = canopyInterest === 'yes' && carportArea > 0;
   const carportUsableArea = includeCarport ? carportArea * CARPORT_USABLE_FACTOR : 0;
   const carportSolarKW = carportUsableArea * SOLAR_DENSITY;
 

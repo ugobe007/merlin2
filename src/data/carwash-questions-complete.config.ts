@@ -820,7 +820,7 @@ export const carWashQuestionsComplete: Question[] = [
     impactsCalculations: ["roofSolar", "solarCapacity"],
   },
   {
-    id: "carportInterest",
+    id: "canopyInterest",
     type: "buttons",
     section: "solar",
     title: "Interested in solar carports over vacuum areas?",

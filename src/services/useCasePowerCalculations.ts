@@ -7480,7 +7480,7 @@ export function getCarWashSolarCapacity(
   const vacuumKW = Math.round((vacuumSf * 0.9) / sqftPerKWac);
 
   // ── 4. Carport solar (queue lane / vacuum carport structure) ──────────────
-  const carportInterest = String(step3Answers?.carportInterest ?? "no");
+  const carportInterest = String(step3Answers?.canopyInterest ?? "no");
   const carportArea = Number(step3Answers?.carportArea ?? 0);
   // yes=100%, learn_more=50% credit (to show upside), no=0%
   const carportFactor =

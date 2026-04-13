@@ -783,7 +783,8 @@ function SolarCard({
   canopyPotentialKW = 0,
   canopyInterest,
   onCanopyChange,
-  isCarWash = false,
+  canopyLabel = "Canopy",
+  canopyAreaLabel = "parking area",
   roofOnlyKW = 0,
   withCanopyKW = 0,
   pendingExternalKW,
@@ -806,7 +807,8 @@ function SolarCard({
   canopyPotentialKW?: number;
   canopyInterest?: string;
   onCanopyChange?: (value: string) => void;
-  isCarWash?: boolean;
+  canopyLabel?: string;
+  canopyAreaLabel?: string;
   roofOnlyKW?: number;
   withCanopyKW?: number;
   pendingExternalKW?: number | null;
@@ -1085,7 +1087,7 @@ function SolarCard({
                 marginBottom: 8,
               }}
             >
-              {isCarWash ? "☀️ Solar Coverage" : "☀️ Solar Coverage"}
+              {"☀️ Solar Coverage"}
             </div>
 
             <div style={{ display: "flex", gap: 8 }}>
@@ -1197,8 +1199,8 @@ function SolarCard({
                       }}
                     >
                       {carportActive
-                        ? `✓ ${isCarWash ? "Carport" : "Canopy"} Added`
-                        : `+ Add ${isCarWash ? "Carport" : "Canopy"}`}
+                        ? `✓ ${canopyLabel} Added`
+                        : `+ Add ${canopyLabel}`}
                     </div>
                     <div
                       style={{
@@ -1244,10 +1246,10 @@ function SolarCard({
                     const roofPortion = Math.min(sliderKW, roofOnlyKW);
                     const canopyPortion = Math.max(0, sliderKW - roofOnlyKW);
                     return canopyPortion > 0
-                      ? `${roofPortion.toLocaleString()} kW rooftop + ${canopyPortion.toLocaleString()} kW ${isCarWash ? "carport canopy" : "parking canopy"} = ${sliderKW.toLocaleString()} kW configured. Tap carport to remove it.`
+                      ? `${roofPortion.toLocaleString()} kW rooftop + ${canopyPortion.toLocaleString()} kW ${canopyLabel.toLowerCase()} canopy = ${sliderKW.toLocaleString()} kW configured. Tap carport to remove it.`
                       : `${roofPortion.toLocaleString()} kW rooftop (carport not yet needed at this size). Tap carport to remove it.`;
                   })()
-                : `Rooftop solar is always included. Tap "+ Add ${isCarWash ? "Carport" : "Canopy"}" to also cover your ${isCarWash ? "vacuum station canopies" : "parking area"} for +${(withCanopyKW - roofOnlyKW).toLocaleString()} kW more capacity.`}
+                : `Rooftop solar is always included. Tap "+ Add ${canopyLabel}" to also cover your ${canopyAreaLabel} for +${(withCanopyKW - roofOnlyKW).toLocaleString()} kW more capacity.`}
             </div>
 
             {/* ── Carport installation type (new build vs retrofit) ── */}
@@ -1528,7 +1530,7 @@ function SolarCard({
             </strong>{" "}
             based on{" "}
             {canopyInterest === "yes"
-              ? `roof + ${isCarWash ? "carport" : "canopy"} (${safeMax.toLocaleString()} kW total)`
+              ? `roof + ${canopyLabel.toLowerCase()} (${safeMax.toLocaleString()} kW total)`
               : safeMax > 0
                 ? `${safeMax.toLocaleString()} kW roof space`
                 : "available roof area"}
@@ -2835,7 +2837,7 @@ function RoiIntelBanner({
   solarRecKW,
   canopyInterest,
   canopyPotentialKW,
-  isCarWash,
+  canopyAreaLabel = "parking area",
   solarFeasible,
   onApplySolarRec,
 }: {
@@ -2848,32 +2850,21 @@ function RoiIntelBanner({
   solarRecKW: number;
   canopyInterest?: string;
   canopyPotentialKW: number;
-  isCarWash: boolean;
+  canopyAreaLabel?: string;
   solarFeasible: boolean;
   /** Fires handleSolarConfig(solarRecKW) in the parent — snaps slider to recommended */
   onApplySolarRec?: () => void;
 }) {
   const hints: RoiHint[] = [];
 
-  // 1. Car wash: vacuum station / carport solar opportunity
-  if (isCarWash && canopyPotentialKW > 0 && canopyInterest !== "yes") {
+  // 1. Canopy / carport solar opportunity (label adapts per industry)
+  if (canopyPotentialKW > 0 && canopyInterest !== "yes") {
     const extraK = Math.round((canopyPotentialKW * peakSunHours * 365 * 0.77 * utilityRate) / 1000);
     hints.push({
-      id: "carport_vacuum",
+      id: "canopy_opportunity",
       icon: "☀️",
       color: "amber",
-      text: `Vacuum station canopies can support ${canopyPotentialKW} kW of additional solar (+$${extraK}K/yr est.). Use the Solar Carport toggle below to include them.`,
-    });
-  }
-
-  // 2. Non-car-wash: parking canopy opportunity
-  if (!isCarWash && canopyPotentialKW > 0 && canopyInterest !== "yes") {
-    const extraK = Math.round((canopyPotentialKW * peakSunHours * 365 * 0.77 * utilityRate) / 1000);
-    hints.push({
-      id: "canopy_general",
-      icon: "🏗️",
-      color: "amber",
-      text: `A solar canopy over your parking area unlocks ${canopyPotentialKW} kW of additional capacity (+$${extraK}K/yr est.). Use the Solar Carport toggle below to include it.`,
+      text: `Solar canopy over your ${canopyAreaLabel} can support ${canopyPotentialKW} kW of additional capacity (+$${extraK}K/yr est.). Use the Solar Carport toggle below to include it.`,
     });
   }
 
@@ -3163,9 +3154,8 @@ export default function Step3_5V8({ state, actions }: Props) {
   const peakSunHours = state.intel?.peakSunHours ?? 4.5;
 
   // Canopy / carport toggle — drives solar cap reactively via useWizardV8 effect
-  const isCarWash = state.industry === "car_wash";
-  const canopyFieldKey = isCarWash ? "carportInterest" : "canopyInterest";
-  const canopyInterest = state.step3Answers?.[canopyFieldKey] as string | undefined;
+  const isCarWash = state.industry === "car_wash"; // used only for getCarWashSolarCapacity routing
+  const canopyInterest = state.step3Answers?.canopyInterest as string | undefined;
   const constraints = getFacilityConstraints(state.industry ?? "");
   const canopyPotentialKW = constraints?.canopyPotentialKW ?? 0;
   const roofArea = Number(state.step3Answers?.roofArea ?? 0);
@@ -3180,7 +3170,7 @@ export default function Step3_5V8({ state, actions }: Props) {
   const _solarWPerSqft = computeSolarWattsPerSqft(_cachedPanelSpec);
   const roofOnlyCapKW = isCarWash
     ? getCarWashSolarCapacity(
-        { ...(state.step3Answers ?? {}), carportInterest: "no" },
+        { ...(state.step3Answers ?? {}), canopyInterest: "no" },
         _cachedPanelSpec ?? undefined
       ) ||
       (constraints?.maxRooftopSolarKW ?? 0)
@@ -3207,7 +3197,7 @@ export default function Step3_5V8({ state, actions }: Props) {
       ? Math.round(solarEffectiveMaxKW * sunFactor * 0.8)
       : solarRecKW;
 
-  const handleCanopyChange = (value: string) => actions.setAnswer(canopyFieldKey, value);
+  const handleCanopyChange = (value: string) => actions.setAnswer("canopyInterest", value);
 
   const handlePanelTierChange = (tier: "standard" | "premium") =>
     actions.setAddonConfig({ solarPanelTier: tier });
@@ -3332,7 +3322,7 @@ export default function Step3_5V8({ state, actions }: Props) {
         solarRecKW={solarEffectiveRecKW}
         canopyInterest={canopyInterest}
         canopyPotentialKW={canopyPotentialKW}
-        isCarWash={isCarWash}
+        canopyAreaLabel={isCarWash ? "vacuum station canopies" : "parking area"}
         solarFeasible={solarFeasible}
         onApplySolarRec={() => {
           const kw = solarEffectiveRecKW;
@@ -3388,7 +3378,8 @@ export default function Step3_5V8({ state, actions }: Props) {
           canopyPotentialKW={canopyPotentialKW}
           canopyInterest={canopyInterest}
           onCanopyChange={handleCanopyChange}
-          isCarWash={isCarWash}
+          canopyLabel={isCarWash ? "Carport" : "Canopy"}
+          canopyAreaLabel={isCarWash ? "vacuum station canopies" : "parking area"}
           roofOnlyKW={roofOnlyCapKW}
           withCanopyKW={withCanopyCapKW}
           pendingExternalKW={pendingSolarKW}

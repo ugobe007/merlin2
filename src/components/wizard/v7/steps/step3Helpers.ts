@@ -29,7 +29,6 @@ export function isRequired(q: CuratedField): boolean {
 export const SOLAR_QUESTIONS_MOVED_TO_MODAL = new Set([
   "roofArea",
   "canopyInterest",
-  "carportInterest",
   "totalSiteArea",
   "solarCapacityKW",
   "existingSolar",
