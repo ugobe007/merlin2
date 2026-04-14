@@ -30,6 +30,8 @@ interface WizardShellV7Props {
   advisorContent?: React.ReactNode;
   /** Width of the Merlin advisor rail in px. Default 520. Increase for data-heavy steps. */
   railWidth?: number;
+  /** Called when the user clicks the ⚡ ProQuote escape button. */
+  onSwitchToProQuote?: () => void;
   children: React.ReactNode;
 }
 
@@ -81,6 +83,7 @@ export default function WizardShellV7({
   onNext,
   advisorContent,
   railWidth: _railWidth = 520,
+  onSwitchToProQuote,
   children,
 }: WizardShellV7Props) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
@@ -440,7 +443,7 @@ export default function WizardShellV7({
               style={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
+                justifyContent: "space-between",
                 gap: 4,
                 padding: "12px 24px",
                 background: "rgba(255, 255, 255, 0.02)",
@@ -448,92 +451,147 @@ export default function WizardShellV7({
                 borderBottom: "1px solid rgba(255, 255, 255, 0.04)",
               }}
             >
-              {stepLabels.map((label, idx) => {
-                const isActive = idx === safeStep;
-                const isComplete = idx < safeStep;
-                const isFuture = idx > safeStep;
+              {/* Left spacer to keep pills centered */}
+              <div style={{ width: 138, flexShrink: 0 }} />
 
-                return (
-                  <React.Fragment key={`${label}-${idx}`}>
-                    {/* Connector line between steps */}
-                    {idx > 0 && (
+              {/* Step pills — centered */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  flex: 1,
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                {stepLabels.map((label, idx) => {
+                  const isActive = idx === safeStep;
+                  const isComplete = idx < safeStep;
+                  const isFuture = idx > safeStep;
+
+                  return (
+                    <React.Fragment key={`${label}-${idx}`}>
+                      {/* Connector line between steps */}
+                      {idx > 0 && (
+                        <div
+                          style={{
+                            width: 24,
+                            height: 2,
+                            borderRadius: 1,
+                            background: isComplete
+                              ? "rgba(62, 207, 142, 0.3)"
+                              : isActive
+                                ? "rgba(62, 207, 142, 0.2)"
+                                : "rgba(255, 255, 255, 0.06)",
+                            flexShrink: 0,
+                          }}
+                        />
+                      )}
+
+                      {/* Step pill */}
                       <div
                         style={{
-                          width: 24,
-                          height: 2,
-                          borderRadius: 1,
-                          background: isComplete
-                            ? "rgba(62, 207, 142, 0.3)"
-                            : isActive
-                              ? "rgba(62, 207, 142, 0.2)"
-                              : "rgba(255, 255, 255, 0.06)",
-                          flexShrink: 0,
-                        }}
-                      />
-                    )}
-
-                    {/* Step pill */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        padding: "6px 14px",
-                        borderRadius: 999,
-                        background: isActive
-                          ? "rgba(62, 207, 142, 0.10)"
-                          : isComplete
-                            ? "rgba(62, 207, 142, 0.06)"
-                            : "transparent",
-                        boxShadow: "none",
-                        opacity: isFuture ? 0.4 : 1,
-                        transition: "all 0.2s ease",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {/* Step number/check */}
-                      <div
-                        style={{
-                          width: 22,
-                          height: 22,
-                          borderRadius: "50%",
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 11,
-                          fontWeight: 700,
+                          gap: 8,
+                          padding: "6px 14px",
+                          borderRadius: 999,
                           background: isActive
-                            ? "rgba(62, 207, 142, 0.25)"
+                            ? "rgba(62, 207, 142, 0.10)"
                             : isComplete
-                              ? "rgba(62, 207, 142, 0.15)"
-                              : "rgba(255, 255, 255, 0.06)",
-                          color: isComplete ? "#3ECF8E" : isActive ? "#fff" : "#e8ebf3",
-                          flexShrink: 0,
+                              ? "rgba(62, 207, 142, 0.06)"
+                              : "transparent",
+                          boxShadow: "none",
+                          opacity: isFuture ? 0.4 : 1,
+                          transition: "all 0.2s ease",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        {isComplete ? "✓" : idx + 1}
-                      </div>
+                        {/* Step number/check */}
+                        <div
+                          style={{
+                            width: 22,
+                            height: 22,
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            background: isActive
+                              ? "rgba(62, 207, 142, 0.25)"
+                              : isComplete
+                                ? "rgba(62, 207, 142, 0.15)"
+                                : "rgba(255, 255, 255, 0.06)",
+                            color: isComplete ? "#3ECF8E" : isActive ? "#fff" : "#e8ebf3",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {isComplete ? "✓" : idx + 1}
+                        </div>
 
-                      {/* Label — shown on active + completed, hidden on future for compactness */}
-                      <span
-                        className="merlin-progress-label"
-                        style={{
-                          fontSize: 12,
-                          fontWeight: isActive ? 600 : 500,
-                          color: isActive
-                            ? "#fff"
-                            : isComplete
-                              ? "rgba(62, 207, 142, 0.8)"
-                              : "rgba(232, 235, 243, 0.35)",
-                          letterSpacing: "0.01em",
-                        }}
-                      >
-                        {label}
-                      </span>
-                    </div>
-                  </React.Fragment>
-                );
-              })}
+                        {/* Label — shown on active + completed, hidden on future for compactness */}
+                        <span
+                          className="merlin-progress-label"
+                          style={{
+                            fontSize: 12,
+                            fontWeight: isActive ? 600 : 500,
+                            color: isActive
+                              ? "#fff"
+                              : isComplete
+                                ? "rgba(62, 207, 142, 0.8)"
+                                : "rgba(232, 235, 243, 0.35)",
+                            letterSpacing: "0.01em",
+                          }}
+                        >
+                          {label}
+                        </span>
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+
+              {/* ProQuote escape button — top-right, always visible */}
+              {onSwitchToProQuote ? (
+                <button
+                  type="button"
+                  onClick={onSwitchToProQuote}
+                  title="Switch to full engineering mode — your inputs are saved"
+                  style={{
+                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 12px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(62,207,142,0.22)",
+                    background: "rgba(62,207,142,0.05)",
+                    color: "rgba(62,207,142,0.75)",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    letterSpacing: "0.01em",
+                    transition: "all 0.15s ease",
+                    whiteSpace: "nowrap",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(62,207,142,0.12)";
+                    e.currentTarget.style.borderColor = "rgba(62,207,142,0.45)";
+                    e.currentTarget.style.color = "#3ECF8E";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(62,207,142,0.05)";
+                    e.currentTarget.style.borderColor = "rgba(62,207,142,0.22)";
+                    e.currentTarget.style.color = "rgba(62,207,142,0.75)";
+                  }}
+                >
+                  ⚡ ProQuote
+                </button>
+              ) : (
+                <div style={{ width: 138, flexShrink: 0 }} />
+              )}
             </div>
 
             {/* Step Content — ref-based animation restart prevents flash on step change */}

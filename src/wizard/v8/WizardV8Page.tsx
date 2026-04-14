@@ -25,7 +25,6 @@
 import React, { Suspense, lazy, useEffect, useMemo } from "react";
 import { useWizardV8 } from "./useWizardV8";
 import type { WizardStep, IndustrySlug } from "./wizardState";
-import { Step0V8_ModeSelect } from "./steps/Step0V8_ModeSelect";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
 import { EV_PACKAGE_COUNTS } from "./addonSizing";
 
@@ -561,6 +560,9 @@ export default function WizardV8Page() {
       if (!isNaN(targetStep) && targetStep >= 0 && targetStep <= 6) {
         actions.goToStep(targetStep as WizardStep);
       }
+    } else {
+      // No URL params at all — go straight to Step 1 (location)
+      actions.goToStep(1 as WizardStep);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Intentionally mount-only: URL params are read once; actions is a stable ref
@@ -622,21 +624,10 @@ export default function WizardV8Page() {
     ]
   );
 
-  // Mode select renders outside the shell — no progress bar for the landing screen
+  // Step 0 is no longer a real landing — useEffect advances to step 1 on mount.
+  // Render a brief spinner so there's no stale render before the effect fires.
   if (step === 0) {
-    return (
-      <Step0V8_ModeSelect
-        onSelectMode={(mode) => {
-          if (mode === "wizard") {
-            actions.goToStep(1 as WizardStep);
-          } else if (mode === "proquote") {
-            window.location.href = "/quote-builder";
-          } else if (mode === "upload") {
-            window.location.href = "/upload-quote";
-          }
-        }}
-      />
-    );
+    return <SpinnerFallback />;
   }
 
   return (
@@ -648,6 +639,29 @@ export default function WizardV8Page() {
         canGoNext={resolveCanGoNext(step, state)}
         isNextLoading={(step === 4 || step === 5) && state.tiersStatus === "fetching"}
         onBack={actions.goBack}
+        onSwitchToProQuote={() => {
+          // Serialize wizard state to sessionStorage so ProQuote can hydrate from it
+          try {
+            sessionStorage.setItem(
+              "merlin_wizard_handoff",
+              JSON.stringify({
+                industry: state.industry,
+                zip: state.location?.zip,
+                city: state.location?.city,
+                baseLoadKW: state.baseLoadKW,
+                peakLoadKW: state.peakLoadKW,
+                solarKW: state.solarKW,
+                step3Answers: state.step3Answers,
+                business: state.business,
+                intel: state.intel,
+                fromStep: state.step,
+              })
+            );
+          } catch {
+            // sessionStorage unavailable — proceed anyway
+          }
+          window.location.href = "/quote-builder?from=wizard";
+        }}
         onNext={() => {
           if (step === 4) {
             // ── Persist Step 3.5 Add-on configuration before advancing ────────

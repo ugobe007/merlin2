@@ -252,6 +252,10 @@ export function Step1V8({ state, actions }: Step1Props) {
   const [previewBusiness, setPreviewBusiness] = useState<BusinessData | null>(null);
   const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
   const [isResolvingBusiness, setIsResolvingBusiness] = useState(false);
+  const [ipDetected, setIpDetected] = useState<{ city: string; state: string; zip: string } | null>(
+    null
+  );
+  const [ipBannerDismissed, setIpBannerDismissed] = useState(false);
 
   const { intel, intelStatus, locationRaw, locationStatus, location, error, isBusy } = state;
   const locationConfirmed = location !== null;
@@ -323,6 +327,23 @@ export function Step1V8({ state, actions }: Step1Props) {
   useEffect(() => {
     zipRef.current?.focus();
   }, []);
+
+  // IP geolocation auto-detect — fires once on mount if no ZIP already seeded
+  useEffect(() => {
+    if (state.locationRaw) return; // already seeded by widget/URL params — don't override
+    fetch("https://ipapi.co/json/")
+      .then((r) => r.json())
+      .then((data: { postal?: string; city?: string; region_code?: string }) => {
+        if (data.postal && /^\d{5}$/.test(data.postal)) {
+          setIpDetected({ city: data.city ?? "", state: data.region_code ?? "", zip: data.postal });
+          actions.setLocationRaw(data.postal); // triggers intel fetch automatically
+        }
+      })
+      .catch(() => {
+        /* silent fail — user enters manually */
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // mount-only
 
   // Preload the Google Maps script as soon as location is confirmed so the
   // Places library is warm before the user starts typing a business name.
@@ -955,6 +976,76 @@ export function Step1V8({ state, actions }: Step1Props) {
 
           {!locationConfirmed ? (
             <>
+              {/* IP auto-detected location banner */}
+              {ipDetected && !ipBannerDismissed && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 10,
+                    padding: "9px 12px",
+                    borderRadius: 10,
+                    border: "1px solid rgba(62,207,142,0.25)",
+                    background: "rgba(62,207,142,0.06)",
+                    marginBottom: 10,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                    <span style={{ fontSize: 15, flexShrink: 0 }}>📍</span>
+                    <span style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.35 }}>
+                      Looks like you&apos;re in{" "}
+                      <strong style={{ color: T.textPrimary }}>
+                        {ipDetected.city}
+                        {ipDetected.state ? `, ${ipDetected.state}` : ""}
+                      </strong>{" "}
+                      — is that right?
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => setIpBannerDismissed(true)}
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: 7,
+                        border: "1px solid rgba(62,207,142,0.35)",
+                        background: "rgba(62,207,142,0.12)",
+                        color: T.accent,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Yes ✓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIpBannerDismissed(true);
+                        setIpDetected(null);
+                        actions.setLocationRaw("");
+                        requestAnimationFrame(() => zipRef.current?.focus());
+                      }}
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: 7,
+                        border: "1px solid rgba(255,255,255,0.10)",
+                        background: "transparent",
+                        color: T.textMuted,
+                        fontSize: 12,
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Row 2: ZIP Code Input */}
               <input
                 ref={zipRef}

@@ -606,7 +606,7 @@ export type WizardIntent =
 
 export function initialState(): WizardState {
   return {
-    step: 0, // Start at Step 0 (Mode Selection)
+    step: 1, // Start at Step 1 (Location) — Step 0 (Mode Select) removed
     locationRaw: "",
     country: "US", // Default to US
     countryCode: "US", // Default to US
