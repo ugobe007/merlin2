@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from "react";
 import { Copy, Check, Zap, Shield, Code2, Play } from "lucide-react";
-import merlinWizardImage from "@/assets/images/merlin_wizard_new.png";
+import merlinWizardImage from "@/assets/images/NEW_Wizard_icon.png";
 import merlinWizardIcon from "@/assets/images/NEW_Wizard_icon.png";
 import trueQuoteBadge from "@/assets/images/badge_gold_icon.jpg";
 import WizardV8Page from "@/wizard/v8/WizardV8Page";
