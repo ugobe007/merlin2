@@ -1,34 +1,259 @@
-/* Merlin Energy — Hero Section
-   Design: Asymmetric split — left headline + path selector (55%), right CalculationCard theater (45%)
-
-   Right card = CALCULATION THEATER, not a marketing mockup.
-   Shows utility rates resolving, demand estimating, savings computing live.
-   Auto-demos 6 representative use cases when user hasn't interacted yet.
-   Bloomberg terminal meets energy calculator.
-
-   Auto-demo logic:
-   - Cycles: Manufacturing (NY) → Hotel (BH) → Data Center (DC) → Car Wash (Austin)
-             → Multifamily (Chicago) → EV Charging (Atlanta)
-   - Timing: locating 600ms → fetching 900ms → resolved 2800ms → fade 400ms = ~5.2s/cycle
-   - User focus/type immediately pauses demo; input clear restarts after 1.2s
+/* Merlin Energy — Hero Section (April 2026 rebuild)
+   Strategy:
+   - Lead with the user's PROBLEM, not the product name
+   - Single dominant CTA: TrueQuote™ (ProQuote demoted to nav)
+   - Right panel: static mockup of actual TrueQuote output — show what they GET
+   - Kill the calculator widget (generic benchmarks undercut the real-data story)
+   - Story arc: problem → Merlin does the work → here's the output
 */
 
 import React from "react";
-import { ChevronRight, Zap } from "lucide-react";
-import QuickEstimateWidget from "./QuickEstimateWidget";
+import {
+  ArrowRight,
+  CheckCircle2,
+  ShieldCheck,
+  Zap,
+  Sun,
+  Battery,
+  TrendingDown,
+} from "lucide-react";
 
 const SHIELD_GOLD =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/shield-gold_53d77804.png";
-const SHIELD_BLUE =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/shield-blue_6e564263.png";
 
-const trustItems = [
-  "NREL Data",
-  "DOE Frameworks",
-  "Sandia-Aligned Logic",
-  "UL / IEEE",
-  "TrueQuote Financial Engine",
-];
+const trustItems = ["NREL Data", "DOE Frameworks", "Sandia Logic", "UL / IEEE"];
+
+// ── TrueQuote output mockup — example output for a hotel in Reno, NV ──────────
+function TrueQuoteMockup() {
+  return (
+    <div
+      style={{
+        background: "linear-gradient(160deg, #0d1420 0%, #080d18 100%)",
+        border: "1px solid rgba(255,255,255,0.10)",
+        borderRadius: 20,
+        overflow: "hidden",
+        boxShadow: "0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(62,207,142,0.08)",
+        fontFamily: "'Inter', -apple-system, sans-serif",
+        maxWidth: 500,
+        width: "100%",
+      }}
+    >
+      {/* Header bar */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "14px 20px",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          background: "rgba(255,255,255,0.02)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 18, height: 18 }} />
+          <span
+            style={{ fontSize: 13, fontWeight: 700, color: "#F5F0E8", letterSpacing: "0.01em" }}
+          >
+            TrueQuote™
+          </span>
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: "#3ECF8E",
+              background: "rgba(62,207,142,0.12)",
+              border: "1px solid rgba(62,207,142,0.25)",
+              borderRadius: 6,
+              padding: "2px 7px",
+              letterSpacing: "0.05em",
+              textTransform: "uppercase" as const,
+            }}
+          >
+            Verified
+          </span>
+        </div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.30)" }}>
+          Grand Sierra Resort · Reno, NV
+        </div>
+      </div>
+
+      {/* Hero savings row */}
+      <div
+        style={{
+          padding: "22px 20px 18px",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "linear-gradient(135deg, rgba(62,207,142,0.07) 0%, transparent 60%)",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            color: "rgba(62,207,142,0.70)",
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase" as const,
+            marginBottom: 6,
+          }}
+        >
+          Projected Annual Savings
+        </div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <span
+            style={{
+              fontSize: 48,
+              fontWeight: 900,
+              color: "#3ECF8E",
+              lineHeight: 1,
+              fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+              letterSpacing: "-2px",
+            }}
+          >
+            $218,400
+          </span>
+          <span style={{ fontSize: 14, color: "rgba(255,255,255,0.40)", fontWeight: 500 }}>
+            /yr
+          </span>
+        </div>
+        <div style={{ marginTop: 6, fontSize: 12, color: "rgba(255,255,255,0.38)" }}>
+          After 30% federal ITC · NV Energy · $0.11/kWh
+        </div>
+      </div>
+
+      {/* System breakdown */}
+      <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+          {[
+            {
+              icon: <Sun size={13} />,
+              label: "Solar",
+              value: "680 kW",
+              sub: "2,176 panels",
+              color: "#F59E0B",
+            },
+            {
+              icon: <Battery size={13} />,
+              label: "BESS",
+              value: "500 kWh",
+              sub: "2-hr dispatch",
+              color: "#3B82F6",
+            },
+            {
+              icon: <TrendingDown size={13} />,
+              label: "Demand Cut",
+              value: "38%",
+              sub: "$14,200/mo",
+              color: "#3ECF8E",
+            },
+          ].map(({ icon, label, value, sub, color }) => (
+            <div
+              key={label}
+              style={{
+                padding: "12px",
+                borderRadius: 10,
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.07)",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6, color }}
+              >
+                {icon}
+                <span
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 700,
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase" as const,
+                  }}
+                >
+                  {label}
+                </span>
+              </div>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 800,
+                  color: "rgba(255,255,255,0.92)",
+                  lineHeight: 1.1,
+                }}
+              >
+                {value}
+              </div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+                {sub}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Payback + IRR row */}
+      <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: 10,
+            textAlign: "center" as const,
+          }}
+        >
+          {[
+            { label: "Payback", value: "5.8 yrs" },
+            { label: "25-yr NPV", value: "$2.1M" },
+            { label: "IRR", value: "18.4%" },
+          ].map(({ label, value }) => (
+            <div key={label}>
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 800,
+                  color: "rgba(255,255,255,0.92)",
+                  fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                }}
+              >
+                {value}
+              </div>
+              <div
+                style={{
+                  fontSize: 10,
+                  color: "rgba(255,255,255,0.35)",
+                  marginTop: 2,
+                  textTransform: "uppercase" as const,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Data sources footer */}
+      <div
+        style={{
+          padding: "11px 20px",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          flexWrap: "wrap" as const,
+        }}
+      >
+        <ShieldCheck size={11} style={{ color: "rgba(62,207,142,0.50)", flexShrink: 0 }} />
+        {["NREL irradiance", "NV Energy tariff EG-1", "DOE BESS sizing", "30% ITC (IRA §48)"].map(
+          (src, i) => (
+            <React.Fragment key={src}>
+              {i > 0 && <span style={{ fontSize: 9, color: "rgba(255,255,255,0.15)" }}>·</span>}
+              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", fontWeight: 500 }}>
+                {src}
+              </span>
+            </React.Fragment>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ── HeroSection ────────────────────────────────────────────────────────────────
 export default function HeroSection() {
@@ -37,7 +262,7 @@ export default function HeroSection() {
       id="hero"
       className="relative min-h-screen flex items-center overflow-hidden pt-16 bg-[#060D1F]"
     >
-      {/* Background: very faint grid */}
+      {/* Background grid */}
       <div
         className="absolute inset-0 opacity-[0.025]"
         style={{
@@ -46,133 +271,109 @@ export default function HeroSection() {
           backgroundSize: "64px 64px",
         }}
       />
-      {/* Radial vignette */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_30%,rgba(59,130,246,0.10)_0%,transparent_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_30%,rgba(62,207,142,0.07)_0%,transparent_70%)]" />
 
       {/* Content */}
       <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full py-20">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* ── Left: headline + path selector ─────────────────────────────── */}
-          <div className="max-w-3xl">
-            {/* Badge */}
-            <div className="animate-fade-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-500/25 bg-blue-500/[0.08] text-blue-300/80 text-[11px] font-medium tracking-wide mb-8">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-              TrueQuote + ProQuote · MerlinAI powered
+        <div className="grid lg:grid-cols-[55%_45%] gap-12 lg:gap-16 items-center">
+          {/* ── Left: story + CTA ─────────────────────────────────────────── */}
+          <div className="max-w-2xl">
+            {/* Problem framing badge */}
+            <div className="animate-fade-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-400 text-[11px] font-medium tracking-wide mb-8">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              No vendor. No sales call. No account needed.
             </div>
 
-            {/* Headline */}
+            {/* Headline — lead with the problem */}
             <h1
-              className="animate-fade-up-delay-1 text-6xl sm:text-7xl lg:text-[82px] xl:text-[96px] font-extrabold leading-[0.92] tracking-tight mb-7"
-              style={{ fontFamily: "'Outfit', sans-serif" }}
+              className="animate-fade-up-delay-1 font-extrabold leading-[0.95] tracking-tight mb-6"
+              style={{ fontFamily: "'Outfit', sans-serif", fontSize: "clamp(40px, 5.5vw, 82px)" }}
             >
-              <span className="text-emerald-400">Energy ROI</span>
+              <span className="text-white">Know your </span>
+              <span className="text-emerald-400">energy ROI</span>
               <br />
-              <span className="text-white">in minutes.</span>
+              <span className="text-white">before you talk</span>
+              <br />
+              <span className="text-white">to a vendor.</span>
             </h1>
 
             {/* Subheadline */}
             <p
-              className="animate-fade-up-delay-1 text-[17px] text-slate-400 leading-relaxed max-w-xl mb-6"
+              className="animate-fade-up-delay-1 text-[17px] text-slate-400 leading-relaxed max-w-lg mb-8"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
-              <span className="text-white font-semibold">
-                Real costs. Real savings. Real decisions.
-              </span>{" "}
-              Build a TrueQuote or ProQuote and know what to build before you build it.
+              Enter your ZIP. Merlin pulls live utility rates, solar data, and demand charges — then
+              builds a <span className="text-white font-semibold">real financial model</span> for
+              solar, batteries, and demand charge reduction.{" "}
+              <span className="text-emerald-400/80">Free. In ~90 seconds.</span>
             </p>
 
-            {/* Technology tags */}
-            <div className="animate-fade-up-delay-2 flex flex-wrap gap-x-4 gap-y-1 mb-8">
-              {["SOLAR", "BESS", "BACKUP POWER", "EV CHARGING"].map((tag, i) => (
-                <span
-                  key={tag}
-                  className="flex items-center gap-2 text-[11px] font-semibold tracking-widest text-blue-400/70 uppercase"
-                >
-                  {i > 0 && <span className="text-slate-700">•</span>}
-                  {tag}
-                </span>
+            {/* What you get */}
+            <div className="animate-fade-up-delay-2 flex flex-col gap-2.5 mb-8">
+              {[
+                "Annual savings projection with payback period",
+                "Solar kW + BESS sizing for your facility type",
+                "Demand charge reduction based on your actual utility",
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-2.5">
+                  <CheckCircle2 size={15} className="text-emerald-400/70 mt-0.5 flex-shrink-0" />
+                  <span
+                    className="text-[14px] text-slate-300"
+                    style={{ fontFamily: "'Outfit', sans-serif" }}
+                  >
+                    {item}
+                  </span>
+                </div>
               ))}
             </div>
 
-            {/* Path selector */}
-            <div className="animate-fade-up-delay-3 mb-5">
-              <div className="flex flex-col sm:flex-row gap-2.5">
-                <a
-                  href="/wizard"
-                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-yellow-500/20 bg-yellow-500/[0.04] hover:bg-yellow-500/[0.08] hover:border-yellow-500/35 transition-all duration-200 group flex-1"
-                >
-                  <img
-                    src={SHIELD_GOLD}
-                    alt="TrueQuote"
-                    className="w-5 h-5 object-contain flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div
-                      className="text-sm font-bold text-yellow-400/90 group-hover:text-yellow-300 transition-colors"
-                      style={{ fontFamily: "'Outfit', sans-serif" }}
-                    >
-                      TrueQuote
-                    </div>
-                    <div className="text-[11px] text-slate-600">
-                      For facility owners &amp; operators
-                    </div>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-700 group-hover:text-yellow-400/50 transition-colors flex-shrink-0" />
-                </a>
-                <a
-                  href="/proquote"
-                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-blue-500/20 bg-blue-500/[0.04] hover:bg-blue-500/[0.08] hover:border-blue-500/35 transition-all duration-200 group flex-1"
-                >
-                  <img
-                    src={SHIELD_BLUE}
-                    alt="ProQuote"
-                    className="w-5 h-5 object-contain flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div
-                      className="text-sm font-bold text-blue-400/90 group-hover:text-blue-300 transition-colors"
-                      style={{ fontFamily: "'Outfit', sans-serif" }}
-                    >
-                      ProQuote
-                    </div>
-                    <div className="text-[11px] text-slate-600">For vendors &amp; EPCs</div>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-700 group-hover:text-blue-400/50 transition-colors flex-shrink-0" />
-                </a>
-              </div>
-            </div>
-
-            {/* Social proof */}
-            <div className="animate-fade-up-delay-3 flex items-center gap-3 mb-8 pl-1">
-              <div className="flex -space-x-2">
-                {["#3B82F6", "#10B981", "#F59E0B", "#8B5CF6"].map((color, i) => (
-                  <div
-                    key={i}
-                    className="w-6 h-6 rounded-full border-2 border-[#060D1F] flex items-center justify-center text-[8px] font-bold text-white"
-                    style={{ backgroundColor: color }}
-                  >
-                    {["JL", "MR", "AK", "TS"][i]}
-                  </div>
-                ))}
-              </div>
-              <p
-                className="text-[11px] text-slate-400 font-medium"
+            {/* PRIMARY CTA — single, dominant */}
+            <div className="animate-fade-up-delay-3 flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
+              <a
+                href="/wizard"
+                className="group inline-flex items-center gap-3 px-7 py-4 rounded-2xl font-bold text-[15px] transition-all duration-200"
+                style={{
+                  background: "linear-gradient(135deg, #3ECF8E 0%, #2BAF74 100%)",
+                  color: "#060D1F",
+                  boxShadow: "0 0 32px rgba(62,207,142,0.35), 0 4px 16px rgba(0,0,0,0.3)",
+                  fontFamily: "'Outfit', sans-serif",
+                  textDecoration: "none",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow =
+                    "0 0 48px rgba(62,207,142,0.55), 0 4px 20px rgba(0,0,0,0.35)";
+                  (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow =
+                    "0 0 32px rgba(62,207,142,0.35), 0 4px 16px rgba(0,0,0,0.3)";
+                  (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+                }}
+              >
+                <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 20, height: 20 }} />
+                Get your free TrueQuote™
+                <ArrowRight
+                  size={16}
+                  className="group-hover:translate-x-0.5 transition-transform"
+                />
+              </a>
+              <span
+                className="text-[12px] text-slate-600"
                 style={{ fontFamily: "'Outfit', sans-serif" }}
               >
-                <span className="text-slate-200 font-semibold">340+ quotes</span> built across 18
-                states
-              </p>
+                Takes ~90 sec · No signup
+              </span>
             </div>
 
             {/* Trust bar */}
             <div className="animate-fade-up-delay-4">
-              <p className="text-[9px] text-slate-700 uppercase tracking-widest mb-2.5 font-semibold">
+              <p className="text-[9px] text-slate-700 uppercase tracking-widest mb-2 font-semibold">
                 Built on trusted data sources
               </p>
               <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                 {trustItems.map((item) => (
                   <span key={item} className="text-[11px] text-slate-600 flex items-center gap-1.5">
-                    <Zap size={9} className="text-blue-500/40" />
+                    <Zap size={9} className="text-emerald-500/40" />
                     {item}
                   </span>
                 ))}
@@ -180,9 +381,22 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* ── Right: instant savings widget — hidden on mobile ─────────────── */}
-          <div className="hidden lg:flex items-center justify-center">
-            <QuickEstimateWidget />
+          {/* ── Right: TrueQuote output mockup — show what they GET ─────── */}
+          <div className="hidden lg:flex flex-col items-center gap-3">
+            <div
+              className="text-[10px] font-semibold tracking-widest uppercase text-slate-600"
+              style={{ fontFamily: "'Outfit', sans-serif" }}
+            >
+              ↓ This is what you'll receive
+            </div>
+            <TrueQuoteMockup />
+            <div
+              className="text-[10px] text-slate-700 text-center max-w-xs leading-relaxed"
+              style={{ fontFamily: "'Outfit', sans-serif" }}
+            >
+              Example output for a 450-room hotel in Reno, NV. Your numbers are calculated from live
+              utility data for your actual location and facility type.
+            </div>
           </div>
         </div>
       </div>
