@@ -766,28 +766,76 @@ export function Step1V8({ state, actions }: Step1Props) {
           <h1
             style={{
               margin: 0,
-              fontSize: "clamp(28px,6vw,50px)",
-              lineHeight: 1.05,
-              letterSpacing: "-1.6px",
+              fontSize: "clamp(26px,5.5vw,46px)",
+              lineHeight: 1.06,
+              letterSpacing: "-1.4px",
               color: T.textPrimary,
               fontWeight: 800,
               textTransform: "lowercase",
             }}
           >
-            unlock your <span style={{ color: T.accent }}>energy savings</span>
+            get your <span style={{ color: T.accent }}>free energy quote</span>
           </h1>
           <p
             style={{
-              margin: "8px 0 0",
-              fontSize: 16,
-              lineHeight: 1.6,
-              color: T.textPrimary,
-              opacity: 0.9,
+              margin: "10px 0 0",
+              fontSize: 15,
+              lineHeight: 1.65,
+              color: T.textSecondary,
             }}
           >
-            Confirm your ZIP, then match your business so Merlin can route you into the right
-            questionnaire immediately.
+            Enter your ZIP and Merlin pulls live utility rates, solar data, and demand charges for
+            your location — then builds a real financial model. No vendor. No sales call.
           </p>
+        </div>
+
+        {/* ── Journey preview strip ── */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0,
+            padding: "10px 14px",
+            borderRadius: 10,
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.07)",
+          }}
+        >
+          {(
+            [
+              { emoji: "📍", label: "Location", sub: "ZIP auto-detected" },
+              { emoji: "🏢", label: "Industry", sub: "picks your defaults" },
+              { emoji: "⚡", label: "TrueQuote", sub: "full financial model", accent: true },
+            ] as const
+          ).map(({ emoji, label, sub, accent }, i, arr) => (
+            <React.Fragment key={label}>
+              <div style={{ flex: 1, textAlign: "center", padding: "2px 4px" }}>
+                <div style={{ fontSize: 17, marginBottom: 3 }}>{emoji}</div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: accent ? T.accent : T.textPrimary,
+                  }}
+                >
+                  {label}
+                </div>
+                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{sub}</div>
+              </div>
+              {i < arr.length - 1 && (
+                <div
+                  style={{
+                    color: "rgba(255,255,255,0.18)",
+                    fontSize: 16,
+                    flexShrink: 0,
+                    padding: "0 2px",
+                  }}
+                >
+                  ›
+                </div>
+              )}
+            </React.Fragment>
+          ))}
         </div>
 
         {error && (
@@ -1149,41 +1197,35 @@ export function Step1V8({ state, actions }: Step1Props) {
               >
                 {isLocationBusy ? "Checking..." : "Confirm Location"}
               </button>
-              {/* Trust strip — fills the empty space and tells users what happens next */}
+              {/* Trust bar — social proof + friction eliminators */}
               {!isBlockedZip && (
                 <div
                   style={{
-                    marginTop: 14,
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr 1fr",
-                    gap: 8,
+                    marginTop: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                    gap: "6px 14px",
                   }}
                 >
                   {[
-                    { icon: "⚡", label: "Utility rates", sub: "by ZIP code" },
-                    { icon: "☀️", label: "Peak sun hours", sub: "solar potential" },
-                    { icon: "📍", label: "Demand windows", sub: "peak load timing" },
-                  ].map(({ icon, label, sub }) => (
-                    <div
-                      key={label}
+                    "✓ Free",
+                    "✓ No signup required",
+                    "✓ Results in ~90 sec",
+                    "✓ NREL + DOE data",
+                  ].map((item) => (
+                    <span
+                      key={item}
                       style={{
-                        padding: "10px 8px",
-                        borderRadius: 8,
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.07)",
-                        textAlign: "center",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: "rgba(255,255,255,0.32)",
+                        whiteSpace: "nowrap",
                       }}
                     >
-                      <div style={{ fontSize: 18, marginBottom: 4 }}>{icon}</div>
-                      <div
-                        style={{ fontSize: 11, fontWeight: 700, color: "rgba(203,213,225,0.85)" }}
-                      >
-                        {label}
-                      </div>
-                      <div style={{ fontSize: 10, color: "rgba(148,163,184,0.5)", marginTop: 2 }}>
-                        {sub}
-                      </div>
-                    </div>
+                      {item}
+                    </span>
                   ))}
                 </div>
               )}

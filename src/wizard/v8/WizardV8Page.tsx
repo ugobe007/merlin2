@@ -205,13 +205,30 @@ function getAdvisorContent(
           ) : (
             <>
               <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-                I'll use your location to look up {hi("local utility rates")} and{" "}
-                {hi("solar irradiance")} — two of the biggest factors in your savings estimate.
+                I'm going to build you a {hi("real financial model")} — solar ROI, BESS sizing,
+                demand charge reduction. All I need to start is your location.
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
-                {["Utility rates by zip code", "Peak demand windows", "Solar potential score"].map(
-                  bullet
-                )}
+                {[
+                  "Live utility rate by ZIP",
+                  "Solar irradiance + grade",
+                  "Demand charge exposure",
+                  "Full quote in ~90 seconds",
+                ].map(bullet)}
+              </div>
+              <div
+                style={{
+                  marginTop: 8,
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  background: "rgba(62,207,142,0.05)",
+                  border: "1px solid rgba(62,207,142,0.18)",
+                  fontSize: 12,
+                  color: "rgba(255,255,255,0.38)",
+                  lineHeight: 1.5,
+                }}
+              >
+                No vendor. No sales call. No account needed.
               </div>
             </>
           )}
