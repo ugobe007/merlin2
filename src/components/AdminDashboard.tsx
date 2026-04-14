@@ -41,6 +41,7 @@ import AdminRealtimeTab from "./admin/tabs/AdminRealtimeTab";
 import AdminSettingsTab from "./admin/tabs/AdminSettingsTab";
 import AdminMarketingTab from "./admin/tabs/AdminMarketingTab";
 import AdminWhitepapersTab from "./admin/tabs/AdminWhitepapersTab";
+import MetaCalculationsPage from "@/pages/MetaCalculationsPage";
 
 /**
  * System Administrator Dashboard
@@ -347,7 +348,13 @@ const AdminDashboard: React.FC = () => {
                         return (
                           <button
                             key={item.key}
-                            onClick={() => setActiveTab(item.key as typeof activeTab)}
+                            onClick={() => {
+                              if (item.key === "pricing") {
+                                setShowPricingAdmin(true);
+                                return;
+                              }
+                              setActiveTab(item.key as typeof activeTab);
+                            }}
                             className={`w-full flex items-start gap-3 p-3 rounded-lg text-left transition-all duration-200 ${
                               activeTab === item.key
                                 ? "bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-md"
@@ -645,9 +652,9 @@ const AdminDashboard: React.FC = () => {
           <AdminPricingTab onOpenPricingAdmin={() => setShowPricingAdmin(true)} />
         )}
 
-        {activeTab === "pricingHealth" && (
-          <AdminPricingTab onOpenPricingAdmin={() => setShowPricingAdmin(true)} />
-        )}
+        {activeTab === "pricingHealth" && <SystemHealthDashboard />}
+
+        {activeTab === "calculations" && <MetaCalculationsPage />}
 
         {activeTab === "godSettings" && <AdminGodSettingsTab />}
 
