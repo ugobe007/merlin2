@@ -112,19 +112,6 @@ export function Step3V8({ state, actions }: Props) {
     appliedSchemaRef.current = templateKey;
   }, [industry, questions.length, questions, answers, actions]);
 
-  const setAnswerWithTracking = useCallback(
-    (id: string, value: unknown) => {
-      setDefaultFilledIds((prev) => {
-        if (!prev.has(id)) return prev;
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-      actions.setAnswer(id, value);
-    },
-    [actions]
-  );
-
   // Restores a field to its smartDefault and re-shows the "Industry default" badge.
   const resetToDefault = useCallback(
     (id: string) => {
@@ -214,60 +201,52 @@ export function Step3V8({ state, actions }: Props) {
     return result;
   }, [curatedSchema.sections, sectionQuestionMap, visibleQuestions]);
 
-  // Active section index — resets when industry changes
-  const [activeSectionIdx, setActiveSectionIdx] = useState(0);
+  // Track which sections are expanded in the accordion
+  // Sections that the user has manually changed start expanded
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
   const prevIndustryRef = useRef(industry);
   useEffect(() => {
     if (prevIndustryRef.current !== industry) {
-      setActiveSectionIdx(0);
+      setOpenSections(new Set());
       prevIndustryRef.current = industry;
     }
   }, [industry]);
 
-  // Clamp index if sections shrink (e.g., filters change visibility)
-  const clampedIdx = Math.min(activeSectionIdx, Math.max(0, orderedSections.length - 1));
-
-  const currentSection: CuratedSection | undefined = orderedSections[clampedIdx];
-  const currentSectionQuestions: CuratedField[] = currentSection
-    ? (sectionQuestionMap.get(currentSection.id) ?? [])
-    : visibleQuestions;
-
-  // Overall progress
-  const answeredCount = useMemo(
-    () => visibleQuestions.filter((q) => isAnswered(answers[q.id])).length,
-    [visibleQuestions, answers]
-  );
-
-  // Per-section answered count
-  const getSectionAnswered = useCallback(
-    (sectionId: string) => {
-      const qs = sectionQuestionMap.get(sectionId) ?? [];
-      return qs.filter((q) => isAnswered(answers[q.id])).length;
+  // Expand a section when the user manually edits a question inside it
+  const setAnswerWithTracking = useCallback(
+    (id: string, value: unknown) => {
+      setDefaultFilledIds((prev) => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      // Find and open the section containing this question
+      const q = visibleQuestions.find((fq) => fq.id === id);
+      if (q) {
+        const sectionId =
+          ((q as unknown as Record<string, unknown>).section as string) || "general";
+        setOpenSections((prev) => {
+          if (prev.has(sectionId)) return prev;
+          return new Set([...prev, sectionId]);
+        });
+      }
+      actions.setAnswer(id, value);
     },
-    [sectionQuestionMap, answers]
+    [actions, visibleQuestions]
   );
 
-  // Whether a section has all required fields answered
-  const isSectionComplete = useCallback(
-    (sectionId: string) => {
-      const qs = sectionQuestionMap.get(sectionId) ?? [];
-      return qs.every((q) => !q.required || isAnswered(answers[q.id]));
-    },
-    [sectionQuestionMap, answers]
-  );
+  const toggleSection = useCallback((sectionId: string) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(sectionId)) next.delete(sectionId);
+      else next.add(sectionId);
+      return next;
+    });
+  }, []);
 
   // Scroll sentinel for section-top
   const sectionTopRef = useRef<HTMLDivElement>(null);
-
-  const goToSection = useCallback((idx: number) => {
-    setActiveSectionIdx(idx);
-    setTimeout(() => {
-      sectionTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 50);
-  }, []);
-
-  const isLastSection = clampedIdx === orderedSections.length - 1;
-  const isFirstSection = clampedIdx === 0;
 
   // ─── Single-section render helper (reused below) ──────────────────────────
   const renderQuestion = (q: CuratedField, indexInSection: number) => {
@@ -665,12 +644,21 @@ export function Step3V8({ state, actions }: Props) {
             border: "1px solid rgba(255,255,255,0.08)",
           }}
         >
-          <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.65)", marginBottom: 10, letterSpacing: "0.03em", textTransform: "uppercase" }}>
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "rgba(255,255,255,0.65)",
+              marginBottom: 10,
+              letterSpacing: "0.03em",
+              textTransform: "uppercase",
+            }}
+          >
             🏗️ Project Type
           </div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", marginBottom: 12 }}>
-            Is this an existing operating facility, or a new build / ground-up project?
-            This shapes how Merlin models roof constraints and panel selection.
+            Is this an existing operating facility, or a new build / ground-up project? This shapes
+            how Merlin models roof constraints and panel selection.
           </div>
           <div style={{ display: "flex", gap: 10 }}>
             {(
@@ -730,290 +718,280 @@ export function Step3V8({ state, actions }: Props) {
           </div>
         </div>
 
-        {/* ── Section pill nav (only when multi-section) ── */}
-        {orderedSections.length > 1 && (
-          <div
+        {/* ── Use Smart Defaults skip banner ── */}
+        <div
+          style={{
+            marginBottom: 20,
+            padding: "14px 18px",
+            borderRadius: 14,
+            background:
+              "linear-gradient(135deg, rgba(62,207,142,0.10) 0%, rgba(62,207,142,0.04) 100%)",
+            border: "1px solid rgba(62,207,142,0.28)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#3ECF8E", marginBottom: 3 }}>
+              ✓ All {visibleQuestions.length} questions pre-filled with {displayName} benchmarks
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.4 }}>
+              Smart defaults applied — review and customize below, or skip straight to add-ons.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
             style={{
               display: "flex",
-              gap: 6,
-              flexWrap: "wrap",
-              marginBottom: 20,
+              alignItems: "center",
+              gap: 8,
+              padding: "11px 20px",
+              borderRadius: 10,
+              border: "none",
+              background: "linear-gradient(135deg, #3ECF8E 0%, #2aad70 100%)",
+              color: "#080B10",
+              fontSize: 13,
+              fontWeight: 900,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+              boxShadow: "0 4px 14px rgba(16,185,129,0.30)",
+              letterSpacing: "0.01em",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = "0 6px 20px rgba(16,185,129,0.45)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = "0 4px 14px rgba(16,185,129,0.30)";
+              e.currentTarget.style.transform = "translateY(0)";
             }}
           >
-            {orderedSections.map((sec, idx) => {
-              const isActive = idx === clampedIdx;
-              const answered = getSectionAnswered(sec.id);
-              const total = sectionQuestionMap.get(sec.id)?.length ?? 0;
-              const complete = isSectionComplete(sec.id);
-              return (
-                <button
-                  key={sec.id}
-                  type="button"
-                  onClick={() => goToSection(idx)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "6px 12px",
-                    borderRadius: 20,
-                    border: isActive
-                      ? "1.5px solid rgba(62,207,142,0.60)"
-                      : complete
-                        ? "1px solid rgba(62,207,142,0.25)"
-                        : "1px solid rgba(255,255,255,0.10)",
-                    background: isActive
-                      ? "rgba(62,207,142,0.12)"
-                      : complete
-                        ? "rgba(62,207,142,0.05)"
-                        : "rgba(255,255,255,0.03)",
-                    color: isActive ? "#3ECF8E" : complete ? "#6EE7B7" : "rgba(255,255,255,0.50)",
-                    fontSize: 12,
-                    fontWeight: isActive ? 700 : 500,
-                    cursor: "pointer",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  {sec.icon && <span style={{ fontSize: 13 }}>{sec.icon}</span>}
-                  <span>{sec.label}</span>
-                  {complete ? (
+            Use Smart Defaults → Skip to Add-ons
+          </button>
+        </div>
+
+        {/* ── Accordion sections ── */}
+        {orderedSections.map((sec) => {
+          const isOpen = openSections.has(sec.id);
+          const sectionQs = sectionQuestionMap.get(sec.id) ?? [];
+          const answered = getSectionAnswered(sec.id);
+          const total = sectionQs.length;
+          const complete = isSectionComplete(sec.id);
+
+          // Build a 2-line preview of first 2-3 default values for collapsed state
+          const previewItems = sectionQs
+            .slice(0, 3)
+            .map((q) => {
+              const val = answers[q.id];
+              const displayVal = Array.isArray(val) ? val.join(", ") : String(val ?? "");
+              const label = q.title || q.label || "";
+              return label && displayVal
+                ? `${String(label).split(" ").slice(0, 3).join(" ")}: ${displayVal}`
+                : null;
+            })
+            .filter(Boolean);
+
+          return (
+            <div
+              key={sec.id}
+              style={{
+                marginBottom: 10,
+                borderRadius: 12,
+                border: isOpen
+                  ? "1px solid rgba(62,207,142,0.28)"
+                  : complete
+                    ? "1px solid rgba(62,207,142,0.15)"
+                    : "1px solid rgba(255,255,255,0.08)",
+                background: isOpen ? "rgba(62,207,142,0.04)" : "rgba(255,255,255,0.02)",
+                transition: "border-color 0.2s ease",
+                overflow: "hidden",
+              }}
+            >
+              {/* Accordion header — always visible */}
+              <button
+                type="button"
+                onClick={() => toggleSection(sec.id)}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "14px 16px",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                {/* Icon */}
+                {sec.icon && <span style={{ fontSize: 20, flexShrink: 0 }}>{sec.icon}</span>}
+
+                {/* Labels */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: previewItems.length > 0 && !isOpen ? 4 : 0,
+                    }}
+                  >
                     <span
                       style={{
-                        width: 16,
-                        height: 16,
-                        borderRadius: "50%",
-                        background: "#3ECF8E",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 9,
-                        fontWeight: 800,
-                        color: "#080B10",
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: isOpen ? "#3ECF8E" : "rgba(255,255,255,0.90)",
                       }}
                     >
-                      ✓
+                      {sec.label}
                     </span>
-                  ) : (
+                    {complete && !isOpen && (
+                      <span
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: "50%",
+                          background: "#3ECF8E",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 9,
+                          fontWeight: 800,
+                          color: "#080B10",
+                          flexShrink: 0,
+                        }}
+                      >
+                        ✓
+                      </span>
+                    )}
                     <span
-                      style={{
-                        fontSize: 10,
-                        color: isActive ? "rgba(62,207,142,0.70)" : "rgba(255,255,255,0.30)",
-                      }}
+                      style={{ fontSize: 11, color: "rgba(255,255,255,0.30)", marginLeft: "auto" }}
                     >
                       {answered}/{total}
                     </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* ── Current section header ── */}
-        {currentSection && (
-          <div
-            style={{
-              marginBottom: 20,
-              padding: "16px 20px",
-              borderRadius: 14,
-              background:
-                "linear-gradient(135deg, rgba(62,207,142,0.08) 0%, rgba(62,207,142,0.02) 100%)",
-              border: "1px solid rgba(62,207,142,0.15)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {currentSection.icon && <span style={{ fontSize: 28 }}>{currentSection.icon}</span>}
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
-                  <span style={{ fontSize: 17, fontWeight: 800, color: "white" }}>
-                    {currentSection.label}
-                  </span>
-                  {orderedSections.length > 1 && (
-                    <span
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 600,
-                        color: "rgba(62,207,142,0.70)",
-                        background: "rgba(62,207,142,0.08)",
-                        border: "1px solid rgba(62,207,142,0.20)",
-                        padding: "2px 8px",
-                        borderRadius: 10,
-                      }}
-                    >
-                      {currentSection.label}
-                    </span>
-                  )}
-                </div>
-                {currentSection.description && (
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.50)", marginBottom: 4 }}>
-                    {currentSection.description}
                   </div>
-                )}
-                {/* Per-section progress */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div
-                    style={{
-                      flex: 1,
-                      height: 3,
-                      borderRadius: 2,
-                      background: "rgba(255,255,255,0.08)",
-                      overflow: "hidden",
-                      maxWidth: 160,
-                    }}
-                  >
+                  {/* Collapsed preview */}
+                  {!isOpen && previewItems.length > 0 && (
                     <div
                       style={{
-                        height: "100%",
-                        borderRadius: 2,
-                        background: "#3ECF8E",
-                        width: `${
-                          currentSectionQuestions.length > 0
-                            ? (getSectionAnswered(currentSection.id) /
-                                currentSectionQuestions.length) *
-                              100
-                            : 0
-                        }%`,
-                        transition: "width 0.3s ease",
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.40)",
+                        lineHeight: 1.5,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                       }}
-                    />
-                  </div>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.40)" }}>
-                    {getSectionAnswered(currentSection.id)} of {currentSectionQuestions.length}{" "}
-                    answered
-                  </span>
+                    >
+                      {previewItems.join(" · ")}
+                    </div>
+                  )}
                 </div>
-              </div>
+
+                {/* Chevron */}
+                <span
+                  style={{
+                    fontSize: 14,
+                    color: "rgba(255,255,255,0.35)",
+                    flexShrink: 0,
+                    transition: "transform 0.2s ease",
+                    transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  }}
+                >
+                  ▼
+                </span>
+              </button>
+
+              {/* Accordion body */}
+              {isOpen && (
+                <div style={{ padding: "0 16px 16px" }}>
+                  {sectionQs.map((q, idx) => renderQuestion(q, idx))}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })}
 
-        {/* ── Questions for current section ── */}
-        {currentSectionQuestions.map((q, idx) => renderQuestion(q, idx))}
-
-        {/* ── Section navigation ── */}
-        {orderedSections.length > 1 && (
-          <div
+        {/* ── Always-visible Choose Add-ons CTA ── */}
+        <div
+          style={{
+            marginTop: 24,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          {/* Back */}
+          <button
+            type="button"
+            onClick={() => actions.goToStep(2 as import("../wizardState").WizardStep)}
             style={{
-              marginTop: 24,
               display: "flex",
               alignItems: "center",
-              gap: 12,
+              gap: 6,
+              padding: "11px 18px",
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.10)",
+              background: "rgba(255,255,255,0.04)",
+              color: "rgba(255,255,255,0.65)",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+              e.currentTarget.style.color = "white";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+              e.currentTarget.style.color = "rgba(255,255,255,0.65)";
             }}
           >
-            {/* Back */}
-            <button
-              type="button"
-              onClick={() =>
-                isFirstSection
-                  ? actions.goToStep(2 as import("../wizardState").WizardStep)
-                  : goToSection(clampedIdx - 1)
-              }
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "11px 18px",
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.10)",
-                background: "rgba(255,255,255,0.04)",
-                color: "rgba(255,255,255,0.65)",
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-                e.currentTarget.style.color = "white";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                e.currentTarget.style.color = "rgba(255,255,255,0.65)";
-              }}
-            >
-              <ChevronLeft size={16} />
-              {isFirstSection ? "← Industry" : (orderedSections[clampedIdx - 1]?.label ?? "← Back")}
-            </button>
+            <ChevronLeft size={16} />← Industry
+          </button>
 
-            {/* Overall progress pill */}
-            <div
-              style={{
-                flex: 1,
-                textAlign: "center",
-                fontSize: 11,
-                color: "rgba(255,255,255,0.35)",
-              }}
-            >
-              {answeredCount} / {visibleQuestions.length} total answered
-            </div>
-
-            {/* Next Section / Choose Add-ons CTA */}
-            {isLastSection ? (
-              <button
-                type="button"
-                onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "13px 22px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "linear-gradient(135deg, #3ECF8E 0%, #2aad70 100%)",
-                  color: "#080B10",
-                  fontSize: 14,
-                  fontWeight: 900,
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  boxShadow: "0 4px 16px rgba(16,185,129,0.35)",
-                  letterSpacing: "0.01em",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = "0 6px 24px rgba(16,185,129,0.50)";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = "0 4px 16px rgba(16,185,129,0.35)";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
-              >
-                Choose add-ons
-                <ChevronRight size={16} />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => goToSection(clampedIdx + 1)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "13px 22px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "linear-gradient(135deg, #3ECF8E 0%, #2aad70 100%)",
-                  color: "#080B10",
-                  fontSize: 14,
-                  fontWeight: 900,
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  boxShadow: "0 4px 16px rgba(16,185,129,0.35)",
-                  letterSpacing: "0.01em",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = "0 6px 24px rgba(16,185,129,0.50)";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = "0 4px 16px rgba(16,185,129,0.35)";
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
-              >
-                {orderedSections[clampedIdx + 1]?.label ?? "Next"}
-                <ChevronRight size={16} />
-              </button>
-            )}
+          {/* Overall progress */}
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.30)" }}>
+            {answeredCount} / {visibleQuestions.length} answered
           </div>
-        )}
+
+          {/* Choose add-ons */}
+          <button
+            type="button"
+            onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "13px 22px",
+              borderRadius: 10,
+              border: "none",
+              background: "linear-gradient(135deg, #3ECF8E 0%, #2aad70 100%)",
+              color: "#080B10",
+              fontSize: 14,
+              fontWeight: 900,
+              cursor: "pointer",
+              boxShadow: "0 4px 16px rgba(16,185,129,0.35)",
+              letterSpacing: "0.01em",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = "0 6px 24px rgba(16,185,129,0.50)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = "0 4px 16px rgba(16,185,129,0.35)";
+              e.currentTarget.style.transform = "translateY(0)";
+            }}
+          >
+            Choose add-ons
+            <ChevronRight size={16} />
+          </button>
+        </div>
       </div>
     </div>
   );
