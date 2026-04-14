@@ -219,8 +219,18 @@ function App() {
     );
   }
 
-  // NEW HOMEPAGE at root "/" - modern marketing page
+  // TrueQuote wizard at root "/" — wizard IS the homepage (April 2026)
+  // Marketing home moved to /home (preserved, not deleted)
   if (pathname === "/") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <WizardV8Page />
+      </Suspense>
+    );
+  }
+
+  // Marketing homepage at /home — full landing page (kept for reference)
+  if (pathname === "/home" || pathname === "/landing" || pathname === "/about") {
     return (
       <Suspense fallback={<PageLoader />}>
         <Home />
@@ -228,7 +238,7 @@ function App() {
     );
   }
 
-  // Wizard at /wizard - WizardV8Page (TrueQuote builder)
+  // Wizard also reachable at /wizard - WizardV8Page (TrueQuote builder)
   if (pathname === "/wizard") {
     return (
       <Suspense fallback={<PageLoader />}>
