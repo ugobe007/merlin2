@@ -286,6 +286,30 @@ function classifyContent(text: string): {
   return { equipment, topics, relevanceScore: Math.min(1, relevanceScore) };
 }
 
+// ── Price extractor helpers ──────────────────────────────────────────────────
+function _preprocessText(text: string): string {
+  return text
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ').trim();
+}
+
+function _detectEquipment(text: string): string[] {
+  const eq: string[] = [];
+  if (text.includes('battery') || text.includes('bess') || text.includes('energy storage') ||
+      text.includes('utility-scale storage') || text.includes('lcos') ||
+      text.includes('levelized cost') ||
+      (text.includes('storage') && (text.includes('/kwh') || text.includes('per kwh'))))
+    eq.push('bess');
+  if (text.includes('solar') || text.includes('photovoltaic') || text.includes('pv '))
+    eq.push('solar');
+  if (text.includes('wind turbine') || text.includes('wind farm')) eq.push('wind');
+  if (text.includes('generator') || text.includes('genset')) eq.push('generator');
+  if (text.includes('ev charger') || text.includes('charging station')) eq.push('ev-charger');
+  return eq;
+}
+
 function extractPrices(text: string, equipment: string[]): Array<{
   equipment: string;
   price: number;
@@ -293,52 +317,138 @@ function extractPrices(text: string, equipment: string[]): Array<{
   context: string;
   confidence: number;
 }> {
-  const prices: Array<{
-    equipment: string;
-    price: number;
-    unit: string;
-    context: string;
-    confidence: number;
-  }> = [];
-  
-  if (equipment.includes('bess')) {
-    const bessRegex = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kWh/gi;
-    let match;
-    while ((match = bessRegex.exec(text)) !== null) {
-      const price = parseFloat(match[1].replace(/,/g, ''));
-      if (price > 50 && price < 2000) {
-        const start = Math.max(0, match.index - 100);
-        const end = Math.min(text.length, match.index + match[0].length + 100);
-        prices.push({
-          equipment: 'bess',
-          price,
-          unit: 'kWh',
-          context: text.slice(start, end),
-          confidence: 0.8
-        });
+  type P = { equipment: string; price: number; unit: string; context: string; confidence: number };
+  const prices: P[] = [];
+  const clean = _preprocessText(text);
+  const lower = clean.toLowerCase();
+  const eq = equipment.length > 0 ? equipment : _detectEquipment(lower);
+
+  const ctx = (idx: number, len: number) =>
+    clean.slice(Math.max(0, idx - 100), Math.min(clean.length, idx + len + 100));
+  const dup = (e: string, p: number, u: string) =>
+    prices.some(x => x.equipment === e && Math.abs(x.price - p) < 1 && x.unit === u);
+
+  // ── BESS $/kWh ─────────────────────────────────────────────────────────────
+  if (eq.includes('bess') || lower.includes('battery') || lower.includes('energy storage') ||
+      lower.includes('bess') || lower.includes('lcos') || lower.includes('levelized cost')) {
+    const bessPatterns: RegExp[] = [
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*k[Ww]h/gi,
+      /(?:battery|bess|storage)\s+(?:cost|price|pricing)s?\s+(?:fell|dropped|declined|reached|at|to|of)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k[Ww]h/gi,
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kW(?!h)\s*(?:installed)?/gi,
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*M[Ww]h/gi,
+      /(?:lcos|levelized\s+cost\s+of\s+(?:storage|energy|electricity))\s*(?:of|at|:)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:to\s+\$?\s*\d+(?:,\d{3})*(?:\.\d{1,2})?)?\s*(?:\/|per|a)?\s*[Mk][Ww]h/gi,
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*kwh/gi,
+      /(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*dollars?\s*(?:per|\/|a)\s*kwh/gi,
+      /(?:cost|price|priced|pricing|priced\s+at)\s*(?:at|of|is|are|to)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*kwh/gi,
+      /battery.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+      /storage.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+      /costs?\s+(?:fell|dropped|declined|decreased|reduced|dropped\s+to)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|a)\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+      /at\s+\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kwh\s*installed/gi,
+    ];
+    for (const pat of bessPatterns) {
+      pat.lastIndex = 0;
+      let m;
+      while ((m = pat.exec(clean)) !== null) {
+        const raw = parseFloat(m[1].replace(/,/g, ''));
+        const isMWh = m[0].toLowerCase().includes('mwh');
+        if (isMWh) {
+          // $/MWh prices (LCOS, auction bids) — store as-is, guard: 20–500 $/MWh
+          if (raw > 20 && raw < 500 && !dup('bess', raw, 'MWh')) {
+            prices.push({ equipment: 'bess', price: raw, unit: 'MWh', context: ctx(m.index, m[0].length), confidence: 0.75 });
+          }
+        } else {
+          // $/kWh capital cost — guard: 50–2000 $/kWh
+          if (raw > 50 && raw < 2000 && !dup('bess', raw, 'kWh')) {
+            prices.push({ equipment: 'bess', price: raw, unit: 'kWh', context: ctx(m.index, m[0].length), confidence: 0.8 });
+          }
+        }
+      }
+    }
+    // Project-cost-derived: "$50 million 200 MWh" → $/kWh
+    const projPat = /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:million|billion|M|B)\s+(?:[^$\d]+)?\s*(\d+(?:\.\d{1,2})?)\s*[Mm][Ww]h/gi;
+    projPat.lastIndex = 0;
+    let pm;
+    while ((pm = projPat.exec(clean)) !== null) {
+      const dollarAmt = parseFloat(pm[1]);
+      const mwhAmt = parseFloat(pm[2]);
+      const mult = pm[0].toLowerCase().includes('billion') ? 1e9 : 1e6;
+      if (dollarAmt > 0 && mwhAmt > 0) {
+        const derived = (dollarAmt * mult) / (mwhAmt * 1000);
+        if (derived > 50 && derived < 2000 && !dup('bess', Math.round(derived), 'kWh')) {
+          prices.push({ equipment: 'bess', price: Math.round(derived), unit: 'kWh', context: `[derived] ${ctx(pm.index, pm[0].length)}`, confidence: 0.6 });
+        }
       }
     }
   }
-  
-  if (equipment.includes('solar')) {
-    const solarRegex = /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per)\s*[Ww](?:att)?/gi;
-    let match;
-    while ((match = solarRegex.exec(text)) !== null) {
-      const price = parseFloat(match[1]);
-      if (price > 0.10 && price < 5) {
-        const start = Math.max(0, match.index - 100);
-        const end = Math.min(text.length, match.index + match[0].length + 100);
-        prices.push({
-          equipment: 'solar',
-          price,
-          unit: 'W',
-          context: text.slice(start, end),
-          confidence: 0.8
-        });
+
+  // ── Solar $/W and $/kW ─────────────────────────────────────────────────────
+  if (eq.includes('solar') || lower.includes('solar') || lower.includes('photovoltaic') || lower.includes('pv ')) {
+    const solarPatterns: RegExp[] = [
+      /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*[Ww](?:att)?/gi,
+      /(?:module|panel|solar)\s+(?:cost|price|pricing)s?\s+(?:at|of|to|reached)\s+\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*[Ww](?:att)?/gi,
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kW(?!h)\s*(?:installed)?/gi,
+      /(?:ppa|auction|bid|contract)\s+(?:price|rate|at)\s+\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per)\s*[Ww](?:att)?/gi,
+      /(\d+(?:\.\d{1,2})?)\s*dollars?\s*(?:per|\/|a)\s*[Ww](?:att)?/gi,
+      /(?:cost|price|priced|pricing)\s*(?:at|of|is|are|to)?\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*[Ww](?:att)?/gi,
+      /solar.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*[Ww](?:att)?/gi,
+      /module.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*[Ww](?:att)?/gi,
+      /prices?\s+(?:at|of|reached)\s+\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*[Ww](?:att)?/gi,
+    ];
+    for (const pat of solarPatterns) {
+      pat.lastIndex = 0;
+      let m;
+      while ((m = pat.exec(clean)) !== null) {
+        const price = parseFloat(m[1].replace(/,/g, ''));
+        const isPerWatt = m[0].toLowerCase().includes('watt') || m[0].toLowerCase().includes('/w') || (price >= 0.1 && price <= 5);
+        const isPerKW = m[0].toLowerCase().includes('/kw') && !m[0].toLowerCase().includes('kwh') && price >= 100 && price <= 5000;
+        if (isPerWatt && price > 0.1 && price < 5 && !dup('solar', price, 'W')) {
+          prices.push({ equipment: 'solar', price, unit: 'W', context: ctx(m.index, m[0].length), confidence: 0.8 });
+        } else if (isPerKW && !dup('solar', price, 'kW')) {
+          prices.push({ equipment: 'solar', price, unit: 'kW', context: ctx(m.index, m[0].length), confidence: 0.7 });
+        }
       }
     }
   }
-  
+
+  // ── Wind $/kW ──────────────────────────────────────────────────────────────
+  if (eq.includes('wind') || lower.includes('wind turbine') || lower.includes('wind farm')) {
+    const windPat = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kW(?!h)/gi;
+    windPat.lastIndex = 0;
+    let m;
+    while ((m = windPat.exec(clean)) !== null) {
+      const price = parseFloat(m[1].replace(/,/g, ''));
+      if (price > 500 && price < 5000 && !dup('wind', price, 'kW')) {
+        prices.push({ equipment: 'wind', price, unit: 'kW', context: ctx(m.index, m[0].length), confidence: 0.7 });
+      }
+    }
+  }
+
+  // ── Generator $/kW ─────────────────────────────────────────────────────────
+  if (eq.includes('generator') || lower.includes('generator') || lower.includes('genset')) {
+    const genPat = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kW(?!h)/gi;
+    genPat.lastIndex = 0;
+    let m;
+    while ((m = genPat.exec(clean)) !== null) {
+      const price = parseFloat(m[1].replace(/,/g, ''));
+      if (price > 200 && price < 2000 && !dup('generator', price, 'kW')) {
+        prices.push({ equipment: 'generator', price, unit: 'kW', context: ctx(m.index, m[0].length), confidence: 0.7 });
+      }
+    }
+  }
+
+  // ── EV Charger $/unit ──────────────────────────────────────────────────────
+  if (eq.includes('ev-charger') || lower.includes('ev charger') || lower.includes('charging station')) {
+    const evPat = /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*(?:charger|unit|station|port)/gi;
+    evPat.lastIndex = 0;
+    let m;
+    while ((m = evPat.exec(clean)) !== null) {
+      const price = parseFloat(m[1].replace(/,/g, ''));
+      if (price > 100 && price < 500000 && !dup('ev-charger', price, 'unit')) {
+        prices.push({ equipment: 'ev-charger', price, unit: 'unit', context: ctx(m.index, m[0].length), confidence: 0.7 });
+      }
+    }
+  }
+
   return prices;
 }
 

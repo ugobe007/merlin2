@@ -31,7 +31,7 @@
 import {
   calculateEquipmentBreakdown,
   type EquipmentBreakdown,
-} from "@/utils/equipmentCalculations";
+} from "../utils/equipmentCalculations";
 import { calculateFinancialMetrics } from "./centralizedCalculations";
 import { getBatteryPricing } from "./unifiedPricingService";
 import {
@@ -59,7 +59,7 @@ import type {
   GeneratorFuelType,
   FuelCellType,
   EquipmentBreakdownOptions,
-} from "@/utils/equipmentCalculations";
+} from "../utils/equipmentCalculations";
 
 export interface QuoteInput {
   // System sizing
@@ -1005,6 +1005,6 @@ export type {
   GeneratorFuelType,
   FuelCellType,
   EquipmentBreakdownOptions,
-} from "@/utils/equipmentCalculations";
+} from "../utils/equipmentCalculations";
 export type { FinancialCalculationResult } from "./centralizedCalculations";
 export type { BatteryChemistry } from "./batteryDegradationService";
