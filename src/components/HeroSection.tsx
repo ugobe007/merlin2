@@ -34,7 +34,6 @@ function TrueQuoteMockup() {
         overflow: "hidden",
         boxShadow: "0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(62,207,142,0.08)",
         fontFamily: "'Inter', -apple-system, sans-serif",
-        maxWidth: 500,
         width: "100%",
       }}
     >
@@ -80,7 +79,7 @@ function TrueQuoteMockup() {
       {/* Hero savings row */}
       <div
         style={{
-          padding: "22px 20px 18px",
+          padding: "24px 24px 20px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
           background: "linear-gradient(135deg, rgba(62,207,142,0.07) 0%, transparent 60%)",
         }}
@@ -100,7 +99,7 @@ function TrueQuoteMockup() {
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
           <span
             style={{
-              fontSize: 48,
+              fontSize: 60,
               fontWeight: 900,
               color: "#3ECF8E",
               lineHeight: 1,
@@ -171,7 +170,7 @@ function TrueQuoteMockup() {
               </div>
               <div
                 style={{
-                  fontSize: 15,
+                  fontSize: 18,
                   fontWeight: 800,
                   color: "rgba(255,255,255,0.92)",
                   lineHeight: 1.1,
@@ -205,7 +204,7 @@ function TrueQuoteMockup() {
             <div key={label}>
               <div
                 style={{
-                  fontSize: 18,
+                  fontSize: 22,
                   fontWeight: 800,
                   color: "rgba(255,255,255,0.92)",
                   fontFamily: "'JetBrains Mono', 'Courier New', monospace",
@@ -274,19 +273,19 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_30%,rgba(62,207,142,0.07)_0%,transparent_70%)]" />
 
       {/* Content */}
-      <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full py-20">
-        <div className="grid lg:grid-cols-[55%_45%] gap-12 lg:gap-16 items-center">
+      <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full py-10">
+        <div className="grid lg:grid-cols-[55%_45%] gap-8 lg:gap-10 items-center">
           {/* ── Left: story + CTA ─────────────────────────────────────────── */}
-          <div className="max-w-2xl">
+          <div className="w-full">
             {/* Problem framing badge */}
-            <div className="animate-fade-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-400 text-[11px] font-medium tracking-wide mb-8">
+            <div className="animate-fade-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-400 text-[11px] font-medium tracking-wide mb-4">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
               Real savings. Real numbers. Free to start.
             </div>
 
             {/* Headline — lead with the problem */}
             <h1
-              className="animate-fade-up-delay-1 font-extrabold leading-[0.95] tracking-tight mb-6"
+              className="animate-fade-up-delay-1 font-extrabold leading-[0.95] tracking-tight mb-4"
               style={{ fontFamily: "'Outfit', sans-serif", fontSize: "clamp(40px, 5.5vw, 82px)" }}
             >
               <span className="text-white">Build </span>
@@ -299,7 +298,7 @@ export default function HeroSection() {
 
             {/* Subheadline */}
             <p
-              className="animate-fade-up-delay-1 text-[17px] text-slate-400 leading-relaxed max-w-lg mb-8"
+              className="animate-fade-up-delay-1 text-[19px] text-slate-400 leading-relaxed mb-5"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
               Enter your ZIP and facility type. Merlin runs a{" "}
@@ -309,7 +308,7 @@ export default function HeroSection() {
             </p>
 
             {/* What you get */}
-            <div className="animate-fade-up-delay-2 flex flex-col gap-2.5 mb-8">
+            <div className="animate-fade-up-delay-2 flex flex-col gap-2 mb-5">
               {[
                 "Annual savings projection with payback period",
                 "Solar kW + BESS sizing for your facility type",
@@ -328,25 +327,28 @@ export default function HeroSection() {
             </div>
 
             {/* PRIMARY CTA — single, dominant */}
-            <div className="animate-fade-up-delay-3 flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
+            <div className="animate-fade-up-delay-3 flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-5">
               <a
                 href="/wizard"
-                className="group inline-flex items-center gap-3 px-7 py-4 rounded-2xl font-bold text-[15px] transition-all duration-200"
+                className="group inline-flex items-center gap-3 px-8 py-5 rounded-2xl font-bold text-[17px] transition-all duration-200"
                 style={{
-                  background: "linear-gradient(135deg, #3ECF8E 0%, #2BAF74 100%)",
-                  color: "#060D1F",
-                  boxShadow: "0 0 32px rgba(62,207,142,0.35), 0 4px 16px rgba(0,0,0,0.3)",
+                  background: "transparent",
+                  color: "#3ECF8E",
+                  border: "1.5px solid #3ECF8E",
+                  boxShadow: "0 0 20px rgba(62,207,142,0.12)",
                   fontFamily: "'Outfit', sans-serif",
                   textDecoration: "none",
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.boxShadow =
-                    "0 0 48px rgba(62,207,142,0.55), 0 4px 20px rgba(0,0,0,0.35)";
+                    "0 0 36px rgba(62,207,142,0.28)";
+                  (e.currentTarget as HTMLElement).style.background = "rgba(62,207,142,0.06)";
                   (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.boxShadow =
-                    "0 0 32px rgba(62,207,142,0.35), 0 4px 16px rgba(0,0,0,0.3)";
+                    "0 0 20px rgba(62,207,142,0.12)";
+                  (e.currentTarget as HTMLElement).style.background = "transparent";
                   (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
                 }}
               >
@@ -367,7 +369,7 @@ export default function HeroSection() {
 
             {/* Trust bar */}
             <div className="animate-fade-up-delay-4">
-              <p className="text-[9px] text-slate-700 uppercase tracking-widest mb-2 font-semibold">
+              <p className="text-[9px] text-slate-700 uppercase tracking-widest mb-1.5 font-semibold">
                 Built on trusted data sources
               </p>
               <div className="flex flex-wrap gap-x-4 gap-y-1.5">
@@ -382,7 +384,7 @@ export default function HeroSection() {
           </div>
 
           {/* ── Right: TrueQuote output mockup — show what they GET ─────── */}
-          <div className="hidden lg:flex flex-col items-center gap-3">
+          <div className="hidden lg:flex flex-col items-start gap-3">
             <div
               className="text-[10px] font-semibold tracking-widest uppercase text-slate-600"
               style={{ fontFamily: "'Outfit', sans-serif" }}
