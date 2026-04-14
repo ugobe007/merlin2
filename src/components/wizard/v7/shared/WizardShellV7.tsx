@@ -150,10 +150,9 @@ export default function WizardShellV7({
           style={{
             flex: 1,
             display: "grid",
-            // 1fr:2fr = 33%/67% — advisor panel is visible but not dominant.
-            // minmax(260px, 1fr) prevents collapse on narrow desktops.
-            // maxWidth + margin center the layout on ultra-wide screens.
-            gridTemplateColumns: "minmax(260px, 1fr) 2fr",
+            // Fixed 380px left rail — wide enough to show intel cards comfortably.
+            // Right panel takes remaining space. maxWidth centers on ultra-wide screens.
+            gridTemplateColumns: "380px 1fr",
             gap: 32,
             width: "100%",
             maxWidth: 1440,
@@ -177,7 +176,7 @@ export default function WizardShellV7({
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
               <div style={{ position: "relative" }}>
                 <a
-                  href="/home"
+                  href="/"
                   title="About Merlin Energy"
                   style={{ display: "block", borderRadius: "50%", outline: "none" }}
                 >
@@ -744,10 +743,10 @@ export default function WizardShellV7({
               }
             }
             
-            /* Tablet: tighten spacing, fix left rail at 260px to match reduced proportion */
+            /* Tablet: tighten spacing, fix left rail at 300px */
             @media (min-width: 901px) and (max-width: 1200px) {
               .merlin-shell-grid {
-                grid-template-columns: 260px 1fr !important;
+                grid-template-columns: 300px 1fr !important;
                 gap: 20px !important;
                 padding: 20px 24px !important;
               }
