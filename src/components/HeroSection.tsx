@@ -274,7 +274,7 @@ export default function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full py-10">
-        <div className="grid lg:grid-cols-[55%_45%] gap-8 lg:gap-10 items-center">
+        <div className="grid lg:grid-cols-[62%_38%] gap-8 lg:gap-10 items-center">
           {/* ── Left: story + CTA ─────────────────────────────────────────── */}
           <div className="w-full">
             {/* Problem framing badge */}
@@ -286,7 +286,7 @@ export default function HeroSection() {
             {/* Headline — lead with the problem */}
             <h1
               className="animate-fade-up-delay-1 font-extrabold leading-[0.95] tracking-tight mb-4"
-              style={{ fontFamily: "'Outfit', sans-serif", fontSize: "clamp(40px, 5.5vw, 82px)" }}
+              style={{ fontFamily: "'Outfit', sans-serif", fontSize: "clamp(52px, 7vw, 100px)" }}
             >
               <span className="text-white">Build </span>
               <span className="text-emerald-400">energy savings</span>
@@ -310,14 +310,14 @@ export default function HeroSection() {
             {/* What you get */}
             <div className="animate-fade-up-delay-2 flex flex-col gap-2 mb-5">
               {[
-                "Annual savings projection with payback period",
-                "Solar kW + BESS sizing for your facility type",
-                "Demand charge reduction based on your actual utility",
+                "Annual savings projection, payback period & 25-yr NPV",
+                "Solar, BESS, backup power & generator sizing for your facility",
+                "Demand charge reduction based on your actual utility tariff",
               ].map((item) => (
                 <div key={item} className="flex items-start gap-2.5">
                   <CheckCircle2 size={15} className="text-emerald-400/70 mt-0.5 flex-shrink-0" />
                   <span
-                    className="text-[14px] text-slate-300"
+                    className="text-[16px] text-slate-300"
                     style={{ fontFamily: "'Outfit', sans-serif" }}
                   >
                     {item}
@@ -330,7 +330,7 @@ export default function HeroSection() {
             <div className="animate-fade-up-delay-3 flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-5">
               <a
                 href="/wizard"
-                className="group inline-flex items-center gap-3 px-8 py-5 rounded-2xl font-bold text-[17px] transition-all duration-200"
+                className="group inline-flex items-center gap-4 px-10 py-6 rounded-2xl font-bold text-[19px] transition-all duration-200"
                 style={{
                   background: "transparent",
                   color: "#3ECF8E",
@@ -352,10 +352,10 @@ export default function HeroSection() {
                   (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
                 }}
               >
-                <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 20, height: 20 }} />
+                <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 24, height: 24 }} />
                 Start your free TrueQuote™
                 <ArrowRight
-                  size={16}
+                  size={20}
                   className="group-hover:translate-x-0.5 transition-transform"
                 />
               </a>
