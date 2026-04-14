@@ -281,7 +281,7 @@ export default function HeroSection() {
             {/* Problem framing badge */}
             <div className="animate-fade-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-400 text-[11px] font-medium tracking-wide mb-8">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              No vendor. No sales call. No account needed.
+              Real savings. Real numbers. Free to start.
             </div>
 
             {/* Headline — lead with the problem */}
@@ -289,12 +289,12 @@ export default function HeroSection() {
               className="animate-fade-up-delay-1 font-extrabold leading-[0.95] tracking-tight mb-6"
               style={{ fontFamily: "'Outfit', sans-serif", fontSize: "clamp(40px, 5.5vw, 82px)" }}
             >
-              <span className="text-white">Know your </span>
-              <span className="text-emerald-400">energy ROI</span>
+              <span className="text-white">Build </span>
+              <span className="text-emerald-400">energy savings</span>
               <br />
-              <span className="text-white">before you talk</span>
+              <span className="text-white">in minutes,</span>
               <br />
-              <span className="text-white">to a vendor.</span>
+              <span className="text-white">not weeks.</span>
             </h1>
 
             {/* Subheadline */}
@@ -302,10 +302,10 @@ export default function HeroSection() {
               className="animate-fade-up-delay-1 text-[17px] text-slate-400 leading-relaxed max-w-lg mb-8"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
-              Enter your ZIP. Merlin pulls live utility rates, solar data, and demand charges — then
-              builds a <span className="text-white font-semibold">real financial model</span> for
-              solar, batteries, and demand charge reduction.{" "}
-              <span className="text-emerald-400/80">Free. In ~90 seconds.</span>
+              Enter your ZIP and facility type. Merlin runs a{" "}
+              <span className="text-white font-semibold">real financial model</span> — live utility
+              rates, solar data, demand charges — and tells you exactly what you'd save with solar
+              and batteries. <span className="text-emerald-400/80">Free. ~90 seconds.</span>
             </p>
 
             {/* What you get */}
@@ -351,7 +351,7 @@ export default function HeroSection() {
                 }}
               >
                 <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 20, height: 20 }} />
-                Get your free TrueQuote™
+                Start your free TrueQuote™
                 <ArrowRight
                   size={16}
                   className="group-hover:translate-x-0.5 transition-transform"
@@ -361,7 +361,7 @@ export default function HeroSection() {
                 className="text-[12px] text-slate-600"
                 style={{ fontFamily: "'Outfit', sans-serif" }}
               >
-                Takes ~90 sec · No signup
+                ~90 sec · No account · Begin saving today
               </span>
             </div>
 
