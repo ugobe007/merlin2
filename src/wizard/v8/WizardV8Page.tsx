@@ -204,21 +204,55 @@ function getAdvisorContent(
             </>
           ) : (
             <>
-              <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-                I'm going to build you a {hi("real financial model")} — solar ROI, BESS sizing,
-                demand charge reduction. All I need to start is your location.
+              <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.6 }}>
+                I'll pull live data for your location and build a {hi("real financial model")}.
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
-                {[
-                  "Live utility rate by ZIP",
-                  "Solar irradiance + grade",
-                  "Demand charge exposure",
-                  "Full quote in ~90 seconds",
-                ].map(bullet)}
+              {/* Live data slots — waiting for ZIP to populate */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
+                {(
+                  [
+                    { icon: "⚡", label: "Utility Rate", hint: "$/kWh" },
+                    { icon: "☀️", label: "Solar Irradiance", hint: "grade + h/day" },
+                    { icon: "📊", label: "Demand Charge", hint: "$/kW" },
+                    { icon: "🎯", label: "TrueQuote™", hint: "~90 sec" },
+                  ] as const
+                ).map(({ icon, label, hint }) => (
+                  <div
+                    key={label}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "9px 12px",
+                      borderRadius: 9,
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <span style={{ fontSize: 14, flexShrink: 0, lineHeight: 1 }}>{icon}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: T.secondary }}>
+                        {label}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 10,
+                        color: "rgba(62,207,142,0.50)",
+                        fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                        letterSpacing: "0.02em",
+                      }}
+                    >
+                      {hint}
+                    </div>
+                  </div>
+                ))}
               </div>
               <div
                 style={{
-                  marginTop: 8,
+                  marginTop: 12,
                   padding: "10px 14px",
                   borderRadius: 10,
                   background: "rgba(62,207,142,0.05)",

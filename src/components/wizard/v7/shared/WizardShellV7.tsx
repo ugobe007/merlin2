@@ -392,43 +392,98 @@ export default function WizardShellV7({
             <div
               style={{
                 flex: 1,
-                padding: 20,
                 borderRadius: 12,
-                background: "rgba(255, 255, 255, 0.02)",
-                border: "1px solid rgba(255, 255, 255, 0.04)",
-                transition: "all 0.2s ease",
+                background: "rgba(62,207,142,0.05)",
+                border: "1px solid rgba(62,207,142,0.20)",
                 display: "flex",
                 flexDirection: "column",
+                overflow: "hidden",
+                boxShadow: "0 0 0 1px rgba(62,207,142,0.06) inset",
               }}
             >
-              {advisorContent ? (
-                advisorContent
-              ) : (
-                /* Fallback welcome when no step-specific advisor data */
-                <>
-                  <div
+              {/* Advisor label bar */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "10px 16px",
+                  borderBottom: "1px solid rgba(62,207,142,0.14)",
+                  background: "rgba(62,207,142,0.08)",
+                  flexShrink: 0,
+                }}
+              >
+                <span
+                  style={{
+                    position: "relative",
+                    display: "inline-flex",
+                    width: 7,
+                    height: 7,
+                    flexShrink: 0,
+                  }}
+                >
+                  <span
                     style={{
-                      fontSize: 15,
-                      fontWeight: 600,
-                      lineHeight: 1.6,
-                      color: "rgba(255, 255, 255, 0.95)",
-                      marginBottom: 12,
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: "50%",
+                      background: "rgba(62,207,142,0.35)",
+                      animation: "merlin-pulse 1.5s ease-in-out infinite",
                     }}
-                  >
-                    Hi, I'm <span style={{ color: "#3ECF8E" }}>Merlin</span> — your energy savings
-                    advisor.
-                  </div>
-                  <div
+                  />
+                  <span
                     style={{
-                      fontSize: 14,
-                      color: "rgba(232, 235, 243, 0.7)",
-                      lineHeight: 1.65,
+                      position: "relative",
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "50%",
+                      background: "#3ECF8E",
                     }}
-                  >
-                    In just a few steps, I'll help you discover how much you could save.
-                  </div>
-                </>
-              )}
+                  />
+                </span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: "rgba(62,207,142,0.80)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.09em",
+                  }}
+                >
+                  Merlin Advisor
+                </span>
+              </div>
+              {/* Advisor content area */}
+              <div style={{ flex: 1, padding: 20, overflowY: "auto" }}>
+                {advisorContent ? (
+                  advisorContent
+                ) : (
+                  /* Fallback welcome when no step-specific advisor data */
+                  <>
+                    <div
+                      style={{
+                        fontSize: 15,
+                        fontWeight: 600,
+                        lineHeight: 1.6,
+                        color: "rgba(255, 255, 255, 0.95)",
+                        marginBottom: 12,
+                      }}
+                    >
+                      Hi, I'm <span style={{ color: "#3ECF8E" }}>Merlin</span> — your energy savings
+                      advisor.
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        color: "rgba(232, 235, 243, 0.7)",
+                        lineHeight: 1.65,
+                      }}
+                    >
+                      In just a few steps, I'll help you discover how much you could save.
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
@@ -607,7 +662,7 @@ export default function WizardShellV7({
               style={{
                 background: "rgba(255, 255, 255, 0.02)",
                 borderRadius: "0 0 12px 12px",
-                padding: 36,
+                padding: 28,
                 border: "1px solid rgba(255, 255, 255, 0.05)",
                 borderTop: "none",
                 minHeight: 400,
