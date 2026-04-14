@@ -176,21 +176,27 @@ export default function WizardShellV7({
             {/* Merlin Header */}
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
               <div style={{ position: "relative" }}>
-                <div
-                  style={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: "50%",
-                    overflow: "hidden",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
-                  }}
+                <a
+                  href="/home"
+                  title="About Merlin Energy"
+                  style={{ display: "block", borderRadius: "50%", outline: "none" }}
                 >
-                  <img
-                    src="/images/new_profile_merlin.png"
-                    alt="Merlin AI"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                </div>
+                  <div
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: "50%",
+                      overflow: "hidden",
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                    }}
+                  >
+                    <img
+                      src="/images/new_profile_merlin.png"
+                      alt="Merlin AI"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  </div>
+                </a>
                 <div
                   style={{
                     position: "absolute",
