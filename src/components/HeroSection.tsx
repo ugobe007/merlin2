@@ -43,15 +43,15 @@ function TrueQuoteMockup() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "14px 20px",
+          padding: "18px 28px",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
           background: "rgba(255,255,255,0.02)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 18, height: 18 }} />
+          <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 24, height: 24 }} />
           <span
-            style={{ fontSize: 13, fontWeight: 700, color: "#F5F0E8", letterSpacing: "0.01em" }}
+            style={{ fontSize: 16, fontWeight: 700, color: "#F5F0E8", letterSpacing: "0.01em" }}
           >
             TrueQuote™
           </span>
@@ -71,7 +71,7 @@ function TrueQuoteMockup() {
             Verified
           </span>
         </div>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.30)" }}>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.30)" }}>
           Grand Sierra Resort · Reno, NV
         </div>
       </div>
@@ -79,19 +79,19 @@ function TrueQuoteMockup() {
       {/* Hero savings row */}
       <div
         style={{
-          padding: "24px 24px 20px",
+          padding: "28px 28px 22px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
-          background: "linear-gradient(135deg, rgba(62,207,142,0.07) 0%, transparent 60%)",
+          background: "linear-gradient(135deg, rgba(245,158,11,0.07) 0%, transparent 60%)",
         }}
       >
         <div
           style={{
-            fontSize: 11,
-            color: "rgba(62,207,142,0.70)",
+            fontSize: 12,
+            color: "rgba(245,158,11,0.80)",
             fontWeight: 700,
             letterSpacing: "0.08em",
             textTransform: "uppercase" as const,
-            marginBottom: 6,
+            marginBottom: 8,
           }}
         >
           Projected Annual Savings
@@ -99,9 +99,9 @@ function TrueQuoteMockup() {
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
           <span
             style={{
-              fontSize: 60,
+              fontSize: 72,
               fontWeight: 900,
-              color: "#3ECF8E",
+              color: "#F59E0B",
               lineHeight: 1,
               fontFamily: "'JetBrains Mono', 'Courier New', monospace",
               letterSpacing: "-2px",
@@ -109,18 +109,18 @@ function TrueQuoteMockup() {
           >
             $218,400
           </span>
-          <span style={{ fontSize: 14, color: "rgba(255,255,255,0.40)", fontWeight: 500 }}>
+          <span style={{ fontSize: 18, color: "rgba(255,255,255,0.40)", fontWeight: 500 }}>
             /yr
           </span>
         </div>
-        <div style={{ marginTop: 6, fontSize: 12, color: "rgba(255,255,255,0.38)" }}>
+        <div style={{ marginTop: 8, fontSize: 14, color: "rgba(255,255,255,0.38)" }}>
           After 30% federal ITC · NV Energy · $0.11/kWh
         </div>
       </div>
 
       {/* System breakdown */}
-      <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+      <div style={{ padding: "20px 28px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           {[
             {
               icon: <Sun size={13} />,
@@ -147,8 +147,8 @@ function TrueQuoteMockup() {
             <div
               key={label}
               style={{
-                padding: "12px",
-                borderRadius: 10,
+                padding: "16px",
+                borderRadius: 12,
                 background: "rgba(255,255,255,0.03)",
                 border: "1px solid rgba(255,255,255,0.07)",
               }}
@@ -159,7 +159,7 @@ function TrueQuoteMockup() {
                 {icon}
                 <span
                   style={{
-                    fontSize: 9,
+                    fontSize: 11,
                     fontWeight: 700,
                     letterSpacing: "0.06em",
                     textTransform: "uppercase" as const,
@@ -170,7 +170,7 @@ function TrueQuoteMockup() {
               </div>
               <div
                 style={{
-                  fontSize: 18,
+                  fontSize: 22,
                   fontWeight: 800,
                   color: "rgba(255,255,255,0.92)",
                   lineHeight: 1.1,
@@ -178,7 +178,7 @@ function TrueQuoteMockup() {
               >
                 {value}
               </div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>
                 {sub}
               </div>
             </div>
@@ -187,7 +187,7 @@ function TrueQuoteMockup() {
       </div>
 
       {/* Payback + IRR row */}
-      <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+      <div style={{ padding: "18px 28px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div
           style={{
             display: "grid",
@@ -204,7 +204,7 @@ function TrueQuoteMockup() {
             <div key={label}>
               <div
                 style={{
-                  fontSize: 22,
+                  fontSize: 26,
                   fontWeight: 800,
                   color: "rgba(255,255,255,0.92)",
                   fontFamily: "'JetBrains Mono', 'Courier New', monospace",
@@ -214,9 +214,9 @@ function TrueQuoteMockup() {
               </div>
               <div
                 style={{
-                  fontSize: 10,
+                  fontSize: 11,
                   color: "rgba(255,255,255,0.35)",
-                  marginTop: 2,
+                  marginTop: 3,
                   textTransform: "uppercase" as const,
                   letterSpacing: "0.05em",
                 }}
@@ -274,7 +274,7 @@ export default function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full py-10">
-        <div className="grid lg:grid-cols-[62%_38%] gap-8 lg:gap-10 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-10 items-center">
           {/* ── Left: story + CTA ─────────────────────────────────────────── */}
           <div className="w-full">
             {/* Problem framing badge */}
