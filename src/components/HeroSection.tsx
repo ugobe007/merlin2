@@ -469,21 +469,21 @@ export default function HeroSection() {
                 className="group inline-flex items-center gap-4 px-10 py-6 rounded-2xl font-bold text-[19px] transition-all duration-200"
                 style={{
                   background: "transparent",
-                  color: "#3ECF8E",
-                  border: "1.5px solid #3ECF8E",
-                  boxShadow: "0 0 20px rgba(62,207,142,0.12)",
+                  color: "#EAB308",
+                  border: "1.5px solid #EAB308",
+                  boxShadow: "0 0 20px rgba(234,179,8,0.12)",
                   fontFamily: "'Outfit', sans-serif",
                   textDecoration: "none",
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.boxShadow =
-                    "0 0 36px rgba(62,207,142,0.28)";
-                  (e.currentTarget as HTMLElement).style.background = "rgba(62,207,142,0.06)";
+                    "0 0 36px rgba(234,179,8,0.28)";
+                  (e.currentTarget as HTMLElement).style.background = "rgba(234,179,8,0.06)";
                   (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.boxShadow =
-                    "0 0 20px rgba(62,207,142,0.12)";
+                    "0 0 20px rgba(234,179,8,0.12)";
                   (e.currentTarget as HTMLElement).style.background = "transparent";
                   (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
                 }}
