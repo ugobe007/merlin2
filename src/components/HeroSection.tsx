@@ -23,8 +23,80 @@ const SHIELD_GOLD =
 
 const trustItems = ["NREL Data", "DOE Frameworks", "Sandia Logic", "UL / IEEE"];
 
+// ── Industry scenarios that cycle in the mockup ──────────────────────────────
+const SCENARIOS = [
+  {
+    industry: "Hotel",
+    name: "Grand Sierra Resort · Reno, NV",
+    savings: "$218,400",
+    utility: "NV Energy · $0.11/kWh",
+    solar: { value: "680 kW", sub: "2,176 panels" },
+    bess: { value: "500 kWh", sub: "2-hr dispatch" },
+    demand: { value: "38%", sub: "$14,200/mo" },
+    payback: "5.8 yrs",
+    npv: "$2.1M",
+    irr: "18.4%",
+    sources: ["NREL irradiance", "NV Energy EG-1", "DOE BESS sizing", "30% ITC (IRA §48)"],
+  },
+  {
+    industry: "Manufacturing",
+    name: "Apex Fabrication · Dallas, TX",
+    savings: "$342,000",
+    utility: "Oncor · $0.09/kWh",
+    solar: { value: "1.2 MW", sub: "3,840 panels" },
+    bess: { value: "800 kWh", sub: "4-hr dispatch" },
+    demand: { value: "44%", sub: "$21,800/mo" },
+    payback: "4.9 yrs",
+    npv: "$3.8M",
+    irr: "21.2%",
+    sources: ["NREL irradiance", "Oncor TOU tariff", "DOE BESS sizing", "30% ITC (IRA §48)"],
+  },
+  {
+    industry: "Data Center",
+    name: "CloudEdge Facility · Phoenix, AZ",
+    savings: "$487,200",
+    utility: "APS · $0.13/kWh",
+    solar: { value: "2.1 MW", sub: "6,720 panels" },
+    bess: { value: "2 MWh", sub: "4-hr dispatch" },
+    demand: { value: "51%", sub: "$38,400/mo" },
+    payback: "4.2 yrs",
+    npv: "$5.6M",
+    irr: "24.8%",
+    sources: ["NREL irradiance", "APS R-3 tariff", "DOE BESS sizing", "30% ITC (IRA §48)"],
+  },
+  {
+    industry: "Car Wash",
+    name: "SpeedyClean Group · Atlanta, GA",
+    savings: "$84,600",
+    utility: "Georgia Power · $0.12/kWh",
+    solar: { value: "280 kW", sub: "896 panels" },
+    bess: { value: "200 kWh", sub: "2-hr dispatch" },
+    demand: { value: "29%", sub: "$5,600/mo" },
+    payback: "6.8 yrs",
+    npv: "$0.9M",
+    irr: "14.6%",
+    sources: ["NREL irradiance", "GA Power TOU-GS", "DOE BESS sizing", "30% ITC (IRA §48)"],
+  },
+];
+
 // ── TrueQuote output mockup — example output for a hotel in Reno, NV ──────────
 function TrueQuoteMockup() {
+  const [activeIndex, setActiveIndex] = React.useState(0);
+  const [visible, setVisible] = React.useState(true);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setActiveIndex((i) => (i + 1) % SCENARIOS.length);
+        setVisible(true);
+      }, 380);
+    }, 4200);
+    return () => clearInterval(interval);
+  }, []);
+
+  const s = SCENARIOS[activeIndex];
+
   return (
     <div
       style={{
@@ -37,7 +109,7 @@ function TrueQuoteMockup() {
         width: "100%",
       }}
     >
-      {/* Header bar */}
+      {/* Header bar — static chrome */}
       <div
         style={{
           display: "flex",
@@ -71,184 +143,248 @@ function TrueQuoteMockup() {
             Verified
           </span>
         </div>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.30)" }}>
-          Grand Sierra Resort · Reno, NV
-        </div>
-      </div>
-
-      {/* Hero savings row */}
-      <div
-        style={{
-          padding: "28px 28px 22px",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          background: "linear-gradient(135deg, rgba(234,179,8,0.07) 0%, transparent 60%)",
-        }}
-      >
+        {/* Facility name fades with content */}
         <div
           style={{
-            fontSize: 12,
-            color: "rgba(234,179,8,0.80)",
-            fontWeight: 700,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase" as const,
-            marginBottom: 8,
+            fontSize: 13,
+            color: "rgba(255,255,255,0.30)",
+            transition: "opacity 0.38s ease",
+            opacity: visible ? 1 : 0,
           }}
         >
-          Projected Annual Savings
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span
-            style={{
-              fontSize: 72,
-              fontWeight: 900,
-              color: "#EAB308",
-              lineHeight: 1,
-              fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-              letterSpacing: "-2px",
-            }}
-          >
-            $218,400
-          </span>
-          <span style={{ fontSize: 18, color: "rgba(255,255,255,0.40)", fontWeight: 500 }}>
-            /yr
-          </span>
-        </div>
-        <div style={{ marginTop: 8, fontSize: 14, color: "rgba(255,255,255,0.38)" }}>
-          After 30% federal ITC · NV Energy · $0.11/kWh
+          {s.name}
         </div>
       </div>
 
-      {/* System breakdown */}
-      <div style={{ padding: "20px 28px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-          {[
-            {
-              icon: <Sun size={13} />,
-              label: "Solar",
-              value: "680 kW",
-              sub: "2,176 panels",
-              color: "#F59E0B",
-            },
-            {
-              icon: <Battery size={13} />,
-              label: "BESS",
-              value: "500 kWh",
-              sub: "2-hr dispatch",
-              color: "#3B82F6",
-            },
-            {
-              icon: <TrendingDown size={13} />,
-              label: "Demand Cut",
-              value: "38%",
-              sub: "$14,200/mo",
-              color: "#3ECF8E",
-            },
-          ].map(({ icon, label, value, sub, color }) => (
-            <div
-              key={label}
+      {/* ── Animated content block ── */}
+      <div style={{ transition: "opacity 0.38s ease", opacity: visible ? 1 : 0 }}>
+        {/* Hero savings row */}
+        <div
+          style={{
+            padding: "28px 28px 22px",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            background: "linear-gradient(135deg, rgba(234,179,8,0.07) 0%, transparent 60%)",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 12,
+              color: "rgba(234,179,8,0.80)",
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase" as const,
+              marginBottom: 8,
+            }}
+          >
+            Projected Annual Savings
+          </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span
               style={{
-                padding: "16px",
-                borderRadius: 12,
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.07)",
+                fontSize: 72,
+                fontWeight: 900,
+                color: "#EAB308",
+                lineHeight: 1,
+                fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                letterSpacing: "-2px",
               }}
             >
+              {s.savings}
+            </span>
+            <span style={{ fontSize: 18, color: "rgba(255,255,255,0.40)", fontWeight: 500 }}>
+              /yr
+            </span>
+          </div>
+          <div style={{ marginTop: 8, fontSize: 14, color: "rgba(255,255,255,0.38)" }}>
+            After 30% federal ITC · {s.utility}
+          </div>
+        </div>
+
+        {/* System breakdown */}
+        <div style={{ padding: "20px 28px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            {[
+              {
+                icon: <Sun size={13} />,
+                label: "Solar",
+                value: s.solar.value,
+                sub: s.solar.sub,
+                color: "#F59E0B",
+              },
+              {
+                icon: <Battery size={13} />,
+                label: "BESS",
+                value: s.bess.value,
+                sub: s.bess.sub,
+                color: "#3B82F6",
+              },
+              {
+                icon: <TrendingDown size={13} />,
+                label: "Demand Cut",
+                value: s.demand.value,
+                sub: s.demand.sub,
+                color: "#3ECF8E",
+              },
+            ].map(({ icon, label, value, sub, color }) => (
               <div
-                style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6, color }}
+                key={label}
+                style={{
+                  padding: "16px",
+                  borderRadius: 12,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
               >
-                {icon}
-                <span
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6, color }}
+                >
+                  {icon}
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase" as const,
+                    }}
+                  >
+                    {label}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 800,
+                    color: "rgba(255,255,255,0.92)",
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {value}
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>
+                  {sub}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Payback + IRR row */}
+        <div style={{ padding: "18px 28px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr 1fr",
+              gap: 10,
+              textAlign: "center" as const,
+            }}
+          >
+            {[
+              { label: "Payback", value: s.payback },
+              { label: "25-yr NPV", value: s.npv },
+              { label: "IRR", value: s.irr },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <div
+                  style={{
+                    fontSize: 26,
+                    fontWeight: 800,
+                    color: "rgba(255,255,255,0.92)",
+                    fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                  }}
+                >
+                  {value}
+                </div>
+                <div
                   style={{
                     fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: "0.06em",
+                    color: "rgba(255,255,255,0.35)",
+                    marginTop: 3,
                     textTransform: "uppercase" as const,
+                    letterSpacing: "0.05em",
                   }}
                 >
                   {label}
-                </span>
+                </div>
               </div>
-              <div
-                style={{
-                  fontSize: 22,
-                  fontWeight: 800,
-                  color: "rgba(255,255,255,0.92)",
-                  lineHeight: 1.1,
-                }}
-              >
-                {value}
-              </div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>
-                {sub}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Payback + IRR row */}
-      <div style={{ padding: "18px 28px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        {/* Data sources */}
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gap: 10,
-            textAlign: "center" as const,
+            padding: "11px 28px",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            flexWrap: "wrap" as const,
           }}
         >
-          {[
-            { label: "Payback", value: "5.8 yrs" },
-            { label: "25-yr NPV", value: "$2.1M" },
-            { label: "IRR", value: "18.4%" },
-          ].map(({ label, value }) => (
-            <div key={label}>
-              <div
-                style={{
-                  fontSize: 26,
-                  fontWeight: 800,
-                  color: "rgba(255,255,255,0.92)",
-                  fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-                }}
-              >
-                {value}
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: "rgba(255,255,255,0.35)",
-                  marginTop: 3,
-                  textTransform: "uppercase" as const,
-                  letterSpacing: "0.05em",
-                }}
-              >
-                {label}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Data sources footer */}
-      <div
-        style={{
-          padding: "11px 20px",
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          flexWrap: "wrap" as const,
-        }}
-      >
-        <ShieldCheck size={11} style={{ color: "rgba(62,207,142,0.50)", flexShrink: 0 }} />
-        {["NREL irradiance", "NV Energy tariff EG-1", "DOE BESS sizing", "30% ITC (IRA §48)"].map(
-          (src, i) => (
+          <ShieldCheck size={11} style={{ color: "rgba(62,207,142,0.50)", flexShrink: 0 }} />
+          {s.sources.map((src, i) => (
             <React.Fragment key={src}>
               {i > 0 && <span style={{ fontSize: 9, color: "rgba(255,255,255,0.15)" }}>·</span>}
               <span style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", fontWeight: 500 }}>
                 {src}
               </span>
             </React.Fragment>
-          )
-        )}
+          ))}
+        </div>
+      </div>
+      {/* end animated block */}
+
+      {/* ── Industry tabs — always visible, clickable ── */}
+      <div
+        style={{
+          display: "flex",
+          gap: 6,
+          padding: "12px 28px 16px",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(0,0,0,0.15)",
+          flexWrap: "wrap" as const,
+        }}
+      >
+        {SCENARIOS.map((sc, i) => (
+          <button
+            key={sc.industry}
+            onClick={() => {
+              setVisible(false);
+              setTimeout(() => {
+                setActiveIndex(i);
+                setVisible(true);
+              }, 200);
+            }}
+            style={{
+              fontSize: 11,
+              padding: "4px 12px",
+              borderRadius: 20,
+              border: "1px solid",
+              borderColor: i === activeIndex ? "rgba(234,179,8,0.45)" : "rgba(255,255,255,0.08)",
+              color: i === activeIndex ? "#EAB308" : "rgba(255,255,255,0.30)",
+              background: i === activeIndex ? "rgba(234,179,8,0.10)" : "transparent",
+              cursor: "pointer",
+              fontWeight: 600,
+              letterSpacing: "0.03em",
+              transition: "all 0.2s ease",
+            }}
+          >
+            {sc.industry}
+          </button>
+        ))}
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5 }}>
+          {SCENARIOS.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: i === activeIndex ? 16 : 5,
+                height: 5,
+                borderRadius: 3,
+                background: i === activeIndex ? "#EAB308" : "rgba(255,255,255,0.12)",
+                transition: "all 0.3s ease",
+              }}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
