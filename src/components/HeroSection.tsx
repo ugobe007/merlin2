@@ -81,13 +81,13 @@ function TrueQuoteMockup() {
         style={{
           padding: "28px 28px 22px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
-          background: "linear-gradient(135deg, rgba(245,158,11,0.07) 0%, transparent 60%)",
+          background: "linear-gradient(135deg, rgba(234,179,8,0.07) 0%, transparent 60%)",
         }}
       >
         <div
           style={{
             fontSize: 12,
-            color: "rgba(245,158,11,0.80)",
+            color: "rgba(234,179,8,0.80)",
             fontWeight: 700,
             letterSpacing: "0.08em",
             textTransform: "uppercase" as const,
@@ -101,7 +101,7 @@ function TrueQuoteMockup() {
             style={{
               fontSize: 72,
               fontWeight: 900,
-              color: "#F59E0B",
+              color: "#EAB308",
               lineHeight: 1,
               fontFamily: "'JetBrains Mono', 'Courier New', monospace",
               letterSpacing: "-2px",
