@@ -112,8 +112,20 @@ interface ZippopotamResponse {
 
 async function resolveZip(zip: string, signal?: AbortSignal): Promise<LocationData> {
   // ── Primary: zippopotam.us ─────────────────────────────────────────────
+  // Combine caller's signal with a 8s timeout so browsers with strict privacy
+  // settings (ad blockers, Safari ITP, Firefox ETP) don't leave the button
+  // permanently stuck on "Checking…".
+  const timeoutController = new AbortController();
+  const timeoutId = setTimeout(() => timeoutController.abort(), 8000);
+  const combinedSignal = signal
+    ? AbortSignal.any
+      ? AbortSignal.any([signal, timeoutController.signal])
+      : timeoutController.signal
+    : timeoutController.signal;
+
   try {
-    const res = await fetch(`https://api.zippopotam.us/us/${zip}`, { signal });
+    const res = await fetch(`https://api.zippopotam.us/us/${zip}`, { signal: combinedSignal });
+    clearTimeout(timeoutId);
     if (res.ok) {
       const data: ZippopotamResponse = await res.json();
       const place = data.places?.[0];
@@ -129,7 +141,8 @@ async function resolveZip(zip: string, signal?: AbortSignal): Promise<LocationDa
       }
     }
   } catch {
-    // fall through to secondary
+    clearTimeout(timeoutId);
+    // fall through to secondary (timeout, CORS block, network error, etc.)
   }
 
   // ── Secondary: derive state from utility rate service ──────────────────
