@@ -39,7 +39,7 @@ export default function PricingValidationSection({
 
       <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4 shadow-sm">
         <h4 className="font-semibold text-purple-800 mb-2">🔍 Automated Daily Sound Checks</h4>
-        <p className="text-sm text-purple-700">
+        <p className="text-sm text-violet-400">
           Pricing is automatically validated daily at 6 AM against NREL ATB 2024, BloombergNEF, Wood
           Mackenzie, and other market intelligence sources. Deviations &gt;10% trigger alerts.
         </p>
@@ -52,16 +52,16 @@ export default function PricingValidationSection({
         >
           <div className="flex items-center">
             <AlertTriangle
-              className={`w-5 h-5 mr-2 ${criticalAlerts.length > 0 ? "text-red-600" : "text-green-600"}`}
+              className={`w-5 h-5 mr-2 ${criticalAlerts.length > 0 ? "text-red-600" : "text-emerald-400"}`}
             />
             <h4
-              className={`font-semibold ${criticalAlerts.length > 0 ? "text-red-800" : "text-green-800"}`}
+              className={`font-semibold ${criticalAlerts.length > 0 ? "text-red-800" : "text-emerald-400"}`}
             >
               Critical Alerts
             </h4>
           </div>
           <p
-            className={`text-2xl font-bold ${criticalAlerts.length > 0 ? "text-red-600" : "text-green-600"}`}
+            className={`text-2xl font-bold ${criticalAlerts.length > 0 ? "text-red-600" : "text-emerald-400"}`}
           >
             {criticalAlerts.length}
           </p>
@@ -72,34 +72,34 @@ export default function PricingValidationSection({
         >
           <div className="flex items-center">
             <Bell
-              className={`w-5 h-5 mr-2 ${warningAlerts.length > 0 ? "text-yellow-600" : "text-green-600"}`}
+              className={`w-5 h-5 mr-2 ${warningAlerts.length > 0 ? "text-yellow-600" : "text-emerald-400"}`}
             />
             <h4
-              className={`font-semibold ${warningAlerts.length > 0 ? "text-yellow-800" : "text-green-800"}`}
+              className={`font-semibold ${warningAlerts.length > 0 ? "text-amber-400" : "text-emerald-400"}`}
             >
               Warnings
             </h4>
           </div>
           <p
-            className={`text-2xl font-bold ${warningAlerts.length > 0 ? "text-yellow-600" : "text-green-600"}`}
+            className={`text-2xl font-bold ${warningAlerts.length > 0 ? "text-yellow-600" : "text-emerald-400"}`}
           >
             {warningAlerts.length}
           </p>
         </div>
 
-        <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
+        <div className="bg-white/[0.02] border border-gray-200 p-4 rounded-lg">
           <div className="flex items-center">
-            <CheckCircle className="w-5 h-5 mr-2 text-gray-600" />
-            <h4 className="font-semibold text-gray-800">Info</h4>
+            <CheckCircle className="w-5 h-5 mr-2 text-white/60" />
+            <h4 className="font-semibold text-white">Info</h4>
           </div>
-          <p className="text-2xl font-bold text-gray-600">{infoAlerts.length}</p>
+          <p className="text-2xl font-bold text-white/60">{infoAlerts.length}</p>
         </div>
       </div>
 
       {/* Detailed Alerts */}
       {validationAlerts.length > 0 && (
         <div className="space-y-4">
-          <h4 className="font-semibold text-gray-800">Validation Results</h4>
+          <h4 className="font-semibold text-white">Validation Results</h4>
           {validationAlerts.map((alert, index) => (
             <div
               key={index}
@@ -128,7 +128,7 @@ export default function PricingValidationSection({
                         alert.severity === "critical"
                           ? "text-red-800"
                           : alert.severity === "warning"
-                            ? "text-yellow-800"
+                            ? "text-amber-400"
                             : "text-purple-800"
                       }`}
                     >
@@ -140,8 +140,8 @@ export default function PricingValidationSection({
                       alert.severity === "critical"
                         ? "text-red-700"
                         : alert.severity === "warning"
-                          ? "text-yellow-700"
-                          : "text-purple-700"
+                          ? "text-amber-400"
+                          : "text-violet-400"
                     }`}
                   >
                     {alert.message}
@@ -173,9 +173,9 @@ export default function PricingValidationSection({
 
       {validationAlerts.length === 0 && (
         <div className="text-center py-8">
-          <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
-          <h4 className="text-lg font-semibold text-gray-800 mb-2">All Pricing Validated ✓</h4>
-          <p className="text-gray-600">
+          <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
+          <h4 className="text-lg font-semibold text-white mb-2">All Pricing Validated ✓</h4>
+          <p className="text-white/60">
             Your pricing configuration is aligned with current market intelligence.
           </p>
         </div>
