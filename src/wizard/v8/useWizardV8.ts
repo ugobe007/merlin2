@@ -1200,6 +1200,30 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     []
   );
 
+  const setBillData = useCallback(
+    (data: import("@/services/openAIExtractionService").ExtractedSpecsData) => {
+      dispatch({ type: "SET_BILL_DATA", data });
+      // Also patch intel with utility rate from bill if available
+      if (data.utilityInfo?.electricityRate != null) {
+        dispatch({
+          type: "PATCH_INTEL",
+          patch: {
+            utilityRate: data.utilityInfo.electricityRate,
+            ...(data.utilityInfo.utilityProvider
+              ? { utilityProvider: data.utilityInfo.utilityProvider }
+              : {}),
+            utilityStatus: "ready" as const,
+          },
+        });
+      }
+    },
+    []
+  );
+
+  const clearBillData = useCallback(() => {
+    dispatch({ type: "CLEAR_BILL_DATA" });
+  }, []);
+
   // ── Step 4 ────────────────────────────────────────────────────────────────
 
   const setTiers = useCallback((tiers: [QuoteTier, QuoteTier, QuoteTier]) => {
@@ -1375,6 +1399,8 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       setEVChargers,
       setPanelInfo,
       setBaseLoad,
+      setBillData,
+      clearBillData,
       setTiers,
       setTiersStatus,
       selectTier,
@@ -1398,6 +1424,8 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       setEVChargers,
       setPanelInfo,
       setBaseLoad,
+      setBillData,
+      clearBillData,
       setTiers,
       setTiersStatus,
       selectTier,

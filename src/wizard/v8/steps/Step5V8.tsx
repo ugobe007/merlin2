@@ -2411,6 +2411,25 @@ export default function Step5V8({ state, actions }: Props) {
           </button>{" "}
           above for all data sources.
         </p>
+        {state.utilityBillOverride && (
+          <div
+            style={{
+              marginTop: 10,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              background: "rgba(0,210,100,0.08)",
+              border: "1px solid rgba(0,210,100,0.3)",
+              borderRadius: 8,
+              padding: "5px 12px",
+              fontSize: 12,
+              color: "#00d264",
+              fontWeight: 600,
+            }}
+          >
+            📄 Load & rate sourced from your uploaded utility bill
+          </div>
+        )}
       </div>
 
       {/* ================================================================
