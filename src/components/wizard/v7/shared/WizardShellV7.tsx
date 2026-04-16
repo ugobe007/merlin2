@@ -13,6 +13,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
+import merlinProfileImage from "@/assets/images/new_profile_merlin.png";
 
 interface WizardShellV7Props {
   currentStep: number; // 0-indexed from parent
@@ -190,7 +191,7 @@ export default function WizardShellV7({
                     }}
                   >
                     <img
-                      src="/images/new_profile_merlin.png"
+                      src={merlinProfileImage}
                       alt="Merlin AI"
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
