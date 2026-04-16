@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Mail, Lock, Eye, EyeOff, User, Building2 } from "lucide-react";
 import { authService } from "../services/authService";
+import merlinImage from "../assets/images/new_profile_merlin.png";
 
 // Google SVG icon
 const GoogleIcon = () => (
@@ -132,11 +133,7 @@ export default function AuthModal({
 
         <div className="text-center mb-8">
           <div className="mb-4">
-            <img
-              src="/images/new_profile_merlin.png"
-              alt="Merlin"
-              className="w-16 h-16 rounded-xl mx-auto"
-            />
+            <img src={merlinImage} alt="Merlin" className="w-16 h-16 rounded-xl mx-auto" />
           </div>
           <h2 className="text-3xl font-bold text-purple-700 mb-2">
             {mode === "login" ? "Welcome Back!" : "Join Merlin Energy"}

@@ -629,6 +629,19 @@ export function Step3V8({ state, actions }: Props) {
   // ── Project type selection ──────────────────────────────────────────────
   const projectType = answers.project_type as "existing" | "greenfield" | undefined;
 
+  // ── Section progress helpers ──────────────────────────────────────────────
+  const getSectionAnswered = (sectionId: string): number => {
+    const qs = sectionQuestionMap.get(sectionId) ?? [];
+    return qs.filter((q) => isAnswered(answers[q.id])).length;
+  };
+
+  const isSectionComplete = (sectionId: string): boolean => {
+    const qs = sectionQuestionMap.get(sectionId) ?? [];
+    return qs.length > 0 && qs.every((q) => isAnswered(answers[q.id]));
+  };
+
+  const answeredCount = visibleQuestions.filter((q) => isAnswered(answers[q.id])).length;
+
   return (
     <div style={{ background: "#0D1117", minHeight: "100vh" }}>
       <div
