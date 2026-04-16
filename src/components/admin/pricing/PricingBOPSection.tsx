@@ -24,7 +24,7 @@ export default function PricingBOPSection({ config, updateConfigSection }: Prici
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white p-4 rounded-lg border">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-white/70 mb-2">
             BOP Percentage
             {config.balanceOfPlant.bopPercentage > 0.15 && (
               <span className="text-red-500 text-xs ml-2">(⚠️ Exceeds 15% guideline)</span>
@@ -45,107 +45,107 @@ export default function PricingBOPSection({ config, updateConfigSection }: Prici
                 updateConfigSection("balanceOfPlant", "bopPercentage", e.target.value)
               }
             />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 text-sm">
               %
             </span>
           </div>
         </div>
 
         <div className="bg-white p-4 rounded-lg border">
-          <label className="block text-sm font-medium text-gray-700 mb-2">EPC Percentage</label>
+          <label className="block text-sm font-medium text-white/70 mb-2">EPC Percentage</label>
           <div className="relative">
             <input
               type="number"
               step="0.01"
-              className="w-full pr-8 py-2 border border-gray-300 rounded-md"
+              className="w-full pr-8 py-2 border border-white/[0.08] rounded-md"
               value={config.balanceOfPlant.epcPercentage}
               onChange={(e) =>
                 updateConfigSection("balanceOfPlant", "epcPercentage", e.target.value)
               }
             />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 text-sm">
               %
             </span>
           </div>
         </div>
 
         <div className="bg-white p-4 rounded-lg border">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-white/70 mb-2">
             Labor Cost (per hour)
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40">
               $
             </span>
             <input
               type="number"
-              className="w-full pl-8 pr-12 py-2 border border-gray-300 rounded-md"
+              className="w-full pl-8 pr-12 py-2 border border-white/[0.08] rounded-md"
               value={config.balanceOfPlant.laborCostPerHour}
               onChange={(e) =>
                 updateConfigSection("balanceOfPlant", "laborCostPerHour", e.target.value)
               }
             />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 text-sm">
               /hr
             </span>
           </div>
         </div>
 
         <div className="bg-white p-4 rounded-lg border">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-white/70 mb-2">
             Shipping Percentage
           </label>
           <div className="relative">
             <input
               type="number"
               step="0.01"
-              className="w-full pr-8 py-2 border border-gray-300 rounded-md"
+              className="w-full pr-8 py-2 border border-white/[0.08] rounded-md"
               value={config.balanceOfPlant.shippingCostPercentage}
               onChange={(e) =>
                 updateConfigSection("balanceOfPlant", "shippingCostPercentage", e.target.value)
               }
             />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 text-sm">
               %
             </span>
           </div>
         </div>
 
         <div className="bg-white p-4 rounded-lg border">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-white/70 mb-2">
             International Tariff Rate
           </label>
           <div className="relative">
             <input
               type="number"
               step="0.01"
-              className="w-full pr-8 py-2 border border-gray-300 rounded-md"
+              className="w-full pr-8 py-2 border border-white/[0.08] rounded-md"
               value={config.balanceOfPlant.internationalTariffRate}
               onChange={(e) =>
                 updateConfigSection("balanceOfPlant", "internationalTariffRate", e.target.value)
               }
             />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 text-sm">
               %
             </span>
           </div>
         </div>
 
         <div className="bg-white p-4 rounded-lg border">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-white/70 mb-2">
             Contingency Percentage
           </label>
           <div className="relative">
             <input
               type="number"
               step="0.01"
-              className="w-full pr-8 py-2 border border-gray-300 rounded-md"
+              className="w-full pr-8 py-2 border border-white/[0.08] rounded-md"
               value={config.balanceOfPlant.contingencyPercentage}
               onChange={(e) =>
                 updateConfigSection("balanceOfPlant", "contingencyPercentage", e.target.value)
               }
             />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 text-sm">
               %
             </span>
           </div>

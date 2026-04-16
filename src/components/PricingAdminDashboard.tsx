@@ -637,54 +637,56 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg max-w-7xl w-full h-5/6 m-4 flex flex-col">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-[#0d0f17] rounded-2xl max-w-7xl w-full h-5/6 m-4 flex flex-col border border-white/[0.08] shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <div className="flex items-center space-x-3">
-            <Settings className="w-6 h-6 text-purple-600" />
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08]">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-500/10 rounded-xl">
+              <Settings className="w-5 h-5 text-emerald-400" />
+            </div>
             <div>
-              <h2 className="text-xl font-bold">Pricing Administration Dashboard</h2>
-              <p className="text-sm text-gray-600">
-                Version {config.version} • Last updated:{" "}
+              <h2 className="text-lg font-bold text-white">Pricing Administration Dashboard</h2>
+              <p className="text-xs text-white/50">
+                Version {config.version} &bull; Last updated:{" "}
                 {new Date(config.lastUpdated).toLocaleString()}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            {/* Save Status */}
-            {saveStatus === "saving" && <span className="text-purple-600 text-sm">Saving...</span>}
+          <div className="flex items-center gap-2">
+            {saveStatus === "saving" && <span className="text-emerald-400 text-sm">Saving...</span>}
             {saveStatus === "saved" && (
-              <span className="text-green-600 text-sm flex items-center">
-                <CheckCircle className="w-4 h-4 mr-1" /> Saved
+              <span className="text-emerald-400 text-sm flex items-center gap-1">
+                <CheckCircle className="w-4 h-4" /> Saved
               </span>
             )}
-            {saveStatus === "error" && <span className="text-red-600 text-sm">Save failed</span>}
+            {saveStatus === "error" && <span className="text-red-400 text-sm">Save failed</span>}
 
-            {/* Action Buttons */}
             <button
               onClick={saveChanges}
               disabled={!hasChanges || saveStatus === "saving"}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
             >
-              <Save className="w-4 h-4 mr-2" />
+              <Save className="w-4 h-4" />
               Save Changes
             </button>
 
             <button
               onClick={exportConfig}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
+              className="bg-white/[0.08] text-white px-4 py-2 rounded-lg hover:bg-white/[0.12] flex items-center gap-2 text-sm font-medium transition-colors"
             >
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4" />
               Export
             </button>
 
             <label
-              className={`bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center ${!canImport ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-              title={!canImport ? "You do not have permission to import configuration" : ""}
+              className={`bg-white/[0.08] text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors ${
+                canImport ? "hover:bg-white/[0.12] cursor-pointer" : "opacity-40 cursor-not-allowed"
+              }`}
+              title={!canImport ? "No permission to import" : ""}
             >
-              <Upload className="w-4 h-4 mr-2" />
+              <Upload className="w-4 h-4" />
               Import
               <input
                 type="file"
@@ -698,14 +700,16 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
             <button
               onClick={resetToDefaults}
               disabled={!canReset}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              title={!canReset ? "You do not have permission to reset to defaults" : ""}
+              className="bg-red-500/10 text-red-400 px-4 py-2 rounded-lg hover:bg-red-500/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
             >
-              <RotateCcw className="w-4 h-4 mr-2" />
+              <RotateCcw className="w-4 h-4" />
               Reset
             </button>
 
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <button
+              onClick={onClose}
+              className="p-2 text-white/40 hover:text-white hover:bg-white/[0.08] rounded-lg transition-colors"
+            >
               ✕
             </button>
           </div>
@@ -713,18 +717,20 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
 
         <div className="flex flex-1 overflow-hidden">
           {/* Sidebar */}
-          <div className="w-64 bg-gray-50 border-r overflow-y-auto">
+          <div className="w-56 bg-white/[0.02] border-r border-white/[0.08] overflow-y-auto">
             <div className="p-4">
-              <h3 className="font-semibold text-gray-800 mb-4">Equipment Categories</h3>
-              <nav className="space-y-2">
+              <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
+                Equipment Categories
+              </h3>
+              <nav className="space-y-1">
                 {sections.map((section) => (
                   <button
                     key={section.id}
                     onClick={() => setActiveSection(section.id)}
                     className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                       activeSection === section.id
-                        ? "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border border-purple-300 shadow-sm"
-                        : "hover:bg-purple-50 text-gray-700"
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        : "hover:bg-white/[0.05] text-white/60 hover:text-white"
                     }`}
                   >
                     <span className="mr-2">{section.icon}</span>
@@ -736,9 +742,9 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-6 bg-transparent">
             <div className="max-w-4xl">
-              <h3 className="text-lg font-semibold mb-6">
+              <h3 className="text-base font-semibold text-white mb-5">
                 {sections.find((s) => s.id === activeSection)?.icon}{" "}
                 {sections.find((s) => s.id === activeSection)?.name} Configuration
               </h3>

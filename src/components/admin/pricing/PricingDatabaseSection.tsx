@@ -42,13 +42,13 @@ export default function PricingDatabaseSection({
   const getStatusIcon = () => {
     switch (databaseStatus) {
       case "connected":
-        return <Cloud className="w-5 h-5 text-green-600" />;
+        return <Cloud className="w-5 h-5 text-emerald-400" />;
       case "disconnected":
         return <CloudOff className="w-5 h-5 text-red-600" />;
       case "error":
         return <AlertTriangle className="w-5 h-5 text-red-600" />;
       default:
-        return <RefreshCw className="w-5 h-5 text-gray-400 animate-spin" />;
+        return <RefreshCw className="w-5 h-5 text-white/30 animate-spin" />;
     }
   };
 
@@ -61,7 +61,7 @@ export default function PricingDatabaseSection({
       case "error":
         return "bg-red-50 border-red-200";
       default:
-        return "bg-gray-50 border-gray-200";
+        return "bg-white/[0.02] border-gray-200";
     }
   };
 
@@ -88,7 +88,7 @@ export default function PricingDatabaseSection({
             {getStatusIcon()}
             <div>
               <h4 className="font-semibold">Database Connection</h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-white/60">
                 {databaseStatus === "connected" &&
                   "Connected to Supabase - pricing data is being persisted"}
                 {databaseStatus === "disconnected" &&
@@ -99,7 +99,7 @@ export default function PricingDatabaseSection({
             </div>
           </div>
           {lastSync && (
-            <div className="text-right text-sm text-gray-600">
+            <div className="text-right text-sm text-white/60">
               <p>Last Sync</p>
               <p className="font-mono text-xs">{new Date(lastSync).toLocaleString()}</p>
             </div>
@@ -111,29 +111,29 @@ export default function PricingDatabaseSection({
       {databaseStatus === "connected" && Object.keys(databaseStats).length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white p-4 rounded-lg border">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-blue-400">
               {databaseStats.totalConfigurations || 0}
             </div>
-            <div className="text-sm text-gray-600">Total Configurations</div>
+            <div className="text-sm text-white/60">Total Configurations</div>
           </div>
           <div className="bg-white p-4 rounded-lg border">
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-emerald-400">
               {databaseStats.recentDataPoints || 0}
             </div>
-            <div className="text-sm text-gray-600">Recent Data Points</div>
+            <div className="text-sm text-white/60">Recent Data Points</div>
           </div>
           <div className="bg-white p-4 rounded-lg border">
             <div className="text-2xl font-bold text-orange-600">
               {databaseStats.unresolvedAlerts || 0}
             </div>
-            <div className="text-sm text-gray-600">Unresolved Alerts</div>
+            <div className="text-sm text-white/60">Unresolved Alerts</div>
           </div>
         </div>
       )}
 
       {/* Sync Actions */}
-      <div className="bg-white border rounded-lg p-6">
-        <h4 className="font-semibold mb-4">Configuration Synchronization</h4>
+      <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-6">
+        <h4 className="font-semibold text-white mb-4">Configuration Synchronization</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             onClick={syncToDatabase}
@@ -164,7 +164,7 @@ export default function PricingDatabaseSection({
           </button>
         </div>
 
-        <div className="mt-4 text-sm text-gray-600">
+        <div className="mt-4 text-sm text-white/60">
           <p>
             • <strong>Sync to Database:</strong> Upload current local configuration to Supabase
           </p>
@@ -185,7 +185,7 @@ export default function PricingDatabaseSection({
         >
           <div className="flex items-center space-x-2">
             {syncResult.success ? (
-              <CheckCircle className="w-5 h-5 text-green-600" />
+              <CheckCircle className="w-5 h-5 text-emerald-400" />
             ) : (
               <AlertTriangle className="w-5 h-5 text-red-600" />
             )}
@@ -202,7 +202,7 @@ export default function PricingDatabaseSection({
             "summary" in syncResult.data && (
               <details className="mt-2">
                 <summary className="text-sm cursor-pointer">View Sync Report</summary>
-                <pre className="text-xs bg-gray-100 p-2 rounded mt-2 overflow-x-auto">
+                <pre className="text-xs bg-white/[0.04] p-2 rounded mt-2 overflow-x-auto">
                   {JSON.stringify(syncResult.data, null, 2)}
                 </pre>
               </details>
@@ -211,22 +211,22 @@ export default function PricingDatabaseSection({
       )}
 
       {/* Daily Sync Service Status */}
-      <div className="bg-white border rounded-lg p-6">
-        <h4 className="font-semibold mb-4">Daily Sync Service</h4>
+      <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-6">
+        <h4 className="font-semibold text-white mb-4">Daily Sync Service</h4>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Service Status</span>
+            <span className="text-sm text-white/60">Service Status</span>
             <span
-              className={`px-2 py-1 rounded text-xs ${databaseStatus === "connected" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}
+              className={`px-2 py-1 rounded text-xs ${databaseStatus === "connected" ? "bg-green-100 text-emerald-400" : "bg-white/[0.04] text-white"}`}
             >
               {databaseStatus === "connected" ? "Running" : "Offline"}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Next Scheduled Sync</span>
+            <span className="text-sm text-white/60">Next Scheduled Sync</span>
             <span className="text-sm font-mono">Daily at 6:00 AM UTC</span>
           </div>
-          <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
+          <div className="text-xs text-white/40 bg-white/[0.02] p-3 rounded">
             <p>The daily sync service automatically:</p>
             <ul className="mt-2 space-y-1 ml-4 list-disc">
               <li>Validates pricing against market sources (NREL, Bloomberg, Wood Mackenzie)</li>

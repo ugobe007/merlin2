@@ -39,40 +39,40 @@ export default function PricingBESSSection({
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white p-4 rounded-lg border">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-white/70 mb-2">
             Small System Price (${config.bess.smallSystemSizeMWh} MWh reference)
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40">
               $
             </span>
             <input
               type="number"
-              className="w-full pl-8 pr-16 py-2 border border-gray-300 rounded-md"
+              className="w-full pl-8 pr-16 py-2 border border-white/[0.08] rounded-md"
               value={config.bess.smallSystemPerKWh}
               onChange={(e) => updateConfigSection("bess", "smallSystemPerKWh", e.target.value)}
             />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 text-sm">
               /kWh
             </span>
           </div>
         </div>
 
         <div className="bg-white p-4 rounded-lg border">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-white/70 mb-2">
             Large System Floor (${config.bess.largeSystemSizeMWh}+ MWh)
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40">
               $
             </span>
             <input
               type="number"
-              className="w-full pl-8 pr-16 py-2 border border-gray-300 rounded-md"
+              className="w-full pl-8 pr-16 py-2 border border-white/[0.08] rounded-md"
               value={config.bess.largeSystemPerKWh}
               onChange={(e) => updateConfigSection("bess", "largeSystemPerKWh", e.target.value)}
             />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 text-sm">
               /kWh
             </span>
           </div>
@@ -81,26 +81,26 @@ export default function PricingBESSSection({
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white p-4 rounded-lg border">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-white/70 mb-2">
             Small System Size Reference (MWh)
           </label>
           <input
             type="number"
             step="0.1"
-            className="w-full py-2 border border-gray-300 rounded-md"
+            className="w-full py-2 border border-white/[0.08] rounded-md"
             value={config.bess.smallSystemSizeMWh}
             onChange={(e) => updateConfigSection("bess", "smallSystemSizeMWh", e.target.value)}
           />
         </div>
 
         <div className="bg-white p-4 rounded-lg border">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-white/70 mb-2">
             Large System Threshold (MWh)
           </label>
           <input
             type="number"
             step="0.1"
-            className="w-full py-2 border border-gray-300 rounded-md"
+            className="w-full py-2 border border-white/[0.08] rounded-md"
             value={config.bess.largeSystemSizeMWh}
             onChange={(e) => updateConfigSection("bess", "largeSystemSizeMWh", e.target.value)}
           />
@@ -109,33 +109,33 @@ export default function PricingBESSSection({
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white p-4 rounded-lg border">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-white/70 mb-2">
             Degradation Rate (Annual)
           </label>
           <div className="relative">
             <input
               type="number"
               step="0.001"
-              className="w-full pr-8 py-2 border border-gray-300 rounded-md"
+              className="w-full pr-8 py-2 border border-white/[0.08] rounded-md"
               value={config.bess.degradationRate}
               onChange={(e) => updateConfigSection("bess", "degradationRate", e.target.value)}
             />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 text-sm">
               %
             </span>
           </div>
         </div>
 
         <div className="bg-white p-4 rounded-lg border">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Warranty Period</label>
+          <label className="block text-sm font-medium text-white/70 mb-2">Warranty Period</label>
           <div className="relative">
             <input
               type="number"
-              className="w-full pr-16 py-2 border border-gray-300 rounded-md"
+              className="w-full pr-16 py-2 border border-white/[0.08] rounded-md"
               value={config.bess.warrantyYears}
               onChange={(e) => updateConfigSection("bess", "warrantyYears", e.target.value)}
             />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 text-sm">
               years
             </span>
           </div>
@@ -143,9 +143,9 @@ export default function PricingBESSSection({
       </div>
 
       <div className="bg-white p-4 rounded-lg border">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Vendor Notes</label>
+        <label className="block text-sm font-medium text-white/70 mb-2">Vendor Notes</label>
         <textarea
-          className="w-full py-2 px-3 border border-gray-300 rounded-md"
+          className="w-full py-2 px-3 border border-white/[0.08] rounded-md"
           rows={3}
           value={config.bess.vendorNotes}
           onChange={(e) => updateConfigSection("bess", "vendorNotes", e.target.value)}
