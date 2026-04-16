@@ -1,10 +1,10 @@
 /* Merlin Energy — Homepage
-   Sections: Navbar → Hero → StatusQuo → Industries+Estimate → Workflow → Platform → Value → Footer */
+   Sections: Navbar → Hero → StatusQuo → AudienceStrip → Industries → Workflow → Platform → Value → Footer */
 
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import StatusQuoSection from "@/components/StatusQuoSection";
-import TwoSidedSection from "@/components/TwoSidedSection";
+import AudienceStrip from "@/components/AudienceStrip";
 import IndustriesSection from "@/components/IndustriesSection";
 import WorkflowSection from "@/components/WorkflowSection";
 import PlatformSection from "@/components/PlatformSection";
@@ -19,38 +19,10 @@ export default function Home() {
       <Navbar />
       <HeroSection />
       <StatusQuoSection />
-      <TwoSidedSection />
+      <AudienceStrip />
       <IndustriesSection />
-
-      {/* ── Section bridge: Hero → How it works ─────────────────────────── */}
-      <div className="bg-[#060D1F] pt-4 pb-0">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
-          <div className="flex items-center gap-4">
-            <div className="h-px flex-1 bg-white/[0.04]" />
-            <span className="text-[11px] text-slate-700 uppercase tracking-widest font-medium">
-              From first number to a full, shareable project model
-            </span>
-            <div className="h-px flex-1 bg-white/[0.04]" />
-          </div>
-        </div>
-      </div>
-
       <WorkflowSection />
       <PlatformSection />
-
-      {/* ── Section bridge: How it works → Why Merlin ───────────────────── */}
-      <div className="bg-[#060D1F] pt-4 pb-0">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
-          <div className="flex items-center gap-4">
-            <div className="h-px flex-1 bg-white/[0.04]" />
-            <span className="text-[11px] text-slate-700 uppercase tracking-widest font-medium">
-              Why this approach beats a vendor quote
-            </span>
-            <div className="h-px flex-1 bg-white/[0.04]" />
-          </div>
-        </div>
-      </div>
-
       <ValueSection />
 
       {/* Footer */}
