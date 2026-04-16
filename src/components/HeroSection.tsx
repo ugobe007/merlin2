@@ -424,12 +424,12 @@ export default function HeroSection() {
               className="animate-fade-up-delay-1 font-extrabold leading-[0.95] tracking-tight mb-4"
               style={{ fontFamily: "'Outfit', sans-serif", fontSize: "clamp(52px, 7vw, 100px)" }}
             >
-              <span className="text-white">Build </span>
-              <span className="text-emerald-400">energy savings</span>
+              <span className="text-white">Know your </span>
+              <span className="text-emerald-400">energy numbers</span>
               <br />
-              <span className="text-white">in minutes,</span>
+              <span className="text-white">before you call</span>
               <br />
-              <span className="text-white">not weeks.</span>
+              <span className="text-white">anyone.</span>
             </h1>
 
             {/* Subheadline */}
