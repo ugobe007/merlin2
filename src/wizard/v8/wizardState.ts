@@ -933,6 +933,7 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
         ...state,
         error: { code: intent.code, message: intent.message },
         isBusy: false,
+        locationStatus: state.locationStatus === "fetching" ? "idle" : state.locationStatus,
       };
 
     case "CLEAR_ERROR":
