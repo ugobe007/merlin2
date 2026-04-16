@@ -67,6 +67,7 @@
  */
 
 import { hasStep35Addons } from "./addonIntent";
+import type { ExtractedSpecsData } from "@/services/openAIExtractionService";
 
 // ── Solar grade type ─────────────────────────────────────────────────────────
 // Maps to gradeFromPSH() in wizardAPI.ts. Order matters for isSolarFeasible().
@@ -475,6 +476,11 @@ export interface WizardState {
   criticalLoadKW: number; // Critical loads only (for generator sizing in non-critical facilities)
   evRevenuePerYear: number; // evChargingCalculations.ts, 0 when no EV
 
+  // ── Utility Bill Upload ──────────────────────────────────────────────────
+  // Set when user uploads a utility bill in Step 3. Overrides NREL benchmarks.
+  uploadedBillData: ExtractedSpecsData | null;
+  utilityBillOverride: boolean; // true = peakLoadKW + utilityRate sourced from actual bill
+
   // ── Step 1: Add-on Preferences (asked upfront for optimization) ─────────
   wantsSolar: boolean; // User wants solar in their quote
   /** 'standard' = best cost/kWh from DB (default). 'premium' = highest-efficiency panel (≥23%) for fixed-roof area maximization. */
@@ -551,6 +557,8 @@ export type WizardIntent =
       criticalLoadPct: number;
     }
   // Step 3
+  | { type: "SET_BILL_DATA"; data: ExtractedSpecsData }
+  | { type: "CLEAR_BILL_DATA" }
   | { type: "SET_ANSWER"; key: string; value: unknown }
   | { type: "SET_EV_CHARGERS"; chargers: WizardState["evChargers"] }
   | { type: "SET_ADDON_PREFERENCE"; addon: "solar" | "ev" | "generator"; value: boolean }
@@ -625,6 +633,8 @@ export function initialState(): WizardState {
     peakLoadKW: 0,
     criticalLoadKW: 0, // Critical loads for generator sizing
     evRevenuePerYear: 0,
+    uploadedBillData: null,
+    utilityBillOverride: false,
     wantsSolar: false,
     solarPanelTier: "standard",
     solarStructureType: "rooftop",
@@ -815,6 +825,27 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
       };
 
     // ── Step 3 ───────────────────────────────────────────────────────────
+
+    case "SET_BILL_DATA": {
+      // Override baseLoadKW/peakLoadKW with values from bill when available
+      const billPeak = intent.data.powerRequirements?.peakDemandKW;
+      return {
+        ...state,
+        uploadedBillData: intent.data,
+        utilityBillOverride: true,
+        // If bill has peak demand, use it as the base load
+        ...(billPeak != null && billPeak > 0
+          ? { baseLoadKW: billPeak * 0.7, peakLoadKW: billPeak }
+          : {}),
+      };
+    }
+
+    case "CLEAR_BILL_DATA":
+      return {
+        ...state,
+        uploadedBillData: null,
+        utilityBillOverride: false,
+      };
 
     case "SET_ANSWER":
       return {
@@ -1007,6 +1038,8 @@ export interface WizardActions {
   ) => void;
   setEVChargers: (chargers: WizardState["evChargers"]) => void;
   setBaseLoad: (baseLoadKW: number, peakLoadKW: number, evRevenuePerYear?: number) => void;
+  setBillData: (data: ExtractedSpecsData) => void;
+  clearBillData: () => void;
   // Step 4: MagicFit
   setTiers: (tiers: [QuoteTier, QuoteTier, QuoteTier]) => void;
   setTiersStatus: (status: WizardState["tiersStatus"]) => void;

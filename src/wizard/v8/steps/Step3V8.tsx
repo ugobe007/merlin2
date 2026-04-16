@@ -16,6 +16,7 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { WizardState, WizardActions } from "../wizardState";
+import { BillUploadPanel } from "./BillUploadPanel";
 import {
   resolveStep3Schema,
   type CuratedField,
@@ -634,6 +635,13 @@ export function Step3V8({ state, actions }: Props) {
         ref={sectionTopRef}
         style={{ maxWidth: 920, margin: "0 auto", padding: "16px 24px 40px" }}
       >
+        {/* ── Utility Bill Upload ── */}
+        <BillUploadPanel
+          uploadedData={state.uploadedBillData}
+          onExtracted={actions.setBillData}
+          onCleared={actions.clearBillData}
+        />
+
         {/* ── Universal: Project Type preamble ── */}
         <div
           style={{
