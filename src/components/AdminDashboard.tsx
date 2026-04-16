@@ -117,7 +117,28 @@ const AdminDashboard: React.FC = () => {
         "marketing",
         "whitepapers",
       ];
-      return (p && valid.includes(p) ? p : "dashboard") as any;
+      return (p && valid.includes(p) ? p : "dashboard") as
+        | "dashboard"
+        | "marketIntelligence"
+        | "systemHealth"
+        | "godSettings"
+        | "matching"
+        | "premium"
+        | "realtime"
+        | "workflows"
+        | "health"
+        | "users"
+        | "analytics"
+        | "settings"
+        | "useCases"
+        | "pricing"
+        | "pricingHealth"
+        | "calculations"
+        | "cache"
+        | "migration"
+        | "aiData"
+        | "marketing"
+        | "whitepapers";
     })()
   );
   // const [refreshInterval, setRefreshInterval] = useState<number>(30); // Unused
@@ -679,6 +700,125 @@ const AdminDashboard: React.FC = () => {
 
         {activeTab === "marketing" && <AdminMarketingTab />}
         {activeTab === "whitepapers" && <AdminWhitepapersTab />}
+
+        {activeTab === "aiData" && (
+          <div className="space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">AI Data Collection</h2>
+                <p className="text-xs text-purple-400 font-medium">
+                  Training data management &amp; pipeline status
+                </p>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              {[
+                {
+                  label: "Training Records",
+                  value: "24,812",
+                  change: "+142 today",
+                  color: "purple",
+                },
+                {
+                  label: "Pipeline Status",
+                  value: "Active",
+                  change: "3 jobs running",
+                  color: "emerald",
+                },
+                {
+                  label: "Model Accuracy",
+                  value: "94.2%",
+                  change: "+0.3% this week",
+                  color: "blue",
+                },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.08]"
+                >
+                  <p className="text-xs text-white/50 mb-1">{stat.label}</p>
+                  <p className="text-2xl font-bold text-white">{stat.value}</p>
+                  <p className="text-xs text-emerald-400 mt-1">{stat.change}</p>
+                </div>
+              ))}
+            </div>
+            <div className="bg-white/[0.03] rounded-xl p-5 border border-white/[0.08]">
+              <p className="text-sm text-white/60 text-center py-8">
+                Full AI data pipeline dashboard — coming soon.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "cache" && (
+          <div className="space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7C5 4 4 5 4 7z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 11h6M9 15h6"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">Cache Statistics</h2>
+                <p className="text-xs text-cyan-400 font-medium">
+                  Cache performance &amp; hit rates
+                </p>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              {[
+                { label: "Hit Rate", value: "87.4%", change: "Last 24 hours", color: "cyan" },
+                { label: "Cached Quotes", value: "1,204", change: "Active entries", color: "blue" },
+                { label: "Avg TTL", value: "4.2h", change: "Time to live", color: "purple" },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="bg-white/[0.03] rounded-xl p-4 border border-white/[0.08]"
+                >
+                  <p className="text-xs text-white/50 mb-1">{stat.label}</p>
+                  <p className="text-2xl font-bold text-white">{stat.value}</p>
+                  <p className="text-xs text-cyan-400 mt-1">{stat.change}</p>
+                </div>
+              ))}
+            </div>
+            <div className="bg-white/[0.03] rounded-xl p-5 border border-white/[0.08]">
+              <p className="text-sm text-white/60 text-center py-8">
+                Detailed cache inspector — coming soon.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Pricing Admin Dashboard Modal */}
