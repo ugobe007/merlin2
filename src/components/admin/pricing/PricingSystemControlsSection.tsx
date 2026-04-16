@@ -18,7 +18,7 @@ export default function PricingSystemControlsSection({
   return (
     <div className="space-y-6">
       <div className="bg-violet-500/10 border border-violet-500/20 rounded-lg p-4">
-        <h4 className="font-semibold text-purple-800 mb-2">📊 System Controls</h4>
+        <h4 className="font-semibold text-violet-400 mb-2">📊 System Controls</h4>
         <p className="text-sm text-violet-400">
           SCADA, EMS, controllers including Deepsea DSE8610 from Eaton quote, and automation
           systems.

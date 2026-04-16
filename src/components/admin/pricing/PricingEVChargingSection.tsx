@@ -22,7 +22,7 @@ export default function PricingEVChargingSection({
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
           <label className="block text-sm font-medium text-white/70 mb-2">
             Level 1 AC (3.3-7.7kW)
           </label>
@@ -42,7 +42,7 @@ export default function PricingEVChargingSection({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
           <label className="block text-sm font-medium text-white/70 mb-2">
             Level 2 AC (7.7-22kW)
           </label>
@@ -62,7 +62,7 @@ export default function PricingEVChargingSection({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
           <label className="block text-sm font-medium text-white/70 mb-2">DC Fast (50-150kW)</label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40">
@@ -80,7 +80,7 @@ export default function PricingEVChargingSection({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
           <label className="block text-sm font-medium text-white/70 mb-2">
             DC Ultra Fast (150-350kW)
           </label>
@@ -102,7 +102,7 @@ export default function PricingEVChargingSection({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
           <label className="block text-sm font-medium text-white/70 mb-2">
             Pantograph Charger (Overhead)
           </label>
@@ -124,7 +124,7 @@ export default function PricingEVChargingSection({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
           <label className="block text-sm font-medium text-white/70 mb-2">
             Networking/OCPP (per charger)
           </label>

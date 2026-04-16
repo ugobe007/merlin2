@@ -38,7 +38,7 @@ export default function PricingBESSSection({
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
           <label className="block text-sm font-medium text-white/70 mb-2">
             Small System Price (${config.bess.smallSystemSizeMWh} MWh reference)
           </label>
@@ -58,7 +58,7 @@ export default function PricingBESSSection({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
           <label className="block text-sm font-medium text-white/70 mb-2">
             Large System Floor (${config.bess.largeSystemSizeMWh}+ MWh)
           </label>
@@ -80,7 +80,7 @@ export default function PricingBESSSection({
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
           <label className="block text-sm font-medium text-white/70 mb-2">
             Small System Size Reference (MWh)
           </label>
@@ -93,7 +93,7 @@ export default function PricingBESSSection({
           />
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
           <label className="block text-sm font-medium text-white/70 mb-2">
             Large System Threshold (MWh)
           </label>
@@ -108,7 +108,7 @@ export default function PricingBESSSection({
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
           <label className="block text-sm font-medium text-white/70 mb-2">
             Degradation Rate (Annual)
           </label>
@@ -126,7 +126,7 @@ export default function PricingBESSSection({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
           <label className="block text-sm font-medium text-white/70 mb-2">Warranty Period</label>
           <div className="relative">
             <input
@@ -142,7 +142,7 @@ export default function PricingBESSSection({
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-lg border">
+      <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
         <label className="block text-sm font-medium text-white/70 mb-2">Vendor Notes</label>
         <textarea
           className="w-full py-2 px-3 border border-white/[0.08] rounded-md"
