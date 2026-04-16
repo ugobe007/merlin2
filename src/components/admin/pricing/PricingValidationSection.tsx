@@ -38,7 +38,7 @@ export default function PricingValidationSection({
       </div>
 
       <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4 shadow-sm">
-        <h4 className="font-semibold text-purple-800 mb-2">🔍 Automated Daily Sound Checks</h4>
+        <h4 className="font-semibold text-violet-400 mb-2">🔍 Automated Daily Sound Checks</h4>
         <p className="text-sm text-violet-400">
           Pricing is automatically validated daily at 6 AM against NREL ATB 2024, BloombergNEF, Wood
           Mackenzie, and other market intelligence sources. Deviations &gt;10% trigger alerts.
@@ -48,14 +48,14 @@ export default function PricingValidationSection({
       {/* Alert Summary */}
       <div className="grid md:grid-cols-3 gap-4">
         <div
-          className={`p-4 rounded-lg border ${criticalAlerts.length > 0 ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"}`}
+          className={`p-4 rounded-lg border ${criticalAlerts.length > 0 ? "bg-red-500/10 border-red-500/20" : "bg-emerald-500/10 border-emerald-500/20"}`}
         >
           <div className="flex items-center">
             <AlertTriangle
               className={`w-5 h-5 mr-2 ${criticalAlerts.length > 0 ? "text-red-600" : "text-emerald-400"}`}
             />
             <h4
-              className={`font-semibold ${criticalAlerts.length > 0 ? "text-red-800" : "text-emerald-400"}`}
+              className={`font-semibold ${criticalAlerts.length > 0 ? "text-red-400" : "text-emerald-400"}`}
             >
               Critical Alerts
             </h4>
@@ -68,7 +68,7 @@ export default function PricingValidationSection({
         </div>
 
         <div
-          className={`p-4 rounded-lg border ${warningAlerts.length > 0 ? "bg-yellow-50 border-yellow-200" : "bg-green-50 border-green-200"}`}
+          className={`p-4 rounded-lg border ${warningAlerts.length > 0 ? "bg-amber-500/10 border-amber-500/20" : "bg-emerald-500/10 border-emerald-500/20"}`}
         >
           <div className="flex items-center">
             <Bell
@@ -87,7 +87,7 @@ export default function PricingValidationSection({
           </p>
         </div>
 
-        <div className="bg-white/[0.02] border border-gray-200 p-4 rounded-lg">
+        <div className="bg-white/[0.02] border border-white/[0.08] p-4 rounded-lg">
           <div className="flex items-center">
             <CheckCircle className="w-5 h-5 mr-2 text-white/60" />
             <h4 className="font-semibold text-white">Info</h4>
@@ -105,9 +105,9 @@ export default function PricingValidationSection({
               key={index}
               className={`p-4 rounded-lg border ${
                 alert.severity === "critical"
-                  ? "bg-red-50 border-red-200"
+                  ? "bg-red-500/10 border-red-500/20"
                   : alert.severity === "warning"
-                    ? "bg-yellow-50 border-yellow-200"
+                    ? "bg-amber-500/10 border-amber-500/20"
                     : "bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200"
               }`}
             >
@@ -126,10 +126,10 @@ export default function PricingValidationSection({
                     <h5
                       className={`font-semibold ${
                         alert.severity === "critical"
-                          ? "text-red-800"
+                          ? "text-red-400"
                           : alert.severity === "warning"
                             ? "text-amber-400"
-                            : "text-purple-800"
+                            : "text-violet-400"
                       }`}
                     >
                       {alert.category}
@@ -138,7 +138,7 @@ export default function PricingValidationSection({
                   <p
                     className={`text-sm mb-2 ${
                       alert.severity === "critical"
-                        ? "text-red-700"
+                        ? "text-red-400"
                         : alert.severity === "warning"
                           ? "text-amber-400"
                           : "text-violet-400"

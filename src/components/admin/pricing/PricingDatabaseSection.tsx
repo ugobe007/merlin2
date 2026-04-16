@@ -55,13 +55,13 @@ export default function PricingDatabaseSection({
   const getStatusColor = () => {
     switch (databaseStatus) {
       case "connected":
-        return "bg-green-50 border-green-200";
+        return "bg-emerald-500/10 border-emerald-500/20";
       case "disconnected":
-        return "bg-yellow-50 border-yellow-200";
+        return "bg-amber-500/10 border-amber-500/20";
       case "error":
-        return "bg-red-50 border-red-200";
+        return "bg-red-500/10 border-red-500/20";
       default:
-        return "bg-white/[0.02] border-gray-200";
+        return "bg-white/[0.02] border-white/[0.08]";
     }
   };
 
@@ -110,19 +110,19 @@ export default function PricingDatabaseSection({
       {/* Database Statistics */}
       {databaseStatus === "connected" && Object.keys(databaseStats).length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-4 rounded-lg border">
+          <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
             <div className="text-2xl font-bold text-blue-400">
               {databaseStats.totalConfigurations || 0}
             </div>
             <div className="text-sm text-white/60">Total Configurations</div>
           </div>
-          <div className="bg-white p-4 rounded-lg border">
+          <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
             <div className="text-2xl font-bold text-emerald-400">
               {databaseStats.recentDataPoints || 0}
             </div>
             <div className="text-sm text-white/60">Recent Data Points</div>
           </div>
-          <div className="bg-white p-4 rounded-lg border">
+          <div className="bg-white/[0.03] p-4 border border-white/[0.08] rounded-xl">
             <div className="text-2xl font-bold text-orange-600">
               {databaseStats.unresolvedAlerts || 0}
             </div>
@@ -181,7 +181,7 @@ export default function PricingDatabaseSection({
       {/* Sync Results */}
       {syncResult && (
         <div
-          className={`border rounded-lg p-4 ${syncResult.success ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}
+          className={`border rounded-lg p-4 ${syncResult.success ? "bg-emerald-500/10 border-emerald-500/20" : "bg-red-500/10 border-red-500/20"}`}
         >
           <div className="flex items-center space-x-2">
             {syncResult.success ? (
