@@ -4,6 +4,7 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import StatusQuoSection from "@/components/StatusQuoSection";
+import TwoSidedSection from "@/components/TwoSidedSection";
 import IndustriesSection from "@/components/IndustriesSection";
 import WorkflowSection from "@/components/WorkflowSection";
 import PlatformSection from "@/components/PlatformSection";
@@ -18,6 +19,7 @@ export default function Home() {
       <Navbar />
       <HeroSection />
       <StatusQuoSection />
+      <TwoSidedSection />
       <IndustriesSection />
 
       {/* ── Section bridge: Hero → How it works ─────────────────────────── */}

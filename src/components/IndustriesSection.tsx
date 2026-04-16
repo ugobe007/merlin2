@@ -236,8 +236,8 @@ export default function IndustriesSection() {
             Run a quick estimate for your facility.
           </h2>
           <p className="text-slate-300 text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
-            Two numbers from your utility bill. Same engine powering enterprise TrueQuotes. No
-            signup.
+            Enter your monthly bill amount and peak demand — same engine that powers full TrueQuote™
+            models. No account, no upload required.
           </p>
         </div>
 

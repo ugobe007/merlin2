@@ -2372,6 +2372,47 @@ export default function Step5V8({ state, actions }: Props) {
         </div>
       </div>
 
+      {/* ── METHODOLOGY TRANSPARENCY NOTE ──────────────────────────────── */}
+      <div
+        style={{
+          marginTop: 16,
+          padding: "12px 16px",
+          borderRadius: 10,
+          background: "rgba(255,255,255,0.02)",
+          border: "1px solid rgba(255,255,255,0.06)",
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 10,
+        }}
+      >
+        <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>📐</span>
+        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", lineHeight: 1.55, margin: 0 }}>
+          <strong style={{ color: "rgba(255,255,255,0.50)", fontWeight: 700 }}>
+            How this quote is built:
+          </strong>{" "}
+          Savings are calculated from your actual local utility rate (EIA). System size is based on
+          your facility's load profile and NREL solar data for your ZIP. Installed costs use{" "}
+          <strong style={{ color: "rgba(255,255,255,0.45)" }}>NREL national benchmarks</strong> —
+          regional labor and permitting typically shift costs ±15–25%. Click{" "}
+          <button
+            onClick={() => setShowDataSourcesModal(true)}
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              color: "rgba(245,158,11,0.70)",
+              fontWeight: 700,
+              fontSize: 11,
+              cursor: "pointer",
+              textDecoration: "underline",
+            }}
+          >
+            TrueQuote™ Verified
+          </button>{" "}
+          above for all data sources.
+        </p>
+      </div>
+
       {/* ================================================================
           TRUEQUOTE™ FINANCIAL PROJECTION MODAL (V7 comprehensive version)
       ================================================================ */}
@@ -2539,6 +2580,11 @@ export default function Step5V8({ state, actions }: Props) {
                     url: "https://www.eia.gov",
                   },
                   {
+                    label: "Installed $/W — labor & BOS",
+                    source: "NREL U.S. Solar PV System Cost Benchmark",
+                    url: "https://www.nrel.gov/solar/market-research-analysis/solar-installed-system-cost.html",
+                  },
+                  {
                     label: "Equipment & installation",
                     source: "StoreFAST Supplier Index",
                     url: "https://storefast.energy",
@@ -2567,9 +2613,12 @@ export default function Step5V8({ state, actions }: Props) {
               </div>
 
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                Pricing estimates reflect regional averages for similar facility profiles. Actual
-                costs may vary based on site conditions, permitting, and final equipment selection.
-                All incentives subject to eligibility verification.
+                Installed cost estimates use{" "}
+                <strong className="text-slate-400">national benchmark averages</strong> from NREL.
+                Regional labor markets, permitting complexity, and site-specific conditions
+                typically shift installed costs <strong className="text-slate-400">±15–25%</strong>{" "}
+                from these benchmarks. Electricity savings and payback calculations are based on
+                your actual local utility rate. All incentives subject to eligibility verification.
               </p>
             </div>
           </div>,
