@@ -686,7 +686,7 @@ export default function WizardV8Page() {
       <WizardShellV7
         currentStep={wizardStepToDisplayIndex(step)}
         stepLabels={STEP_LABELS}
-        canGoBack={step > 0}
+        canGoBack={step > 1}
         canGoNext={resolveCanGoNext(step, state)}
         isNextLoading={(step === 4 || step === 5) && state.tiersStatus === "fetching"}
         onBack={actions.goBack}
