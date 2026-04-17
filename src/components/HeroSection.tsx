@@ -436,10 +436,11 @@ export default function HeroSection() {
               className="animate-fade-up-delay-1 text-[19px] text-slate-400 leading-relaxed mb-5"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
-              Enter your ZIP and facility type. Merlin runs a{" "}
+              ZIP code. Facility type. Merlin runs a{" "}
               <span className="text-white font-semibold">real financial model</span> — live utility
-              rates, solar data, demand charges — and tells you exactly what you'd save with solar
-              and batteries. <span className="text-emerald-400/80">Free. ~90 seconds.</span>
+              rates, solar irradiance, demand charges, and power generation potential — and returns
+              your exact savings, payback, and generation capacity.{" "}
+              <span className="text-emerald-400/80">Free. ~90 seconds.</span>
             </p>
 
             {/* What you get */}
