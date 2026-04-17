@@ -421,8 +421,11 @@ export default function HeroSection() {
 
             {/* Headline — lead with the problem */}
             <h1
-              className="animate-fade-up-delay-1 font-extrabold leading-[0.95] tracking-tight mb-4"
-              style={{ fontFamily: "'Outfit', sans-serif", fontSize: "clamp(52px, 7vw, 100px)" }}
+              className="animate-fade-up-delay-1 font-bold leading-[1.02] tracking-normal mb-4"
+              style={{
+                fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif",
+                fontSize: "clamp(48px, 6.5vw, 92px)",
+              }}
             >
               <span className="text-white">Your energy project,</span>
               <br />
@@ -433,8 +436,8 @@ export default function HeroSection() {
 
             {/* Subheadline */}
             <p
-              className="animate-fade-up-delay-1 text-[19px] text-slate-400 leading-relaxed mb-5"
-              style={{ fontFamily: "'Outfit', sans-serif" }}
+              className="animate-fade-up-delay-1 text-[18px] text-slate-400 leading-relaxed mb-5"
+              style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif", fontWeight: 400 }}
             >
               ZIP code. Facility type. Merlin runs a{" "}
               <span className="text-white font-semibold">real financial model</span> — live utility
