@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Users, RefreshCw, AlertCircle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
 
 interface UserProfile {
   id: string;
@@ -54,7 +54,7 @@ export default function AdminUsersTab() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const { data, error: err } = await supabase
+    const { data, error: err } = await supabaseAdmin
       .from("user_profiles")
       .select(
         "id, email, full_name, plan, matches_used, matches_remaining, is_active, created_at, last_login_at, login_count, company_name"
@@ -77,7 +77,7 @@ export default function AdminUsersTab() {
     const next = !user.is_active;
     const label = next ? "re-enable" : "disable";
     if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} ${user.email}?`)) return;
-    const { error: err } = await supabase
+    const { error: err } = await supabaseAdmin
       .from("user_profiles")
       .update({ is_active: next })
       .eq("id", user.id);
@@ -91,7 +91,7 @@ export default function AdminUsersTab() {
   const handleChangeTier = async () => {
     if (!tierUser || !pendingTier) return;
     setSaving(true);
-    const { error: err } = await supabase
+    const { error: err } = await supabaseAdmin
       .from("user_profiles")
       .update({ plan: pendingTier })
       .eq("id", tierUser.id);
