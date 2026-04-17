@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Home,
   Users,
@@ -28,6 +28,7 @@ import SystemHealthDashboard from "./admin/SystemHealthDashboard";
 import MarketIntelligenceDashboard from "./admin/MarketIntelligenceDashboard";
 // premiumConfigurationService imports moved to tab components
 import merlinImage from "@/assets/images/new_profile_merlin.png";
+import { supabaseAdmin } from "@/lib/supabase";
 // import MigrationManager from './admin/MigrationManager'; // Temporarily disabled
 import AdminWorkflowsTab from "./admin/tabs/AdminWorkflowsTab";
 import AdminHealthTab from "./admin/tabs/AdminHealthTab";
@@ -144,23 +145,79 @@ const AdminDashboard: React.FC = () => {
   // const [refreshInterval, setRefreshInterval] = useState<number>(30); // Unused
   const [showPricingAdmin, setShowPricingAdmin] = useState(false);
 
-  // Enhanced mock data (will be replaced with Supabase queries and real-time APIs)
-  const stats: AdminStats = {
-    totalUsers: 1247,
-    freeUsers: 1100,
-    semiPremiumUsers: 120,
-    premiumUsers: 27,
-    quotesGeneratedToday: 145,
-    activeSessions: 23,
-    monthlyRevenue: 3613,
+  // Real stats from Supabase
+  const [stats, setStats] = useState<AdminStats>({
+    totalUsers: 0,
+    freeUsers: 0,
+    semiPremiumUsers: 0,
+    premiumUsers: 0,
+    quotesGeneratedToday: 0,
+    activeSessions: 0,
+    monthlyRevenue: 0,
     systemHealth: "operational",
-    uptime: 99.97,
-    apiResponseTime: 142,
-    errorRate: 0.08,
-    activeWorkflows: 8,
-    completedWorkflows: 1247,
-    failedWorkflows: 3,
-  };
+    uptime: 99.99,
+    apiResponseTime: 0,
+    errorRate: 0,
+    activeWorkflows: 0,
+    completedWorkflows: 0,
+    failedWorkflows: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStats() {
+      setStatsLoading(true);
+      try {
+        // Total user counts by plan
+        const { data: users } = await supabaseAdmin
+          .from("user_profiles")
+          .select("plan", { count: "exact" });
+        const allUsers = users ?? [];
+        const totalUsers = allUsers.length;
+        const freeUsers = allUsers.filter((u) => !u.plan || u.plan === "free").length;
+        const semiPremiumUsers = allUsers.filter((u) => u.plan === "semi_premium").length;
+        const premiumUsers = allUsers.filter((u) => u.plan === "premium").length;
+
+        // Quotes generated today (matches_used increments per quote)
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const { count: quotesToday } = await supabaseAdmin
+          .from("user_profiles")
+          .select("*", { count: "exact", head: true })
+          .gte("updated_at", todayStart.toISOString());
+
+        // Monthly revenue from user_subscriptions
+        const monthStart = new Date();
+        monthStart.setDate(1);
+        monthStart.setHours(0, 0, 0, 0);
+        const { data: subs } = await supabaseAdmin
+          .from("user_subscriptions")
+          .select("tier, status")
+          .eq("status", "active");
+        const activeSubs = subs ?? [];
+        // Rough revenue estimate: premium=$199/mo, semi_premium=$49/mo
+        const monthlyRevenue =
+          activeSubs.filter((s) => s.tier === "premium").length * 199 +
+          activeSubs.filter((s) => s.tier === "semi_premium").length * 49;
+
+        setStats((prev) => ({
+          ...prev,
+          totalUsers,
+          freeUsers,
+          semiPremiumUsers,
+          premiumUsers,
+          quotesGeneratedToday: quotesToday ?? 0,
+          activeSessions: activeSubs.length, // active paid subs as proxy
+          monthlyRevenue,
+        }));
+      } catch (e) {
+        console.error("Failed to fetch admin stats", e);
+      } finally {
+        setStatsLoading(false);
+      }
+    }
+    fetchStats();
+  }, []);
 
   // Navigation panels - organized by category
   const navigationPanels = [
@@ -475,10 +532,12 @@ const AdminDashboard: React.FC = () => {
                     <Users className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-xs font-medium text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">
-                    +12%
+                    {statsLoading ? "…" : `${stats.freeUsers} free`}
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-white">{stats.totalUsers.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-white">
+                  {statsLoading ? "—" : stats.totalUsers.toLocaleString()}
+                </p>
                 <p className="text-xs text-white/50 mt-0.5">Total Users</p>
                 {/* Mini chart placeholder */}
                 <div className="mt-2 flex items-end gap-0.5 h-6">
@@ -499,10 +558,12 @@ const AdminDashboard: React.FC = () => {
                     <TrendingUp className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-xs font-medium text-emerald-400 bg-emerald-500/5 px-2 py-0.5 rounded-full">
-                    +8%
+                    today
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-white">{stats.quotesGeneratedToday}</p>
+                <p className="text-2xl font-bold text-white">
+                  {statsLoading ? "—" : stats.quotesGeneratedToday}
+                </p>
                 <p className="text-xs text-white/50 mt-0.5">Quotes Today</p>
                 <div className="mt-2 flex items-end gap-0.5 h-6">
                   {[30, 50, 40, 75, 60, 85, 70].map((h, i) => (
@@ -522,11 +583,11 @@ const AdminDashboard: React.FC = () => {
                     <DollarSign className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                    +15%
+                    active subs
                   </span>
                 </div>
                 <p className="text-2xl font-bold text-white">
-                  ${stats.monthlyRevenue.toLocaleString()}
+                  {statsLoading ? "—" : `$${stats.monthlyRevenue.toLocaleString()}`}
                 </p>
                 <p className="text-xs text-white/50 mt-0.5">Monthly Revenue</p>
                 <div className="mt-2 flex items-end gap-0.5 h-6">
@@ -551,8 +612,10 @@ const AdminDashboard: React.FC = () => {
                     <span className="text-xs text-white/50">Live</span>
                   </div>
                 </div>
-                <p className="text-2xl font-bold text-white">{stats.activeSessions}</p>
-                <p className="text-xs text-white/50 mt-0.5">Active Sessions</p>
+                <p className="text-2xl font-bold text-white">
+                  {statsLoading ? "—" : stats.activeSessions}
+                </p>
+                <p className="text-xs text-white/50 mt-0.5">Active Paid Subs</p>
                 <div className="mt-2 flex items-end gap-0.5 h-6">
                   {[60, 45, 70, 55, 80, 65, 75].map((h, i) => (
                     <div
