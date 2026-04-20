@@ -165,7 +165,7 @@ export default function ValueSection() {
                 className="text-[9px] text-sky-400/50 uppercase tracking-widest font-semibold"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
-                What Merlin sizes
+                What TrueQuote sizes
               </p>
               {[
                 { label: "BESS", note: "Battery energy storage — the core" },

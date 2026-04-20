@@ -70,20 +70,20 @@ export default function HeroSection({
               className="text-sm font-medium tracking-widest uppercase mb-4"
               style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em" }}
             >
-              Why Merlin
+              Why TrueQuote
             </p>
             <h2
               className="text-3xl md:text-4xl font-bold mb-4"
               style={{ color: "#fff", letterSpacing: "-0.02em" }}
             >
-              Get accurate quotes <span style={{ color: "#fbbf24" }}>without the runaround</span>
+              Verified quotes — <span style={{ color: "#fbbf24" }}>not vendor estimates</span>
             </h2>
             <p
               className="text-base max-w-2xl mx-auto"
               style={{ color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}
             >
-              Our AI analyzes 30+ industry configurations, real utility rates, and NREL-validated
-              pricing to design your optimal energy system.
+              Every number is traced to a published source: NREL ATB 2024 for equipment costs, EIA
+              for utility rates, and IRA 2022 for tax credits. No guesswork, no sales spin.
             </p>
           </div>
 

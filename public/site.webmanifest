@@ -1,7 +1,7 @@
 {
-  "name": "Merlin Energy",
-  "short_name": "Merlin",
-  "description": "Smart BESS & Solar Quotes — TrueQuote™ verified with NREL & IRA 2022 data",
+  "name": "TrueQuote",
+  "short_name": "TrueQuote",
+  "description": "Verified BESS & Solar Quotes — TrueQuote™ verified with NREL & IRA 2022 data",
   "icons": [
     {
       "src": "/favicon-16.png",
