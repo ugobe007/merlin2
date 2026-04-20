@@ -1,13 +1,13 @@
 /**
  * Real-Time Market Data API Integration Service
- * 
+ *
  * Connects to live wholesale electricity markets and equipment pricing APIs:
  * - GridStatus.io (unified ISO market data)
  * - CAISO OASIS (California)
  * - PJM DataMiner (Mid-Atlantic/Midwest)
  * - ERCOT API (Texas)
  * - EIA API (US Energy Information Administration)
- * 
+ *
  * Created: March 20, 2026
  */
 
@@ -16,7 +16,7 @@
 // ============================================================================
 
 export interface RealTimePricing {
-  iso: 'CAISO' | 'PJM' | 'ERCOT' | 'NYISO';
+  iso: "CAISO" | "PJM" | "ERCOT" | "NYISO";
   timestamp: string;
   lmp_current: number; // $/MWh - Locational Marginal Price
   lmp_day_ahead: number; // $/MWh forecast
@@ -39,7 +39,7 @@ export interface AncillaryServices {
 export interface CapacityMarket {
   iso: string;
   timestamp: string;
-  market_type: 'PJM_BRA' | 'CAISO_RA' | 'ERCOT_ORDC' | 'NYISO_ICAP';
+  market_type: "PJM_BRA" | "CAISO_RA" | "ERCOT_ORDC" | "NYISO_ICAP";
   price: number; // $/MW-day or $/MW-month
   clearing_price: number;
   auction_date: string;
@@ -52,7 +52,17 @@ export interface StorageValueStack {
   ancillary_revenue: number; // $/MW-year
   capacity_revenue: number; // $/MW-year
   transmission_deferral: number; // $/MW-year
+  local_grid_services_revenue: number; // $/MW-year
+  vpp_orchestration_revenue: number; // $/MW-year
+  value_stacking_multiplier_estimate: number; // Typical advanced VPP uplift (1.0-4.0x)
   total_revenue_potential: number; // $/MW-year
+  participant_revenue_split: {
+    end_users: number; // $/MW-year
+    aggregator_operator: number; // $/MW-year
+    utility_grid_value: number; // $/MW-year (deferred/avoided system costs)
+    fleet_operators: number; // $/MW-year
+    oem_platforms: number; // $/MW-year
+  };
 }
 
 // ============================================================================
@@ -61,27 +71,27 @@ export interface StorageValueStack {
 
 // GridStatus.io - Unified market data API (requires API key)
 // https://www.gridstatus.io/
-const GRIDSTATUS_API_URL = 'https://api.gridstatus.io/v1';
-const GRIDSTATUS_API_KEY = import.meta.env.VITE_GRIDSTATUS_API_KEY || '';
+const GRIDSTATUS_API_URL = "https://api.gridstatus.io/v1";
+const GRIDSTATUS_API_KEY = import.meta.env.VITE_GRIDSTATUS_API_KEY || "";
 
 // CAISO OASIS - California ISO market data (public API)
 // http://oasis.caiso.com/
-const CAISO_OASIS_URL = 'http://oasis.caiso.com/oasisapi/SingleZip';
+const CAISO_OASIS_URL = "http://oasis.caiso.com/oasisapi/SingleZip";
 
 // PJM DataMiner - PJM Interconnection market data (requires account)
 // https://dataminer2.pjm.com/
-const PJM_DATAMINER_URL = 'https://api.pjm.com/api/v1';
-const PJM_API_KEY = import.meta.env.VITE_PJM_API_KEY || '';
+const PJM_DATAMINER_URL = "https://api.pjm.com/api/v1";
+const PJM_API_KEY = import.meta.env.VITE_PJM_API_KEY || "";
 
 // ERCOT API - Texas grid data (public API)
 // https://www.ercot.com/mp/data-products
-const ERCOT_API_URL = 'https://api.ercot.com/api/public-reports';
-const ERCOT_API_KEY = import.meta.env.VITE_ERCOT_API_KEY || '';
+const ERCOT_API_URL = "https://api.ercot.com/api/public-reports";
+const ERCOT_API_KEY = import.meta.env.VITE_ERCOT_API_KEY || "";
 
 // EIA API - US Energy Information Administration (requires free API key)
 // https://www.eia.gov/opendata/
-const EIA_API_URL = 'https://api.eia.gov/v2';
-const EIA_API_KEY = import.meta.env.VITE_EIA_API_KEY || '';
+const EIA_API_URL = "https://api.eia.gov/v2";
+const EIA_API_KEY = import.meta.env.VITE_EIA_API_KEY || "";
 
 // ============================================================================
 // GRIDSTATUS.IO - UNIFIED MARKET DATA (RECOMMENDED)
@@ -93,15 +103,15 @@ const EIA_API_KEY = import.meta.env.VITE_EIA_API_KEY || '';
  */
 export async function fetchGridStatusLMP(iso: string): Promise<RealTimePricing | null> {
   if (!GRIDSTATUS_API_KEY) {
-    console.warn('GridStatus.io API key not configured. Set VITE_GRIDSTATUS_API_KEY in .env');
+    console.warn("GridStatus.io API key not configured. Set VITE_GRIDSTATUS_API_KEY in .env");
     return null;
   }
 
   try {
     const response = await fetch(`${GRIDSTATUS_API_URL}/lmp/latest?iso=${iso}`, {
       headers: {
-        'Authorization': `Bearer ${GRIDSTATUS_API_KEY}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${GRIDSTATUS_API_KEY}`,
+        "Content-Type": "application/json",
       },
     });
 
@@ -138,8 +148,8 @@ export async function fetchAncillaryServices(iso: string): Promise<AncillaryServ
   try {
     const response = await fetch(`${GRIDSTATUS_API_URL}/ancillary-services/${iso}`, {
       headers: {
-        'Authorization': `Bearer ${GRIDSTATUS_API_KEY}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${GRIDSTATUS_API_KEY}`,
+        "Content-Type": "application/json",
       },
     });
 
@@ -173,31 +183,31 @@ export async function fetchCAISOPricing(): Promise<RealTimePricing | null> {
   try {
     // CAISO OASIS query for real-time 5-minute LMP
     const params = new URLSearchParams({
-      queryname: 'PRC_LMP',
-      market_run_id: 'RTM',
-      node: 'TH_NP15_GEN-APND', // NP15 (Northern California) load zone
+      queryname: "PRC_LMP",
+      market_run_id: "RTM",
+      node: "TH_NP15_GEN-APND", // NP15 (Northern California) load zone
       startdatetime: new Date(Date.now() - 3600000).toISOString().slice(0, 19),
       enddatetime: new Date().toISOString().slice(0, 19),
-      version: '1',
+      version: "1",
     });
 
     const response = await fetch(`${CAISO_OASIS_URL}?${params}`, {
       headers: {
-        'Accept': 'application/xml',
+        Accept: "application/xml",
       },
     });
 
     if (!response.ok) throw new Error(`CAISO API error: ${response.status}`);
 
     const xmlText = await response.text();
-    
+
     // Parse XML response (simplified - would use DOMParser in browser)
     const lmpMatch = xmlText.match(/<LMP>([0-9.]+)<\/LMP>/);
     const congestionMatch = xmlText.match(/<CONGESTION_LMP>([0-9.]+)<\/CONGESTION_LMP>/);
     const lossMatch = xmlText.match(/<LOSS_LMP>([0-9.]+)<\/LOSS_LMP>/);
 
     return {
-      iso: 'CAISO',
+      iso: "CAISO",
       timestamp: new Date().toISOString(),
       lmp_current: lmpMatch ? parseFloat(lmpMatch[1]) : 0,
       lmp_day_ahead: 0, // Would need separate DA query
@@ -208,7 +218,7 @@ export async function fetchCAISOPricing(): Promise<RealTimePricing | null> {
       loss_component: lossMatch ? parseFloat(lossMatch[1]) : 0,
     };
   } catch (error) {
-    console.error('Error fetching CAISO pricing:', error);
+    console.error("Error fetching CAISO pricing:", error);
     return null;
   }
 }
@@ -228,7 +238,7 @@ export async function fetchEIAElectricityRates(state: string): Promise<{
   timestamp: string;
 } | null> {
   if (!EIA_API_KEY) {
-    console.warn('EIA API key not configured. Set VITE_EIA_API_KEY in .env');
+    console.warn("EIA API key not configured. Set VITE_EIA_API_KEY in .env");
     return null;
   }
 
@@ -236,7 +246,7 @@ export async function fetchEIAElectricityRates(state: string): Promise<{
     // EIA electricity rates API
     const response = await fetch(
       `${EIA_API_URL}/electricity/retail-sales/data/?api_key=${EIA_API_KEY}` +
-      `&frequency=monthly&data[0]=price&facets[stateid][]=${state}&sort[0][column]=period&sort[0][direction]=desc&offset=0&length=1`
+        `&frequency=monthly&data[0]=price&facets[stateid][]=${state}&sort[0][column]=period&sort[0][direction]=desc&offset=0&length=1`
     );
 
     if (!response.ok) throw new Error(`EIA API error: ${response.status}`);
@@ -247,9 +257,9 @@ export async function fetchEIAElectricityRates(state: string): Promise<{
 
     // EIA returns cents/kWh - convert to $/kWh
     const rates = data.response.data;
-    const residential = rates.find((r: any) => r.sectorid === 'RES')?.price / 100 || 0;
-    const commercial = rates.find((r: any) => r.sectorid === 'COM')?.price / 100 || 0;
-    const industrial = rates.find((r: any) => r.sectorid === 'IND')?.price / 100 || 0;
+    const residential = rates.find((r: any) => r.sectorid === "RES")?.price / 100 || 0;
+    const commercial = rates.find((r: any) => r.sectorid === "COM")?.price / 100 || 0;
+    const industrial = rates.find((r: any) => r.sectorid === "IND")?.price / 100 || 0;
 
     return {
       residential,
@@ -291,7 +301,7 @@ export async function calculateStorageValueStack(
 
     // Ancillary services revenue (assumes 50% capacity factor)
     const ancillaryRevenue = ancillary
-      ? (ancillary.frequency_regulation * 12 * systemSizeMW * 0.5) // $/MW-month * 12 * MW * capacity_factor
+      ? ancillary.frequency_regulation * 12 * systemSizeMW * 0.5 // $/MW-month * 12 * MW * capacity_factor
       : 0;
 
     // Capacity market revenue (varies by ISO)
@@ -300,7 +310,30 @@ export async function calculateStorageValueStack(
     // Transmission deferral value (utility-specific, conservative estimate)
     const transmissionDeferral = systemSizeMW * 50000; // $50k/MW-year conservative
 
-    const totalRevenue = arbitrageRevenue + ancillaryRevenue + capacityRevenue + transmissionDeferral;
+    // Local grid services value (distribution deferral / congestion management)
+    const localGridServices = systemSizeMW * 25000; // $25k/MW-year conservative
+
+    const activeStreams = [
+      arbitrageRevenue > 0,
+      ancillaryRevenue > 0,
+      capacityRevenue > 0,
+      transmissionDeferral > 0,
+      localGridServices > 0,
+    ].filter(Boolean).length;
+
+    const valueStackingMultiplier = estimateValueStackingMultiplier(activeStreams);
+
+    const baseTotalRevenue =
+      arbitrageRevenue +
+      ancillaryRevenue +
+      capacityRevenue +
+      transmissionDeferral +
+      localGridServices;
+
+    const totalRevenue = baseTotalRevenue * valueStackingMultiplier;
+    const participantSplit = allocateVPPParticipantRevenue(totalRevenue);
+
+    const perMW = systemSizeMW > 0 ? totalRevenue / systemSizeMW : 0;
 
     return {
       iso,
@@ -309,10 +342,20 @@ export async function calculateStorageValueStack(
       ancillary_revenue: ancillaryRevenue / systemSizeMW, // $/MW-year
       capacity_revenue: capacityRevenue / systemSizeMW, // $/MW-year
       transmission_deferral: 50000, // $/MW-year
-      total_revenue_potential: totalRevenue / systemSizeMW, // $/MW-year
+      local_grid_services_revenue: 25000, // $/MW-year
+      vpp_orchestration_revenue: participantSplit.aggregator_operator / systemSizeMW, // $/MW-year
+      value_stacking_multiplier_estimate: valueStackingMultiplier,
+      total_revenue_potential: perMW, // $/MW-year
+      participant_revenue_split: {
+        end_users: participantSplit.end_users / systemSizeMW,
+        aggregator_operator: participantSplit.aggregator_operator / systemSizeMW,
+        utility_grid_value: participantSplit.utility_grid_value / systemSizeMW,
+        fleet_operators: participantSplit.fleet_operators / systemSizeMW,
+        oem_platforms: participantSplit.oem_platforms / systemSizeMW,
+      },
     };
   } catch (error) {
-    console.error('Error calculating storage value stack:', error);
+    console.error("Error calculating storage value stack:", error);
     return null;
   }
 }
@@ -320,22 +363,53 @@ export async function calculateStorageValueStack(
 async function estimateCapacityRevenue(iso: string, systemSizeMW: number): Promise<number> {
   // ISO-specific capacity market estimates (would integrate with real APIs)
   const capacityPrices: Record<string, number> = {
-    'CAISO': 5.50, // $/kW-month Resource Adequacy
-    'PJM': 140.0, // $/MW-day Base Residual Auction (2024/2025)
-    'ERCOT': 0, // Energy-only market (no capacity market)
-    'NYISO': 3.50, // $/kW-month ICAP
-    'ISONE': 2.00, // $/kW-month FCM
+    CAISO: 5.5, // $/kW-month Resource Adequacy
+    PJM: 140.0, // $/MW-day Base Residual Auction (2024/2025)
+    ERCOT: 0, // Energy-only market (no capacity market)
+    NYISO: 3.5, // $/kW-month ICAP
+    ISONE: 2.0, // $/kW-month FCM
   };
 
   const price = capacityPrices[iso.toUpperCase()] || 0;
-  
-  if (iso.toUpperCase() === 'PJM') {
+
+  if (iso.toUpperCase() === "PJM") {
     // PJM: $/MW-day * 365 days * MW
     return price * 365 * systemSizeMW;
   } else {
     // Others: $/kW-month * 12 months * kW
     return price * 12 * systemSizeMW * 1000;
   }
+}
+
+function estimateValueStackingMultiplier(activeStreams: number): number {
+  // Advanced stacked dispatch can drive ~2-4x recurring value relative to a single stream
+  if (activeStreams >= 5) return 2.4;
+  if (activeStreams === 4) return 2.0;
+  if (activeStreams === 3) return 1.5;
+  return 1.0;
+}
+
+function allocateVPPParticipantRevenue(totalAnnualRevenue: number): {
+  end_users: number;
+  aggregator_operator: number;
+  utility_grid_value: number;
+  fleet_operators: number;
+  oem_platforms: number;
+} {
+  // Baseline VPP allocation for mixed DER portfolios
+  const endUsers = totalAnnualRevenue * 0.52;
+  const aggregator = totalAnnualRevenue * 0.18;
+  const utility = totalAnnualRevenue * 0.17;
+  const fleet = totalAnnualRevenue * 0.08;
+  const oem = totalAnnualRevenue * 0.05;
+
+  return {
+    end_users: endUsers,
+    aggregator_operator: aggregator,
+    utility_grid_value: utility,
+    fleet_operators: fleet,
+    oem_platforms: oem,
+  };
 }
 
 // ============================================================================
