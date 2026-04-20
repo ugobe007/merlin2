@@ -71,26 +71,13 @@ export default function Navbar() {
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <a href="/" className="flex items-center gap-2.5 group">
+            <a href="/" className="flex items-center group">
               <img
-                src={WIZARD_URL}
-                alt="Merlin wizard icon"
-                className="w-8 h-8 object-contain rounded-full"
+                src="/truequote-logo.svg"
+                alt="TrueQuote — Verified Energy Quotes"
+                className="h-10 w-auto object-contain transition-opacity duration-200 group-hover:opacity-90"
+                style={{ minWidth: 160 }}
               />
-              <div className="flex flex-col leading-none">
-                <span
-                  className="text-white font-bold text-lg tracking-tight"
-                  style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                >
-                  TrueQuote
-                </span>
-                <span
-                  className="text-[9px] font-medium tracking-[0.2em] uppercase"
-                  style={{ fontFamily: "'Manrope', sans-serif", color: "#F2C14F" }}
-                >
-                  ™
-                </span>
-              </div>
             </a>
 
             {/* Center nav — desktop */}
