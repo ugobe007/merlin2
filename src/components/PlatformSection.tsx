@@ -9,22 +9,22 @@ const items = [
   {
     icon: BarChart3,
     title: "Price projects with real structure",
-    body: "Merlin uses NREL data, DOE frameworks, and Sandia-aligned logic to build project costs from the ground up — not estimates, not averages. Every number has a source.",
+    body: "TrueQuote uses NREL data, DOE frameworks, and Sandia-aligned logic to build project costs from the ground up — not estimates, not averages. Every number has a source.",
   },
   {
     icon: Calculator,
     title: "Model savings without spreadsheet drag",
-    body: "Stop building custom Excel models for every project. Merlin runs the financial logic automatically — utility rates, demand charges, incentives, depreciation — and delivers a clean output in minutes.",
+    body: "Stop building custom Excel models for every project. TrueQuote runs the financial logic automatically — utility rates, demand charges, incentives, depreciation — and delivers a clean output in minutes.",
   },
   {
     icon: GitCompare,
     title: "Compare paths before you commit",
-    body: "Solar only? Solar + storage? EV charging? Merlin lets you model multiple project configurations side by side so you can compare ROI, payback, and risk before spending a dollar.",
+    body: "Solar only? Solar + storage? EV charging? TrueQuote lets you model multiple project configurations side by side so you can compare ROI, payback, and risk before spending a dollar.",
   },
   {
     icon: FileText,
     title: "Build strategy, profiles, and RFP-ready assets",
-    body: "Save your quote as a strategy profile. Share it with your team. Export it as an RFP-ready document. Merlin turns a quote into a buildable plan — not just a number.",
+    body: "Save your quote as a strategy profile. Share it with your team. Export it as an RFP-ready document. TrueQuote turns a quote into a buildable plan — not just a number.",
   },
 ];
 
@@ -43,7 +43,6 @@ export default function PlatformSection() {
 
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="grid lg:grid-cols-[80px_1fr_1fr] gap-8 lg:gap-12 items-start">
-
           {/* Left: vertical label */}
           <div className="hidden lg:flex flex-col items-center gap-4 pt-2">
             <div className="w-px h-16 bg-gradient-to-b from-transparent to-cyan-500/40" />
@@ -69,19 +68,26 @@ export default function PlatformSection() {
               <br />
               <span className="gradient-text">A faster way to decide.</span>
             </h2>
-            <p className="text-slate-400 text-base leading-relaxed mb-8" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-              Merlin is not a calculator. It is not just quoting. It is not engineering software. It is a decision, quoting, and planning platform — built to move energy projects from idea to action.
+            <p
+              className="text-slate-400 text-base leading-relaxed mb-8"
+              style={{ fontFamily: "'DM Sans', sans-serif" }}
+            >
+              TrueQuote is not a calculator. It is not just quoting. It is not engineering software.
+              It is a decision, quoting, and planning platform — built to move energy projects from
+              idea to action.
             </p>
             <div className="flex flex-wrap gap-2">
-              {["Decision Platform", "Quoting Engine", "Planning Tool", "RFP Builder"].map((tag) => (
-                <span
-                  key={tag}
-                  className="px-3 py-1.5 rounded-full text-xs font-medium border border-cyan-500/20 bg-cyan-500/5 text-cyan-400"
-                  style={{ fontFamily: "'DM Sans', sans-serif" }}
-                >
-                  {tag}
-                </span>
-              ))}
+              {["Decision Platform", "Quoting Engine", "Planning Tool", "RFP Builder"].map(
+                (tag) => (
+                  <span
+                    key={tag}
+                    className="px-3 py-1.5 rounded-full text-xs font-medium border border-cyan-500/20 bg-cyan-500/5 text-cyan-400"
+                    style={{ fontFamily: "'DM Sans', sans-serif" }}
+                  >
+                    {tag}
+                  </span>
+                )
+              )}
             </div>
           </div>
 
@@ -128,7 +134,10 @@ export default function PlatformSection() {
                   {isOpen && (
                     <div className="px-5 pb-4">
                       <div className="pl-[52px]">
-                        <p className="text-slate-400 text-sm leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                        <p
+                          className="text-slate-400 text-sm leading-relaxed"
+                          style={{ fontFamily: "'DM Sans', sans-serif" }}
+                        >
                           {item.body}
                         </p>
                       </div>

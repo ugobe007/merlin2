@@ -82,13 +82,13 @@ export default function Navbar() {
                   className="text-white font-bold text-lg tracking-tight"
                   style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                 >
-                  Merlin
+                  TrueQuote
                 </span>
                 <span
-                  className="text-[9px] text-slate-500 font-medium tracking-[0.2em] uppercase"
-                  style={{ fontFamily: "'Manrope', sans-serif" }}
+                  className="text-[9px] font-medium tracking-[0.2em] uppercase"
+                  style={{ fontFamily: "'Manrope', sans-serif", color: "#F2C14F" }}
                 >
-                  Energy
+                  ™
                 </span>
               </div>
             </a>

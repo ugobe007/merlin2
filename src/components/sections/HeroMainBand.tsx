@@ -110,7 +110,7 @@ export default function HeroMainBand({
 
                 {/* Main Headline */}
                 <h1
-                  className="mb-8 lg:text-[72px] md:text-[48px] text-[36px]"
+                  className="mb-6 lg:text-[68px] md:text-[46px] text-[34px]"
                   style={{
                     fontWeight: 900,
                     lineHeight: 0.95,
@@ -122,24 +122,24 @@ export default function HeroMainBand({
                     MozOsxFontSmoothing: "grayscale",
                   }}
                 >
-                  Slash Your
+                  True
                   <span className="block" style={{ color: "#fbbf24", letterSpacing: "-0.025em" }}>
-                    Energy Costs
+                    Energy Quotes.
                   </span>
                 </h1>
 
                 {/* Subheadline */}
                 <div
-                  className="mb-4"
+                  className="mb-6"
                   style={{
-                    fontSize: "20px",
-                    color: "rgba(255,255,255,0.85)",
-                    lineHeight: 1.7,
-                    maxWidth: "480px",
+                    fontSize: "19px",
+                    color: "rgba(255,255,255,0.75)",
+                    lineHeight: 1.65,
+                    maxWidth: "460px",
                   }}
                 >
-                  Get your custom energy savings quote in 5 easy steps. See exactly how much you'll
-                  save with battery storage.
+                  Instant, bankable BESS & solar quotes — every number traced to NREL, EIA, and IRA
+                  2022. No vendor runaround.
                 </div>
 
                 {/* CTA Button - Emerald Ghost */}
@@ -238,7 +238,10 @@ export default function HeroMainBand({
                 </button>
 
                 {/* Links - Merlin + Newsletter */}
-                <div className="flex flex-col items-center gap-3 w-full" style={{ maxWidth: "480px" }}>
+                <div
+                  className="flex flex-col items-center gap-3 w-full"
+                  style={{ maxWidth: "480px" }}
+                >
                   <button
                     onClick={() => setShowAbout(true)}
                     className="inline-flex items-center gap-2 transition-all"
@@ -254,10 +257,10 @@ export default function HeroMainBand({
                       e.currentTarget.style.color = "rgba(255,255,255,0.6)";
                     }}
                   >
-                    <img src={merlinImage} alt="Merlin" className="w-7 h-7 rounded-full" />
-                    <span>About Merlin AI →</span>
+                    <img src={merlinImage} alt="TrueQuote" className="w-7 h-7 rounded-full" />
+                    <span>About TrueQuote →</span>
                   </button>
-                  
+
                   {/* Newsletter Link */}
                   <a
                     href="/news"
