@@ -55,6 +55,8 @@ export interface ProfessionalModelInput {
     spinningReserve: boolean;
     capacityPayments: boolean;
     resourceAdequacy: boolean;
+    vppParticipation?: boolean; // VPP aggregator enrollment + event payments
+    localGridServices?: boolean; // Distribution deferral, local capacity, voltage support
   };
 
   // Project Finance
@@ -91,6 +93,8 @@ export interface RevenueBreakdown {
   spinningReserve: number;
   capacityPayments: number;
   resourceAdequacy: number;
+  vppParticipation: number; // VPP aggregator event payments + enrollment incentives
+  localGridServices: number; // Distribution deferral + local capacity contracts
   totalRevenue: number;
 }
 
@@ -328,6 +332,35 @@ function calculateCapacityPayments(powerMW: number, isoRegion: string): number {
 
   const rate = capacityRates[isoRegion] || 30000;
   return powerMW * rate;
+}
+
+/**
+ * Calculate VPP participation revenue
+ * Aggregator event payments + enrollment incentives
+ * Based on typical CAISO/PJM ELRP/EE program payouts
+ */
+function calculateVPPParticipationRevenue(powerMW: number, isoRegion: string): number {
+  // VPP program rates ($/MW-year) — enrollment bonus + avg event dispatches
+  const vppRates: Record<string, number> = {
+    CAISO: 28000, // ELRP + DRAM program
+    ERCOT: 18000, // 4CP + demand response
+    PJM: 22000, // EE + capacity auction participation
+    NYISO: 20000, // ICAP DMNC programs
+    "ISO-NE": 17000,
+    MISO: 14000,
+    SPP: 12000,
+    OTHER: 15000,
+  };
+  return powerMW * (vppRates[isoRegion] || 15000);
+}
+
+/**
+ * Calculate local grid services revenue
+ * Distribution deferral, local capacity, voltage support contracts
+ */
+function calculateLocalGridServicesRevenue(powerMW: number): number {
+  // $25,000/MW-year — consistent with realTimeMarketService value
+  return powerMW * 25000;
 }
 
 /**
@@ -693,6 +726,8 @@ export async function generateProfessionalModel(
     let spinningReserve = 0;
     let capacity = 0;
     let ra = 0;
+    let vppParticipation = 0;
+    let localGridServices = 0;
 
     if (input.revenueStreams.energyArbitrage) {
       arbitrage = calculateArbitrageRevenue(
@@ -746,6 +781,20 @@ export async function generateProfessionalModel(
         ) * escalationFactor;
     }
 
+    if (input.revenueStreams.vppParticipation) {
+      vppParticipation =
+        calculateVPPParticipationRevenue(
+          input.storageSizeMW * degradationFactor,
+          config.isoRegion
+        ) * escalationFactor;
+    }
+
+    if (input.revenueStreams.localGridServices) {
+      localGridServices =
+        calculateLocalGridServicesRevenue(input.storageSizeMW * degradationFactor) *
+        escalationFactor;
+    }
+
     revenueProjection.push({
       year,
       energyArbitrage: Math.round(arbitrage),
@@ -754,8 +803,17 @@ export async function generateProfessionalModel(
       spinningReserve: Math.round(spinningReserve),
       capacityPayments: Math.round(capacity),
       resourceAdequacy: Math.round(ra),
+      vppParticipation: Math.round(vppParticipation),
+      localGridServices: Math.round(localGridServices),
       totalRevenue: Math.round(
-        arbitrage + demandCharge + frequencyReg + spinningReserve + capacity + ra
+        arbitrage +
+          demandCharge +
+          frequencyReg +
+          spinningReserve +
+          capacity +
+          ra +
+          vppParticipation +
+          localGridServices
       ),
     });
   }

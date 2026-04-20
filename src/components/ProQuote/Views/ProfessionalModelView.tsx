@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   ArrowLeft,
@@ -12,11 +12,17 @@ import {
   DollarSign,
   TrendingUp,
   Banknote,
+  Users,
+  Layers,
 } from "lucide-react";
 import {
   generateProfessionalModel,
   type ProfessionalModelResult,
 } from "@/services/professionalFinancialModel";
+import {
+  calculateStorageValueStack,
+  type StorageValueStack,
+} from "@/services/realTimeMarketService";
 
 /**
  * ProfessionalModelView Component
@@ -91,6 +97,16 @@ export const ProfessionalModelView: React.FC<ProfessionalModelViewProps> = ({
   onClose,
   onNavigateToLanding,
 }) => {
+  const [vppStack, setVppStack] = useState<StorageValueStack | null>(null);
+
+  // Fetch VPP value stack whenever the model results are available
+  useEffect(() => {
+    if (!professionalModel) return;
+    calculateStorageValueStack(storageSizeMW, selectedISORegion)
+      .then((stack) => setVppStack(stack))
+      .catch(() => setVppStack(null));
+  }, [professionalModel, storageSizeMW, selectedISORegion]);
+
   return (
     <div className="min-h-screen" style={{ background: "#0f1117" }}>
       {/* Header */}
@@ -358,6 +374,8 @@ export const ProfessionalModelView: React.FC<ProfessionalModelViewProps> = ({
                     <li>• Energy Arbitrage</li>
                     <li>• Frequency Regulation</li>
                     <li>• Capacity Payments</li>
+                    <li>• VPP Participation</li>
+                    <li>• Local Grid Services</li>
                   </ul>
                 </div>
                 <div
@@ -401,6 +419,8 @@ export const ProfessionalModelView: React.FC<ProfessionalModelViewProps> = ({
                       spinningReserve: true,
                       capacityPayments: true,
                       resourceAdequacy: true,
+                      vppParticipation: true,
+                      localGridServices: true,
                     },
                   });
                   setProfessionalModel(result);
@@ -830,6 +850,127 @@ export const ProfessionalModelView: React.FC<ProfessionalModelViewProps> = ({
                 <span className="text-red-400 ml-2">●</span> &lt;1.0x (Below Threshold)
               </p>
             </div>
+
+            {/* VPP Participant Economics Panel */}
+            {vppStack && (
+              <div
+                className="rounded-xl p-6"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(99,102,241,0.25)",
+                }}
+              >
+                <h3 className="text-lg font-semibold text-white mb-1 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-indigo-400" />
+                  VPP Participant Economics
+                </h3>
+                <p className="text-xs text-slate-500 mb-5">
+                  Annual revenue allocation across all stakeholders at {storageSizeMW.toFixed(2)} MW
+                  ·&nbsp; Value-stacking multiplier:{" "}
+                  <span className="text-indigo-300 font-semibold">
+                    {vppStack.value_stacking_multiplier_estimate.toFixed(1)}×
+                  </span>
+                </p>
+
+                {/* Multiplier + total */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 text-center">
+                    <p className="text-xs text-slate-400 uppercase tracking-wide">
+                      Stack Multiplier
+                    </p>
+                    <p className="text-2xl font-bold text-indigo-300">
+                      {vppStack.value_stacking_multiplier_estimate.toFixed(1)}×
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">vs single-stream</p>
+                  </div>
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-center">
+                    <p className="text-xs text-slate-400 uppercase tracking-wide">Total Pool</p>
+                    <p className="text-2xl font-bold text-emerald-300">
+                      ${(vppStack.total_revenue_potential / 1000).toFixed(0)}K
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">$/yr stacked</p>
+                  </div>
+                  <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-4 text-center">
+                    <p className="text-xs text-slate-400 uppercase tracking-wide">Local Grid Svc</p>
+                    <p className="text-2xl font-bold text-cyan-300">
+                      ${(vppStack.local_grid_services_revenue / 1000).toFixed(0)}K
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">distribution deferral</p>
+                  </div>
+                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 text-center">
+                    <p className="text-xs text-slate-400 uppercase tracking-wide">
+                      VPP Orchestration
+                    </p>
+                    <p className="text-2xl font-bold text-purple-300">
+                      ${(vppStack.vpp_orchestration_revenue / 1000).toFixed(0)}K
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">aggregator programs</p>
+                  </div>
+                </div>
+
+                {/* Participant revenue split */}
+                <h4 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-slate-400" />
+                  Revenue Split by Participant
+                </h4>
+                <div className="space-y-2">
+                  {(
+                    [
+                      {
+                        label: "End Users / DER Owners",
+                        key: "end_users" as const,
+                        pct: 52,
+                        color: "bg-emerald-500",
+                      },
+                      {
+                        label: "Aggregator / VPP Operator",
+                        key: "aggregator_operator" as const,
+                        pct: 18,
+                        color: "bg-indigo-500",
+                      },
+                      {
+                        label: "Utility / Grid Value (TSO/DSO)",
+                        key: "utility_grid_value" as const,
+                        pct: 17,
+                        color: "bg-blue-500",
+                      },
+                      {
+                        label: "Fleet Operators (EV / V2G)",
+                        key: "fleet_operators" as const,
+                        pct: 8,
+                        color: "bg-amber-500",
+                      },
+                      {
+                        label: "OEM / Device Platforms",
+                        key: "oem_platforms" as const,
+                        pct: 5,
+                        color: "bg-purple-500",
+                      },
+                    ] as const
+                  ).map(({ label, key, pct, color }) => (
+                    <div key={key} className="flex items-center gap-3">
+                      <div className="w-44 flex-shrink-0 text-xs text-slate-400 text-right pr-2">
+                        {label}
+                      </div>
+                      <div className="flex-1 h-5 rounded-full bg-slate-800 overflow-hidden">
+                        <div
+                          className={`h-full ${color} rounded-full transition-all`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="w-28 flex-shrink-0 text-xs text-slate-300 font-mono">
+                        <span className="text-slate-400">{pct}% · </span>$
+                        {(vppStack.participant_revenue_split[key] / 1000).toFixed(0)}K/yr
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-600 mt-4">
+                  Participant shares reflect industry averages (NREL VPP Market Characterization,
+                  2024). Actual splits vary by program contract.
+                </p>
+              </div>
+            )}
 
             {/* Export Options */}
             <div className="flex justify-center gap-4 mt-8">

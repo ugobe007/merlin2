@@ -1,9 +1,9 @@
 /**
  * Industry Opportunity Panel
- * 
+ *
  * Shows industry-specific opportunity cards at the top of Step 3.
  * Similar to Vineet's "Goals Analysis Potential" design.
- * 
+ *
  * Each card shows potential benefits for the selected industry:
  * - Cost Reduction (savings %, annual $, payback)
  * - Backup Power (runtime, coverage, switch time)
@@ -11,15 +11,25 @@
  * - Peak Shaving (peak cut %, savings, management)
  * - Revenue (grid services, arbitrage, total)
  * - Independence (self-power %, resilient, autonomy)
- * 
+ *
  * Created: January 13, 2026
  */
 
-import React, { useState } from 'react';
-import { 
-  ChevronDown, ChevronUp, DollarSign, Battery, Leaf, 
-  Zap, TrendingUp, Shield, Sun, Car, Flame
-} from 'lucide-react';
+import React, { useState } from "react";
+import {
+  ChevronDown,
+  ChevronUp,
+  DollarSign,
+  Battery,
+  Leaf,
+  Zap,
+  TrendingUp,
+  Shield,
+  Sun,
+  Car,
+  Flame,
+  Network,
+} from "lucide-react";
 
 // ============================================================================
 // TYPES
@@ -65,256 +75,271 @@ function getIndustryOpportunities(
 ): OpportunityCard[] {
   const rate = electricityRate || 0.12;
   const sun = sunHours || 5.5;
-  
+
   // Base opportunities that apply to most industries
   const baseOpportunities: OpportunityCard[] = [
     {
-      id: 'cost-reduction',
-      title: 'Cost Reduction',
+      id: "cost-reduction",
+      title: "Cost Reduction",
       icon: <DollarSign className="w-5 h-5" />,
-      color: 'text-emerald-400',
-      bgColor: 'bg-emerald-500/10',
-      borderColor: 'border-emerald-500/30',
+      color: "text-emerald-400",
+      bgColor: "bg-emerald-500/10",
+      borderColor: "border-emerald-500/30",
       metrics: [
-        { value: '25-35%', label: 'Savings', highlight: true },
-        { value: `$${Math.round(rate * 150000 * 0.25 / 1000)}K`, label: 'Annual' },
-        { value: '4.2yr', label: 'Payback' },
+        { value: "25-35%", label: "Savings", highlight: true },
+        { value: `$${Math.round((rate * 150000 * 0.25) / 1000)}K`, label: "Annual" },
+        { value: "4.2yr", label: "Payback" },
       ],
     },
     {
-      id: 'backup-power',
-      title: 'Backup Power',
+      id: "backup-power",
+      title: "Backup Power",
       icon: <Battery className="w-5 h-5" />,
-      color: 'text-amber-400',
-      bgColor: 'bg-amber-500/10',
-      borderColor: 'border-amber-500/30',
+      color: "text-amber-400",
+      bgColor: "bg-amber-500/10",
+      borderColor: "border-amber-500/30",
       metrics: [
-        { value: '8 hrs', label: 'Runtime', highlight: true },
-        { value: '100%', label: 'Coverage' },
-        { value: '<10ms', label: 'Switch' },
+        { value: "8 hrs", label: "Runtime", highlight: true },
+        { value: "100%", label: "Coverage" },
+        { value: "<10ms", label: "Switch" },
       ],
     },
     {
-      id: 'sustainability',
-      title: 'Sustainability',
+      id: "sustainability",
+      title: "Sustainability",
       icon: <Leaf className="w-5 h-5" />,
-      color: 'text-green-400',
-      bgColor: 'bg-green-500/10',
-      borderColor: 'border-green-500/30',
+      color: "text-green-400",
+      bgColor: "bg-green-500/10",
+      borderColor: "border-green-500/30",
       metrics: [
-        { value: '45%', label: 'CO₂ Cut', highlight: true },
-        { value: '120T', label: 'Tons/Yr' },
-        { value: 'A+', label: 'Rating' },
+        { value: "45%", label: "CO₂ Cut", highlight: true },
+        { value: "120T", label: "Tons/Yr" },
+        { value: "A+", label: "Rating" },
       ],
     },
   ];
-  
+
   // Industry-specific opportunities
   const industryOpportunities: Record<string, OpportunityCard[]> = {
-    'car-wash': [
+    "car-wash": [
       {
-        id: 'peak-shaving',
-        title: 'Peak Shaving',
+        id: "peak-shaving",
+        title: "Peak Shaving",
         icon: <Zap className="w-5 h-5" />,
-        color: 'text-cyan-400',
-        bgColor: 'bg-cyan-500/10',
-        borderColor: 'border-cyan-500/30',
+        color: "text-cyan-400",
+        bgColor: "bg-cyan-500/10",
+        borderColor: "border-cyan-500/30",
         metrics: [
-          { value: '30%', label: 'Peak Cut', highlight: true },
-          { value: '$8K', label: 'Savings' },
-          { value: 'Smart', label: 'Mgmt' },
+          { value: "30%", label: "Peak Cut", highlight: true },
+          { value: "$8K", label: "Savings" },
+          { value: "Smart", label: "Mgmt" },
         ],
-        description: 'High pump loads make peak shaving very effective',
+        description: "High pump loads make peak shaving very effective",
       },
       {
-        id: 'solar-potential',
-        title: 'Solar Potential',
+        id: "solar-potential",
+        title: "Solar Potential",
         icon: <Sun className="w-5 h-5" />,
-        color: 'text-yellow-400',
-        bgColor: 'bg-yellow-500/10',
-        borderColor: 'border-yellow-500/30',
+        color: "text-yellow-400",
+        bgColor: "bg-yellow-500/10",
+        borderColor: "border-yellow-500/30",
         metrics: [
-          { value: `${sun.toFixed(1)}h`, label: 'Peak Sun', highlight: true },
-          { value: '45kW', label: 'Roof Fit' },
-          { value: '$12K', label: 'Savings' },
+          { value: `${sun.toFixed(1)}h`, label: "Peak Sun", highlight: true },
+          { value: "45kW", label: "Roof Fit" },
+          { value: "$12K", label: "Savings" },
         ],
-        description: 'Large flat roof area ideal for solar installation',
+        description: "Large flat roof area ideal for solar installation",
       },
     ],
-    'hotel': [
+    hotel: [
       {
-        id: 'ev-revenue',
-        title: 'EV Revenue',
+        id: "ev-revenue",
+        title: "EV Revenue",
         icon: <Car className="w-5 h-5" />,
-        color: 'text-blue-400',
-        bgColor: 'bg-blue-500/10',
-        borderColor: 'border-blue-500/30',
+        color: "text-blue-400",
+        bgColor: "bg-blue-500/10",
+        borderColor: "border-blue-500/30",
         metrics: [
-          { value: '$2K', label: 'Monthly', highlight: true },
-          { value: '8+', label: 'Chargers' },
-          { value: 'Premium', label: 'Guest Perk' },
+          { value: "$2K", label: "Monthly", highlight: true },
+          { value: "8+", label: "Chargers" },
+          { value: "Premium", label: "Guest Perk" },
         ],
-        description: 'Guest EV charging is a premium amenity with revenue potential',
+        description: "Guest EV charging is a premium amenity with revenue potential",
       },
       {
-        id: 'hvac-optimization',
-        title: 'HVAC Savings',
+        id: "hvac-optimization",
+        title: "HVAC Savings",
         icon: <Flame className="w-5 h-5" />,
-        color: 'text-orange-400',
-        bgColor: 'bg-orange-500/10',
-        borderColor: 'border-orange-500/30',
+        color: "text-orange-400",
+        bgColor: "bg-orange-500/10",
+        borderColor: "border-orange-500/30",
         metrics: [
-          { value: '40%', label: 'Load', highlight: true },
-          { value: '$15K', label: 'Savings' },
-          { value: '24/7', label: 'Comfort' },
+          { value: "40%", label: "Load", highlight: true },
+          { value: "$15K", label: "Savings" },
+          { value: "24/7", label: "Comfort" },
         ],
-        description: 'HVAC is your biggest load - battery storage optimizes it',
+        description: "HVAC is your biggest load - battery storage optimizes it",
       },
     ],
-    'ev-charging': [
+    "ev-charging": [
       {
-        id: 'grid-arbitrage',
-        title: 'Grid Arbitrage',
+        id: "grid-arbitrage",
+        title: "Grid Arbitrage",
         icon: <TrendingUp className="w-5 h-5" />,
-        color: 'text-purple-400',
-        bgColor: 'bg-purple-500/10',
-        borderColor: 'border-purple-500/30',
+        color: "text-purple-400",
+        bgColor: "bg-purple-500/10",
+        borderColor: "border-purple-500/30",
         metrics: [
-          { value: '$5K', label: 'Grid Svc', highlight: true },
-          { value: '$3K', label: 'Arbitrage' },
-          { value: '$8K', label: 'Total/Yr' },
+          { value: "$5K", label: "Grid Svc", highlight: true },
+          { value: "$3K", label: "Arbitrage" },
+          { value: "$8K", label: "Total/Yr" },
         ],
-        description: 'Buy low, sell high - maximize TOU rate differences',
+        description: "Buy low, sell high - maximize TOU rate differences",
       },
       {
-        id: 'demand-management',
-        title: 'Demand Mgmt',
+        id: "demand-management",
+        title: "Demand Mgmt",
         icon: <Zap className="w-5 h-5" />,
-        color: 'text-cyan-400',
-        bgColor: 'bg-cyan-500/10',
-        borderColor: 'border-cyan-500/30',
+        color: "text-cyan-400",
+        bgColor: "bg-cyan-500/10",
+        borderColor: "border-cyan-500/30",
         metrics: [
-          { value: '50%', label: 'Peak Cut', highlight: true },
-          { value: '$12K', label: 'Savings' },
-          { value: 'Auto', label: 'Control' },
+          { value: "50%", label: "Peak Cut", highlight: true },
+          { value: "$12K", label: "Savings" },
+          { value: "Auto", label: "Control" },
         ],
-        description: 'DCFC creates massive peaks - BESS smooths them out',
+        description: "DCFC creates massive peaks - BESS smooths them out",
       },
     ],
-    'hospital': [
+    hospital: [
       {
-        id: 'critical-backup',
-        title: 'Critical Backup',
+        id: "critical-backup",
+        title: "Critical Backup",
         icon: <Shield className="w-5 h-5" />,
-        color: 'text-red-400',
-        bgColor: 'bg-red-500/10',
-        borderColor: 'border-red-500/30',
+        color: "text-red-400",
+        bgColor: "bg-red-500/10",
+        borderColor: "border-red-500/30",
         metrics: [
-          { value: '100%', label: 'Coverage', highlight: true },
-          { value: '<10ms', label: 'Transfer' },
-          { value: 'NEC 517', label: 'Compliant' },
+          { value: "100%", label: "Coverage", highlight: true },
+          { value: "<10ms", label: "Transfer" },
+          { value: "NEC 517", label: "Compliant" },
         ],
-        description: 'Life-safety systems require seamless backup power',
+        description: "Life-safety systems require seamless backup power",
       },
       {
-        id: 'demand-response',
-        title: 'DR Revenue',
+        id: "demand-response",
+        title: "DR Revenue",
         icon: <DollarSign className="w-5 h-5" />,
-        color: 'text-emerald-400',
-        bgColor: 'bg-emerald-500/10',
-        borderColor: 'border-emerald-500/30',
+        color: "text-emerald-400",
+        bgColor: "bg-emerald-500/10",
+        borderColor: "border-emerald-500/30",
         metrics: [
-          { value: '$25K', label: 'Annual', highlight: true },
-          { value: 'Auto', label: 'Dispatch' },
-          { value: 'Low Risk', label: 'Profile' },
+          { value: "$25K", label: "Annual", highlight: true },
+          { value: "Auto", label: "Dispatch" },
+          { value: "Low Risk", label: "Profile" },
         ],
-        description: 'Hospitals qualify for premium demand response rates',
+        description: "Hospitals qualify for premium demand response rates",
       },
     ],
-    'data-center': [
+    "data-center": [
       {
-        id: 'ups-integration',
-        title: 'UPS Integration',
+        id: "ups-integration",
+        title: "UPS Integration",
         icon: <Battery className="w-5 h-5" />,
-        color: 'text-blue-400',
-        bgColor: 'bg-blue-500/10',
-        borderColor: 'border-blue-500/30',
+        color: "text-blue-400",
+        bgColor: "bg-blue-500/10",
+        borderColor: "border-blue-500/30",
         metrics: [
-          { value: '99.99%', label: 'Uptime', highlight: true },
-          { value: 'Tier III', label: 'Rating' },
-          { value: 'Instant', label: 'Failover' },
+          { value: "99.99%", label: "Uptime", highlight: true },
+          { value: "Tier III", label: "Rating" },
+          { value: "Instant", label: "Failover" },
         ],
-        description: 'BESS replaces or augments traditional UPS systems',
+        description: "BESS replaces or augments traditional UPS systems",
       },
       {
-        id: 'cooling-load',
-        title: 'Cooling Savings',
+        id: "cooling-load",
+        title: "Cooling Savings",
         icon: <Flame className="w-5 h-5" />,
-        color: 'text-cyan-400',
-        bgColor: 'bg-cyan-500/10',
-        borderColor: 'border-cyan-500/30',
+        color: "text-cyan-400",
+        bgColor: "bg-cyan-500/10",
+        borderColor: "border-cyan-500/30",
         metrics: [
-          { value: '35%', label: 'Load', highlight: true },
-          { value: '$50K', label: 'Savings' },
-          { value: 'PUE 1.3', label: 'Target' },
+          { value: "35%", label: "Load", highlight: true },
+          { value: "$50K", label: "Savings" },
+          { value: "PUE 1.3", label: "Target" },
         ],
-        description: 'Optimize cooling with thermal storage + BESS',
+        description: "Optimize cooling with thermal storage + BESS",
       },
     ],
   };
-  
+
   // Get industry-specific cards or use generic ones
   const specificCards = industryOpportunities[industry] || [
     {
-      id: 'independence',
-      title: 'Independence',
+      id: "independence",
+      title: "Independence",
       icon: <Shield className="w-5 h-5" />,
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-500/10',
-      borderColor: 'border-purple-500/30',
+      color: "text-purple-400",
+      bgColor: "bg-purple-500/10",
+      borderColor: "border-purple-500/30",
       metrics: [
-        { value: '60%', label: 'Self-Pwr', highlight: true },
-        { value: 'Yes', label: 'Resilient' },
-        { value: '24/7', label: 'Autonomy' },
+        { value: "60%", label: "Self-Pwr", highlight: true },
+        { value: "Yes", label: "Resilient" },
+        { value: "24/7", label: "Autonomy" },
       ],
     },
     {
-      id: 'revenue',
-      title: 'Revenue',
+      id: "revenue",
+      title: "Revenue",
       icon: <TrendingUp className="w-5 h-5" />,
-      color: 'text-cyan-400',
-      bgColor: 'bg-cyan-500/10',
-      borderColor: 'border-cyan-500/30',
+      color: "text-cyan-400",
+      bgColor: "bg-cyan-500/10",
+      borderColor: "border-cyan-500/30",
       metrics: [
-        { value: '$5K', label: 'Grid Svc', highlight: true },
-        { value: '$3K', label: 'Arbitrage' },
-        { value: '$8K', label: 'Total/Yr' },
+        { value: "$5K", label: "Grid Svc", highlight: true },
+        { value: "$3K", label: "Arbitrage" },
+        { value: "$8K", label: "Total/Yr" },
       ],
     },
+    {
+      id: "vpp-participation",
+      title: "VPP Program",
+      icon: <Network className="w-5 h-5" />,
+      color: "text-indigo-400",
+      bgColor: "bg-indigo-500/10",
+      borderColor: "border-indigo-500/30",
+      metrics: [
+        { value: "1.5-2.4×", label: "Multiplier", highlight: true },
+        { value: "5-Party", label: "Split" },
+        { value: "52%", label: "Owner Share" },
+      ],
+      description:
+        "Enroll in a VPP aggregator and stack revenues across energy, capacity, and ancillary services",
+    },
   ];
-  
+
   // Filter based on selected goals
   let allCards = [...baseOpportunities, ...specificCards];
-  
+
   // If goals are provided, prioritize cards that match goals
   if (goals && goals.length > 0) {
     const goalCardMap: Record<string, string[]> = {
-      'cost-savings': ['cost-reduction', 'peak-shaving', 'hvac-optimization', 'cooling-load'],
-      'backup-power': ['backup-power', 'critical-backup', 'ups-integration'],
-      'sustainability': ['sustainability', 'solar-potential'],
-      'ev-charging': ['ev-revenue', 'demand-management'],
-      'grid-independence': ['independence', 'grid-arbitrage'],
-      'demand-response': ['revenue', 'demand-response'],
+      "cost-savings": ["cost-reduction", "peak-shaving", "hvac-optimization", "cooling-load"],
+      "backup-power": ["backup-power", "critical-backup", "ups-integration"],
+      sustainability: ["sustainability", "solar-potential"],
+      "ev-charging": ["ev-revenue", "demand-management"],
+      "grid-independence": ["independence", "grid-arbitrage"],
+      "demand-response": ["revenue", "demand-response", "vpp-participation"],
     };
-    
+
     // Boost relevant cards to top
-    const boostedIds = new Set(goals.flatMap(g => goalCardMap[g] || []));
+    const boostedIds = new Set(goals.flatMap((g) => goalCardMap[g] || []));
     allCards = [
-      ...allCards.filter(c => boostedIds.has(c.id)),
-      ...allCards.filter(c => !boostedIds.has(c.id)),
+      ...allCards.filter((c) => boostedIds.has(c.id)),
+      ...allCards.filter((c) => !boostedIds.has(c.id)),
     ];
   }
-  
+
   // Return top 6 cards
   return allCards.slice(0, 6);
 }
@@ -333,10 +358,10 @@ export function IndustryOpportunityPanel({
   goals,
 }: IndustryOpportunityPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   // ✅ Bug #5 Fix: Accept both state (deprecated) and locationString
   const location = locationString || state;
-  
+
   const opportunities = getIndustryOpportunities(
     industry,
     location,
@@ -344,9 +369,10 @@ export function IndustryOpportunityPanel({
     sunHours,
     goals
   );
-  
-  const displayName = industryName || industry.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  
+
+  const displayName =
+    industryName || industry.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
   return (
     <div className="mb-6 rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700/50 overflow-hidden">
       {/* Header - Always visible */}
@@ -359,20 +385,18 @@ export function IndustryOpportunityPanel({
             <TrendingUp className="w-4 h-4 text-purple-400" />
           </div>
           <div className="text-left">
-            <h3 className="text-white font-semibold text-sm">
-              {displayName} Energy Opportunities
-            </h3>
+            <h3 className="text-white font-semibold text-sm">{displayName} Energy Opportunities</h3>
             <p className="text-slate-400 text-xs">
-              {isExpanded ? 'Click to collapse' : 'Click to see potential savings & benefits'}
+              {isExpanded ? "Click to collapse" : "Click to see potential savings & benefits"}
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {!isExpanded && (
             <div className="hidden sm:flex items-center gap-1">
               {opportunities.slice(0, 3).map((opp) => (
-                <div 
+                <div
                   key={opp.id}
                   className={`w-6 h-6 rounded ${opp.bgColor} flex items-center justify-center`}
                 >
@@ -391,7 +415,7 @@ export function IndustryOpportunityPanel({
           )}
         </div>
       </button>
-      
+
       {/* Expanded Content - Opportunity Cards Grid */}
       {isExpanded && (
         <div className="px-4 pb-4 pt-2 border-t border-slate-700/50">
@@ -406,34 +430,33 @@ export function IndustryOpportunityPanel({
                   <span className={opp.color}>{opp.icon}</span>
                   <span className={`${opp.color} font-medium text-sm`}>{opp.title}</span>
                 </div>
-                
+
                 {/* Metrics */}
                 <div className="grid grid-cols-3 gap-1">
                   {opp.metrics.map((metric, i) => (
                     <div key={i} className="text-center">
-                      <div className={`text-sm font-bold ${metric.highlight ? opp.color : 'text-white'}`}>
+                      <div
+                        className={`text-sm font-bold ${metric.highlight ? opp.color : "text-white"}`}
+                      >
                         {metric.value}
                       </div>
-                      <div className="text-[10px] text-slate-500 uppercase">
-                        {metric.label}
-                      </div>
+                      <div className="text-[10px] text-slate-500 uppercase">{metric.label}</div>
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Description (if available) */}
                 {opp.description && (
-                  <p className="mt-2 text-[10px] text-slate-400 line-clamp-2">
-                    {opp.description}
-                  </p>
+                  <p className="mt-2 text-[10px] text-slate-400 line-clamp-2">{opp.description}</p>
                 )}
               </div>
             ))}
           </div>
-          
+
           {/* Footer note */}
           <p className="mt-3 text-xs text-slate-500 text-center">
-            💡 Estimates based on your location and industry. Answer questions below for precise calculations.
+            💡 Estimates based on your location and industry. Answer questions below for precise
+            calculations.
           </p>
         </div>
       )}

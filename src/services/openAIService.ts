@@ -74,6 +74,26 @@ class OpenAIService {
 - Standards: UL, IEEE, utility interconnection
 - Leading vendors: Tesla, LG Chem, CATL, BYD, Fluence
 
+**Virtual Power Plant (VPP) Economics Model:**
+- Participants to model explicitly:
+  * End users (residential/commercial DER owners)
+  * Aggregators/VPP operators
+  * Utilities/grid operators (TSO/DSO)
+  * OEM/device platforms
+  * Fleet operators (EV + V2G)
+- Compensation mechanics:
+  * Direct event payments / bill credits for discharged kWh or curtailed load
+  * Enrollment incentives/rebates
+  * Revenue sharing (operator fee + owner payout)
+  * Avoided procurement + deferred infrastructure value for utilities
+- Value stack categories to include in recommendations:
+  * Energy arbitrage
+  * Capacity commitments
+  * Ancillary services (frequency/voltage/reserves)
+  * Local grid services (distribution deferral/congestion management)
+  * EV/fleet flexibility and V2G monetization
+- When quantifying upside, note advanced stacked orchestration can materially increase recurring revenue versus single-stream operation.
+
 Always provide specific cost estimates, technical specs, and ROI analysis. Ask clarifying questions to optimize recommendations.`;
 
   constructor() {
@@ -240,6 +260,12 @@ Would you like me to calculate specific ROI projections for your use case? I can
 - Frequency regulation, voltage support, capacity market
 - Revenue: $50-200/kW/year depending on market
 - Best for: Utility-scale systems with grid interconnection
+
+**6. VPP Participation & Flexibility Monetization ($$)**
+- Enroll DERs (battery, thermostat, EV charging, water heating) in aggregator programs
+- Revenue channels: event payments, capacity contracts, ancillary services, local utility programs
+- Typical payout structure: participant share + operator fee + utility avoided-cost benefit
+- Fleet operators can unlock additional value through managed charging and V2G where tariffs permit
 
 What type of facility/application are you considering? I can provide tailored recommendations based on your specific situation.`;
     }
