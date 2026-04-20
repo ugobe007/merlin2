@@ -28,7 +28,7 @@ export default function HeroMainBand({
     <>
       {/* ========== MERLIN HERO - EDGE TO EDGE ========== */}
       <section className="relative">
-        <div className="relative min-h-[85vh] overflow-hidden">
+        <div className="relative min-h-[72vh] overflow-hidden">
           {/* Deep dark blue background */}
           <div
             className="absolute inset-0"
@@ -54,12 +54,12 @@ export default function HeroMainBand({
             />
           </div>
 
-          <div className="relative z-10 min-h-[80vh]">
+          <div className="relative z-10 min-h-[68vh]">
             {/* ========== HERO - Two Column Grid ========== */}
-            <div className="grid min-h-[80vh] lg:grid-cols-[minmax(420px,560px)_1fr] grid-cols-1 lg:grid-rows-none grid-rows-[auto_1fr] items-stretch">
+            <div className="grid min-h-[68vh] lg:grid-cols-[minmax(380px,500px)_1fr] grid-cols-1 lg:grid-rows-none grid-rows-[auto_1fr] items-stretch">
               {/* ========== LEFT PANEL ========== */}
               <div
-                className="flex flex-col justify-center lg:px-14 lg:py-16 px-8 py-12 relative z-10 lg:rounded-r-[40px] rounded-b-[40px] lg:rounded-bl-none my-0 lg:h-full"
+                className="flex flex-col justify-center lg:px-10 lg:py-10 px-6 py-8 relative z-10 lg:rounded-r-[40px] rounded-b-[40px] lg:rounded-bl-none my-0 lg:h-full"
                 style={{
                   background:
                     "linear-gradient(165deg, #081029 0%, #0e1a3a 40%, #132044 70%, #0e1a3a 100%)",
@@ -110,7 +110,7 @@ export default function HeroMainBand({
 
                 {/* Main Headline */}
                 <h1
-                  className="mb-6 lg:text-[68px] md:text-[46px] text-[34px]"
+                  className="mb-4 lg:text-[52px] md:text-[38px] text-[28px]"
                   style={{
                     fontWeight: 900,
                     lineHeight: 0.95,
@@ -130,12 +130,12 @@ export default function HeroMainBand({
 
                 {/* Subheadline */}
                 <div
-                  className="mb-6"
+                  className="mb-5"
                   style={{
-                    fontSize: "19px",
+                    fontSize: "15px",
                     color: "rgba(255,255,255,0.75)",
-                    lineHeight: 1.65,
-                    maxWidth: "460px",
+                    lineHeight: 1.6,
+                    maxWidth: "420px",
                   }}
                 >
                   Instant, bankable BESS & solar quotes — every number traced to NREL, EIA, and IRA
@@ -165,10 +165,10 @@ export default function HeroMainBand({
                     color: "#3ECF8E",
                     borderRadius: "14px",
                     fontWeight: 700,
-                    fontSize: "20px",
+                    fontSize: "16px",
                     letterSpacing: "-0.01em",
-                    padding: "18px 42px",
-                    maxWidth: "480px",
+                    padding: "13px 32px",
+                    maxWidth: "420px",
                   }}
                   aria-label="Start Saving with SmartWizard"
                   onMouseEnter={(e) => {
@@ -198,11 +198,11 @@ export default function HeroMainBand({
                     color: "rgba(255,255,255,0.65)",
                     borderRadius: "14px",
                     fontWeight: 700,
-                    fontSize: "18px",
+                    fontSize: "15px",
                     letterSpacing: "-0.01em",
-                    padding: "16px 42px",
+                    padding: "11px 32px",
                     width: "100%",
-                    maxWidth: "480px",
+                    maxWidth: "420px",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)";
@@ -308,7 +308,7 @@ export default function HeroMainBand({
               </div>
 
               {/* ========== RIGHT SIDE - Image Carousel with Stats Card ========== */}
-              <div className="relative overflow-hidden lg:h-full min-h-[500px]">
+              <div className="relative overflow-hidden lg:h-full min-h-[380px]">
                 <div className="absolute inset-0">
                   {useCases.map((useCase, index) => (
                     <div
@@ -348,13 +348,13 @@ export default function HeroMainBand({
                       WebkitBackdropFilter: "blur(24px)",
                       border: "2px solid rgba(62,207,142,0.35)",
                       borderRadius: "16px",
-                      padding: "28px 36px",
+                      padding: "18px 24px",
                       boxShadow:
                         "0 8px 40px rgba(0,0,0,0.3), 0 0 20px rgba(62,207,142,0.08), inset 0 1px 0 rgba(255,255,255,0.12)",
                     }}
                   >
                     <div className="flex items-center justify-between mb-5">
-                      <span style={{ fontSize: "22px", fontWeight: 700, color: "#fff" }}>
+                      <span style={{ fontSize: "17px", fontWeight: 700, color: "#fff" }}>
                         {useCases[currentImageIndex].name}
                       </span>
                       <div className="flex items-center gap-4">
@@ -378,11 +378,11 @@ export default function HeroMainBand({
                         </span>
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-4 md:gap-6">
+                    <div className="grid grid-cols-3 gap-3 md:gap-4">
                       <div className="text-center">
                         <div
-                          className="lg:text-[36px] md:text-[32px] text-[28px]"
-                          style={{ fontWeight: 800, marginBottom: "6px", color: "#fbbf24" }}
+                          className="lg:text-[26px] md:text-[22px] text-[20px]"
+                          style={{ fontWeight: 800, marginBottom: "4px", color: "#fbbf24" }}
                         >
                           {useCases[currentImageIndex].savings}
                         </div>
@@ -399,8 +399,8 @@ export default function HeroMainBand({
                       </div>
                       <div className="text-center">
                         <div
-                          className="lg:text-[36px] md:text-[32px] text-[28px]"
-                          style={{ fontWeight: 800, marginBottom: "6px", color: "#fff" }}
+                          className="lg:text-[26px] md:text-[22px] text-[20px]"
+                          style={{ fontWeight: 800, marginBottom: "4px", color: "#fff" }}
                         >
                           {useCases[currentImageIndex].payback}
                         </div>
@@ -417,8 +417,8 @@ export default function HeroMainBand({
                       </div>
                       <div className="text-center">
                         <div
-                          className="lg:text-[36px] md:text-[32px] text-[28px]"
-                          style={{ fontWeight: 800, marginBottom: "6px", color: "#4ade80" }}
+                          className="lg:text-[26px] md:text-[22px] text-[20px]"
+                          style={{ fontWeight: 800, marginBottom: "4px", color: "#4ade80" }}
                         >
                           {useCases[currentImageIndex].roi}
                         </div>
