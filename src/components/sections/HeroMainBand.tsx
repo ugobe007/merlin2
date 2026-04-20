@@ -66,45 +66,98 @@ export default function HeroMainBand({
                   boxShadow: "20px 0 80px rgba(0,0,0,0.6)",
                 }}
               >
-                {/* TrueQuote Badge — rounded rect, centered, clickable */}
-                <div className="flex justify-center w-full" style={{ maxWidth: "480px" }}>
+                {/* TrueQuote Badge — gold shield + name + verified tag */}
+                <div className="flex justify-start w-full" style={{ maxWidth: "480px" }}>
                   <button
                     onClick={() => setShowTrueQuoteModal(true)}
-                    className="inline-flex items-center gap-2 mb-8 transition-all duration-200 cursor-pointer"
+                    className="inline-flex items-center mb-7 transition-all duration-200 cursor-pointer"
                     style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.15)",
-                      padding: "10px 20px",
+                      background: "rgba(242,193,79,0.07)",
+                      border: "1px solid rgba(242,193,79,0.3)",
+                      padding: "8px 16px 8px 12px",
                       borderRadius: "10px",
-                      fontSize: "13px",
-                      fontWeight: 600,
-                      color: "rgba(255,255,255,0.7)",
-                      letterSpacing: "0.02em",
+                      gap: "0",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
+                      e.currentTarget.style.background = "rgba(242,193,79,0.13)";
+                      e.currentTarget.style.borderColor = "rgba(242,193,79,0.55)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                      e.currentTarget.style.background = "rgba(242,193,79,0.07)";
+                      e.currentTarget.style.borderColor = "rgba(242,193,79,0.3)";
                     }}
                   >
-                    <span className="font-semibold" style={{ color: "#F1F5F9" }}>
-                      TrueQuote™
-                    </span>
+                    {/* Gold shield SVG icon */}
+                    <svg
+                      width="18"
+                      height="20"
+                      viewBox="0 0 18 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{ flexShrink: 0, filter: "drop-shadow(0 0 4px rgba(242,193,79,0.5))" }}
+                    >
+                      <path
+                        d="M9 1L2 4V10C2 14.1 5.1 17.9 9 19C12.9 17.9 16 14.1 16 10V4L9 1Z"
+                        fill="url(#sg)"
+                        stroke="rgba(242,193,79,0.6)"
+                        strokeWidth="0.75"
+                        strokeLinejoin="round"
+                      />
+                      <polyline
+                        points="6,10 8,12.5 12,7.5"
+                        fill="none"
+                        stroke="#fff"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <defs>
+                        <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#FFE8A3" />
+                          <stop offset="50%" stopColor="#F2C14F" />
+                          <stop offset="100%" stopColor="#C8962A" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+
+                    {/* Spacer */}
+                    <span style={{ width: "10px", display: "inline-block" }} />
+
+                    {/* TrueQuote name */}
                     <span
                       style={{
-                        width: "6px",
-                        height: "6px",
-                        borderRadius: "50%",
-                        background:
-                          "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
-                        boxShadow: "0 0 6px rgba(242, 193, 79, 0.45)",
-                        flexShrink: 0,
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: "#F1F5F9",
+                        letterSpacing: "0.01em",
+                      }}
+                    >
+                      TrueQuote™
+                    </span>
+
+                    {/* Divider */}
+                    <span
+                      style={{
+                        width: "1px",
+                        height: "14px",
+                        background: "rgba(255,255,255,0.15)",
+                        margin: "0 10px",
+                        display: "inline-block",
                       }}
                     />
-                    <span style={{ color: "#94A3B8" }}>Verified Energy Quotes</span>
+
+                    {/* Verified tag */}
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        color: "#F2C14F",
+                        letterSpacing: "0.06em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Verified
+                    </span>
                   </button>
                 </div>
 
