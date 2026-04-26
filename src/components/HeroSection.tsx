@@ -465,45 +465,79 @@ export default function HeroSection() {
               ))}
             </div>
 
-            {/* PRIMARY CTA — single, dominant */}
-            <div className="animate-fade-up-delay-3 flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-5">
-              <a
-                href="/wizard"
-                className="group inline-flex items-center gap-4 px-10 py-6 rounded-2xl font-bold text-[19px] transition-all duration-200"
-                style={{
-                  background: "transparent",
-                  color: "#EAB308",
-                  border: "1.5px solid #EAB308",
-                  boxShadow: "0 0 20px rgba(234,179,8,0.12)",
-                  fontFamily: "'Outfit', sans-serif",
-                  textDecoration: "none",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.boxShadow =
-                    "0 0 36px rgba(234,179,8,0.28)";
-                  (e.currentTarget as HTMLElement).style.background = "rgba(234,179,8,0.06)";
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.boxShadow =
-                    "0 0 20px rgba(234,179,8,0.12)";
-                  (e.currentTarget as HTMLElement).style.background = "transparent";
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                }}
-              >
-                <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 24, height: 24 }} />
-                Start your free TrueQuote™
-                <ArrowRight
-                  size={20}
-                  className="group-hover:translate-x-0.5 transition-transform"
-                />
-              </a>
-              <span
-                className="text-[12px] text-slate-600"
-                style={{ fontFamily: "'Outfit', sans-serif" }}
-              >
-                ~90 sec · No account · Begin saving today
-              </span>
+            {/* CTAs — primary (facility owners) + secondary (EPCs) */}
+            <div className="animate-fade-up-delay-3 flex flex-col gap-3 mb-5">
+              {/* Primary — facility owner */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <a
+                  href="/wizard"
+                  className="group inline-flex items-center gap-4 px-10 py-6 rounded-2xl font-bold text-[19px] transition-all duration-200"
+                  style={{
+                    background: "transparent",
+                    color: "#EAB308",
+                    border: "1.5px solid #EAB308",
+                    boxShadow: "0 0 20px rgba(234,179,8,0.12)",
+                    fontFamily: "'Outfit', sans-serif",
+                    textDecoration: "none",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.boxShadow =
+                      "0 0 36px rgba(234,179,8,0.28)";
+                    (e.currentTarget as HTMLElement).style.background = "rgba(234,179,8,0.06)";
+                    (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.boxShadow =
+                      "0 0 20px rgba(234,179,8,0.12)";
+                    (e.currentTarget as HTMLElement).style.background = "transparent";
+                    (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+                  }}
+                >
+                  <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 24, height: 24 }} />
+                  Start your free TrueQuote™
+                  <ArrowRight
+                    size={20}
+                    className="group-hover:translate-x-0.5 transition-transform"
+                  />
+                </a>
+                <span
+                  className="text-[12px] text-slate-600"
+                  style={{ fontFamily: "'Outfit', sans-serif" }}
+                >
+                  ~90 sec · No account · Begin saving today
+                </span>
+              </div>
+
+              {/* Secondary — EPC / integrator */}
+              <div className="flex items-center gap-3">
+                <a
+                  href="/widget"
+                  className="group inline-flex items-center gap-2 text-[13px] font-semibold transition-all duration-200"
+                  style={{
+                    color: "rgba(56,189,248,0.75)",
+                    fontFamily: "'Outfit', sans-serif",
+                    textDecoration: "none",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.color = "rgba(56,189,248,1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.color = "rgba(56,189,248,0.75)";
+                  }}
+                >
+                  <span
+                    className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+                    style={{ background: "rgba(56,189,248,0.12)", color: "rgba(56,189,248,0.9)" }}
+                  >
+                    EPC / Integrator
+                  </span>
+                  Embed TrueQuote™ on your site — free
+                  <ArrowRight
+                    size={13}
+                    className="group-hover:translate-x-0.5 transition-transform"
+                  />
+                </a>
+              </div>
             </div>
 
             {/* Trust bar */}

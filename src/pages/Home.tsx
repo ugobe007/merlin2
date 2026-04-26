@@ -74,6 +74,7 @@ export default function Home() {
                 {[
                   { label: "TrueQuote", href: "/wizard" },
                   { label: "ProQuote", href: "/proquote" },
+                  { label: "Microgrid", href: "/microgrid" },
                   { label: "Pricing", href: "/pricing" },
                   { label: "Partner API", href: "/widget" },
                 ].map((l) => (
