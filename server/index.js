@@ -8,6 +8,7 @@ import templatesRouter from './routes/templates.js';
 import telemetryRouter from './routes/telemetry.js';
 import demoRouter from './routes/demo.js';
 import quoteRouter from './routes/quote.js';
+import salesAgentRouter from './routes/sales-agent.js';
 
 // Load environment variables from server/.env
 const __filename = fileURLToPath(import.meta.url);
@@ -39,6 +40,7 @@ app.use('/api/location', locationRouter);
 app.use('/api/templates', templatesRouter);
 app.use('/api/telemetry', telemetryRouter);
 app.use('/api/quote', quoteRouter);
+app.use('/api/sales-agent', salesAgentRouter);
 app.use('/api', demoRouter);
 
 // Health check — used by smoke tests and uptime monitors

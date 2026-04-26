@@ -54,7 +54,7 @@ export default function AudienceStrip() {
 
           {/* Path 2 — EPCs */}
           <a
-            href="/vendor"
+            href="/widget"
             className="group flex-1 flex items-center justify-between gap-3 px-5 py-3 rounded-xl transition-all duration-200"
             style={{
               background: "rgba(56,189,248,0.04)",
@@ -74,10 +74,10 @@ export default function AudienceStrip() {
                 className="text-[13px] font-bold text-white block"
                 style={{ fontFamily: "'Outfit', sans-serif" }}
               >
-                EPCs, Developers &amp; Vendors
+                EPCs, Developers &amp; Integrators
               </span>
               <span className="text-[12px] text-slate-500">
-                Pre-scoped leads · ProQuote tooling · Partner portal
+                Embed TrueQuote™ on your site · Free API key · No credit card
               </span>
             </div>
             <ArrowRight

@@ -10,15 +10,27 @@ import { supabase } from "@/services/supabaseClient";
 
 const db = supabase as any;
 
-// ── Session ID (persisted per browser) ────────────────────────────────────────
+// ── Session ID ────────────────────────────────────────────────────────────────
+// localStorage → persists across tabs/refreshes in the same browser.
+// A new session starts only after 30 min of inactivity.
+const SESSION_TTL_MS = 30 * 60 * 1000;
+
 function getSessionId(): string {
   const key = "merlin_session_id";
-  let id = sessionStorage.getItem(key);
-  if (!id) {
-    id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    sessionStorage.setItem(key, id);
+  const tsKey = "merlin_session_ts";
+  const now = Date.now();
+  const lastTs = parseInt(localStorage.getItem(tsKey) ?? "0", 10);
+  const existing = localStorage.getItem(key);
+
+  if (!existing || now - lastTs > SESSION_TTL_MS) {
+    const id = `${now}-${Math.random().toString(36).slice(2, 9)}`;
+    localStorage.setItem(key, id);
+    localStorage.setItem(tsKey, String(now));
+    return id;
   }
-  return id;
+
+  localStorage.setItem(tsKey, String(now));
+  return existing;
 }
 
 // ── Track a page view ─────────────────────────────────────────────────────────

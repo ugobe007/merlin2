@@ -45,6 +45,7 @@ const PartnerDashboard = lazy(() => import("./pages/PartnerDashboard"));
 const PartnerDemo = lazy(() => import("./pages/PartnerDemo"));
 const EnergyNews = lazy(() => import("./pages/EnergyNews"));
 const ElCarWashLanding = lazy(() => import("./pages/ElCarWashLanding"));
+const MicrogridPage = lazy(() => import("./pages/MicrogridPage"));
 const OpportunitiesDashboard = lazy(() => import("./pages/OpportunitiesDashboard"));
 const BuildRFPPage = lazy(() => import("./pages/BuildRFPPage"));
 const UploadQuotePage = lazy(() => import("./pages/UploadQuotePage"));
@@ -519,6 +520,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <OpportunitiesDashboard />
+      </Suspense>
+    );
+  }
+
+  // Microgrid Front Door — /microgrid
+  if (pathname === "/microgrid" || pathname === "/microgrid-energy" || pathname === "/resilience") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <MicrogridPage />
       </Suspense>
     );
   }
