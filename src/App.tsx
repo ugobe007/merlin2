@@ -5,6 +5,7 @@ const ProQuoteConfigurationPage = lazy(() => import("./pages/ProQuoteConfigurati
 const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
 const VendorPortal = lazy(() => import("./components/VendorPortal"));
 const VendorAdminDashboard = lazy(() => import("./pages/admin/VendorAdminDashboard"));
+const SalesAgentDashboard = lazy(() => import("./pages/admin/SalesAgentDashboard"));
 const CarWashEnergy = lazy(() => import("./components/verticals/CarWashEnergy"));
 const EVChargingEnergy = lazy(() => import("./components/verticals/EVChargingEnergy"));
 const HotelEnergy = lazy(() => import("./components/verticals/HotelEnergy"));
@@ -96,6 +97,7 @@ function App() {
   const isAdminRoute = pathname === "/admin" || adminParam === "true";
   const isVendorPortalRoute = pathname === "/vendor-portal" || pathname === "/vendor";
   const isVendorAdminRoute = pathname === "/admin/vendors";
+  const isSalesAgentRoute = pathname === "/admin/sales-agent";
 
   const [showAdmin, setShowAdmin] = useState(isAdminRoute);
   const [showVendorPortal] = useState(isVendorPortalRoute);
@@ -207,6 +209,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <VendorAdminDashboard />
+      </Suspense>
+    );
+  }
+
+  // Access via /admin/sales-agent - Sales Agent Dashboard
+  if (isSalesAgentRoute) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <SalesAgentDashboard />
       </Suspense>
     );
   }
