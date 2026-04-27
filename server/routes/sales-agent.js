@@ -301,8 +301,7 @@ async function upsertLead(place, details, vertical) {
     .single();
 
   if (error) {
-    console.warn(`[SalesAgent] Upsert failed for ${place.name}:`, error.message);
-    return null;
+    throw new Error(`DB upsert failed: ${error.message}`);
   }
   return data;
 }
@@ -344,6 +343,12 @@ router.post('/discover', async (req, res) => {
       places = await searchPlaces(cfg.query, location, maxPerVertical);
     } catch (err) {
       results.errors.push(`Places search failed for ${vertical}: ${err.message}`);
+      continue;
+    }
+
+    console.log(`[SalesAgent] Found ${places.length} places for ${vertical}`);
+    if (places.length === 0) {
+      results.errors.push(`No places found for ${vertical} in ${location}`);
       continue;
     }
 
