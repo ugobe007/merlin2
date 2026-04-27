@@ -164,14 +164,17 @@ async function generateQuote(industry, location, peakLoadKW) {
 // ── Store a shared quote and return its public URL ────────────────────────────
 async function storeSharedQuote(leadId, quoteData, businessName, industry) {
   const shareToken = crypto.randomUUID();
+  const shortCode = shareToken.replace(/-/g, '').slice(0, 12); // e.g. "a1b2c3d4e5f6"
 
   const { data, error } = await getSupabase().from('shared_quotes').insert({
     share_token: shareToken,
+    short_code: shortCode,
     quote_data: quoteData,
     business_name: businessName,
     industry,
     source: 'sales_agent',
     smb_lead_id: leadId,
+    is_public: true,
     expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
   }).select('id').single();
 
