@@ -186,11 +186,62 @@ async function storeSharedQuote(leadId, quoteData, businessName, industry) {
   return `${APP_BASE_URL}/quote/${shareToken}`;
 }
 
+// ── Extract key numbers from a quote response ────────────────────────────────
+function extractQuoteHighlights(quoteData) {
+  if (!quoteData) return null;
+  const rec = quoteData.tiers?.recommended || quoteData.recommended;
+  if (!rec) return null;
+  const fmt = (n) => n != null ? Math.round(n).toLocaleString('en-US') : null;
+  const savings    = rec.savings?.netAnnualSavings;
+  const payback    = rec.roi?.paybackYears;
+  const npv        = rec.roi?.npv25Year;
+  const solarKW    = rec.equipment?.solarKW;
+  const bessKW     = rec.equipment?.bessKW;
+  const bessKWh    = rec.equipment?.bessKWh;
+  const net        = rec.costs?.netInvestment;
+  return {
+    annualSavings: savings != null ? `$${fmt(savings)}/yr` : null,
+    payback:       payback != null ? `${payback} yrs` : null,
+    npv25:         npv    != null ? `$${fmt(npv)}` : null,
+    solarKW:       solarKW != null ? `${fmt(solarKW)} kW` : null,
+    bessKW:        bessKW  != null ? `${fmt(bessKW)} kW / ${fmt(bessKWh)} kWh` : null,
+    netInvestment: net     != null ? `$${fmt(net)}` : null,
+  };
+}
+
 // ── Send intro email via Resend ───────────────────────────────────────────────
 // Build email HTML — shared by preview and send
-function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody }) {
+function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody, quoteData }) {
   const cfg = VERTICAL_CONFIG[vertical] || VERTICAL_CONFIG.car_wash;
   const body = customBody || cfg.emailBodyHook;
+  const hi = extractQuoteHighlights(quoteData);
+
+  // Stats strip — only shown when we have real numbers
+  const statsStrip = hi ? `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+      <tr>
+        ${hi.annualSavings ? `<td style="text-align:center;padding:12px 8px;background:rgba(234,179,8,0.06);border-radius:8px;">
+          <div style="color:#EAB308;font-size:22px;font-weight:800;letter-spacing:-0.5px;">${hi.annualSavings}</div>
+          <div style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-top:3px;">Est. Annual Savings</div>
+        </td>` : ''}
+        ${hi.payback ? `<td style="width:12px;"></td><td style="text-align:center;padding:12px 8px;background:rgba(16,185,129,0.06);border-radius:8px;">
+          <div style="color:#10b981;font-size:22px;font-weight:800;letter-spacing:-0.5px;">${hi.payback}</div>
+          <div style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-top:3px;">Payback Period</div>
+        </td>` : ''}
+        ${hi.npv25 ? `<td style="width:12px;"></td><td style="text-align:center;padding:12px 8px;background:rgba(99,102,241,0.06);border-radius:8px;">
+          <div style="color:#818cf8;font-size:22px;font-weight:800;letter-spacing:-0.5px;">${hi.npv25}</div>
+          <div style="color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;margin-top:3px;">25-Year NPV</div>
+        </td>` : ''}
+      </tr>
+    </table>
+    ${(hi.solarKW || hi.bessKW) ? `<p style="color:#475569;font-size:12px;margin:0 0 20px;">
+      System: ${[hi.solarKW ? `${hi.solarKW} solar` : null, hi.bessKW ? `${hi.bessKW} BESS` : null].filter(Boolean).join(' · ')}
+      ${hi.netInvestment ? `· ${hi.netInvestment} net investment after incentives` : ''}
+    </p>` : ''}
+  ` : `<p style="color:#cbd5e1;font-size:14px;margin:0 0 20px;line-height:1.5;">
+    Estimated annual savings · Payback period · Solar + BESS sizing · 25-yr NPV
+  </p>`;
+
   return `
 <!DOCTYPE html>
 <html>
@@ -218,16 +269,14 @@ function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody
       sizing logic — the same framework used by major EPCs.
     </p>
     <div style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.25);border-radius:12px;padding:24px;margin-bottom:28px;">
-      <p style="color:#EAB308;font-size:13px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.08em;">
-        Your Pre-Built TrueQuote™
+      <p style="color:#EAB308;font-size:13px;font-weight:700;margin:0 0 16px;text-transform:uppercase;letter-spacing:0.08em;">
+        Your Pre-Built TrueQuote™ — ${location}
       </p>
-      <p style="color:#cbd5e1;font-size:14px;margin:0 0 20px;line-height:1.5;">
-        Estimated annual savings · Payback period · Solar + BESS sizing · 25-yr NPV
-      </p>
+      ${statsStrip}
       <a href="${quoteUrl}"
          style="display:inline-block;background:#EAB308;color:#000;font-size:15px;font-weight:700;
                 padding:12px 28px;border-radius:8px;text-decoration:none;letter-spacing:-0.2px;">
-        View Your Free Quote →
+        View Full Quote →
       </a>
     </div>
     <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 8px;">
@@ -251,10 +300,10 @@ function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody
 </html>`;
 }
 
-async function sendIntroEmail({ recipients, businessName, vertical, quoteUrl, location, customSubject, customBody }) {
+async function sendIntroEmail({ recipients, businessName, vertical, quoteUrl, location, customSubject, customBody, quoteData }) {
   const cfg = VERTICAL_CONFIG[vertical] || VERTICAL_CONFIG.car_wash;
   const subject = customSubject || cfg.emailSubjectHook.replace('{{name}}', businessName);
-  const html = buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody });
+  const html = buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody, quoteData });
 
   const toList = Array.isArray(recipients) ? recipients : [recipients];
   const results = [];
@@ -373,6 +422,8 @@ router.post('/discover', async (req, res) => {
               await getSupabase().from('smb_leads')
                 .update({ quote_url: quoteUrl, status: 'quoted' })
                 .eq('id', lead.id);
+            // Cache quote_data for email highlights
+            getSupabase().from('smb_leads').update({ quote_data: quoteData }).eq('id', lead.id).then(() => {}).catch(() => {});
               leadResult.quoteUrl = quoteUrl;
               leadResult.status = 'quoted';
               results.quoted++;
@@ -448,8 +499,10 @@ router.post('/quote/:leadId', async (req, res) => {
   await getSupabase().from('smb_leads')
     .update({ quote_url: quoteUrl, status: 'quoted' })
     .eq('id', leadId);
+  // Cache quote_data for email highlights (column added in migration 20260427)
+  getSupabase().from('smb_leads').update({ quote_data: quoteData }).eq('id', leadId).then(() => {}).catch(() => {});
 
-  res.json({ ok: true, leadId, quoteUrl });
+  res.json({ ok: true, leadId, quoteUrl, highlights: extractQuoteHighlights(quoteData) });
 });
 
 /**
@@ -485,6 +538,19 @@ router.post('/email/:leadId', async (req, res) => {
     }
   }
 
+  // Load quote data for highlights (from smb_leads.quote_data or shared_quotes)
+  let quoteData = lead.quote_data || null;
+  if (!quoteData && lead.quote_url) {
+    try {
+      const token = lead.quote_url.split('/quote/')[1];
+      if (token) {
+        const { data: sq } = await getSupabase()
+          .from('shared_quotes').select('quote_data').eq('share_token', token).single();
+        quoteData = sq?.quote_data || null;
+      }
+    } catch (_) {}
+  }
+
   // Preview mode — return subject + html without sending
   if (previewOnly) {
     const cfg = VERTICAL_CONFIG[lead.vertical] || VERTICAL_CONFIG.car_wash;
@@ -495,8 +561,9 @@ router.post('/email/:leadId', async (req, res) => {
       quoteUrl: lead.quote_url,
       location: lead.address || 'your area',
       customBody,
+      quoteData,
     });
-    return res.json({ ok: true, previewOnly: true, subject, html, recipients: toList });
+    return res.json({ ok: true, previewOnly: true, subject, html, recipients: toList, highlights: extractQuoteHighlights(quoteData) });
   }
 
   const emailResult = await sendIntroEmail({
@@ -507,6 +574,7 @@ router.post('/email/:leadId', async (req, res) => {
     location: lead.address || 'your area',
     customSubject,
     customBody,
+    quoteData,
   });
 
   if (emailResult.success) {
