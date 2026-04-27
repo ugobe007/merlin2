@@ -290,7 +290,7 @@ async function upsertLead(place, details, vertical) {
   };
 
   // Upsert on place_id to avoid duplicates
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('smb_leads')
     .upsert(record, { onConflict: 'place_id', ignoreDuplicates: false })
     .select('id, name, status')
@@ -417,7 +417,7 @@ router.post('/discover', async (req, res) => {
 router.post('/quote/:leadId', async (req, res) => {
   const { leadId } = req.params;
 
-  const { data: lead, error } = await supabase
+  const { data: lead, error } = await getSupabase()
     .from('smb_leads')
     .select('*')
     .eq('id', leadId)
@@ -451,7 +451,7 @@ router.post('/email/:leadId', async (req, res) => {
   const { leadId } = req.params;
   const { toEmail } = req.body; // optional override
 
-  const { data: lead, error } = await supabase
+  const { data: lead, error } = await getSupabase()
     .from('smb_leads')
     .select('*')
     .eq('id', leadId)
