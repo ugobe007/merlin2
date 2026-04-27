@@ -533,7 +533,7 @@ router.post('/email/:leadId', async (req, res) => {
         toList = [];
       }
     }
-    if (!toList || toList.length === 0) {
+    if ((!toList || toList.length === 0) && !previewOnly) {
       return res.status(400).json({ error: 'No recipients. Provide recipients array or ensure lead has a website.' });
     }
   }

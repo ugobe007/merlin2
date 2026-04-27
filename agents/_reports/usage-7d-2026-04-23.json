@@ -1,0 +1,132 @@
+{
+  "timestamp": "2026-04-23T13:00:05.447Z",
+  "period": "7d",
+  "quotes": {
+    "total": 595,
+    "byIndustry": {
+      "warehouse": 90,
+      "ev-charging": 99,
+      "manufacturing": 99,
+      "car-wash": 106,
+      "data-center": 94,
+      "hotel": 107
+    },
+    "avgSystemSizeMW": 2.9664449718943624,
+    "avgProjectValueDollars": 1252957.8535544488,
+    "completionRate": 0.7083333333333334
+  },
+  "leads": {
+    "total": 210,
+    "byIndustry": {
+      "car-wash": 34,
+      "hotel": 40,
+      "warehouse": 32,
+      "data-center": 32,
+      "ev-charging": 31,
+      "manufacturing": 41
+    },
+    "estimatedRevenue": 61200,
+    "conversionRate": 0.35294117647058826,
+    "avgLeadValue": 291.42857142857144
+  },
+  "wizard": {
+    "step1Starts": 840,
+    "step2Completions": 689,
+    "step3Completions": 565,
+    "step4Completions": 463,
+    "step5Completions": 380,
+    "step6LeadCaptures": 311,
+    "overallConversion": 0.37023809523809526,
+    "dropOffSteps": [
+      {
+        "step": 6,
+        "dropRate": 0.18157894736842106
+      },
+      {
+        "step": 4,
+        "dropRate": 0.18053097345132743
+      },
+      {
+        "step": 3,
+        "dropRate": 0.1799709724238026
+      },
+      {
+        "step": 2,
+        "dropRate": 0.17976190476190476
+      },
+      {
+        "step": 5,
+        "dropRate": 0.17926565874730022
+      }
+    ]
+  },
+  "revenue": {
+    "leadGenRevenue": 61200,
+    "estimatedMRR": 262285.7142857143,
+    "estimatedARR": 3191142.8571428573,
+    "revenueGrowthWoW": 0.12
+  },
+  "topIndustries": [
+    {
+      "industry": "manufacturing",
+      "quoteCount": 99,
+      "leadCount": 41,
+      "revenueContribution": 16400
+    },
+    {
+      "industry": "data-center",
+      "quoteCount": 94,
+      "leadCount": 32,
+      "revenueContribution": 16000
+    },
+    {
+      "industry": "ev-charging",
+      "quoteCount": 99,
+      "leadCount": 31,
+      "revenueContribution": 9300
+    },
+    {
+      "industry": "hotel",
+      "quoteCount": 107,
+      "leadCount": 40,
+      "revenueContribution": 8000
+    },
+    {
+      "industry": "warehouse",
+      "quoteCount": 90,
+      "leadCount": 32,
+      "revenueContribution": 6400
+    }
+  ],
+  "kpiStatus": [
+    {
+      "metric": "Daily Wizard Starts",
+      "actual": 120,
+      "target": 100,
+      "status": "on-track",
+      "trend": "up"
+    },
+    {
+      "metric": "Daily Quote Completions",
+      "actual": 85,
+      "target": 70,
+      "status": "on-track",
+      "trend": "flat"
+    },
+    {
+      "metric": "Daily Leads Captured",
+      "actual": 30,
+      "target": 28,
+      "status": "on-track",
+      "trend": "up"
+    },
+    {
+      "metric": "Monthly Lead Revenue",
+      "actual": "$262,286",
+      "target": "$50,000",
+      "status": "on-track",
+      "trend": "up"
+    }
+  ],
+  "insights": ["🏆 Top performing vertical: manufacturing ($16,400 in period)."]
+}
