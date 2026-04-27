@@ -299,10 +299,10 @@ export default function SalesAgentDashboard() {
         </button>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+      <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-5 space-y-4 md:space-y-5">
           {stats && (
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
               {[
                 { label: "Total", value: stats.total },
                 { label: "Discovered", value: stats.discovered },
@@ -327,13 +327,13 @@ export default function SalesAgentDashboard() {
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
               Run New Discovery
             </p>
-            <div className="flex flex-wrap gap-3 items-end">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-start sm:items-end">
               <div className="flex flex-col gap-1">
                 <label className="text-xs text-slate-500">Location</label>
                 <input
                   value={discLoc}
                   onChange={(e) => setDiscLoc(e.target.value)}
-                  className="bg-white/10 border border-white/15 rounded-lg px-3 py-1.5 text-sm text-white w-48 focus:outline-none focus:border-yellow-500/50"
+                  className="bg-white/10 border border-white/15 rounded-lg px-3 py-1.5 text-sm text-white w-full sm:w-48 focus:outline-none focus:border-yellow-500/50"
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -443,115 +443,189 @@ export default function SalesAgentDashboard() {
                 No leads. Run a discovery above.
               </div>
             ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-white/10 text-left">
-                    <th className="px-4 py-3 w-8">
-                      <input
-                        type="checkbox"
-                        className="accent-yellow-500"
-                        checked={selected.size === filtered.length && filtered.length > 0}
-                        onChange={() =>
-                          selected.size === filtered.length ? clearSel() : selectAll()
-                        }
-                      />
-                    </th>
-                    <th className="px-4 py-3 text-slate-400 font-medium">Business</th>
-                    <th className="px-4 py-3 text-slate-400 font-medium">Vertical</th>
-                    <th className="px-4 py-3 text-slate-400 font-medium">Status</th>
-                    <th className="px-4 py-3 text-slate-400 font-medium">Rating</th>
-                    <th className="px-4 py-3 text-slate-400 font-medium">Quote</th>
-                    <th className="px-4 py-3 text-slate-400 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
+              <>
+                {/* Mobile card list */}
+                <div className="md:hidden divide-y divide-white/5">
                   {filtered.map((lead) => (
-                    <tr
+                    <div
                       key={lead.id}
-                      className={`hover:bg-white/4 transition-colors cursor-pointer ${selected.has(lead.id) ? "bg-yellow-500/5" : ""} ${activeLead?.id === lead.id ? "bg-sky-500/5" : ""}`}
+                      className={`px-4 py-3 transition-colors ${selected.has(lead.id) ? "bg-yellow-500/5" : ""} ${activeLead?.id === lead.id ? "bg-sky-500/5" : ""}`}
                     >
-                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-start gap-3">
                         <input
                           type="checkbox"
-                          className="accent-yellow-500"
+                          className="accent-yellow-500 mt-1 shrink-0"
                           checked={selected.has(lead.id)}
                           onChange={() => toggle(lead.id)}
                         />
-                      </td>
-                      <td className="px-4 py-3" onClick={() => setActiveLead(lead)}>
-                        <div className="font-medium text-white hover:text-yellow-300 transition-colors">
-                          {lead.name}
+                        <div className="flex-1 min-w-0" onClick={() => setActiveLead(lead)}>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-white text-sm">{lead.name}</span>
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_PILL[lead.status] ?? STATUS_PILL.discovered}`}
+                            >
+                              {lead.status}
+                              {lead.email_sent_at ? " ✓" : ""}
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-500 mt-0.5 truncate">
+                            {lead.address}
+                          </div>
+                          <div className="flex gap-3 mt-1 text-xs text-slate-400">
+                            <span>{VERTICAL_LABELS[lead.vertical] ?? lead.vertical}</span>
+                            {lead.google_rating && <span>⭐ {lead.google_rating}</span>}
+                          </div>
                         </div>
-                        <div className="text-xs text-slate-500 mt-0.5 truncate max-w-[200px]">
-                          {lead.address}
-                        </div>
-                      </td>
-                      <td
-                        className="px-4 py-3 text-slate-400 text-xs"
-                        onClick={() => setActiveLead(lead)}
-                      >
-                        {VERTICAL_LABELS[lead.vertical] ?? lead.vertical}
-                      </td>
-                      <td className="px-4 py-3" onClick={() => setActiveLead(lead)}>
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_PILL[lead.status] ?? STATUS_PILL.discovered}`}
-                        >
-                          {lead.status}
-                          {lead.email_sent_at ? " ✓" : ""}
-                        </span>
-                      </td>
-                      <td
-                        className="px-4 py-3 text-slate-400 text-xs"
-                        onClick={() => setActiveLead(lead)}
-                      >
-                        {lead.google_rating ? `⭐ ${lead.google_rating}` : "—"}
-                      </td>
-                      <td className="px-4 py-3">
-                        {lead.quote_url ? (
+                      </div>
+                      <div className="flex gap-2 mt-2.5 ml-7">
+                        {!lead.quote_url && (
+                          <button
+                            onClick={() => void quoteLead(lead)}
+                            disabled={running}
+                            className="text-xs bg-slate-700/80 border border-white/10 text-slate-300 px-3 py-1.5 rounded-lg hover:bg-slate-600 disabled:opacity-40 transition-colors"
+                          >
+                            📊 Quote
+                          </button>
+                        )}
+                        {lead.quote_url && (
                           <a
                             href={lead.quote_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-yellow-400 hover:text-yellow-300 text-xs"
-                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 px-3 py-1.5 rounded-lg"
                           >
-                            View →
+                            View Quote →
                           </a>
-                        ) : (
-                          <span className="text-slate-600 text-xs">—</span>
                         )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
-                          {!lead.quote_url && (
-                            <button
-                              onClick={() => void quoteLead(lead)}
-                              disabled={running}
-                              className="text-xs bg-slate-700/80 border border-white/10 text-slate-300 px-2 py-1 rounded hover:bg-slate-600 disabled:opacity-40 transition-colors"
-                            >
-                              Quote
-                            </button>
-                          )}
-                          {!lead.email_sent_at && (
-                            <button
-                              onClick={() => void openEmailReview([lead])}
-                              disabled={running}
-                              className="text-xs bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 px-2 py-1 rounded hover:bg-yellow-500/25 disabled:opacity-40 transition-colors"
-                            >
-                              ✉ Review
-                            </button>
-                          )}
-                          {lead.email_sent_at && (
-                            <span className="text-xs text-slate-600">
-                              Sent {new Date(lead.email_sent_at).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+                        {!lead.email_sent_at && (
+                          <button
+                            onClick={() => void openEmailReview([lead])}
+                            disabled={running}
+                            className="text-xs bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 px-3 py-1.5 rounded-lg hover:bg-yellow-500/25 disabled:opacity-40 transition-colors"
+                          >
+                            ✉ Review
+                          </button>
+                        )}
+                        {lead.email_sent_at && (
+                          <span className="text-xs text-green-400">
+                            ✓ Sent {new Date(lead.email_sent_at).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+                {/* Desktop table */}
+                <table className="hidden md:table w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10 text-left">
+                      <th className="px-4 py-3 w-8">
+                        <input
+                          type="checkbox"
+                          className="accent-yellow-500"
+                          checked={selected.size === filtered.length && filtered.length > 0}
+                          onChange={() =>
+                            selected.size === filtered.length ? clearSel() : selectAll()
+                          }
+                        />
+                      </th>
+                      <th className="px-4 py-3 text-slate-400 font-medium">Business</th>
+                      <th className="px-4 py-3 text-slate-400 font-medium">Vertical</th>
+                      <th className="px-4 py-3 text-slate-400 font-medium">Status</th>
+                      <th className="px-4 py-3 text-slate-400 font-medium">Rating</th>
+                      <th className="px-4 py-3 text-slate-400 font-medium">Quote</th>
+                      <th className="px-4 py-3 text-slate-400 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {filtered.map((lead) => (
+                      <tr
+                        key={lead.id}
+                        className={`hover:bg-white/4 transition-colors cursor-pointer ${selected.has(lead.id) ? "bg-yellow-500/5" : ""} ${activeLead?.id === lead.id ? "bg-sky-500/5" : ""}`}
+                      >
+                        <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            className="accent-yellow-500"
+                            checked={selected.has(lead.id)}
+                            onChange={() => toggle(lead.id)}
+                          />
+                        </td>
+                        <td className="px-4 py-3" onClick={() => setActiveLead(lead)}>
+                          <div className="font-medium text-white hover:text-yellow-300 transition-colors">
+                            {lead.name}
+                          </div>
+                          <div className="text-xs text-slate-500 mt-0.5 truncate max-w-[200px]">
+                            {lead.address}
+                          </div>
+                        </td>
+                        <td
+                          className="px-4 py-3 text-slate-400 text-xs"
+                          onClick={() => setActiveLead(lead)}
+                        >
+                          {VERTICAL_LABELS[lead.vertical] ?? lead.vertical}
+                        </td>
+                        <td className="px-4 py-3" onClick={() => setActiveLead(lead)}>
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_PILL[lead.status] ?? STATUS_PILL.discovered}`}
+                          >
+                            {lead.status}
+                            {lead.email_sent_at ? " ✓" : ""}
+                          </span>
+                        </td>
+                        <td
+                          className="px-4 py-3 text-slate-400 text-xs"
+                          onClick={() => setActiveLead(lead)}
+                        >
+                          {lead.google_rating ? `⭐ ${lead.google_rating}` : "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          {lead.quote_url ? (
+                            <a
+                              href={lead.quote_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-yellow-400 hover:text-yellow-300 text-xs"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              View →
+                            </a>
+                          ) : (
+                            <span className="text-slate-600 text-xs">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            {!lead.quote_url && (
+                              <button
+                                onClick={() => void quoteLead(lead)}
+                                disabled={running}
+                                className="text-xs bg-slate-700/80 border border-white/10 text-slate-300 px-2 py-1 rounded hover:bg-slate-600 disabled:opacity-40 transition-colors"
+                              >
+                                Quote
+                              </button>
+                            )}
+                            {!lead.email_sent_at && (
+                              <button
+                                onClick={() => void openEmailReview([lead])}
+                                disabled={running}
+                                className="text-xs bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 px-2 py-1 rounded hover:bg-yellow-500/25 disabled:opacity-40 transition-colors"
+                              >
+                                ✉ Review
+                              </button>
+                            )}
+                            {lead.email_sent_at && (
+                              <span className="text-xs text-slate-600">
+                                Sent {new Date(lead.email_sent_at).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
             )}
           </div>
 
@@ -580,7 +654,7 @@ export default function SalesAgentDashboard() {
         </div>
 
         {activeLead && (
-          <div className="w-80 border-l border-white/10 bg-black/30 flex flex-col shrink-0 overflow-y-auto">
+          <div className="fixed inset-x-0 bottom-0 z-40 md:static md:inset-auto md:w-80 md:border-l border-white/10 bg-[#0a1020] md:bg-black/30 flex flex-col shrink-0 overflow-y-auto max-h-[70vh] md:max-h-none rounded-t-2xl md:rounded-none shadow-2xl md:shadow-none border-t md:border-t-0">
             <div className="px-5 py-4 border-b border-white/10 flex items-start justify-between">
               <div>
                 <h2 className="font-semibold text-white text-sm leading-tight">
@@ -705,8 +779,8 @@ export default function SalesAgentDashboard() {
 
       {emailModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0d1628] border border-white/15 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
-            <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
+          <div className="bg-[#0d1628] border border-white/15 rounded-2xl w-full max-w-4xl max-h-[95vh] md:max-h-[90vh] flex flex-col shadow-2xl">
+            <div className="px-4 md:px-6 py-3 md:py-4 border-b border-white/10 flex items-center justify-between shrink-0">
               <div>
                 <h2 className="font-semibold text-white">
                   {emailModal.mode === "single"
@@ -724,8 +798,8 @@ export default function SalesAgentDashboard() {
                 ✕
               </button>
             </div>
-            <div className="flex flex-1 overflow-hidden">
-              <div className="w-80 border-r border-white/10 flex flex-col shrink-0 overflow-y-auto p-5 space-y-4">
+            <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+              <div className="md:w-80 border-b md:border-b-0 md:border-r border-white/10 flex flex-col shrink-0 overflow-y-auto p-4 md:p-5 space-y-4">
                 {emailModal.mode === "bulk" && (
                   <div>
                     <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">
@@ -806,7 +880,7 @@ export default function SalesAgentDashboard() {
                     : `✅ Approve & Send${emailModal.mode === "bulk" ? ` (${emailModal.leads.length})` : ""}`}
                 </button>
               </div>
-              <div className="flex-1 overflow-hidden flex flex-col">
+              <div className="hidden md:flex flex-1 overflow-hidden flex-col">
                 <div className="px-4 py-3 border-b border-white/10 shrink-0">
                   <p className="text-xs text-slate-500">Email preview</p>
                   {emailModal.preview?.subject && (
