@@ -106,8 +106,11 @@ export default function SalesAgentDashboard() {
     try {
       const r = await fetch(`${API}/api/sales-agent/leads`);
       const d = await r.json();
-      setLeads(d.leads || []);
+      const freshLeads: Lead[] = d.leads || [];
+      setLeads(freshLeads);
       setStats(d.stats || null);
+      // Sync activeLead if open so the panel reflects latest status
+      setActiveLead((prev) => (prev ? (freshLeads.find((l) => l.id === prev.id) ?? prev) : null));
     } catch {
       addLog("❌ Failed to fetch leads");
     }
@@ -233,8 +236,17 @@ export default function SalesAgentDashboard() {
           }),
         });
         const d = await r.json();
-        if (d.ok) addLog(`📧 Sent → ${lead.name} (${recipients.join(", ")})`);
-        else addLog(`❌ Failed → ${lead.name}`);
+        if (d.ok) {
+          addLog(`📧 Sent → ${lead.name} (${recipients.join(", ")})`);
+          // Optimistically update local state so the UI reflects it immediately
+          const sentAt = new Date().toISOString();
+          const patch = (l: Lead) =>
+            l.id === lead.id ? { ...l, email_sent_at: sentAt, status: "emailed" as const } : l;
+          setLeads((prev) => prev.map(patch));
+          setActiveLead((prev) => (prev?.id === lead.id ? patch(prev) : prev));
+        } else {
+          addLog(`❌ Failed → ${lead.name}: ${d.error ?? "unknown error"}`);
+        }
       } catch {
         addLog(`❌ Error sending to ${lead.name}`);
       }
@@ -243,7 +255,7 @@ export default function SalesAgentDashboard() {
     setEmailModal(null);
     setRunning(false);
     clearSel();
-    void fetchLeads();
+    await fetchLeads();
   };
 
   const runDiscovery = async () => {
