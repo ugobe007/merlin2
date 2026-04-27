@@ -80,6 +80,7 @@ const VERTICAL_CONFIG = {
     industry: 'ev_charging',
     label: 'EV Charging Station',
     peakLoadKW: 600,
+    quoteParams: { dcfcChargers: 2, bessApplication: 'peak_shaving' },
     emailSubjectHook: 'Free BESS analysis for {{name}}',
     emailBodyHook: 'EV charging demand spikes are the #1 cost driver for operators. We pre-built a savings model for your location.',
   },
@@ -89,6 +90,7 @@ const VERTICAL_CONFIG = {
     industry: 'truck_stop',
     label: 'Truck Stop / Travel Center',
     peakLoadKW: 800,
+    quoteParams: { truckStopCabinets: 1, bessApplication: 'peak_shaving' },
     emailSubjectHook: '{{name}} — energy savings analysis (pre-built)',
     emailBodyHook: 'Truck stops and travel centers are prime candidates for solar + BESS. We modeled your facility.',
   },
@@ -151,11 +153,11 @@ async function getPlaceDetails(placeId) {
 }
 
 // ── Auto-quote: call our own /api/quote endpoint ──────────────────────────────
-async function generateQuote(industry, location, peakLoadKW) {
+async function generateQuote(industry, location, peakLoadKW, extraParams = {}) {
   const resp = await fetch(`${APP_BASE_URL}/api/quote`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ industry, location, bessKW: Math.round(peakLoadKW * 0.4) }),
+    body: JSON.stringify({ industry, location, bessKW: Math.round(peakLoadKW * 0.4), ...extraParams }),
   });
   if (!resp.ok) return null;
   return resp.json();
@@ -191,6 +193,8 @@ function extractQuoteHighlights(quoteData) {
   if (!quoteData) return null;
   const rec = quoteData.tiers?.recommended || quoteData.recommended;
   if (!rec) return null;
+  const confidence = quoteData.confidence || null;
+  const monteCarlo = quoteData.monteCarlo || null;
   const fmt = (n) => n != null ? Math.round(n).toLocaleString('en-US') : null;
   const savings    = rec.savings?.netAnnualSavings;
   const payback    = rec.roi?.paybackYears;
@@ -206,6 +210,12 @@ function extractQuoteHighlights(quoteData) {
     solarKW:       solarKW != null ? `${fmt(solarKW)} kW` : null,
     bessKW:        bessKW  != null ? `${fmt(bessKW)} kW / ${fmt(bessKWh)} kWh` : null,
     netInvestment: net     != null ? `$${fmt(net)}` : null,
+    confidence:    confidence ? { score: confidence.score, tier: confidence.tier } : null,
+    p50Payback:    monteCarlo?.p50?.paybackYears ?? null,
+    p50IRR:        monteCarlo?.p50?.irr5Pct ?? null,
+    p50Savings:    monteCarlo?.p50?.annualSavings ?? null,
+    bessVendor:    quoteData.equipmentSelection?.bess?.vendor ?? null,
+    bessModel:     quoteData.equipmentSelection?.bess?.model ?? null,
   };
 }
 
@@ -234,9 +244,13 @@ function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody
         </td>` : ''}
       </tr>
     </table>
-    ${(hi.solarKW || hi.bessKW) ? `<p style="color:#475569;font-size:12px;margin:0 0 20px;">
-      System: ${[hi.solarKW ? `${hi.solarKW} solar` : null, hi.bessKW ? `${hi.bessKW} BESS` : null].filter(Boolean).join(' · ')}
+    ${(hi.solarKW || hi.bessKW) ? `<p style="color:#475569;font-size:12px;margin:0 0 8px;">
+      System: ${[hi.solarKW ? `${hi.solarKW} solar` : null, hi.bessKW ? `${hi.bessKW} BESS` : null, hi.bessVendor ? `${hi.bessVendor} ${hi.bessModel || ''}`.trim() : null].filter(Boolean).join(' · ')}
       ${hi.netInvestment ? `· ${hi.netInvestment} net investment after incentives` : ''}
+    </p>` : ''}
+    ${hi.p50Payback ? `<p style="color:#475569;font-size:11px;margin:0 0 20px;background:#f8fafc;border-radius:6px;padding:8px 12px;border-left:3px solid #eab308;">
+      📊 Monte Carlo P50 · ${hi.p50Payback}-yr payback · ${hi.p50IRR}% 5-yr IRR · ${hi.p50Savings}/yr
+      ${hi.confidence ? ` · <strong>${hi.confidence.tier}</strong> (${hi.confidence.score}/100)` : ''}
     </p>` : ''}
   ` : `<p style="color:#cbd5e1;font-size:14px;margin:0 0 20px;line-height:1.5;">
     Estimated annual savings · Payback period · Solar + BESS sizing · 25-yr NPV
@@ -420,7 +434,7 @@ router.post('/discover', async (req, res) => {
 
         // 3. Auto-quote
         if (autoQuote) {
-          const quoteData = await generateQuote(cfg.industry, location, cfg.peakLoadKW);
+          const quoteData = await generateQuote(cfg.industry, location, cfg.peakLoadKW, cfg.quoteParams || {});
           if (quoteData) {
             const quoteUrl = await storeSharedQuote(lead.id, quoteData, place.name, cfg.industry);
             if (quoteUrl) {
@@ -493,7 +507,7 @@ router.post('/quote/:leadId', async (req, res) => {
   }
 
   const cfg = VERTICAL_CONFIG[lead.vertical] || VERTICAL_CONFIG.car_wash;
-  const quoteData = await generateQuote(cfg.industry, lead.address || 'Las Vegas, NV', cfg.peakLoadKW);
+  const quoteData = await generateQuote(cfg.industry, lead.address || 'Las Vegas, NV', cfg.peakLoadKW, cfg.quoteParams || {});
 
   if (!quoteData) {
     return res.status(502).json({ error: 'Quote generation failed' });
