@@ -34,13 +34,27 @@ import crypto from 'crypto';
 
 const router = express.Router();
 
-// ── Clients ──────────────────────────────────────────────────────────────────
-const supabase = createClient(
-  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY
-);
+// ── Clients (lazy-init — env vars not available at module parse time) ─────────
+let _supabase = null;
+let _resend = null;
 
-const resend = new Resend(process.env.VITE_RESEND_API_KEY || process.env.RESEND_API_KEY);
+function getSupabase() {
+  if (!_supabase) {
+    const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new Error('Supabase env vars not set');
+    _supabase = createClient(url, key);
+  }
+  return _supabase;
+}
+
+function getResend() {
+  if (!_resend) {
+    const key = process.env.VITE_RESEND_API_KEY || process.env.RESEND_API_KEY;
+    _resend = new Resend(key || 'placeholder');
+  }
+  return _resend;
+}
 
 const GOOGLE_MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
 const APP_BASE_URL = process.env.APP_BASE_URL || 'https://merlin2.fly.dev';
@@ -147,7 +161,7 @@ async function generateQuote(industry, location, peakLoadKW) {
 async function storeSharedQuote(leadId, quoteData, businessName, industry) {
   const shareToken = crypto.randomUUID();
 
-  const { data, error } = await supabase.from('shared_quotes').insert({
+  const { data, error } = await getSupabase().from('shared_quotes').insert({
     share_token: shareToken,
     quote_data: quoteData,
     business_name: businessName,
@@ -243,7 +257,7 @@ async function sendIntroEmail({ to, businessName, vertical, quoteUrl, location }
 </html>`;
 
   try {
-    const result = await resend.emails.send({
+    const result = await getResend().emails.send({
       from: FROM_EMAIL,
       to,
       subject,
@@ -347,7 +361,7 @@ router.post('/discover', async (req, res) => {
           if (quoteData) {
             const quoteUrl = await storeSharedQuote(lead.id, quoteData, place.name, cfg.industry);
             if (quoteUrl) {
-              await supabase.from('smb_leads')
+              await getSupabase().from('smb_leads')
                 .update({ quote_url: quoteUrl, status: 'quoted' })
                 .eq('id', lead.id);
               leadResult.quoteUrl = quoteUrl;
@@ -370,7 +384,7 @@ router.post('/discover', async (req, res) => {
               });
 
               if (emailResult.success) {
-                await supabase.from('smb_leads')
+                await getSupabase().from('smb_leads')
                   .update({ email_sent_at: new Date().toISOString(), status: 'emailed', contact_email: contactEmail })
                   .eq('id', lead.id);
                 leadResult.emailSent = true;
@@ -422,7 +436,7 @@ router.post('/quote/:leadId', async (req, res) => {
 
   const quoteUrl = await storeSharedQuote(lead.id, quoteData, lead.name, cfg.industry);
 
-  await supabase.from('smb_leads')
+  await getSupabase().from('smb_leads')
     .update({ quote_url: quoteUrl, status: 'quoted' })
     .eq('id', leadId);
 
@@ -465,7 +479,7 @@ router.post('/email/:leadId', async (req, res) => {
   });
 
   if (emailResult.success) {
-    await supabase.from('smb_leads')
+    await getSupabase().from('smb_leads')
       .update({ email_sent_at: new Date().toISOString(), status: 'emailed', contact_email: to })
       .eq('id', leadId);
   }
@@ -480,7 +494,7 @@ router.post('/email/:leadId', async (req, res) => {
 router.get('/leads', async (req, res) => {
   const { vertical, status, limit = 100 } = req.query;
 
-  let q = supabase.from('smb_leads').select('*').order('created_at', { ascending: false }).limit(Number(limit));
+  let q = getSupabase().from('smb_leads').select('*').order('created_at', { ascending: false }).limit(Number(limit));
   if (vertical) q = q.eq('vertical', vertical);
   if (status) q = q.eq('status', status);
 
