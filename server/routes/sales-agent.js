@@ -323,10 +323,15 @@ async function sendIntroEmail({ recipients, businessName, vertical, quoteUrl, lo
 }
 
 // ── Upsert a prospect into smb_leads ─────────────────────────────────────────
+function cleanBusinessName(raw) {
+  // Remove highway exit prefixes like "Exit 46: ", "Exit I-15: ", etc.
+  return raw.replace(/^Exit\s+[\w-]+:\s*/i, '').trim();
+}
+
 async function upsertLead(place, details, vertical) {
   const cfg = VERTICAL_CONFIG[vertical];
   const record = {
-    name: place.name,
+    name: cleanBusinessName(place.name),
     site_slug: place.place_id,   // satisfy NOT NULL; place_id is unique & stable
     place_id: place.place_id,
     vertical,
