@@ -187,43 +187,36 @@ async function storeSharedQuote(leadId, quoteData, businessName, industry) {
 }
 
 // ── Send intro email via Resend ───────────────────────────────────────────────
-async function sendIntroEmail({ to, businessName, vertical, quoteUrl, location }) {
+// Build email HTML — shared by preview and send
+function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody }) {
   const cfg = VERTICAL_CONFIG[vertical] || VERTICAL_CONFIG.car_wash;
-  const subject = cfg.emailSubjectHook.replace('{{name}}', businessName);
-
-  const html = `
+  const body = customBody || cfg.emailBodyHook;
+  return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${subject}</title>
 </head>
 <body style="margin:0;padding:0;background:#060D1F;font-family:'Helvetica Neue',Arial,sans-serif;">
   <div style="max-width:600px;margin:0 auto;padding:32px 24px;">
-
-    <!-- Header -->
     <div style="border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:20px;margin-bottom:28px;">
       <span style="font-size:18px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">
-        TrueQuote<sup style="font-size:11px;color:#EAB308;">™</sup>
+        TrueQuote™
         <span style="font-size:12px;color:#64748b;font-weight:400;margin-left:6px;">by Merlin Energy</span>
       </span>
     </div>
-
-    <!-- Body -->
     <p style="color:#94a3b8;font-size:15px;line-height:1.6;margin:0 0 16px;">
       Hi ${businessName} team,
     </p>
     <p style="color:#94a3b8;font-size:15px;line-height:1.6;margin:0 0 16px;">
-      ${cfg.emailBodyHook}
+      ${body}
     </p>
     <p style="color:#94a3b8;font-size:15px;line-height:1.6;margin:0 0 28px;">
-      We built a <strong style="color:#ffffff;">free energy savings analysis</strong> for your 
-      ${location} facility using live utility rates, NREL solar data, and DOE-aligned battery 
+      We built a <strong style="color:#ffffff;">free energy savings analysis</strong> for your
+      ${location} facility using live utility rates, NREL solar data, and DOE-aligned battery
       sizing logic — the same framework used by major EPCs.
     </p>
-
-    <!-- Quote CTA -->
     <div style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.25);border-radius:12px;padding:24px;margin-bottom:28px;">
       <p style="color:#EAB308;font-size:13px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.08em;">
         Your Pre-Built TrueQuote™
@@ -231,50 +224,53 @@ async function sendIntroEmail({ to, businessName, vertical, quoteUrl, location }
       <p style="color:#cbd5e1;font-size:14px;margin:0 0 20px;line-height:1.5;">
         Estimated annual savings · Payback period · Solar + BESS sizing · 25-yr NPV
       </p>
-      <a href="${quoteUrl}" 
+      <a href="${quoteUrl}"
          style="display:inline-block;background:#EAB308;color:#000;font-size:15px;font-weight:700;
                 padding:12px 28px;border-radius:8px;text-decoration:none;letter-spacing:-0.2px;">
         View Your Free Quote →
       </a>
     </div>
-
-    <!-- Book call CTA -->
     <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 8px;">
       Want to walk through the numbers with a TrueQuote professional?
     </p>
-    <a href="${BOOKING_URL}" 
+    <a href="${BOOKING_URL}"
        style="color:#38bdf8;font-size:14px;text-decoration:none;font-weight:600;">
       Schedule a free 20-min call →
     </a>
-
-    <!-- Footer -->
     <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:40px;padding-top:20px;">
       <p style="color:#334155;font-size:12px;line-height:1.5;margin:0;">
-        Merlin Energy · Las Vegas, NV · 
-        <a href="${APP_BASE_URL}/unsubscribe?email=${encodeURIComponent(to)}" 
-           style="color:#334155;">Unsubscribe</a>
+        Merlin Energy · Las Vegas, NV
       </p>
       <p style="color:#1e293b;font-size:11px;margin:6px 0 0;">
-        This analysis was generated automatically using publicly available facility data. 
+        This analysis was generated automatically using publicly available facility data.
         Numbers are estimates based on industry benchmarks and should be verified by a licensed engineer.
       </p>
     </div>
   </div>
 </body>
 </html>`;
+}
 
-  try {
-    const result = await getResend().emails.send({
-      from: FROM_EMAIL,
-      to,
-      subject,
-      html,
-    });
-    return { success: true, id: result.data?.id };
-  } catch (err) {
-    console.error('[SalesAgent] Resend error:', err.message);
-    return { success: false, error: err.message };
+async function sendIntroEmail({ recipients, businessName, vertical, quoteUrl, location, customSubject, customBody }) {
+  const cfg = VERTICAL_CONFIG[vertical] || VERTICAL_CONFIG.car_wash;
+  const subject = customSubject || cfg.emailSubjectHook.replace('{{name}}', businessName);
+  const html = buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody });
+
+  const toList = Array.isArray(recipients) ? recipients : [recipients];
+  const results = [];
+
+  for (const to of toList) {
+    try {
+      const result = await getResend().emails.send({ from: FROM_EMAIL, to, subject, html });
+      results.push({ to, success: true, id: result.data?.id });
+    } catch (err) {
+      console.error('[SalesAgent] Resend error:', err.message);
+      results.push({ to, success: false, error: err.message });
+    }
   }
+
+  const anySuccess = results.some(r => r.success);
+  return { success: anySuccess, results };
 }
 
 // ── Upsert a prospect into smb_leads ─────────────────────────────────────────
@@ -462,7 +458,7 @@ router.post('/quote/:leadId', async (req, res) => {
  */
 router.post('/email/:leadId', async (req, res) => {
   const { leadId } = req.params;
-  const { toEmail } = req.body; // optional override
+  const { recipients, customSubject, customBody, previewOnly } = req.body;
 
   const { data: lead, error } = await getSupabase()
     .from('smb_leads')
@@ -470,34 +466,61 @@ router.post('/email/:leadId', async (req, res) => {
     .eq('id', leadId)
     .single();
 
-  if (error || !lead) {
-    return res.status(404).json({ error: 'Lead not found' });
+  if (error || !lead) return res.status(404).json({ error: 'Lead not found' });
+  if (!lead.quote_url) return res.status(400).json({ error: 'No quote URL — run /quote/:leadId first' });
+
+  // Derive default recipients from website domain
+  let toList = recipients;
+  if (!toList || toList.length === 0) {
+    if (lead.website) {
+      try {
+        const domain = new URL(lead.website).hostname.replace(/^www\./, '');
+        toList = [`sales@${domain}`, `operations@${domain}`, `cfo@${domain}`];
+      } catch (_) {
+        toList = [];
+      }
+    }
+    if (!toList || toList.length === 0) {
+      return res.status(400).json({ error: 'No recipients. Provide recipients array or ensure lead has a website.' });
+    }
   }
 
-  if (!lead.quote_url) {
-    return res.status(400).json({ error: 'No quote URL — run /quote/:leadId first' });
-  }
-
-  const to = toEmail || lead.contact_email;
-  if (!to) {
-    return res.status(400).json({ error: 'No contact email. Provide toEmail in body.' });
+  // Preview mode — return subject + html without sending
+  if (previewOnly) {
+    const cfg = VERTICAL_CONFIG[lead.vertical] || VERTICAL_CONFIG.car_wash;
+    const subject = customSubject || cfg.emailSubjectHook.replace('{{name}}', lead.name);
+    const html = buildEmailHtml({
+      businessName: lead.name,
+      vertical: lead.vertical || 'car_wash',
+      quoteUrl: lead.quote_url,
+      location: lead.address || 'your area',
+      customBody,
+    });
+    return res.json({ ok: true, previewOnly: true, subject, html, recipients: toList });
   }
 
   const emailResult = await sendIntroEmail({
-    to,
+    recipients: toList,
     businessName: lead.name,
     vertical: lead.vertical || 'car_wash',
     quoteUrl: lead.quote_url,
     location: lead.address || 'your area',
+    customSubject,
+    customBody,
   });
 
   if (emailResult.success) {
     await getSupabase().from('smb_leads')
-      .update({ email_sent_at: new Date().toISOString(), status: 'emailed', contact_email: to })
+      .update({
+        email_sent_at: new Date().toISOString(),
+        status: 'emailed',
+        contact_email: toList.join(', '),
+        notes: `Sent to: ${toList.join(', ')}`,
+      })
       .eq('id', leadId);
   }
 
-  res.json({ ok: emailResult.success, leadId, to, ...emailResult });
+  res.json({ ok: emailResult.success, leadId, recipients: toList, results: emailResult.results });
 });
 
 /**
