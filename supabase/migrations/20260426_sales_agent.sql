@@ -1,6 +1,11 @@
 -- Sales Agent schema additions
 -- Run this in Supabase SQL Editor
 
+-- 0. Add name column and relax site_slug NOT NULL (sales agent creates records without a slug)
+ALTER TABLE smb_leads
+  ADD COLUMN IF NOT EXISTS name            text,
+  ALTER COLUMN site_slug DROP NOT NULL;
+
 -- 1. Extend smb_leads with sales agent fields
 ALTER TABLE smb_leads
   ADD COLUMN IF NOT EXISTS place_id        text UNIQUE,

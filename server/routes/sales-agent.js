@@ -279,6 +279,7 @@ async function upsertLead(place, details, vertical) {
   const cfg = VERTICAL_CONFIG[vertical];
   const record = {
     name: place.name,
+    site_slug: place.place_id,   // satisfy NOT NULL; place_id is unique & stable
     place_id: place.place_id,
     vertical,
     industry: cfg.industry,
