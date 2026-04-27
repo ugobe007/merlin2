@@ -56,7 +56,9 @@ function getResend() {
   return _resend;
 }
 
-const GOOGLE_MAPS_KEY = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
+function getGoogleMapsKey() {
+  return process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
+}
 const APP_BASE_URL = process.env.APP_BASE_URL || 'https://merlin2.fly.dev';
 const FROM_EMAIL = 'TrueQuote by Merlin <hello@merlin.energy>';
 const BOOKING_URL = 'https://cal.com/truequote';  // update when cal link is live
@@ -103,6 +105,7 @@ const VERTICAL_CONFIG = {
 
 // ── Google Places — Text Search ───────────────────────────────────────────────
 async function searchPlaces(query, location, maxResults = 20) {
+  const GOOGLE_MAPS_KEY = getGoogleMapsKey();
   const url = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json');
   url.searchParams.set('query', `${query} in ${location}`);
   url.searchParams.set('key', GOOGLE_MAPS_KEY);
@@ -136,6 +139,7 @@ async function searchPlaces(query, location, maxResults = 20) {
 
 // ── Google Places — Place Details (for phone, website) ───────────────────────
 async function getPlaceDetails(placeId) {
+  const GOOGLE_MAPS_KEY = getGoogleMapsKey();
   const url = new URL('https://maps.googleapis.com/maps/api/place/details/json');
   url.searchParams.set('place_id', placeId);
   url.searchParams.set('fields', 'name,formatted_phone_number,website,formatted_address,rating,user_ratings_total,opening_hours,price_level');
@@ -320,7 +324,7 @@ router.post('/discover', async (req, res) => {
     maxPerVertical = 10,
   } = req.body;
 
-  if (!GOOGLE_MAPS_KEY) {
+  if (!getGoogleMapsKey()) {
     return res.status(503).json({ error: 'Google Maps API key not configured' });
   }
 
