@@ -32,6 +32,7 @@
  */
 
 import express from 'express';
+import { findInstallerForState } from './epc.js';
 
 const router = express.Router();
 
@@ -647,7 +648,23 @@ router.post('/', async (req, res) => {
 
     console.log(`[/api/quote] ✅ ${elapsed}ms — ${geo.formattedAddress} PSH=${psh}h | Rec: $${rec.costs.netInvestment.toLocaleString()} net, ${rec.roi.paybackYears}yr payback | Confidence: ${confidence.score} (${confidence.tier}) | BESS: ${bessSelection.vendor} ${bessSelection.model}`);
 
-    // ── 7. Response ────────────────────────────────────────────────────────
+    // ── 7. Installer lookup ────────────────────────────────────────────────
+    const installerResult = findInstallerForState(geo.stateCode, industryKey);
+    const installerBlock = installerResult
+      ? {
+          id:           installerResult.firm.id,
+          name:         installerResult.firm.name,
+          tier:         installerResult.firm.tier,
+          focus:        installerResult.firm.focus,
+          website:      installerResult.firm.website,
+          contact_email: installerResult.firm.contact_email,
+          phone:        installerResult.firm.phone,
+          hq_city:      installerResult.firm.hq_city,
+          matchReason:  installerResult.matchReason,
+        }
+      : null;
+
+    // ── 8. Response ────────────────────────────────────────────────────────
     return res.json({
       ok: true,
       location: {
@@ -680,6 +697,7 @@ router.post('/', async (req, res) => {
         note: `${bessSelection.vendor} ${bessSelection.model} selected (score ${bessSelection.scoreBase ?? '—'}, fitness-first). ${bessSelection.disqualified?.length ? bessSelection.disqualified.length + ' unit(s) disqualified.' : 'All catalog units eligible.'}`,
       },
       provenance: PRICE_PROVENANCE,
+      installer: installerBlock,
       meta: {
         methodology:   'Merlin TrueQuote™ v4.5 + v34.3.0 enhancements',
         solarMethod:   `NREL PVWatts v8 (PR=${SOLAR_PR}, PSH=${psh} h/day)`,

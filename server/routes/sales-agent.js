@@ -61,7 +61,8 @@ function getGoogleMapsKey() {
 }
 const APP_BASE_URL = process.env.APP_BASE_URL || 'https://merlin2.fly.dev';
 const FROM_EMAIL = 'TrueQuote by Merlin <hello@merlin.energy>';
-const BOOKING_URL = 'https://cal.com/truequote';  // update when cal link is live
+const REPLY_EMAIL = 'sales@merlinenergy.net';
+const BOOKING_MAILTO = `mailto:sales@merlinenergy.net?subject=${encodeURIComponent('Let\u2019s schedule a call — TrueQuote by Merlin')}&body=${encodeURIComponent('Hi,\n\nI\u2019d love to walk through my energy savings analysis. Please let me know a few times that work for a 20-minute call.\n\nThanks,')}`;
 
 // ── Vertical → Google Places search config ───────────────────────────────────
 const VERTICAL_CONFIG = {
@@ -216,6 +217,7 @@ function extractQuoteHighlights(quoteData) {
     p50Savings:    monteCarlo?.p50?.annualSavings ?? null,
     bessVendor:    quoteData.equipmentSelection?.bess?.vendor ?? null,
     bessModel:     quoteData.equipmentSelection?.bess?.model ?? null,
+    installer:     quoteData.installer ?? null,
   };
 }
 
@@ -294,12 +296,21 @@ function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody
       </a>
     </div>
     <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 8px;">
-      Want to walk through the numbers with a TrueQuote professional?
+      Questions? Want to walk through the numbers?
     </p>
-    <a href="${BOOKING_URL}"
+    <a href="${BOOKING_MAILTO}"
        style="color:#38bdf8;font-size:14px;text-decoration:none;font-weight:600;">
-      Schedule a free 20-min call →
+      Click here to learn more →
     </a>
+    <p style="color:#475569;font-size:12px;margin:6px 0 0;">Reply directly to this email or reach us at <a href="mailto:sales@merlinenergy.net" style="color:#38bdf8;text-decoration:none;">sales@merlinenergy.net</a></p>
+    ${hi?.installer ? `
+    <div style="margin-top:28px;padding:14px 18px;background:rgba(59,130,246,0.06);border-left:3px solid #3b82f6;border-radius:6px;">
+      <p style="margin:0;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Installation Partner</p>
+      <p style="margin:0;font-size:14px;color:#e2e8f0;font-weight:600;">${hi.installer.name}
+        <span style="color:#94a3b8;font-weight:400;font-size:13px;"> · ${hi.installer.hq_city}</span>
+      </p>
+      <p style="margin:4px 0 0;font-size:12px;color:#64748b;">${hi.installer.focus?.slice(0, 90)}${hi.installer.focus?.length > 90 ? '…' : ''}</p>
+    </div>` : ''}
     <div style="border-top:1px solid rgba(255,255,255,0.06);margin-top:40px;padding-top:20px;">
       <p style="color:#334155;font-size:12px;line-height:1.5;margin:0;">
         Merlin Energy · Las Vegas, NV
@@ -324,7 +335,7 @@ async function sendIntroEmail({ recipients, businessName, vertical, quoteUrl, lo
 
   for (const to of toList) {
     try {
-      const result = await getResend().emails.send({ from: FROM_EMAIL, to, subject, html });
+      const result = await getResend().emails.send({ from: FROM_EMAIL, to, subject, html, reply_to: REPLY_EMAIL, bcc: REPLY_EMAIL });
       results.push({ to, success: true, id: result.data?.id });
     } catch (err) {
       console.error('[SalesAgent] Resend error:', err.message);
