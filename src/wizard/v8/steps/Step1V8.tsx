@@ -803,8 +803,8 @@ export function Step1V8({ state, actions }: Step1Props) {
         >
           {(
             [
-              { emoji: "📍", label: "Location", sub: "ZIP auto-detected", accent: false },
-              { emoji: "🏢", label: "Industry", sub: "picks your defaults", accent: false },
+              { emoji: "📍", label: "Location", sub: "ZIP auto-detected" },
+              { emoji: "🏢", label: "Industry", sub: "picks your defaults" },
               { emoji: "⚡", label: "TrueQuote", sub: "full financial model", accent: true },
             ] as const
           ).map(({ emoji, label, sub, accent }, i, arr) => (
