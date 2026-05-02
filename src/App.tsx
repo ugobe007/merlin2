@@ -46,7 +46,6 @@ const PartnerDashboard = lazy(() => import("./pages/PartnerDashboard"));
 const PartnerDemo = lazy(() => import("./pages/PartnerDemo"));
 const EnergyNews = lazy(() => import("./pages/EnergyNews"));
 const ElCarWashLanding = lazy(() => import("./pages/ElCarWashLanding"));
-const TruckStopCampaign = lazy(() => import("./pages/TruckStopCampaign"));
 const MicrogridPage = lazy(() => import("./pages/MicrogridPage"));
 const OpportunitiesDashboard = lazy(() => import("./pages/OpportunitiesDashboard"));
 const BuildRFPPage = lazy(() => import("./pages/BuildRFPPage"));
@@ -554,19 +553,6 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <ElCarWashLanding />
-      </Suspense>
-    );
-  }
-
-  // Truck Stop Campaign Landing Page
-  if (
-    pathname === "/truck-stop" ||
-    pathname === "/truckstop" ||
-    pathname === "/truck-stop-campaign"
-  ) {
-    return (
-      <Suspense fallback={<PageLoader />}>
-        <TruckStopCampaign />
       </Suspense>
     );
   }
