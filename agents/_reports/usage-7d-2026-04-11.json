@@ -1,0 +1,132 @@
+{
+  "timestamp": "2026-04-11T13:00:03.462Z",
+  "period": "7d",
+  "quotes": {
+    "total": 595,
+    "byIndustry": {
+      "hotel": 100,
+      "data-center": 86,
+      "warehouse": 111,
+      "ev-charging": 104,
+      "car-wash": 95,
+      "manufacturing": 99
+    },
+    "avgSystemSizeMW": 3.069232929153813,
+    "avgProjectValueDollars": 1172322.090581755,
+    "completionRate": 0.7083333333333334
+  },
+  "leads": {
+    "total": 210,
+    "byIndustry": {
+      "manufacturing": 41,
+      "car-wash": 37,
+      "warehouse": 37,
+      "hotel": 25,
+      "data-center": 34,
+      "ev-charging": 36
+    },
+    "estimatedRevenue": 62150,
+    "conversionRate": 0.35294117647058826,
+    "avgLeadValue": 295.95238095238096
+  },
+  "wizard": {
+    "step1Starts": 840,
+    "step2Completions": 689,
+    "step3Completions": 565,
+    "step4Completions": 463,
+    "step5Completions": 380,
+    "step6LeadCaptures": 311,
+    "overallConversion": 0.37023809523809526,
+    "dropOffSteps": [
+      {
+        "step": 6,
+        "dropRate": 0.18157894736842106
+      },
+      {
+        "step": 4,
+        "dropRate": 0.18053097345132743
+      },
+      {
+        "step": 3,
+        "dropRate": 0.1799709724238026
+      },
+      {
+        "step": 2,
+        "dropRate": 0.17976190476190476
+      },
+      {
+        "step": 5,
+        "dropRate": 0.17926565874730022
+      }
+    ]
+  },
+  "revenue": {
+    "leadGenRevenue": 62150,
+    "estimatedMRR": 266357.14285714284,
+    "estimatedARR": 3240678.571428571,
+    "revenueGrowthWoW": 0.12
+  },
+  "topIndustries": [
+    {
+      "industry": "data-center",
+      "quoteCount": 86,
+      "leadCount": 34,
+      "revenueContribution": 17000
+    },
+    {
+      "industry": "manufacturing",
+      "quoteCount": 99,
+      "leadCount": 41,
+      "revenueContribution": 16400
+    },
+    {
+      "industry": "ev-charging",
+      "quoteCount": 104,
+      "leadCount": 36,
+      "revenueContribution": 10800
+    },
+    {
+      "industry": "warehouse",
+      "quoteCount": 111,
+      "leadCount": 37,
+      "revenueContribution": 7400
+    },
+    {
+      "industry": "car-wash",
+      "quoteCount": 95,
+      "leadCount": 37,
+      "revenueContribution": 5550
+    }
+  ],
+  "kpiStatus": [
+    {
+      "metric": "Daily Wizard Starts",
+      "actual": 120,
+      "target": 100,
+      "status": "on-track",
+      "trend": "up"
+    },
+    {
+      "metric": "Daily Quote Completions",
+      "actual": 85,
+      "target": 70,
+      "status": "on-track",
+      "trend": "flat"
+    },
+    {
+      "metric": "Daily Leads Captured",
+      "actual": 30,
+      "target": 28,
+      "status": "on-track",
+      "trend": "up"
+    },
+    {
+      "metric": "Monthly Lead Revenue",
+      "actual": "$266,357",
+      "target": "$50,000",
+      "status": "on-track",
+      "trend": "up"
+    }
+  ],
+  "insights": ["🏆 Top performing vertical: data-center ($17,000 in period)."]
+}

@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-04-21T13:00:03.231Z",
+  "overall": "critical",
+  "score": 37,
+  "checks": [
+    {
+      "name": "Frontend (merlinpro.energy)",
+      "status": "fail",
+      "value": 224,
+      "threshold": "< 3000ms",
+      "message": "OFFLINE — status: timeout",
+      "severity": "critical"
+    },
+    {
+      "name": "Partner API (/v1/health)",
+      "status": "fail",
+      "value": 205,
+      "threshold": "< 1000ms",
+      "message": "API unhealthy — undefined",
+      "severity": "critical"
+    },
+    {
+      "name": "Server Error Rate (last 500 log lines)",
+      "status": "pass",
+      "value": 1,
+      "threshold": "< 10 errors",
+      "message": "1 errors, 0 criticals in recent logs",
+      "severity": "info"
+    },
+    {
+      "name": "Build Freshness (dist/)",
+      "status": "fail",
+      "value": "105h old",
+      "threshold": "< 24h for production",
+      "message": "Last build was 105 hours ago",
+      "severity": "warning"
+    },
+    {
+      "name": "Dependencies",
+      "status": "pass",
+      "value": "20 prod, 42 dev",
+      "message": "20 production dependencies. Run \"npm audit\" for security check.",
+      "severity": "info"
+    },
+    {
+      "name": "SSOT Integrity (unifiedQuoteCalculator.ts)",
+      "status": "warn",
+      "value": "1011 lines",
+      "message": "WARNING: SSOT markers missing from file",
+      "severity": "warning"
+    },
+    {
+      "name": "Agent Change Log",
+      "status": "warn",
+      "value": "17 unreviewed",
+      "message": "17 total agent changes. 17 awaiting review.",
+      "severity": "warning"
+    }
+  ],
+  "summary": "Merlin Health Score: 37/100 (CRITICAL) — 3 critical, 2 warnings",
+  "actionItems": [
+    "🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout",
+    "🚨 CRITICAL: Partner API (/v1/health) — API unhealthy — undefined",
+    "🚨 CRITICAL: Build Freshness (dist/) — Last build was 105 hours ago",
+    "⚠️ WARNING: SSOT Integrity (unifiedQuoteCalculator.ts) — WARNING: SSOT markers missing from file",
+    "⚠️ WARNING: Agent Change Log — 17 total agent changes. 17 awaiting review."
+  ]
+}
