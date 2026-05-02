@@ -1,0 +1,66 @@
+{
+  "timestamp": "2026-04-07T13:00:03.139Z",
+  "overall": "critical",
+  "score": 49,
+  "checks": [
+    {
+      "name": "Frontend (merlinpro.energy)",
+      "status": "fail",
+      "value": 120,
+      "threshold": "< 3000ms",
+      "message": "OFFLINE — status: timeout",
+      "severity": "critical"
+    },
+    {
+      "name": "Partner API (/v1/health)",
+      "status": "fail",
+      "value": 197,
+      "threshold": "< 1000ms",
+      "message": "API unhealthy — undefined",
+      "severity": "critical"
+    },
+    {
+      "name": "Server Error Rate (last 500 log lines)",
+      "status": "pass",
+      "value": 1,
+      "threshold": "< 10 errors",
+      "message": "1 errors, 0 criticals in recent logs",
+      "severity": "info"
+    },
+    {
+      "name": "Build Freshness (dist/)",
+      "status": "pass",
+      "value": "14h old",
+      "threshold": "< 24h for production",
+      "message": "Last build was 14 hours ago",
+      "severity": "info"
+    },
+    {
+      "name": "Dependencies",
+      "status": "pass",
+      "value": "20 prod, 42 dev",
+      "message": "20 production dependencies. Run \"npm audit\" for security check.",
+      "severity": "info"
+    },
+    {
+      "name": "SSOT Integrity (unifiedQuoteCalculator.ts)",
+      "status": "warn",
+      "value": "1011 lines",
+      "message": "WARNING: SSOT markers missing from file",
+      "severity": "warning"
+    },
+    {
+      "name": "Agent Change Log",
+      "status": "pass",
+      "value": "3 unreviewed",
+      "message": "3 total agent changes. 3 awaiting review.",
+      "severity": "info"
+    }
+  ],
+  "summary": "Merlin Health Score: 49/100 (CRITICAL) — 2 critical, 1 warnings",
+  "actionItems": [
+    "🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout",
+    "🚨 CRITICAL: Partner API (/v1/health) — API unhealthy — undefined",
+    "⚠️ WARNING: SSOT Integrity (unifiedQuoteCalculator.ts) — WARNING: SSOT markers missing from file"
+  ]
+}
