@@ -155,8 +155,7 @@ function loadGoogleMapsScript(): Promise<void> {
     // Catch invalid key or HTTP-referrer restriction
     (window as Window & { gm_authFailure?: () => void }).gm_authFailure = () => {
       console.error(
-        "❌ Google Maps auth failure — key invalid or domain not whitelisted:",
-        GOOGLE_MAPS_API_KEY?.slice(0, 12) + "..."
+        "❌ Google Maps auth failure — key invalid, API target blocked, or domain not whitelisted"
       );
       googleMapsPromise = null; // allow retry
       reject(new Error("Google Maps API key rejected (auth failure)"));
@@ -181,7 +180,7 @@ function loadGoogleMapsScript(): Promise<void> {
     script.id = "merlin-v8-google-maps";
     script.async = true;
     script.src =
-      `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}` +
+      `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}` +
       "&libraries=places&loading=async&v=weekly";
     script.onload = () => resolve();
     script.onerror = () => reject(new Error("Failed to load Google Maps script (network error)"));
@@ -803,8 +802,8 @@ export function Step1V8({ state, actions }: Step1Props) {
         >
           {(
             [
-              { emoji: "📍", label: "Location", sub: "ZIP auto-detected" },
-              { emoji: "🏢", label: "Industry", sub: "picks your defaults" },
+              { emoji: "📍", label: "Location", sub: "ZIP auto-detected", accent: false },
+              { emoji: "🏢", label: "Industry", sub: "picks your defaults", accent: false },
               { emoji: "⚡", label: "TrueQuote", sub: "full financial model", accent: true },
             ] as const
           ).map(({ emoji, label, sub, accent }, i, arr) => (

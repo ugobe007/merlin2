@@ -102,7 +102,7 @@ export const ProfessionalModelView: React.FC<ProfessionalModelViewProps> = ({
   // Fetch VPP value stack whenever the model results are available
   useEffect(() => {
     if (!professionalModel) return;
-    calculateStorageValueStack(storageSizeMW, selectedISORegion)
+    calculateStorageValueStack(selectedISORegion, storageSizeMW)
       .then((stack) => setVppStack(stack))
       .catch(() => setVppStack(null));
   }, [professionalModel, storageSizeMW, selectedISORegion]);
