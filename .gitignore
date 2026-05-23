@@ -42,6 +42,9 @@ coverage/
 *.webm
 puppeteer-results.txt
 
+# Generated agent reports
+agents/_reports/
+
 # TypeScript build info
 tsconfig.tsbuildinfo
 *.tsbuildinfo

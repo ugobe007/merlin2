@@ -473,5 +473,423 @@
       "leadsGenerated": 30
     },
     "timestamp": "2026-04-28T13:00:18.574Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-02.json",
+      "agents/_reports/usage-24h-2026-05-02.json",
+      "agents/_reports/bugs-2026-05-02.json",
+      "agents/_reports/newsletter-2026-05-02.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 47,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-02T13:21:40.471Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-03.json",
+      "agents/_reports/usage-24h-2026-05-03.json",
+      "agents/_reports/bugs-2026-05-03.json",
+      "agents/_reports/newsletter-2026-05-03.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 43,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-03T13:00:14.572Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-04.json",
+      "agents/_reports/usage-24h-2026-05-04.json",
+      "agents/_reports/bugs-2026-05-04.json",
+      "agents/_reports/newsletter-2026-05-04.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 43,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-04T13:00:16.392Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-05.json",
+      "agents/_reports/usage-24h-2026-05-05.json",
+      "agents/_reports/bugs-2026-05-05.json",
+      "agents/_reports/newsletter-2026-05-05.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-05T13:00:11.654Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-06.json",
+      "agents/_reports/usage-24h-2026-05-06.json",
+      "agents/_reports/bugs-2026-05-06.json",
+      "agents/_reports/newsletter-2026-05-06.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-06T13:00:11.205Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-07.json",
+      "agents/_reports/usage-24h-2026-05-07.json",
+      "agents/_reports/bugs-2026-05-07.json",
+      "agents/_reports/newsletter-2026-05-07.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-07T13:00:10.138Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-08.json",
+      "agents/_reports/usage-24h-2026-05-08.json",
+      "agents/_reports/bugs-2026-05-08.json",
+      "agents/_reports/newsletter-2026-05-08.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-08T13:00:11.834Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-09.json",
+      "agents/_reports/usage-24h-2026-05-09.json",
+      "agents/_reports/bugs-2026-05-09.json",
+      "agents/_reports/newsletter-2026-05-09.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-09T13:00:12.671Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-10.json",
+      "agents/_reports/usage-24h-2026-05-10.json",
+      "agents/_reports/bugs-2026-05-10.json",
+      "agents/_reports/newsletter-2026-05-10.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 47,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-10T13:14:19.735Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-11.json",
+      "agents/_reports/usage-24h-2026-05-11.json",
+      "agents/_reports/bugs-2026-05-11.json",
+      "agents/_reports/newsletter-2026-05-11.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 43,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-11T13:00:11.409Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-12.json",
+      "agents/_reports/usage-24h-2026-05-12.json",
+      "agents/_reports/bugs-2026-05-12.json",
+      "agents/_reports/newsletter-2026-05-12.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 43,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-12T13:00:12.234Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-13.json",
+      "agents/_reports/usage-24h-2026-05-13.json",
+      "agents/_reports/bugs-2026-05-13.json",
+      "agents/_reports/newsletter-2026-05-13.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-13T13:00:10.604Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-14.json",
+      "agents/_reports/usage-24h-2026-05-14.json",
+      "agents/_reports/bugs-2026-05-14.json",
+      "agents/_reports/newsletter-2026-05-14.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-14T13:00:09.893Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-15.json",
+      "agents/_reports/usage-24h-2026-05-15.json",
+      "agents/_reports/bugs-2026-05-15.json",
+      "agents/_reports/newsletter-2026-05-15.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-15T13:00:10.264Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-16.json",
+      "agents/_reports/usage-24h-2026-05-16.json",
+      "agents/_reports/bugs-2026-05-16.json",
+      "agents/_reports/newsletter-2026-05-16.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-16T13:00:10.131Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-17.json",
+      "agents/_reports/usage-24h-2026-05-17.json",
+      "agents/_reports/bugs-2026-05-17.json",
+      "agents/_reports/newsletter-2026-05-17.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-17T13:00:10.738Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-18.json",
+      "agents/_reports/usage-24h-2026-05-18.json",
+      "agents/_reports/bugs-2026-05-18.json",
+      "agents/_reports/newsletter-2026-05-18.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-18T13:00:16.572Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-19.json",
+      "agents/_reports/usage-24h-2026-05-19.json",
+      "agents/_reports/bugs-2026-05-19.json",
+      "agents/_reports/newsletter-2026-05-19.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-19T13:00:09.673Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-20.json",
+      "agents/_reports/usage-24h-2026-05-20.json",
+      "agents/_reports/bugs-2026-05-20.json",
+      "agents/_reports/newsletter-2026-05-20.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-20T13:00:12.019Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-21.json",
+      "agents/_reports/usage-24h-2026-05-21.json",
+      "agents/_reports/bugs-2026-05-21.json",
+      "agents/_reports/newsletter-2026-05-21.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-21T13:00:10.327Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-22.json",
+      "agents/_reports/usage-24h-2026-05-22.json",
+      "agents/_reports/bugs-2026-05-22.json",
+      "agents/_reports/newsletter-2026-05-22.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-22T13:00:14.740Z"
+  },
+  {
+    "agent": "daily-runner",
+    "action": "daily_report_generated",
+    "files_modified": [
+      "agents/_reports/health-2026-05-23.json",
+      "agents/_reports/usage-24h-2026-05-23.json",
+      "agents/_reports/bugs-2026-05-23.json",
+      "agents/_reports/newsletter-2026-05-23.html"
+    ],
+    "authorization_level": 1,
+    "reviewed_by": null,
+    "deployed": false,
+    "details": {
+      "healthScore": 37,
+      "quotesGenerated": 85,
+      "leadsGenerated": 30
+    },
+    "timestamp": "2026-05-23T13:00:17.730Z"
   }
 ]

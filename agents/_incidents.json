@@ -248,5 +248,225 @@
     "runId": "agent-1777381204441",
     "timestamp": "2026-04-28T13:00:09.001Z",
     "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1777728057380",
+    "timestamp": "2026-05-02T13:20:58.300Z",
+    "message": "System health CRITICAL (47/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1777728057380",
+    "timestamp": "2026-05-02T13:21:35.726Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1777813203734",
+    "timestamp": "2026-05-03T13:00:03.817Z",
+    "message": "System health CRITICAL (43/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1777813203734",
+    "timestamp": "2026-05-03T13:00:07.707Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1777899602366",
+    "timestamp": "2026-05-04T13:00:02.704Z",
+    "message": "System health CRITICAL (43/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1777899602366",
+    "timestamp": "2026-05-04T13:00:10.449Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1777986003656",
+    "timestamp": "2026-05-05T13:00:03.976Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1777986003656",
+    "timestamp": "2026-05-05T13:00:07.332Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1778072403838",
+    "timestamp": "2026-05-06T13:00:04.007Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1778072403838",
+    "timestamp": "2026-05-06T13:00:07.369Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1778158801491",
+    "timestamp": "2026-05-07T13:00:01.806Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1778158801491",
+    "timestamp": "2026-05-07T13:00:05.781Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1778245202168",
+    "timestamp": "2026-05-08T13:00:02.374Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1778245202168",
+    "timestamp": "2026-05-08T13:00:06.860Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1778331603142",
+    "timestamp": "2026-05-09T13:00:03.347Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1778331603142",
+    "timestamp": "2026-05-09T13:00:08.031Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1778418846945",
+    "timestamp": "2026-05-10T13:14:07.311Z",
+    "message": "System health CRITICAL (47/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1778418846945",
+    "timestamp": "2026-05-10T13:14:14.016Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1778504403498",
+    "timestamp": "2026-05-11T13:00:03.648Z",
+    "message": "System health CRITICAL (43/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1778504403498",
+    "timestamp": "2026-05-11T13:00:07.510Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1778590803886",
+    "timestamp": "2026-05-12T13:00:04.173Z",
+    "message": "System health CRITICAL (43/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1778590803886",
+    "timestamp": "2026-05-12T13:00:07.656Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1778677203019",
+    "timestamp": "2026-05-13T13:00:03.315Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1778677203019",
+    "timestamp": "2026-05-13T13:00:06.933Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1778763601816",
+    "timestamp": "2026-05-14T13:00:02.035Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1778763601816",
+    "timestamp": "2026-05-14T13:00:05.547Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1778850002178",
+    "timestamp": "2026-05-15T13:00:02.440Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1778850002178",
+    "timestamp": "2026-05-15T13:00:06.362Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1778936402154",
+    "timestamp": "2026-05-16T13:00:02.306Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1778936402154",
+    "timestamp": "2026-05-16T13:00:06.235Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1779022802697",
+    "timestamp": "2026-05-17T13:00:02.802Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1779022802697",
+    "timestamp": "2026-05-17T13:00:06.176Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1779109203768",
+    "timestamp": "2026-05-18T13:00:04.211Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1779109203768",
+    "timestamp": "2026-05-18T13:00:10.369Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1779195601429",
+    "timestamp": "2026-05-19T13:00:01.771Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1779195601429",
+    "timestamp": "2026-05-19T13:00:05.439Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1779282004164",
+    "timestamp": "2026-05-20T13:00:04.360Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1779282004164",
+    "timestamp": "2026-05-20T13:00:07.597Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1779368401971",
+    "timestamp": "2026-05-21T13:00:02.212Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1779368401971",
+    "timestamp": "2026-05-21T13:00:05.992Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1779454803444",
+    "timestamp": "2026-05-22T13:00:03.903Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1779454803444",
+    "timestamp": "2026-05-22T13:00:07.212Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
+  },
+  {
+    "runId": "agent-1779541203997",
+    "timestamp": "2026-05-23T13:00:04.594Z",
+    "message": "System health CRITICAL (37/100): 🚨 CRITICAL: Frontend (merlinpro.energy) — OFFLINE — status: timeout"
+  },
+  {
+    "runId": "agent-1779541203997",
+    "timestamp": "2026-05-23T13:00:13.165Z",
+    "message": "Bug detector found 4 CRITICAL issue(s). Human review required.\n• [src/core/calculations/sizing/bessCalculator.ts:186] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/services/professionalFinancialModel.ts:259] Function 'calculateDemandChargeReduction' defined outside unifiedQuoteCalculator.ts\n• [src/utils/gridSynkBessFormulas.ts:276] Function 'calculateBESSSizing' defined outside unifiedQuoteCalculator.ts\n• [src/__tests__/wizard-data-flow.test.ts:215] Potential secret value logged (long literal string)"
   }
 ]

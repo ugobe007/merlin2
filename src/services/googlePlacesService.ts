@@ -118,6 +118,11 @@ export function loadGoogleMapsAPI(): Promise<void> {
   }
 
   googleMapsLoadPromise = new Promise((resolve, reject) => {
+    if (!GOOGLE_MAPS_API_KEY) {
+      reject(new Error("Missing VITE_GOOGLE_MAPS_API_KEY"));
+      return;
+    }
+
     // Check if already loaded
     if (window.google && window.google.maps) {
       googleMapsLoaded = true;
@@ -126,7 +131,9 @@ export function loadGoogleMapsAPI(): Promise<void> {
     }
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
+      GOOGLE_MAPS_API_KEY
+    )}&libraries=places&loading=async&v=weekly`;
     script.async = true;
     script.defer = true;
 
