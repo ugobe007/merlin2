@@ -11,6 +11,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 const API = "https://merlin2.fly.dev";
+const AUTO_BULK_RECIPIENTS = "Auto: sales@, operations@, cfo@ per lead domain";
 
 interface Lead {
   id: string;
@@ -75,6 +76,24 @@ function domainFromUrl(url: string): string | null {
 
 function cleanName(raw: string): string {
   return raw.replace(/^(Exit|Stop|Mile|Rest Area|Loc)\s+[\w/-]+[:\s]+/i, "").trim();
+}
+
+function defaultRecipientsForLead(lead: Lead): string[] {
+  const domain = lead.website ? domainFromUrl(lead.website) : null;
+  return domain ? [`sales@${domain}`, `operations@${domain}`, `cfo@${domain}`] : [];
+}
+
+function parseRecipients(value: string): string[] {
+  if (!value.trim() || value.trim() === AUTO_BULK_RECIPIENTS) return [];
+  return value
+    .split(",")
+    .map((recipient) => recipient.trim())
+    .filter(Boolean);
+}
+
+function recipientsForLead(lead: Lead, value: string): string[] {
+  const explicit = parseRecipients(value);
+  return explicit.length > 0 ? explicit : defaultRecipientsForLead(lead);
 }
 
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -241,7 +260,11 @@ export default function SalesAgentDashboard() {
 
   const quoteLead = async (lead: Lead) => {
     addLog(`⏳ Quoting ${lead.name}…`);
-    const r = await fetch(`${API}/api/sales-agent/quote/${lead.id}`, { method: "POST" });
+    const r = await fetch(`${API}/api/sales-agent/quote/${lead.id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
     const d = await r.json();
     if (d.ok) {
       addLog(`✅ Quoted ${lead.name}`);
@@ -252,24 +275,26 @@ export default function SalesAgentDashboard() {
 
   const openEmailReview = async (leadsToEmail: Lead[]) => {
     const ref = leadsToEmail[0];
-    const domain = ref.website ? domainFromUrl(ref.website) : null;
-    const defaultRecipients = domain
-      ? [`sales@${domain}`, `operations@${domain}`, `cfo@${domain}`]
-      : [];
+    const defaultRecipients = defaultRecipientsForLead(ref);
+    const mode = leadsToEmail.length === 1 ? "single" : "bulk";
     setEmailModal({
-      mode: leadsToEmail.length === 1 ? "single" : "bulk",
+      mode,
       leads: leadsToEmail,
       preview: null,
       customSubject: "",
       customBody: "",
-      recipients: defaultRecipients.join(", "),
+      recipients: mode === "bulk" ? AUTO_BULK_RECIPIENTS : defaultRecipients.join(", "),
       loading: true,
     });
     // Auto-quote if the lead hasn't been quoted yet
     let leadForPreview = ref;
     if (!ref.quote_url) {
       addLog(`⏳ Auto-quoting ${cleanName(ref.name)} before preview…`);
-      const qr = await fetch(`${API}/api/sales-agent/quote/${ref.id}`, { method: "POST" });
+      const qr = await fetch(`${API}/api/sales-agent/quote/${ref.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
       const qd = await qr.json();
       if (qd.ok) {
         addLog(`✅ Auto-quoted ${cleanName(ref.name)}`);
@@ -290,7 +315,13 @@ export default function SalesAgentDashboard() {
         const r = await fetch(`${API}/api/sales-agent/email/${leadForPreview.id}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ previewOnly: true, recipients: defaultRecipients }),
+          body: JSON.stringify({
+            previewOnly: true,
+            recipients: recipientsForLead(
+              leadForPreview,
+              mode === "bulk" ? AUTO_BULK_RECIPIENTS : defaultRecipients.join(", ")
+            ),
+          }),
         });
         const d = await r.json();
         setEmailModal((m) => (m ? { ...m, preview: d, loading: false } : null));
@@ -315,10 +346,7 @@ export default function SalesAgentDashboard() {
           previewOnly: true,
           customSubject: emailModal.customSubject || undefined,
           customBody: emailModal.customBody || undefined,
-          recipients: emailModal.recipients
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean),
+          recipients: recipientsForLead(ref, emailModal.recipients),
         }),
       });
       const d = await r.json();
@@ -331,10 +359,6 @@ export default function SalesAgentDashboard() {
   const sendApproved = async () => {
     if (!emailModal) return;
     setRunning(true);
-    const recipients = emailModal.recipients
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
     for (const lead of emailModal.leads) {
       if (!lead.quote_url) {
         const ok = await quoteLead(lead);
@@ -343,6 +367,11 @@ export default function SalesAgentDashboard() {
           continue;
         }
         await fetchLeads();
+      }
+      const recipients = recipientsForLead(lead, emailModal.recipients);
+      if (recipients.length === 0) {
+        addLog(`⏭ Skipped ${lead.name} (no valid recipient domain)`);
+        continue;
       }
       try {
         const r = await fetch(`${API}/api/sales-agent/email/${lead.id}`, {
@@ -372,6 +401,53 @@ export default function SalesAgentDashboard() {
       await new Promise((res) => setTimeout(res, 400));
     }
     setEmailModal(null);
+    setRunning(false);
+    clearSel();
+    await fetchLeads();
+  };
+
+  const sendBulkEmails = async () => {
+    const selectedLeads = leads.filter((lead) => selected.has(lead.id));
+    if (selectedLeads.length === 0) return;
+
+    const confirmed = window.confirm(
+      `Send emails to ${selectedLeads.length} selected leads using each lead's website domain?`
+    );
+    if (!confirmed) return;
+
+    setRunning(true);
+    for (const lead of selectedLeads) {
+      if (!lead.quote_url) {
+        const ok = await quoteLead(lead);
+        if (!ok) {
+          addLog(`⏭ Skipped ${lead.name} (quote failed)`);
+          continue;
+        }
+      }
+
+      const recipients = defaultRecipientsForLead(lead);
+      if (recipients.length === 0) {
+        addLog(`⏭ Skipped ${lead.name} (no website domain for recipients)`);
+        continue;
+      }
+
+      try {
+        const r = await fetch(`${API}/api/sales-agent/email/${lead.id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipients }),
+        });
+        const d = await r.json();
+        if (d.ok) {
+          addLog(`📧 Bulk sent → ${lead.name} (${recipients.join(", ")})`);
+        } else {
+          addLog(`❌ Bulk failed → ${lead.name}: ${d.error ?? "unknown error"}`);
+        }
+      } catch {
+        addLog(`❌ Bulk error sending to ${lead.name}`);
+      }
+      await new Promise((res) => setTimeout(res, 400));
+    }
     setRunning(false);
     clearSel();
     await fetchLeads();
@@ -707,7 +783,14 @@ export default function SalesAgentDashboard() {
                         disabled={running}
                         className="text-xs bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 px-3 py-1.5 rounded-lg hover:bg-yellow-500/30 disabled:opacity-40 transition-colors"
                       >
-                        ✉ Review & Send ({selected.size})
+                        ✉ Draft Emails ({selected.size})
+                      </button>
+                      <button
+                        onClick={() => void sendBulkEmails()}
+                        disabled={running}
+                        className="text-xs bg-green-500/20 border border-green-500/40 text-green-300 px-3 py-1.5 rounded-lg hover:bg-green-500/30 disabled:opacity-40 transition-colors"
+                      >
+                        📬 Send Bulk Emails ({selected.size})
                       </button>
                       <button
                         onClick={clearSel}
@@ -790,7 +873,7 @@ export default function SalesAgentDashboard() {
                                 disabled={running}
                                 className="text-xs bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 px-3 py-1.5 rounded-lg hover:bg-yellow-500/25 disabled:opacity-40 transition-colors"
                               >
-                                ✉ Review
+                                ✉ Draft Email
                               </button>
                             )}
                             {lead.email_sent_at && (
@@ -898,7 +981,7 @@ export default function SalesAgentDashboard() {
                                     disabled={running}
                                     className="text-xs bg-yellow-500/15 border border-yellow-500/30 text-yellow-300 px-2 py-1 rounded hover:bg-yellow-500/25 disabled:opacity-40 transition-colors"
                                   >
-                                    ✉ Review
+                                    ✉ Draft
                                   </button>
                                 )}
                                 {lead.email_sent_at && (
@@ -1057,7 +1140,7 @@ export default function SalesAgentDashboard() {
                         disabled={running}
                         className="w-full text-sm bg-green-500/20 border border-green-500/40 text-green-300 py-2 rounded-lg hover:bg-green-500/30 disabled:opacity-40 transition-colors"
                       >
-                        ✉ Review & Send Email
+                        ✉ Draft Email
                       </button>
                     )}
                   </div>

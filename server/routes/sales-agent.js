@@ -41,7 +41,7 @@ let _resend = null;
 function getSupabase() {
   if (!_supabase) {
     const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!url || !key) throw new Error('Supabase env vars not set');
     _supabase = createClient(url, key);
   }
@@ -400,7 +400,7 @@ router.post('/discover', async (req, res) => {
     autoQuote = true,
     autoEmail = false,
     maxPerVertical = 10,
-  } = req.body;
+  } = req.body || {};
 
   if (!getGoogleMapsKey()) {
     return res.status(503).json({ error: 'Google Maps API key not configured' });
@@ -541,7 +541,7 @@ router.post('/quote/:leadId', async (req, res) => {
  */
 router.post('/email/:leadId', async (req, res) => {
   const { leadId } = req.params;
-  const { recipients, customSubject, customBody, previewOnly } = req.body;
+  const { recipients, customSubject, customBody, previewOnly } = req.body || {};
 
   const { data: lead, error } = await getSupabase()
     .from('smb_leads')

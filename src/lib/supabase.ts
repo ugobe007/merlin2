@@ -16,12 +16,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
- * Admin client — uses service role key, bypasses RLS.
- * ONLY use in admin-gated components. Never expose to end users.
+ * Admin-facing client for browser components.
+ *
+ * This intentionally uses the anon key. Service-role keys must never be
+ * exposed through Vite/browser environment variables; privileged operations
+ * belong behind server/API routes.
  */
-const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
-export const supabaseAdmin: SupabaseClient = supabaseServiceKey
-  ? createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    })
-  : supabase; // fallback to anon if key not present (dev safety)
+export const supabaseAdmin: SupabaseClient = supabase;
