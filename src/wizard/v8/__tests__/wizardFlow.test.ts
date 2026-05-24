@@ -32,9 +32,9 @@ import { hasGeneratorIntent, hasSolarAddonOpportunity, hasStep35Addons } from ".
 // =============================================================================
 
 describe("Initial wizard state", () => {
-  it("starts at Step 0 (mode select)", () => {
+  it("starts at Step 1 (location)", () => {
     const state = initialState();
-    expect(state.step).toBe(0);
+    expect(state.step).toBe(1);
   });
 
   it("has no location initially", () => {
@@ -162,8 +162,8 @@ describe("Step navigation", () => {
           generatorNeed: "resilience",
         },
         false,
-        0,
-      ),
+        0
+      )
     ).toBe(true);
   });
 
@@ -774,7 +774,7 @@ describe("Conditional Step 3.5 flow", () => {
       state.wantsGenerator,
       state.step3Answers,
       state.intel?.solarFeasible ?? false,
-      state.solarPhysicalCapKW,
+      state.solarPhysicalCapKW
     );
     expect(needsStep35).toBe(true);
   });
@@ -789,7 +789,7 @@ describe("Conditional Step 3.5 flow", () => {
       state.wantsGenerator,
       state.step3Answers,
       state.intel?.solarFeasible ?? false,
-      state.solarPhysicalCapKW,
+      state.solarPhysicalCapKW
     );
     expect(needsStep35).toBe(true);
   });
@@ -803,7 +803,7 @@ describe("Conditional Step 3.5 flow", () => {
       state.wantsGenerator,
       state.step3Answers,
       state.intel?.solarFeasible ?? false,
-      state.solarPhysicalCapKW,
+      state.solarPhysicalCapKW
     );
     expect(needsStep35).toBe(false);
   });
@@ -819,7 +819,7 @@ describe("Conditional Step 3.5 flow", () => {
       state.wantsGenerator,
       state.step3Answers,
       state.intel?.solarFeasible ?? false,
-      state.solarPhysicalCapKW,
+      state.solarPhysicalCapKW
     );
     expect(needsStep35).toBe(true);
   });
@@ -843,9 +843,9 @@ describe("Conditional Step 3.5 flow", () => {
       criticalLoadPct: 0.45,
     });
 
-    expect(hasSolarAddonOpportunity(false, state.intel?.solarFeasible ?? false, state.solarPhysicalCapKW)).toBe(
-      true,
-    );
+    expect(
+      hasSolarAddonOpportunity(false, state.intel?.solarFeasible ?? false, state.solarPhysicalCapKW)
+    ).toBe(true);
 
     const needsStep35 = hasStep35Addons(
       state.wantsSolar,
@@ -853,7 +853,7 @@ describe("Conditional Step 3.5 flow", () => {
       state.wantsGenerator,
       state.step3Answers,
       state.intel?.solarFeasible ?? false,
-      state.solarPhysicalCapKW,
+      state.solarPhysicalCapKW
     );
     expect(needsStep35).toBe(true);
   });
