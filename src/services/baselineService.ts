@@ -153,6 +153,48 @@ export async function calculateDatabaseBaseline(
     // Each handler takes useCaseData and returns BaselineCalculationResult
     // ═══════════════════════════════════════════════════════════════════════
 
+    // **CRITICAL FIX**: Check if user explicitly provided peak load
+    // If user entered peakLoad in MW, use that value directly instead of database/fallback.
+    if (useCaseData && typeof useCaseData.peakLoad === "number" && useCaseData.peakLoad > 0) {
+      const userPowerMW = useCaseData.peakLoad;
+      const durationHrs = useCaseData.operatingHours
+        ? Math.round(useCaseData.operatingHours / 5)
+        : 4; // Default 4 hours
+      // ✅ FIXED: Don't auto-calculate solar - let user control via wantsSolar preference
+      const solarMW = 0;
+
+      if (import.meta.env.DEV) {
+        console.log(
+          `👤 [BaselineService] Using user's explicit peak load input: ${userPowerMW} MW`
+        );
+        console.log(`👤 [BaselineService] User inputs:`, {
+          peakLoad: useCaseData.peakLoad,
+          facilitySize: useCaseData.facilitySize,
+          operatingHours: useCaseData.operatingHours,
+        });
+        console.log(`👤 [BaselineService] Cache key: "${cacheKey}"`);
+        console.log(`👤 [BaselineService] Template: "${templateKey}", Scale: ${scale}`);
+      }
+
+      const userResult = {
+        powerMW: userPowerMW,
+        durationHrs,
+        solarMW,
+        description: `User-specified peak load: ${userPowerMW} MW`,
+        dataSource: "User Input (Step 2)",
+      };
+
+      const validation = validateBessSizing(userPowerMW, userPowerMW);
+      if (import.meta.env.DEV) {
+        console.log(
+          `✅ [Validation] Using user's explicit peak load: ${userPowerMW} MW (ratio: ${validation.ratio.toFixed(2)}x)`
+        );
+      }
+
+      baselineCache.set(cacheKey, userResult);
+      return userResult;
+    }
+
     // Special case: EV Charging uses charger-specific calculation
     if (templateKey === "ev-charging" && useCaseData) {
       if (import.meta.env.DEV) {
@@ -309,56 +351,6 @@ export async function calculateDatabaseBaseline(
       return agResult;
     }
 
-    // **CRITICAL FIX**: Check if user explicitly provided peak load
-    // If user entered peakLoad in MW, use that value directly instead of database/fallback
-    if (useCaseData && typeof useCaseData.peakLoad === "number" && useCaseData.peakLoad > 0) {
-      const userPowerMW = useCaseData.peakLoad;
-      const durationHrs = useCaseData.operatingHours
-        ? Math.round(useCaseData.operatingHours / 5)
-        : 4; // Default 4 hours
-      // ✅ FIXED: Don't auto-calculate solar - let user control via wantsSolar preference
-      const solarMW = 0;
-
-      if (import.meta.env.DEV) {
-        console.log(
-          `👤 [BaselineService] Using user's explicit peak load input: ${userPowerMW} MW`
-        );
-        console.log(`👤 [BaselineService] User inputs:`, {
-          peakLoad: useCaseData.peakLoad,
-          facilitySize: useCaseData.facilitySize,
-          operatingHours: useCaseData.operatingHours,
-        });
-        if (import.meta.env.DEV) {
-          console.log(`👤 [BaselineService] Cache key: "${cacheKey}"`);
-        }
-        if (import.meta.env.DEV) {
-          console.log(`👤 [BaselineService] Template: "${templateKey}", Scale: ${scale}`);
-        }
-      }
-
-      const userResult = {
-        powerMW: userPowerMW,
-        durationHrs,
-        solarMW,
-        description: `User-specified peak load: ${userPowerMW} MW`,
-        dataSource: "User Input (Step 2)",
-      };
-
-      // Validate sizing (user's input should always be valid since they provided it)
-      const validation = validateBessSizing(userPowerMW, userPowerMW);
-      if (import.meta.env.DEV) {
-        console.log(
-          `✅ [Validation] Using user's explicit peak load: ${userPowerMW} MW (ratio: ${validation.ratio.toFixed(2)}x)`
-        );
-      }
-      // Cache the user-specified result
-      baselineCache.set(cacheKey, userResult);
-      if (import.meta.env.DEV) {
-        console.log(`💾 [BaselineService] Cached user result with key: "${cacheKey}"`);
-      }
-      return userResult;
-    }
-
     // Query database for use case configuration
     if (import.meta.env.DEV) {
       console.log(`📡 [BaselineService] Querying database for slug: "${templateKey}"...`);
@@ -484,7 +476,7 @@ export async function calculateDatabaseBaseline(
           if (question.impact_type !== "additionalLoad") continue;
 
           // Use question_key (DB column) to look up user value
-          const qKey = question.question_key ?? '';
+          const qKey = question.question_key ?? "";
           if (!qKey) continue;
           const userValue = useCaseData[qKey];
           if (!userValue) continue;
