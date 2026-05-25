@@ -2,7 +2,8 @@
    Design: Left-aligned CTA with large decorative "01" background number
    Minimal footer with brand mark */
 
-const WIZARD_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/merlin-wizard_11d2b1f0.png";
+const WIZARD_URL =
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/merlin-wizard_11d2b1f0.png";
 
 export default function FinalCTA() {
   return (
@@ -38,7 +39,10 @@ export default function FinalCTA() {
               <span className="gradient-text">true potential?</span>
             </h2>
 
-            <p className="text-slate-400 text-lg mb-10 max-w-md leading-relaxed" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            <p
+              className="text-slate-400 text-lg mb-10 max-w-md leading-relaxed"
+              style={{ fontFamily: "'DM Sans', sans-serif" }}
+            >
               Get started in minutes. No setup, no commitment — just answers.
             </p>
 
@@ -76,7 +80,10 @@ export default function FinalCTA() {
                 >
                   Merlin Energy
                 </div>
-                <div className="text-slate-600 text-xs" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                <div
+                  className="text-slate-600 text-xs"
+                  style={{ fontFamily: "'DM Sans', sans-serif" }}
+                >
                   Energy decision platform
                 </div>
               </div>
@@ -84,14 +91,21 @@ export default function FinalCTA() {
 
             {/* Links */}
             <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm text-slate-600">
-              {["Products", "Industries", "How It Works", "Platform", "Privacy", "Terms"].map((link) => (
+              {[
+                { label: "Products", href: "/#products" },
+                { label: "Industries", href: "/#industries" },
+                { label: "How It Works", href: "/#workflow" },
+                { label: "Platform", href: "/#platform" },
+                { label: "Privacy", href: "/privacy" },
+                { label: "Terms", href: "/terms" },
+              ].map((link) => (
                 <a
-                  key={link}
-                  href="#"
+                  key={link.label}
+                  href={link.href}
                   className="hover:text-slate-400 transition-colors"
                   style={{ fontFamily: "'DM Sans', sans-serif" }}
                 >
-                  {link}
+                  {link.label}
                 </a>
               ))}
             </div>

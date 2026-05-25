@@ -11,9 +11,6 @@ import { authService } from "@/services/authService";
 
 const ADMIN_EMAILS = ["ugobe07@gmail.com", "admin@merlinenergy.net", "viewer@merlinenergy.net"];
 
-const WIZARD_URL =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/merlin-wizard_11d2b1f0.png";
-
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -52,10 +49,10 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { label: "Products", href: "#products" },
-    { label: "Industries", href: "#industries" },
-    { label: "Platform", href: "#platform" },
-    { label: "How It Works", href: "#workflow" },
+    { label: "Products", href: "/#products" },
+    { label: "Industries", href: "/#industries" },
+    { label: "Platform", href: "/#platform" },
+    { label: "How It Works", href: "/#workflow" },
     { label: "Pricing", href: "/pricing" },
   ];
 

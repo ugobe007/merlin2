@@ -31,16 +31,16 @@ const COLOR_CLASSES: Record<string, { iconBg: string; iconBorder: string; iconTe
 const PLANS = [
   {
     id: 'free',
-    name: 'Free',
+    name: '7-Day Trial',
     icon: User,
     monthlyPrice: 0,
     annualPrice: 0,
     badge: null,
-    description: 'Create an account to save quotes, track projects, and explore BESS sizing.',
+    description: 'Start with 7 days of access. After the trial, continue on Builder for $14.99/mo.',
     color: 'green',
     borderColor: 'border-green-500/20',
     badgeBg: '',
-    ctaText: 'Sign Up Free',
+    ctaText: 'Start 7-Day Trial',
     ctaStyle: 'border border-green-500/30 text-green-400 hover:bg-green-500/10 hover:border-green-500/50',
     features: [
       '5 quote exports per month',
@@ -57,14 +57,14 @@ const PLANS = [
     id: 'starter',
     name: 'Builder',
     icon: Zap,
-    monthlyPrice: 29,
-    annualPrice: 290,
+    monthlyPrice: 14.99,
+    annualPrice: 149.9,
     badge: null,
     description: 'Everything you need to build professional BESS quotes and win projects.',
     color: 'slate',
     borderColor: 'border-white/[0.08]',
     badgeBg: '',
-    ctaText: 'Start 14-Day Trial',
+    ctaText: 'Subscribe — $14.99/mo',
     ctaStyle: 'border border-white/20 text-white hover:bg-white/[0.06]',
     features: [
       '15 quotes per month',
@@ -275,13 +275,13 @@ export default function PricingPage() {
         <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-8 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-sm font-medium mb-6">
             <Sparkles className="w-3.5 h-3.5" />
-            14-day free trial on all paid plans
+            7-day trial, then $14.99/mo
           </div>
           <h1 className="text-5xl font-black tracking-tight mb-4">
             Simple, transparent pricing
           </h1>
           <p className="text-xl text-white/50 max-w-2xl mx-auto mb-8">
-            Professional BESS analysis starting at $29/mo.
+            Professional BESS analysis starts with a 7-day trial, then $14.99/mo.
             Every plan includes TrueQuote™ verified calculations.
           </p>
 
@@ -515,7 +515,7 @@ export default function PricingPage() {
           {/* Comparison note */}
           <div className="text-center mt-8">
             <p className="text-sm text-white/30">
-              All plans include NREL ATB 2024 benchmarks · IRA 2022 ITC calculations · TrueQuote™ audit trails · 14-day free trial
+              All plans include NREL ATB 2024 benchmarks · IRA 2022 ITC calculations · TrueQuote™ audit trails · 7-day trial, then $14.99/mo Builder subscription
             </p>
           </div>
         </div>
@@ -672,13 +672,13 @@ export default function PricingPage() {
             </p>
 
             <div className="grid md:grid-cols-3 gap-5">
-              {/* Starter $29/mo */}
+              {/* Starter $14.99/mo */}
               <div className="bg-emerald-500/[0.04] rounded-xl border border-emerald-500/20 p-5 relative">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   Most Popular
                 </div>
                 <h4 className="font-bold text-white mb-1">Starter</h4>
-                <p className="text-2xl font-black text-emerald-400 mb-1">$29<span className="text-sm text-white/40">/mo</span></p>
+                <p className="text-2xl font-black text-emerald-400 mb-1">$14.99<span className="text-sm text-white/40">/mo</span></p>
                 <p className="text-xs text-white/40 mb-4">Full platform access for vendors</p>
                 <ul className="space-y-2 text-sm text-white/50">
                   <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />API access (1,000 calls/mo)</li>

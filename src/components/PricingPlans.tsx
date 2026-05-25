@@ -5,7 +5,11 @@ interface PricingPlansProps {
   currentTier?: "free" | "starter" | "pro" | "advanced" | "business";
 }
 
-const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentTier: _currentTier }) => {
+const PricingPlans: React.FC<PricingPlansProps> = ({
+  onClose,
+  onSignUp,
+  currentTier: _currentTier,
+}) => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
   const [showLearnMore, setShowLearnMore] = useState<string | null>(null);
 
@@ -26,7 +30,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
 
   const handleSelectPlan = (tier: string) => {
     if (tier === "starter") {
-      // Allow free signup
+      // Allow trial signup
       if (onSignUp) {
         onClose();
         onSignUp();
@@ -80,9 +84,9 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
       { title: string; description: string; highlights: string[]; powerProfile: string }
     > = {
       starter: {
-        title: "Starter Plan - Begin Your Energy Journey",
+        title: "7-Day Trial - Begin Your Energy Journey",
         description:
-          "The Starter plan is perfect for exploring BESS technology. As you use the platform, you'll build your Power Profile - unlocking new insights and capabilities.",
+          "Start with 7 days to explore BESS technology. After the trial, continue with the Builder subscription for $14.99/month.",
         powerProfile: "Levels 1-3: Initiate → Practitioner → Specialist",
         highlights: [
           "Generate up to 3 professional quotes per month",
@@ -91,7 +95,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
           "PDF export with Merlin branding",
           "Request official quotes from Merlin Energy experts",
           "Build your Power Profile as you explore",
-          "No credit card required - free forever",
+          "7-day trial, then $14.99/month",
           "Perfect for learning and small projects",
         ],
       },
@@ -208,19 +212,20 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
         <div className="overflow-y-auto flex-1">
           {/* Pricing Cards */}
           <div className="p-8 bg-gray-50 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* STARTER - FREE */}
+            {/* STARTER - 7-DAY TRIAL */}
             <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-all">
               <div className="mb-4">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Starter</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">7-Day Trial</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Begin your energy journey - no commitment
+                  Begin your energy journey, then continue for $14.99/month
                 </p>
 
                 <div className="mb-4">
                   <div className="flex items-baseline">
                     <span className="text-5xl font-bold text-gray-900">$0</span>
-                    <span className="text-gray-600 ml-2">forever</span>
+                    <span className="text-gray-600 ml-2">for 7 days</span>
                   </div>
+                  <p className="text-xs text-gray-600 mt-1">Then $14.99/month subscription</p>
                 </div>
 
                 {/* Power Profile Badge */}
@@ -237,10 +242,10 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onClose, onSignUp, currentT
                 </div>
 
                 <button
-                  onClick={() => handleSelectPlan("free")}
+                  onClick={() => handleSelectPlan("starter")}
                   className="w-full py-3 rounded-xl font-bold transition-all bg-purple-600 text-white hover:bg-purple-700 shadow-md"
                 >
-                  Start Free
+                  Start 7-Day Trial
                 </button>
 
                 <button

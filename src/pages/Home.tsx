@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import StatusQuoSection from "@/components/StatusQuoSection";
 import AudienceStrip from "@/components/AudienceStrip";
+import ProductsSection from "@/components/ProductsSection";
 import IndustriesSection from "@/components/IndustriesSection";
 import WorkflowSection from "@/components/WorkflowSection";
 import PlatformSection from "@/components/PlatformSection";
@@ -20,6 +21,7 @@ export default function Home() {
       <HeroSection />
       <StatusQuoSection />
       <AudienceStrip />
+      <ProductsSection />
       <IndustriesSection />
       <WorkflowSection />
       <PlatformSection />
