@@ -106,6 +106,37 @@ const VERTICAL_CONFIG = {
   },
 };
 
+// ── Daily Deal Agent intelligence reused for prospect outreach ──────────────
+// Mirrors the promotional voice from agents/daily-deal.ts: fact → pain point →
+// proof → TrueQuote CTA. Keep this server-side so Sales Agent emails can use it
+// without importing TypeScript agent code into the production Express runtime.
+const PROMO_OUTREACH_INTEL = {
+  car_wash: {
+    fact: 'A high-volume tunnel car wash can use more electricity in a day than dozens of homes — mostly from compressors, dryers, pumps, and conveyor motors that spike during rush periods.',
+    marketHook: 'Tunnel car washes draw 400–800 kW in burst loads, which makes demand charges one of the biggest hidden profit leaks in the business.',
+    painPoint: 'Demand charges from wash equipment can represent 40–60% of the total electric bill.',
+    subject: '{{name}} — we modeled your demand-charge exposure',
+  },
+  ev_charging: {
+    fact: 'Ten 150 kW DC fast chargers present the same electrical load to a utility as a small factory.',
+    marketHook: 'BESS lets EV charging sites deploy faster, reduce demand-charge spikes, and avoid some transformer-upgrade pain.',
+    painPoint: 'Each fast charger adds directly to peak demand unless storage buffers the site load.',
+    subject: '{{name}} — BESS analysis for EV charging demand spikes',
+  },
+  truck_stop: {
+    fact: 'Truck stops combine refrigeration, lighting, restaurant loads, pumps, HVAC, and often EV charging expansion on one utility meter.',
+    marketHook: 'Travel centers are becoming energy hubs, and storage can flatten peak demand while supporting solar and charging growth.',
+    painPoint: 'Peak site demand can climb fast as fleets add charging, refrigeration, and longer operating hours.',
+    subject: '{{name}} — pre-built energy savings analysis',
+  },
+  hotel: {
+    fact: 'Hotels use far more energy per square foot than office buildings, yet a handful of peak HVAC and laundry moments can set the demand charge for the month.',
+    marketHook: 'Hotels have dual exposure: demand-charge reduction plus evening time-of-use arbitrage when occupancy is highest.',
+    painPoint: 'Peak HVAC, laundry, pool heating, and kitchen loads can create expensive demand spikes during high-occupancy periods.',
+    subject: '{{name}} — your hotel energy savings model',
+  },
+};
+
 // ── Google Places — Text Search ───────────────────────────────────────────────
 async function searchPlaces(query, location, maxResults = 20) {
   const GOOGLE_MAPS_KEY = getGoogleMapsKey();
@@ -221,11 +252,37 @@ function extractQuoteHighlights(quoteData) {
   };
 }
 
+function buildOutreachSubject(businessName, vertical) {
+  const cfg = VERTICAL_CONFIG[vertical] || VERTICAL_CONFIG.car_wash;
+  const intel = PROMO_OUTREACH_INTEL[vertical] || PROMO_OUTREACH_INTEL.car_wash;
+  return (intel.subject || cfg.emailSubjectHook).replace('{{name}}', businessName);
+}
+
+function buildPromotionalOutreachBody({ vertical, quoteData }) {
+  const cfg = VERTICAL_CONFIG[vertical] || VERTICAL_CONFIG.car_wash;
+  const intel = PROMO_OUTREACH_INTEL[vertical] || PROMO_OUTREACH_INTEL.car_wash;
+  const hi = extractQuoteHighlights(quoteData);
+  const proofPoints = [
+    hi?.annualSavings ? `estimated annual savings of <strong style="color:#ffffff;">${hi.annualSavings}</strong>` : null,
+    hi?.payback ? `payback around <strong style="color:#ffffff;">${hi.payback}</strong>` : null,
+    hi?.npv25 ? `25-year NPV near <strong style="color:#ffffff;">${hi.npv25}</strong>` : null,
+  ].filter(Boolean);
+  const proofLine = proofPoints.length > 0
+    ? `The first-pass model shows ${proofPoints.join(', ')}.`
+    : 'The model estimates annual savings, system sizing, payback period, and 25-year NPV from live utility and benchmark data.';
+
+  return [
+    intel.fact,
+    intel.marketHook,
+    `${intel.painPoint} ${proofLine}`,
+    cfg.emailBodyHook,
+  ].join('<br><br>');
+}
+
 // ── Send intro email via Resend ───────────────────────────────────────────────
 // Build email HTML — shared by preview and send
 function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody, quoteData }) {
-  const cfg = VERTICAL_CONFIG[vertical] || VERTICAL_CONFIG.car_wash;
-  const body = customBody || cfg.emailBodyHook;
+  const body = customBody || buildPromotionalOutreachBody({ vertical, quoteData });
   const hi = extractQuoteHighlights(quoteData);
 
   // Stats strip — only shown when we have real numbers
@@ -326,8 +383,7 @@ function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody
 }
 
 async function sendIntroEmail({ recipients, businessName, vertical, quoteUrl, location, customSubject, customBody, quoteData }) {
-  const cfg = VERTICAL_CONFIG[vertical] || VERTICAL_CONFIG.car_wash;
-  const subject = customSubject || cfg.emailSubjectHook.replace('{{name}}', businessName);
+  const subject = customSubject || buildOutreachSubject(businessName, vertical);
   const html = buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody, quoteData });
 
   const toList = Array.isArray(recipients) ? recipients : [recipients];
@@ -583,8 +639,7 @@ router.post('/email/:leadId', async (req, res) => {
 
   // Preview mode — return subject + html without sending
   if (previewOnly) {
-    const cfg = VERTICAL_CONFIG[lead.vertical] || VERTICAL_CONFIG.car_wash;
-    const subject = customSubject || cfg.emailSubjectHook.replace('{{name}}', lead.name);
+    const subject = customSubject || buildOutreachSubject(lead.name, lead.vertical || 'car_wash');
     const html = buildEmailHtml({
       businessName: lead.name,
       vertical: lead.vertical || 'car_wash',
