@@ -36,7 +36,7 @@ const PLANS = [
     monthlyPrice: 0,
     annualPrice: 0,
     badge: null,
-    description: 'Start with 7 days of access. After the trial, continue on Builder for $14.99/mo.',
+    description: 'Start with 7 days of access. After the trial, continue on the first level for $14.99/mo.',
     color: 'green',
     borderColor: 'border-green-500/20',
     badgeBg: '',
@@ -57,14 +57,14 @@ const PLANS = [
     id: 'starter',
     name: 'Builder',
     icon: Zap,
-    monthlyPrice: 14.99,
-    annualPrice: 149.9,
+    monthlyPrice: 29.99,
+    annualPrice: 299.9,
     badge: null,
     description: 'Everything you need to build professional BESS quotes and win projects.',
     color: 'slate',
     borderColor: 'border-white/[0.08]',
     badgeBg: '',
-    ctaText: 'Subscribe — $14.99/mo',
+    ctaText: 'Subscribe — $29.99/mo',
     ctaStyle: 'border border-white/20 text-white hover:bg-white/[0.06]',
     features: [
       '15 quotes per month',
@@ -84,14 +84,14 @@ const PLANS = [
     id: 'pro',
     name: 'Pro',
     icon: Crown,
-    monthlyPrice: 49,
-    annualPrice: 490,
+    monthlyPrice: 49.99,
+    annualPrice: 499.9,
     badge: 'Most Popular',
     description: 'Advanced analytics and professional deliverables for consultants and developers.',
     color: 'emerald',
     borderColor: 'border-emerald-500/30',
     badgeBg: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-    ctaText: 'Start Pro Trial',
+    ctaText: 'Subscribe — $49.99/mo',
     ctaStyle: 'border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50',
     features: [
       '100 quotes per month',
@@ -275,13 +275,13 @@ export default function PricingPage() {
         <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-8 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-sm font-medium mb-6">
             <Sparkles className="w-3.5 h-3.5" />
-            7-day trial, then $14.99/mo
+            7-day trial, then plans from $14.99/mo
           </div>
           <h1 className="text-5xl font-black tracking-tight mb-4">
             Simple, transparent pricing
           </h1>
           <p className="text-xl text-white/50 max-w-2xl mx-auto mb-8">
-            Professional BESS analysis starts with a 7-day trial, then $14.99/mo.
+            Professional BESS analysis starts with a 7-day trial, then plans from $14.99/mo.
             Every plan includes TrueQuote™ verified calculations.
           </p>
 
@@ -515,7 +515,7 @@ export default function PricingPage() {
           {/* Comparison note */}
           <div className="text-center mt-8">
             <p className="text-sm text-white/30">
-              All plans include NREL ATB 2024 benchmarks · IRA 2022 ITC calculations · TrueQuote™ audit trails · 7-day trial, then $14.99/mo Builder subscription
+              All plans include NREL ATB 2024 benchmarks · IRA 2022 ITC calculations · TrueQuote™ audit trails · 7-day trial, then plans from $14.99/mo
             </p>
           </div>
         </div>
