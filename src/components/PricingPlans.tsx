@@ -44,15 +44,19 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
     }
 
     // Prepare for Stripe integration - placeholder for payment processing
+    const monthlyPrices: Record<string, number> = {
+      professional: 29.99,
+      enterprise_pro: 49.99,
+    };
     const planDetails = {
       tier,
       billing: billingCycle,
-      price: tier === "semi_premium" ? getPrice(29) : getPrice(79),
+      price: getPrice(monthlyPrices[tier] ?? 49.99),
       features:
-        tier === "semi_premium"
+        tier === "professional"
           ? ["Advanced Analytics", "Portfolio Management", "Export to Word/PDF"]
           : [
-              "Everything in Semi-Premium",
+              "Everything in Professional",
               "Unlimited Projects",
               "Priority Support",
               "Custom Branding",
@@ -86,7 +90,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
       starter: {
         title: "7-Day Trial - Begin Your Energy Journey",
         description:
-          "Start with 7 days to explore BESS technology. After the trial, continue with the Builder subscription for $14.99/month.",
+          "Start with 7 days to explore BESS technology. After the trial, continue with the first level for $14.99/month.",
         powerProfile: "Levels 1-3: Initiate → Practitioner → Specialist",
         highlights: [
           "Generate up to 3 professional quotes per month",
@@ -308,7 +312,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
 
                 <div className="mb-2">
                   <div className="flex items-baseline">
-                    <span className="text-5xl font-bold text-gray-900">${getPrice(49)}</span>
+                    <span className="text-5xl font-bold text-gray-900">${getPrice(29.99)}</span>
                     <span className="text-gray-600 ml-2">
                       per {billingCycle === "monthly" ? "month" : "year"}
                     </span>
@@ -321,7 +325,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
                 {billingCycle === "annual" && (
                   <div className="mb-2">
                     <span className="text-green-600 font-semibold text-sm">
-                      💰 Save ${getSavings(49)} annually
+                      💰 Save ${getSavings(29.99)} annually
                     </span>
                   </div>
                 )}
@@ -408,7 +412,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
 
                 <div className="mb-2">
                   <div className="flex items-baseline">
-                    <span className="text-5xl font-bold text-gray-900">${getPrice(149)}</span>
+                    <span className="text-5xl font-bold text-gray-900">${getPrice(49.99)}</span>
                     <span className="text-gray-600 ml-2">
                       per {billingCycle === "monthly" ? "month" : "year"}
                     </span>
@@ -421,7 +425,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
                 {billingCycle === "annual" && (
                   <div className="mb-2">
                     <span className="text-green-600 font-semibold text-sm">
-                      💰 Save ${getSavings(149)} annually
+                      💰 Save ${getSavings(49.99)} annually
                     </span>
                   </div>
                 )}
