@@ -406,51 +406,10 @@ export default function SalesAgentDashboard() {
     await fetchLeads();
   };
 
-  const sendBulkEmails = async () => {
+  const reviewBulkEmails = async () => {
     const selectedLeads = leads.filter((lead) => selected.has(lead.id));
     if (selectedLeads.length === 0) return;
-
-    const confirmed = window.confirm(
-      `Send emails to ${selectedLeads.length} selected leads using each lead's website domain?`
-    );
-    if (!confirmed) return;
-
-    setRunning(true);
-    for (const lead of selectedLeads) {
-      if (!lead.quote_url) {
-        const ok = await quoteLead(lead);
-        if (!ok) {
-          addLog(`⏭ Skipped ${lead.name} (quote failed)`);
-          continue;
-        }
-      }
-
-      const recipients = defaultRecipientsForLead(lead);
-      if (recipients.length === 0) {
-        addLog(`⏭ Skipped ${lead.name} (no website domain for recipients)`);
-        continue;
-      }
-
-      try {
-        const r = await fetch(`${API}/api/sales-agent/email/${lead.id}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ recipients }),
-        });
-        const d = await r.json();
-        if (d.ok) {
-          addLog(`📧 Bulk sent → ${lead.name} (${recipients.join(", ")})`);
-        } else {
-          addLog(`❌ Bulk failed → ${lead.name}: ${d.error ?? "unknown error"}`);
-        }
-      } catch {
-        addLog(`❌ Bulk error sending to ${lead.name}`);
-      }
-      await new Promise((res) => setTimeout(res, 400));
-    }
-    setRunning(false);
-    clearSel();
-    await fetchLeads();
+    await openEmailReview(selectedLeads);
   };
 
   const runDiscovery = async () => {
@@ -786,11 +745,11 @@ export default function SalesAgentDashboard() {
                         ✉ Draft Emails ({selected.size})
                       </button>
                       <button
-                        onClick={() => void sendBulkEmails()}
+                        onClick={() => void reviewBulkEmails()}
                         disabled={running}
                         className="text-xs bg-green-500/20 border border-green-500/40 text-green-300 px-3 py-1.5 rounded-lg hover:bg-green-500/30 disabled:opacity-40 transition-colors"
                       >
-                        📬 Send Bulk Emails ({selected.size})
+                        📬 Review Bulk Send ({selected.size})
                       </button>
                       <button
                         onClick={clearSel}
@@ -1162,7 +1121,7 @@ export default function SalesAgentDashboard() {
                     : `Review Email — ${emailModal.leads.length} leads (bulk)`}
                 </h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Edit the template, then approve to send
+                  Review the preview, edit if needed, then approve to send
                 </p>
               </div>
               <button
@@ -1194,6 +1153,10 @@ export default function SalesAgentDashboard() {
                     </div>
                   </div>
                 )}
+                <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/8 px-3 py-2 text-xs text-yellow-100 leading-relaxed">
+                  Review is required before sending. Alex voice should stay direct, specific, and
+                  tied to one measurable driver.
+                </div>
                 <div>
                   <label className="text-xs text-slate-400 uppercase tracking-wider block mb-1.5">
                     Recipients
@@ -1246,7 +1209,7 @@ export default function SalesAgentDashboard() {
                 </button>
                 <button
                   onClick={() => void sendApproved()}
-                  disabled={running || emailModal.loading}
+                  disabled={running || emailModal.loading || !emailModal.preview?.html}
                   className="bg-green-500 hover:bg-green-400 disabled:opacity-40 text-black font-bold py-3 rounded-xl text-sm transition-colors"
                 >
                   {running
@@ -1254,7 +1217,7 @@ export default function SalesAgentDashboard() {
                     : `✅ Approve & Send${emailModal.mode === "bulk" ? ` (${emailModal.leads.length})` : ""}`}
                 </button>
               </div>
-              <div className="hidden md:flex flex-1 overflow-hidden flex-col">
+              <div className="flex flex-1 min-h-[360px] overflow-hidden flex-col">
                 <div className="px-4 py-3 border-b border-white/10 shrink-0">
                   <p className="text-xs text-slate-500">Email preview</p>
                   {emailModal.preview?.subject && (
