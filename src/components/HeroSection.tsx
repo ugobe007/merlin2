@@ -23,7 +23,7 @@ const SHIELD_GOLD =
 
 const trustItems = ["NREL Data", "DOE Frameworks", "Sandia Logic", "UL / IEEE"];
 
-// ── Industry scenarios that cycle in the mockup ──────────────────────────────
+// Industry scenarios that cycle in the mockup
 const SCENARIOS = [
   {
     industry: "Hotel",
@@ -79,7 +79,7 @@ const SCENARIOS = [
   },
 ];
 
-// ── TrueQuote output mockup — example output for a hotel in Reno, NV ──────────
+// TrueQuote output mockup — example output for a hotel in Reno, NV
 function TrueQuoteMockup() {
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [visible, setVisible] = React.useState(true);
@@ -156,7 +156,7 @@ function TrueQuoteMockup() {
         </div>
       </div>
 
-      {/* ── Animated content block ── */}
+      {/* Animated content block */}
       <div style={{ transition: "opacity 0.38s ease", opacity: visible ? 1 : 0 }}>
         {/* Hero savings row */}
         <div
@@ -333,7 +333,7 @@ function TrueQuoteMockup() {
       </div>
       {/* end animated block */}
 
-      {/* ── Industry tabs — always visible, clickable ── */}
+      {/* Industry tabs — always visible, clickable */}
       <div
         style={{
           display: "flex",
@@ -390,7 +390,7 @@ function TrueQuoteMockup() {
   );
 }
 
-// ── HeroSection ────────────────────────────────────────────────────────────────
+// HeroSection
 export default function HeroSection() {
   return (
     <section
@@ -411,12 +411,12 @@ export default function HeroSection() {
       {/* Content */}
       <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full py-10">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-10 items-center">
-          {/* ── Left: story + CTA ─────────────────────────────────────────── */}
+          {/* Left: story + CTA */}
           <div className="w-full">
             {/* Problem framing badge */}
             <div className="animate-fade-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-400 text-[11px] font-medium tracking-wide mb-4">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              Real savings. Real numbers. Free to start.
+              Energy costs are rising. Grid capacity is tightening.
             </div>
 
             {/* Headline — lead with the problem */}
@@ -427,11 +427,11 @@ export default function HeroSection() {
                 fontSize: "clamp(48px, 6.5vw, 92px)",
               }}
             >
-              <span className="text-white">Your energy project,</span>
+              <span className="text-white">Energy costs are</span>
               <br />
-              <span className="text-emerald-400">sized &amp; priced</span>
+              <span className="text-emerald-400">becoming a</span>
               <br />
-              <span className="text-white">in 90 seconds.</span>
+              <span className="text-white">business risk.</span>
             </h1>
 
             {/* Subheadline */}
@@ -439,19 +439,17 @@ export default function HeroSection() {
               className="animate-fade-up-delay-1 text-[18px] text-slate-400 leading-relaxed mb-5"
               style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif", fontWeight: 400 }}
             >
-              ZIP code. Facility type. Merlin runs a{" "}
-              <span className="text-white font-semibold">real financial model</span> — live utility
-              rates, solar irradiance, demand charges, and power generation potential — and returns
-              your exact savings, payback, and generation capacity.{" "}
-              <span className="text-emerald-400/80">Free. ~90 seconds.</span>
+              Merlin analyzes your facilities, utility bills, tariffs, and site constraints to show
+              where energy is costing you money, where the grid may limit growth, and which solar,
+              storage, efficiency, or resilience projects are worth pursuing.
             </p>
 
             {/* What you get */}
             <div className="animate-fade-up-delay-2 flex flex-col gap-2 mb-5">
               {[
-                "Annual savings projection, payback period & 25-yr NPV",
-                "Solar, BESS, backup power & generator sizing for your facility",
-                "Demand charge reduction based on your actual utility tariff",
+                "Energy cost, demand-charge, and utility-rate exposure",
+                "Solar, storage, efficiency, backup power, and resilience options",
+                "CFO-ready Merlin Brief with blockers, savings, incentives, and next steps",
               ].map((item) => (
                 <div key={item} className="flex items-start gap-2.5">
                   <CheckCircle2 size={15} className="text-emerald-400/70 mt-0.5 flex-shrink-0" />
@@ -494,7 +492,7 @@ export default function HeroSection() {
                   }}
                 >
                   <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 24, height: 24 }} />
-                  Start your free TrueQuote™
+                  Analyze My Energy Risk
                   <ArrowRight
                     size={20}
                     className="group-hover:translate-x-0.5 transition-transform"
@@ -504,7 +502,7 @@ export default function HeroSection() {
                   className="text-[12px] text-slate-600"
                   style={{ fontFamily: "'Outfit', sans-serif" }}
                 >
-                  ~90 sec · No account · Begin saving today
+                  Create a Merlin Brief · Identify cost, grid, and resilience exposure
                 </span>
               </div>
 
@@ -531,7 +529,7 @@ export default function HeroSection() {
                   >
                     EPC / Integrator
                   </span>
-                  Embed TrueQuote™ on your site — free
+                  Build professional project quotes with ProQuote™
                   <ArrowRight
                     size={13}
                     className="group-hover:translate-x-0.5 transition-transform"
@@ -556,21 +554,21 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* ── Right: TrueQuote output mockup — show what they GET ─────── */}
+          {/* Right: TrueQuote output mockup — show what they GET */}
           <div className="hidden lg:flex flex-col items-start gap-3">
             <div
               className="text-[10px] font-semibold tracking-widest uppercase text-slate-600"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
-              ↓ This is what you'll receive
+              ↓ Example Merlin Energy Brief
             </div>
             <TrueQuoteMockup />
             <div
               className="text-[10px] text-slate-700 text-center max-w-xs leading-relaxed"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
-              Example output for a 450-room hotel in Reno, NV. Your numbers are calculated from live
-              utility data for your actual location and facility type.
+              Example output for a 450-room hotel in Reno, NV. Merlin turns energy data into a
+              practical action plan for cost, grid exposure, resilience, and execution.
             </div>
           </div>
         </div>
