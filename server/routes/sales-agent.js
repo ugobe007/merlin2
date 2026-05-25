@@ -59,7 +59,7 @@ function getResend() {
 function getGoogleMapsKey() {
   return process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
 }
-const APP_BASE_URL = process.env.APP_BASE_URL || 'https://merlin2.fly.dev';
+const APP_BASE_URL = process.env.APP_BASE_URL || 'https://merlinenergy.net';
 const FROM_EMAIL = 'TrueQuote by Merlin <hello@merlin.energy>';
 const REPLY_EMAIL = 'sales@merlinenergy.net';
 const BOOKING_MAILTO = `mailto:sales@merlinenergy.net?subject=${encodeURIComponent('Let\u2019s schedule a call — TrueQuote by Merlin')}&body=${encodeURIComponent('Hi,\n\nI\u2019d love to walk through my energy savings analysis. Please let me know a few times that work for a 20-minute call.\n\nThanks,')}`;
@@ -537,6 +537,44 @@ router.post('/discover', async (req, res) => {
   }
 
   res.json({ ok: true, ...results });
+});
+
+/**
+ * GET /api/sales-agent/shared-quote/:token
+ * Public read-only quote payload for emailed Sales Agent quote links.
+ */
+router.get('/shared-quote/:token', async (req, res) => {
+  const { token } = req.params;
+
+  if (!token) {
+    return res.status(400).json({ error: 'Missing quote token' });
+  }
+
+  const { data, error } = await getSupabase()
+    .from('shared_quotes')
+    .select('id, share_token, short_code, business_name, industry, quote_data, created_at, expires_at, is_public')
+    .or(`share_token.eq.${token},short_code.eq.${token}`)
+    .single();
+
+  if (error || !data || data.is_public === false) {
+    return res.status(404).json({ error: 'Quote not found' });
+  }
+
+  if (data.expires_at && new Date(data.expires_at).getTime() < Date.now()) {
+    return res.status(410).json({ error: 'Quote link has expired' });
+  }
+
+  res.json({
+    ok: true,
+    quote: {
+      businessName: data.business_name,
+      industry: data.industry,
+      quoteData: data.quote_data,
+      createdAt: data.created_at,
+      expiresAt: data.expires_at,
+      highlights: extractQuoteHighlights(data.quote_data),
+    },
+  });
 });
 
 /**

@@ -51,7 +51,7 @@ const OpportunitiesDashboard = lazy(() => import("./pages/OpportunitiesDashboard
 const BuildRFPPage = lazy(() => import("./pages/BuildRFPPage"));
 const UploadQuotePage = lazy(() => import("./pages/UploadQuotePage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
-// const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage")); // TEMP DISABLED
+const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage"));
 import { trackPageView } from "./services/analyticsService";
 import { syncApprovedVendorProducts } from "./services/vendorPricingIntegrationService";
 
@@ -473,10 +473,14 @@ function App() {
     );
   }
 
-  // Access via /q/:shortCode - Shared quote viewer (public) - TEMP DISABLED
-  // if (pathname.startsWith("/q/")) {
-  //   return <Suspense fallback={<PageLoader />}><SharedQuotePage /></Suspense>;
-  // }
+  // Access via /quote/:token - Shared quote viewer (public)
+  if (pathname.startsWith("/quote/") || pathname.startsWith("/q/")) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <SharedQuotePage />
+      </Suspense>
+    );
+  }
 
   // OLD HomePage removed from production routes (kept as legacy component)
   // Access new homepage at / instead

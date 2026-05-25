@@ -16,7 +16,7 @@
  *   "Quote export" = PDF/Word/Excel download or saved project.
  *   Previews/calculations are NEVER metered.
  *
- * Tiers: starter ($29/mo), pro ($49/mo), advanced ($99/mo), business (custom)
+ * Tiers: starter ($14.99/mo after 7-day trial), pro ($49/mo), advanced ($99/mo), business (custom)
  *
  * Created: Feb 2026
  */
@@ -93,10 +93,10 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     id: 'plan_starter',
     tier: 'starter',
     name: 'Builder',
-    priceMonthly: 29,
-    priceAnnual: 290,
-    stripePriceIdMonthly: 'price_1T22fNDoNSCVLvYPyEeYKW5y',
-    stripePriceIdAnnual: 'price_1T22fNDoNSCVLvYPgIXNWuRe',
+    priceMonthly: 14.99,
+    priceAnnual: 149.9,
+    stripePriceIdMonthly: import.meta.env.VITE_STRIPE_BUILDER_MONTHLY_PRICE_ID,
+    stripePriceIdAnnual: import.meta.env.VITE_STRIPE_BUILDER_ANNUAL_PRICE_ID,
     features: [
       '15 quotes per month',
       'BESS sizing & configuration',
