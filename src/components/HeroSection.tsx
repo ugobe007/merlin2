@@ -429,9 +429,9 @@ export default function HeroSection() {
             >
               <span className="text-white">Energy costs are</span>
               <br />
-              <span className="text-emerald-400">becoming a</span>
+              <span className="text-emerald-400">a business</span>
               <br />
-              <span className="text-white">business risk.</span>
+              <span className="text-white">risk.</span>
             </h1>
 
             {/* Subheadline */}
@@ -469,7 +469,7 @@ export default function HeroSection() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <a
                   href="/wizard"
-                  className="group inline-flex items-center gap-4 px-10 py-6 rounded-2xl font-bold text-[19px] transition-all duration-200"
+                  className="group inline-flex items-center gap-3 px-7 py-4 rounded-2xl font-bold text-[16px] transition-all duration-200"
                   style={{
                     background: "transparent",
                     color: "#EAB308",
@@ -491,10 +491,10 @@ export default function HeroSection() {
                     (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
                   }}
                 >
-                  <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 24, height: 24 }} />
+                  <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 20, height: 20 }} />
                   Analyze My Energy Risk
                   <ArrowRight
-                    size={20}
+                    size={17}
                     className="group-hover:translate-x-0.5 transition-transform"
                   />
                 </a>
