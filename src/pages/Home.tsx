@@ -59,8 +59,8 @@ export default function Home() {
                 className="text-slate-600 text-sm leading-relaxed max-w-xs"
                 style={{ fontFamily: "'DM Sans', sans-serif" }}
               >
-                Real costs. Real savings. Built on NREL data, DOE frameworks, and Sandia-aligned
-                logic.
+                Energy intelligence for businesses facing rising power costs, grid constraints, and
+                resilience risk.
               </p>
             </div>
 
@@ -193,7 +193,7 @@ export default function Home() {
                 className="text-xs text-yellow-600/70 hover:text-yellow-400 font-semibold transition-colors"
                 style={{ fontFamily: "'Outfit', sans-serif" }}
               >
-                Start a TrueQuote →
+                Analyze energy risk →
               </a>
               <a
                 href="/proquote"
