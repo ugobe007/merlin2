@@ -112,28 +112,28 @@ const VERTICAL_CONFIG = {
 // without importing TypeScript agent code into the production Express runtime.
 const PROMO_OUTREACH_INTEL = {
   car_wash: {
-    fact: 'A high-volume tunnel car wash can use more electricity in a day than dozens of homes — mostly from compressors, dryers, pumps, and conveyor motors that spike during rush periods.',
-    marketHook: 'Tunnel car washes draw 400–800 kW in burst loads, which makes demand charges one of the biggest hidden profit leaks in the business.',
-    painPoint: 'Demand charges from wash equipment can represent 40–60% of the total electric bill.',
-    subject: '{{name}} — we modeled your demand-charge exposure',
+    driver: 'compressors, dryers, pumps, and conveyor motors spike during rush periods',
+    context: 'Tunnel car washes often draw 400–800 kW in short bursts.',
+    painPoint: 'That peak can set the demand-charge portion of the bill for the month.',
+    subject: '{{name}} — demand-charge model for your car wash',
   },
   ev_charging: {
-    fact: 'Ten 150 kW DC fast chargers present the same electrical load to a utility as a small factory.',
-    marketHook: 'BESS lets EV charging sites deploy faster, reduce demand-charge spikes, and avoid some transformer-upgrade pain.',
-    painPoint: 'Each fast charger adds directly to peak demand unless storage buffers the site load.',
-    subject: '{{name}} — BESS analysis for EV charging demand spikes',
+    driver: 'fast chargers add directly to peak demand unless storage buffers the site load',
+    context: 'Ten 150 kW DC fast chargers can look like a small factory to the utility.',
+    painPoint: 'That demand spike can drive both utility charges and transformer-upgrade pressure.',
+    subject: '{{name}} — BESS model for charging demand',
   },
   truck_stop: {
-    fact: 'Truck stops combine refrigeration, lighting, restaurant loads, pumps, HVAC, and often EV charging expansion on one utility meter.',
-    marketHook: 'Travel centers are becoming energy hubs, and storage can flatten peak demand while supporting solar and charging growth.',
-    painPoint: 'Peak site demand can climb fast as fleets add charging, refrigeration, and longer operating hours.',
-    subject: '{{name}} — pre-built energy savings analysis',
+    driver: 'refrigeration, pumps, HVAC, lighting, restaurant loads, and charging can stack on one meter',
+    context: 'Travel centers are becoming energy hubs, not just fuel stops.',
+    painPoint: 'Peak demand can climb before the site has a clear storage or solar plan.',
+    subject: '{{name}} — energy model for your travel center',
   },
   hotel: {
-    fact: 'Hotels use far more energy per square foot than office buildings, yet a handful of peak HVAC and laundry moments can set the demand charge for the month.',
-    marketHook: 'Hotels have dual exposure: demand-charge reduction plus evening time-of-use arbitrage when occupancy is highest.',
-    painPoint: 'Peak HVAC, laundry, pool heating, and kitchen loads can create expensive demand spikes during high-occupancy periods.',
-    subject: '{{name}} — your hotel energy savings model',
+    driver: 'HVAC, laundry, pool heating, and kitchen loads peak during high-occupancy periods',
+    context: 'Hotels have dual exposure: demand charges and evening time-of-use pricing.',
+    painPoint: 'A few peak operating windows can set a large share of the monthly bill.',
+    subject: '{{name}} — hotel energy model for review',
   },
 };
 
@@ -269,13 +269,13 @@ function buildPromotionalOutreachBody({ vertical, quoteData }) {
   ].filter(Boolean);
   const proofLine = proofPoints.length > 0
     ? `The first-pass model shows ${proofPoints.join(', ')}.`
-    : 'The model estimates annual savings, system sizing, payback period, and 25-year NPV from live utility and benchmark data.';
+    : 'The first-pass model estimates annual savings, system sizing, payback period, and 25-year NPV from live utility and benchmark data.';
 
   return [
-    intel.fact,
-    intel.marketHook,
-    `${intel.painPoint} ${proofLine}`,
-    cfg.emailBodyHook,
+    `Because ${intel.driver}, storage sizing is worth checking before the next utility bill cycle.`,
+    `${intel.context} ${intel.painPoint}`,
+    `I ran a first-pass TrueQuote™ for your ${cfg.label.toLowerCase()} facility. ${proofLine}`,
+    'If the numbers are directionally useful, review the quote. If they are off, reply with a utility bill and I will tighten the assumptions.',
   ].join('<br><br>');
 }
 
@@ -337,9 +337,9 @@ function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody
       ${body}
     </p>
     <p style="color:#94a3b8;font-size:15px;line-height:1.6;margin:0 0 28px;">
-      We built a <strong style="color:#ffffff;">free energy savings analysis</strong> for your
+      I built a <strong style="color:#ffffff;">first-pass energy savings analysis</strong> for your
       ${location} facility using live utility rates, NREL solar data, and DOE-aligned battery
-      sizing logic — the same framework used by major EPCs.
+      sizing logic.
     </p>
     <div style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.25);border-radius:12px;padding:24px;margin-bottom:28px;">
       <p style="color:#EAB308;font-size:13px;font-weight:700;margin:0 0 16px;text-transform:uppercase;letter-spacing:0.08em;">
@@ -353,13 +353,14 @@ function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody
       </a>
     </div>
     <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 8px;">
-      Questions? Want to walk through the numbers?
+      Want me to tighten the assumptions?
     </p>
     <a href="${BOOKING_MAILTO}"
        style="color:#38bdf8;font-size:14px;text-decoration:none;font-weight:600;">
       Click here to learn more →
     </a>
-    <p style="color:#475569;font-size:12px;margin:6px 0 0;">Reply directly to this email or reach us at <a href="mailto:sales@merlinenergy.net" style="color:#38bdf8;text-decoration:none;">sales@merlinenergy.net</a></p>
+    <p style="color:#475569;font-size:12px;margin:6px 0 0;">Reply with a utility bill or reach us at <a href="mailto:sales@merlinenergy.net" style="color:#38bdf8;text-decoration:none;">sales@merlinenergy.net</a></p>
+    <p style="color:#94a3b8;font-size:14px;line-height:1.5;margin:24px 0 0;">— Alex<br><span style="color:#64748b;font-size:12px;">Merlin Energy</span></p>
     ${hi?.installer ? `
     <div style="margin-top:28px;padding:14px 18px;background:rgba(59,130,246,0.06);border-left:3px solid #3b82f6;border-radius:6px;">
       <p style="margin:0;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Installation Partner</p>
@@ -515,28 +516,10 @@ router.post('/discover', async (req, res) => {
               results.quoted++;
             }
 
-            // 4. Auto-email (only if we have a website/contact and quote URL)
-            if (autoEmail && quoteUrl && details.website) {
-              // Derive a contact email from website domain as best-effort
-              const domain = new URL(details.website).hostname.replace('www.', '');
-              const contactEmail = `info@${domain}`;
-
-              const emailResult = await sendIntroEmail({
-                to: contactEmail,
-                businessName: place.name,
-                vertical,
-                quoteUrl,
-                location,
-              });
-
-              if (emailResult.success) {
-                await getSupabase().from('smb_leads')
-                  .update({ email_sent_at: new Date().toISOString(), status: 'emailed', contact_email: contactEmail })
-                  .eq('id', lead.id);
-                leadResult.emailSent = true;
-                leadResult.status = 'emailed';
-                results.emailed++;
-              }
+              // 4. Email review gate — discovery never sends prospect emails directly.
+              if (autoEmail && quoteUrl) {
+                leadResult.emailReviewRequired = true;
+                results.errors.push(`${place.name}: email queued for human review; auto-send is disabled`);
             }
           }
         }
