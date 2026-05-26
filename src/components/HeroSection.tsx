@@ -9,7 +9,6 @@ import {
   Hotel,
   Plane,
   Sparkles,
-  WandSparkles,
   X,
   Zap,
 } from "lucide-react";
@@ -27,6 +26,10 @@ type UseCase = {
   modeledAssets: string[];
   risk: string;
   brief: string;
+  recommendation: string;
+  quoteRange: string;
+  payback: string;
+  roiNote: string;
 };
 
 const telemetryRows: UseCase[] = [
@@ -47,6 +50,10 @@ const telemetryRows: UseCase[] = [
     risk: "High occupancy days can spike demand charges before operators see the bill.",
     brief:
       "MERLIN turns room count, ZIP, tariff, and monthly bill into an owner-ready savings brief.",
+    recommendation: "Rooftop/canopy solar + battery demand-charge control",
+    quoteRange: "$170K–$240K",
+    payback: "5.1–6.4 yrs",
+    roiNote: "Prioritize demand-charge reduction before sizing generation.",
   },
   {
     type: "Car Wash",
@@ -65,6 +72,10 @@ const telemetryRows: UseCase[] = [
     risk: "Demand spikes can erase margin on high-volume wash days.",
     brief:
       "MERLIN compares solar-only, solar + storage, and load-control paths before a vendor proposal.",
+    recommendation: "Solar-first quote with optional battery peak clipping",
+    quoteRange: "$75K–$115K",
+    payback: "4.8–6.0 yrs",
+    roiNote: "Best fit when daytime volume overlaps solar production.",
   },
   {
     type: "Airport",
@@ -79,6 +90,10 @@ const telemetryRows: UseCase[] = [
     risk: "Grid constraints and outage exposure can cascade across passenger, vendor, and operations systems.",
     brief:
       "MERLIN frames phased infrastructure decisions before expensive engineering studies begin.",
+    recommendation: "Phased campus microgrid and critical-load segmentation",
+    quoteRange: "$3.8M–$6.2M",
+    payback: "6.5–8.2 yrs",
+    roiNote: "Separate resilience value from pure utility-bill savings.",
   },
   {
     type: "EV Charging Hub",
@@ -97,6 +112,10 @@ const telemetryRows: UseCase[] = [
     risk: "Demand charges and upgrade costs can break a charging hub's unit economics.",
     brief:
       "MERLIN shows whether the site needs storage, load controls, or a different charging mix.",
+    recommendation: "Demand-managed fast charging + BESS dispatch",
+    quoteRange: "$620K–$1.1M",
+    payback: "4.9–6.7 yrs",
+    roiNote: "Storage protects utilization upside from peak-demand penalties.",
   },
   {
     type: "Data Center",
@@ -111,6 +130,10 @@ const telemetryRows: UseCase[] = [
     risk: "Power availability, rate-case pressure, and interconnection delays can slow growth.",
     brief:
       "MERLIN helps teams compare grid dependency, on-site energy, and resilience economics by location.",
+    recommendation: "On-site generation mix + storage resilience screen",
+    quoteRange: "$18M–$42M",
+    payback: "5.8–8.0 yrs",
+    roiNote: "Treat grid access as a growth constraint, not just a utility line item.",
   },
 ];
 
@@ -140,14 +163,14 @@ function UseCaseModal({ useCase, onClose }: { useCase: UseCase; onClose: () => v
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-[0.18em] text-blue-400">
-                  Use Case Brief
+                  Sample MERLIN Energy Brief
                 </div>
                 <h3
                   id="use-case-title"
                   className="mt-1 text-2xl font-black tracking-[-0.03em] text-white"
                   style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                 >
-                  {useCase.type} energy intelligence
+                  {useCase.type} quote + ROI preview
                 </h3>
                 <div className="mt-1 text-sm text-slate-500">
                   Example market: {useCase.location}
@@ -173,13 +196,38 @@ function UseCaseModal({ useCase, onClose }: { useCase: UseCase; onClose: () => v
             </div>
             <div className="rounded-xl border border-white/[0.07] bg-black/25 p-4 sm:col-span-2">
               <div className="text-[10px] uppercase tracking-[0.14em] text-slate-500">
-                Primary Risk
+                First-Pass Quote Range
               </div>
-              <div className="mt-2 text-sm leading-6 text-slate-300">{useCase.risk}</div>
+              <div className="mt-2 text-xl font-black text-white">{useCase.quoteRange}</div>
+              <div className="mt-1 text-xs text-slate-500">
+                Illustrative installed-cost range before vendor bids.
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-white/[0.07] bg-black/25 p-4">
+              <div className="text-[10px] uppercase tracking-[0.14em] text-slate-500">
+                Payback Window
+              </div>
+              <div className="mt-2 text-lg font-black text-emerald-300">{useCase.payback}</div>
+            </div>
+            <div className="rounded-xl border border-white/[0.07] bg-black/25 p-4">
+              <div className="text-[10px] uppercase tracking-[0.14em] text-slate-500">
+                Recommended Path
+              </div>
+              <div className="mt-2 text-sm leading-6 text-slate-300">{useCase.recommendation}</div>
             </div>
           </div>
 
           <p className="mt-6 text-base leading-7 text-slate-300">{useCase.opportunity}</p>
+
+          <div className="mt-6 rounded-xl border border-white/10 bg-black/20 p-4">
+            <div className="mb-2 text-[10px] uppercase tracking-[0.16em] text-slate-500">
+              Primary risk MERLIN checks
+            </div>
+            <div className="text-sm leading-6 text-slate-300">{useCase.risk}</div>
+          </div>
 
           <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.05] p-4">
             <div className="mb-3 text-[10px] uppercase tracking-[0.16em] text-slate-500">
@@ -198,7 +246,8 @@ function UseCaseModal({ useCase, onClose }: { useCase: UseCase; onClose: () => v
           </div>
 
           <div className="mt-6 rounded-xl border border-emerald-400/18 bg-emerald-400/8 p-4 text-sm leading-6 text-slate-300">
-            <span className="font-bold text-emerald-300">MERLIN output:</span> {useCase.brief}
+            <span className="font-bold text-emerald-300">MERLIN output:</span> {useCase.brief}{" "}
+            <span className="text-emerald-200">{useCase.roiNote}</span>
           </div>
         </div>
       </div>
@@ -228,15 +277,15 @@ function AgentTelemetryPanel() {
                 className="text-sm font-bold text-white"
                 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
               >
-                MERLIN Agent Active
+                MERLIN Energy Briefs
               </div>
               <div className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-blue-500">
-                <Zap size={12} /> Live Processing
+                <Zap size={12} /> Quote + ROI previews
               </div>
             </div>
           </div>
           <div className="rounded-full border border-blue-500/25 bg-blue-500/10 px-3 py-1 text-[10px] font-medium text-blue-500">
-            NREL API Connected
+            Agent-Generated Examples
           </div>
         </div>
 
@@ -245,7 +294,7 @@ function AgentTelemetryPanel() {
             className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400"
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           >
-            Live Agent Telemetry
+            Click a facility type
           </div>
           <div className="space-y-3">
             {telemetryRows.map((row) => (
@@ -285,7 +334,7 @@ function AgentTelemetryPanel() {
                 <div className="shrink-0 text-right">
                   <div className="text-sm font-bold text-blue-500">{row.savings}</div>
                   <div className="text-[10px] text-slate-500 group-hover:text-slate-400">
-                    View Details
+                    {row.payback}
                   </div>
                 </div>
               </button>
@@ -296,7 +345,8 @@ function AgentTelemetryPanel() {
         <div className="mt-7 rounded-xl border border-white/10 bg-white/[0.07] p-4 text-sm leading-relaxed text-slate-400">
           <span className="font-bold text-slate-300">How MERLIN bypasses friction:</span> instead of
           demanding weeks of electric bills and engineering site visits, MERLIN uses independent
-          tariff, solar, and facility benchmark data to estimate your energy structure instantly.
+          tariff, solar, and facility benchmark data to draft a first-pass quote and ROI case
+          instantly.
         </div>
       </div>
 
@@ -307,18 +357,13 @@ function AgentTelemetryPanel() {
   );
 }
 
-function MerlinIntroFlight() {
+function MerlinAgentSignal() {
   return (
     <div className="pointer-events-none absolute inset-0 z-20 hidden lg:block" aria-hidden="true">
-      <div className="merlin-intro-flight absolute left-[16%] top-[35%] text-cyan-300 drop-shadow-[0_0_24px_rgba(45,212,191,0.75)]">
-        <span className="relative block">
-          <WandSparkles size={34} className="merlin-wand-icon -rotate-12" />
-          <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(110,231,183,0.85)]" />
-          <span className="wand-sparkle-burst wand-sparkle-burst-1" />
-          <span className="wand-sparkle-burst wand-sparkle-burst-2" />
-          <span className="wand-sparkle-burst wand-sparkle-burst-3" />
-          <span className="wand-sparkle-burst wand-sparkle-burst-4" />
-        </span>
+      <div className="merlin-agent-signal absolute left-[48%] top-[31%] h-40 w-40 rounded-full border border-cyan-300/10 bg-cyan-300/[0.025] shadow-[0_0_80px_rgba(34,211,238,0.12)]" />
+      <div className="absolute left-[50%] top-[38%] h-px w-[18vw] bg-gradient-to-r from-cyan-300/0 via-cyan-300/28 to-emerald-300/0" />
+      <div className="absolute left-[50%] top-[38%] rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-200 shadow-[0_0_32px_rgba(16,185,129,0.16)]">
+        MERLIN scanning tariffs
       </div>
     </div>
   );
@@ -333,7 +378,7 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.018)_1px,transparent_1px)] bg-[size:72px_72px] opacity-35" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_62%,rgba(37,99,235,0.18),transparent_28%),radial-gradient(circle_at_74%_36%,rgba(16,185,129,0.12),transparent_32%)]" />
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#050608] to-transparent" />
-      <MerlinIntroFlight />
+      <MerlinAgentSignal />
 
       <div className="relative z-10 mx-auto grid w-full max-w-screen-2xl items-center gap-14 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:px-8 xl:px-12">
         <div className="max-w-3xl">
@@ -345,12 +390,12 @@ export default function HeroSection() {
             className="text-5xl font-black leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl"
             style={{ fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif" }}
           >
-            Cut your business
+            Reduce business
             <br />
-            <span className="bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+            <span className="text-cyan-300 drop-shadow-[0_0_22px_rgba(34,211,238,0.28)]">
               energy bills
             </span>{" "}
-            <span className="inline-block whitespace-nowrap bg-gradient-to-r from-emerald-300 via-cyan-300 to-blue-300 bg-clip-text text-[1.05em] text-transparent drop-shadow-[0_0_24px_rgba(45,212,191,0.42)]">
+            <span className="inline-block whitespace-nowrap text-[1.05em] text-emerald-300 drop-shadow-[0_0_26px_rgba(52,211,153,0.45)]">
               by 30%.
             </span>
           </h1>
@@ -408,54 +453,19 @@ export default function HeroSection() {
       </div>
 
       <style>{`
-        @keyframes merlinIntroFlight {
-          0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(-8deg) scale(0.9); }
-          10% { opacity: 1; transform: translate3d(0, 0, 0) rotate(-10deg) scale(1); }
-          25% { opacity: 1; transform: translate3d(15vw, -7vh, 0) rotate(8deg) scale(1.04); }
-          42% { opacity: 1; transform: translate3d(30vw, 8vh, 0) rotate(-5deg) scale(0.98); }
-          60% { opacity: 1; transform: translate3d(43vw, -3vh, 0) rotate(10deg) scale(0.95); }
-          78% { opacity: 0.94; transform: translate3d(53vw, 6vh, 0) rotate(-12deg) scale(0.78); }
-          92% { opacity: 0.78; transform: translate3d(57vw, 0, 0) rotate(16deg) scale(0.58); }
-          100% { opacity: 0; transform: translate3d(58vw, -1vh, 0) rotate(22deg) scale(0.36); }
+        @keyframes merlinAgentSignal {
+          0%, 100% { opacity: 0.34; transform: scale(0.96); }
+          50% { opacity: 0.72; transform: scale(1.06); }
         }
 
-        @keyframes wandSparkleBurst {
-          0%, 74% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.4); }
-          84% { opacity: 1; transform: translate3d(var(--spark-x), var(--spark-y), 0) scale(1); }
-          100% { opacity: 0; transform: translate3d(calc(var(--spark-x) * 1.8), calc(var(--spark-y) * 1.8), 0) scale(0.15); }
+        .merlin-agent-signal {
+          animation: merlinAgentSignal 4.8s ease-in-out infinite;
         }
-
-        .merlin-intro-flight {
-          animation: merlinIntroFlight 5.8s cubic-bezier(0.16, 1, 0.3, 1) 1.1s both;
-        }
-
-        .merlin-wand-icon {
-          filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.8)) drop-shadow(0 0 18px rgba(16, 185, 129, 0.5));
-        }
-
-        .wand-sparkle-burst {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          height: 0.4rem;
-          width: 0.4rem;
-          border-radius: 9999px;
-          background: rgb(110 231 183);
-          box-shadow: 0 0 18px rgba(45, 212, 191, 0.9);
-          opacity: 0;
-          animation: wandSparkleBurst 5.8s ease-out 1.1s both;
-        }
-
-        .wand-sparkle-burst-1 { --spark-x: 18px; --spark-y: -18px; }
-        .wand-sparkle-burst-2 { --spark-x: -16px; --spark-y: -12px; background: rgb(125 211 252); }
-        .wand-sparkle-burst-3 { --spark-x: 20px; --spark-y: 14px; }
-        .wand-sparkle-burst-4 { --spark-x: -18px; --spark-y: 16px; background: rgb(147 197 253); }
 
         @media (prefers-reduced-motion: reduce) {
-          .merlin-intro-flight,
-          .wand-sparkle-burst {
+          .merlin-agent-signal {
             animation: none;
-            opacity: 0;
+            opacity: 0.36;
           }
         }
       `}</style>
