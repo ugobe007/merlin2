@@ -310,12 +310,11 @@ function AgentTelemetryPanel() {
 function MerlinIntroFlight() {
   return (
     <div className="pointer-events-none absolute inset-0 z-20 hidden lg:block" aria-hidden="true">
-      <div className="merlin-intro-flight absolute left-[14%] top-[34%] flex items-center gap-2 rounded-full border border-blue-300/25 bg-[#111827]/75 px-3 py-2 text-xs font-semibold text-blue-100 shadow-[0_20px_70px_rgba(37,99,235,0.28)] backdrop-blur-md">
-        <span className="relative grid h-9 w-9 place-items-center rounded-full border border-blue-300/25 bg-blue-500/12 text-blue-200 shadow-[0_0_30px_rgba(96,165,250,0.24)]">
-          <WandSparkles size={19} className="-rotate-12" />
+      <div className="merlin-intro-flight absolute left-[16%] top-[35%] text-blue-100 drop-shadow-[0_0_26px_rgba(96,165,250,0.65)]">
+        <span className="relative block">
+          <WandSparkles size={34} className="-rotate-12" />
           <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(110,231,183,0.85)]" />
         </span>
-        <span>MERLIN casts the first scan</span>
       </div>
     </div>
   );
