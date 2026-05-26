@@ -310,10 +310,14 @@ function AgentTelemetryPanel() {
 function MerlinIntroFlight() {
   return (
     <div className="pointer-events-none absolute inset-0 z-20 hidden lg:block" aria-hidden="true">
-      <div className="merlin-intro-flight absolute left-[16%] top-[35%] text-blue-100 drop-shadow-[0_0_26px_rgba(96,165,250,0.65)]">
+      <div className="merlin-intro-flight absolute left-[16%] top-[35%] text-cyan-300 drop-shadow-[0_0_24px_rgba(45,212,191,0.75)]">
         <span className="relative block">
-          <WandSparkles size={34} className="-rotate-12" />
+          <WandSparkles size={34} className="merlin-wand-icon -rotate-12" />
           <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(110,231,183,0.85)]" />
+          <span className="wand-sparkle-burst wand-sparkle-burst-1" />
+          <span className="wand-sparkle-burst wand-sparkle-burst-2" />
+          <span className="wand-sparkle-burst wand-sparkle-burst-3" />
+          <span className="wand-sparkle-burst wand-sparkle-burst-4" />
         </span>
       </div>
     </div>
@@ -403,19 +407,51 @@ export default function HeroSection() {
 
       <style>{`
         @keyframes merlinIntroFlight {
-          0% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.92); }
-          12% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
-          58% { opacity: 1; transform: translate3d(46vw, 11vh, 0) scale(0.96); }
-          76% { opacity: 0.85; transform: translate3d(55vw, 3vh, 0) scale(0.78); }
-          100% { opacity: 0; transform: translate3d(57vw, 0, 0) scale(0.55); }
+          0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(-8deg) scale(0.9); }
+          10% { opacity: 1; transform: translate3d(0, 0, 0) rotate(-10deg) scale(1); }
+          25% { opacity: 1; transform: translate3d(15vw, -7vh, 0) rotate(8deg) scale(1.04); }
+          42% { opacity: 1; transform: translate3d(30vw, 8vh, 0) rotate(-5deg) scale(0.98); }
+          60% { opacity: 1; transform: translate3d(43vw, -3vh, 0) rotate(10deg) scale(0.95); }
+          78% { opacity: 0.94; transform: translate3d(53vw, 6vh, 0) rotate(-12deg) scale(0.78); }
+          92% { opacity: 0.78; transform: translate3d(57vw, 0, 0) rotate(16deg) scale(0.58); }
+          100% { opacity: 0; transform: translate3d(58vw, -1vh, 0) rotate(22deg) scale(0.36); }
+        }
+
+        @keyframes wandSparkleBurst {
+          0%, 74% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.4); }
+          84% { opacity: 1; transform: translate3d(var(--spark-x), var(--spark-y), 0) scale(1); }
+          100% { opacity: 0; transform: translate3d(calc(var(--spark-x) * 1.8), calc(var(--spark-y) * 1.8), 0) scale(0.15); }
         }
 
         .merlin-intro-flight {
           animation: merlinIntroFlight 5.8s cubic-bezier(0.16, 1, 0.3, 1) 1.1s both;
         }
 
+        .merlin-wand-icon {
+          filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.8)) drop-shadow(0 0 18px rgba(16, 185, 129, 0.5));
+        }
+
+        .wand-sparkle-burst {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          height: 0.4rem;
+          width: 0.4rem;
+          border-radius: 9999px;
+          background: rgb(110 231 183);
+          box-shadow: 0 0 18px rgba(45, 212, 191, 0.9);
+          opacity: 0;
+          animation: wandSparkleBurst 5.8s ease-out 1.1s both;
+        }
+
+        .wand-sparkle-burst-1 { --spark-x: 18px; --spark-y: -18px; }
+        .wand-sparkle-burst-2 { --spark-x: -16px; --spark-y: -12px; background: rgb(125 211 252); }
+        .wand-sparkle-burst-3 { --spark-x: 20px; --spark-y: 14px; }
+        .wand-sparkle-burst-4 { --spark-x: -18px; --spark-y: 16px; background: rgb(147 197 253); }
+
         @media (prefers-reduced-motion: reduce) {
-          .merlin-intro-flight {
+          .merlin-intro-flight,
+          .wand-sparkle-burst {
             animation: none;
             opacity: 0;
           }
