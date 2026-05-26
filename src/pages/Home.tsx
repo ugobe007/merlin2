@@ -6,7 +6,6 @@ import HeroSection from "@/components/HeroSection";
 import GridCongestionSection from "@/components/GridCongestionSection";
 import StatusQuoSection from "@/components/StatusQuoSection";
 import AudienceStrip from "@/components/AudienceStrip";
-import ProductsSection from "@/components/ProductsSection";
 import IndustriesSection from "@/components/IndustriesSection";
 import WorkflowSection from "@/components/WorkflowSection";
 import PlatformSection from "@/components/PlatformSection";
@@ -24,7 +23,7 @@ export default function Home() {
       <WorkflowSection />
       <StatusQuoSection />
       <AudienceStrip />
-      <ProductsSection />
+      {/* <ProductsSection /> */}
       <IndustriesSection />
       <PlatformSection />
       <ValueSection />
@@ -66,34 +65,8 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Products */}
-            <div>
-              <h4
-                className="text-white text-xs font-semibold uppercase tracking-widest mb-4"
-                style={{ fontFamily: "'Outfit', sans-serif" }}
-              >
-                Products
-              </h4>
-              <ul className="space-y-3">
-                {[
-                  { label: "TrueQuote", href: "/wizard" },
-                  { label: "ProQuote", href: "/proquote" },
-                  { label: "Microgrid", href: "/microgrid" },
-                  { label: "Pricing", href: "/pricing" },
-                  { label: "Partner API", href: "/widget" },
-                ].map((l) => (
-                  <li key={l.label}>
-                    <a
-                      href={l.href}
-                      className="text-slate-500 hover:text-slate-300 text-sm transition-colors"
-                      style={{ fontFamily: "'DM Sans', sans-serif" }}
-                    >
-                      {l.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* Products (removed TrueQuote/ProQuote) */}
+            <div />
 
             {/* Industries */}
             <div>
@@ -189,22 +162,7 @@ export default function Home() {
             <div className="text-slate-700 text-xs" style={{ fontFamily: "'DM Sans', sans-serif" }}>
               © {new Date().getFullYear()} Merlin Energy. All rights reserved.
             </div>
-            <div className="flex items-center gap-6">
-              <a
-                href="/wizard"
-                className="text-xs text-yellow-600/70 hover:text-yellow-400 font-semibold transition-colors"
-                style={{ fontFamily: "'Outfit', sans-serif" }}
-              >
-                Analyze energy risk →
-              </a>
-              <a
-                href="/proquote"
-                className="text-xs text-blue-600/70 hover:text-blue-400 font-semibold transition-colors"
-                style={{ fontFamily: "'Outfit', sans-serif" }}
-              >
-                Start a ProQuote →
-              </a>
-            </div>
+            <div className="flex items-center gap-6">{/* Removed TrueQuote/ProQuote links */}</div>
           </div>
         </div>
       </footer>

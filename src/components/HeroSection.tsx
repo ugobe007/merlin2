@@ -357,33 +357,20 @@ function AgentTelemetryPanel() {
   );
 }
 
-function MerlinAgentSignal() {
-  return (
-    <div className="pointer-events-none absolute inset-0 z-20 hidden lg:block" aria-hidden="true">
-      <div className="merlin-agent-signal absolute left-[48%] top-[31%] h-40 w-40 rounded-full border border-cyan-300/10 bg-cyan-300/[0.025] shadow-[0_0_80px_rgba(34,211,238,0.12)]" />
-      <div className="absolute left-[50%] top-[38%] h-px w-[18vw] bg-gradient-to-r from-cyan-300/0 via-cyan-300/28 to-emerald-300/0" />
-      <div className="absolute left-[50%] top-[38%] rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-200 shadow-[0_0_32px_rgba(16,185,129,0.16)]">
-        MERLIN scanning tariffs
-      </div>
-    </div>
-  );
-}
-
 export default function HeroSection() {
   return (
     <section
       id="hero"
       className="relative flex min-h-screen items-center overflow-hidden bg-[#050608] pt-20 text-white"
     >
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.018)_1px,transparent_1px)] bg-[size:72px_72px] opacity-35" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_62%,rgba(37,99,235,0.18),transparent_28%),radial-gradient(circle_at_74%_36%,rgba(16,185,129,0.12),transparent_32%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(128,90,213,0.07)_1px,transparent_1px),linear-gradient(rgba(168,85,247,0.04)_1px,transparent_1px)] bg-[size:72px_72px] opacity-35" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_62%,rgba(168,85,247,0.13),transparent_28%),radial-gradient(circle_at_74%_36%,rgba(99,102,241,0.10),transparent_32%)]" />
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#050608] to-transparent" />
-      <MerlinAgentSignal />
 
       <div className="relative z-10 mx-auto grid w-full max-w-screen-2xl items-center gap-14 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:px-8 xl:px-12">
         <div className="max-w-3xl">
-          <div className="mb-9 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-[12px] font-medium tracking-[0.12em] text-blue-500">
-            <Sparkles size={13} /> Independent B2B Energy Intelligence
+          <div className="mb-9 inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-purple-500/10 px-3 py-1.5 text-[12px] font-medium tracking-[0.12em] text-purple-400 shadow-[0_0_18px_rgba(168,85,247,0.18)]">
+            <Sparkles size={13} className="text-purple-400" /> Independent B2B Energy Intelligence
           </div>
 
           <h1
@@ -395,7 +382,7 @@ export default function HeroSection() {
             <span className="text-cyan-300 drop-shadow-[0_0_22px_rgba(34,211,238,0.28)]">
               energy bills
             </span>{" "}
-            <span className="inline-block whitespace-nowrap text-[1.05em] text-emerald-300 drop-shadow-[0_0_26px_rgba(52,211,153,0.45)]">
+            <span className="inline-block whitespace-nowrap text-[1.05em] text-purple-300 drop-shadow-[0_0_26px_rgba(168,85,247,0.32)]">
               by 30%.
             </span>
           </h1>
