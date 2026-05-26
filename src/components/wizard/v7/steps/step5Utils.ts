@@ -32,9 +32,9 @@ export const TIER_CONFIG: Record<TierKey, TierConfig> = {
     headlineClass: "text-2xl lg:text-3xl font-bold tracking-tight text-white",
     cardBorder: "border-white/[0.06]",
     cardBg: "bg-white/[0.02]",
-    accentColor: "text-emerald-400",
+    accentColor: "text-blue-400",
     buttonClass:
-      "text-slate-300 bg-transparent border border-white/[0.1] hover:border-white/[0.2] hover:bg-white/[0.04]",
+      "text-slate-300 bg-transparent border border-white/[0.1] hover:border-blue-400/30 hover:bg-blue-500/[0.06]",
   },
   perfectFit: {
     name: "PERFECT FIT",
@@ -43,10 +43,11 @@ export const TIER_CONFIG: Record<TierKey, TierConfig> = {
     solarMultiplier: 1.0,
     genMultiplier: 1.0,
     headlineClass: "text-2xl lg:text-3xl font-bold tracking-tight text-white",
-    cardBorder: "border-[#3ECF8E]/30",
+    cardBorder: "border-blue-400/30",
     cardBg: "bg-white/[0.03]",
-    accentColor: "text-[#3ECF8E]",
-    buttonClass: "text-[#0D0D0D] bg-[#3ECF8E] hover:bg-[#3ECF8E]/90",
+    accentColor: "text-blue-300",
+    buttonClass:
+      "text-white bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-400 hover:to-violet-400",
   },
   beastMode: {
     name: "BEAST MODE",
@@ -57,9 +58,9 @@ export const TIER_CONFIG: Record<TierKey, TierConfig> = {
     headlineClass: "text-2xl lg:text-3xl font-bold tracking-tight text-white",
     cardBorder: "border-white/[0.06]",
     cardBg: "bg-white/[0.02]",
-    accentColor: "text-amber-400",
+    accentColor: "text-violet-400",
     buttonClass:
-      "text-slate-300 bg-transparent border border-white/[0.1] hover:border-white/[0.2] hover:bg-white/[0.04]",
+      "text-slate-300 bg-transparent border border-white/[0.1] hover:border-violet-400/30 hover:bg-violet-500/[0.06]",
   },
 };
 

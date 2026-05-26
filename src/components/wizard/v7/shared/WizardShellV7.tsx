@@ -134,7 +134,7 @@ export default function WizardShellV7({
         style={{
           minHeight: "100svh" as string,
           background: `
-            radial-gradient(ellipse 1400px 900px at 50% 15%, rgba(62,207,142,0.15) 0%, rgba(62,207,142,0.05) 40%, transparent 60%),
+            radial-gradient(ellipse 1400px 900px at 50% 15%, rgba(79,140,255,0.18) 0%, rgba(139,92,246,0.10) 34%, transparent 60%),
             linear-gradient(160deg, #080b14 0%, #0f1420 40%, #0a0d16 100%)
           `,
           color: "#e8ebf3",
@@ -205,8 +205,8 @@ export default function WizardShellV7({
                     width: 16,
                     height: 16,
                     borderRadius: "50%",
-                    background: "#3ECF8E",
-                    boxShadow: "0 0 8px rgba(62, 207, 142, 0.5)",
+                    background: "#4F8CFF",
+                    boxShadow: "0 0 8px rgba(79, 140, 255, 0.55)",
                   }}
                 />
               </div>
@@ -236,7 +236,7 @@ export default function WizardShellV7({
                         position: "absolute",
                         inset: 0,
                         borderRadius: "50%",
-                        background: "rgba(62,207,142,0.35)",
+                        background: "rgba(79,140,255,0.35)",
                         animation: "merlin-pulse 1.5s ease-in-out infinite",
                       }}
                     />
@@ -246,11 +246,11 @@ export default function WizardShellV7({
                         borderRadius: "50%",
                         width: "100%",
                         height: "100%",
-                        background: "#3ECF8E",
+                        background: "#4F8CFF",
                       }}
                     />
                   </span>
-                  <span style={{ color: "rgba(62,207,142,0.85)", letterSpacing: "0.04em" }}>
+                  <span style={{ color: "rgba(96,165,250,0.95)", letterSpacing: "0.04em" }}>
                     LIVE
                   </span>
                   <span style={{ color: "rgba(255,255,255,0.18)" }}>·</span>
@@ -321,7 +321,7 @@ export default function WizardShellV7({
                     />
                     <path
                       d="M7 11L9.5 13.5L14 8.5"
-                      stroke="#3ECF8E"
+                      stroke="#4F8CFF"
                       strokeWidth="1.7"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -361,13 +361,13 @@ export default function WizardShellV7({
                       cx="6"
                       cy="6"
                       r="5.5"
-                      fill="rgba(62,207,142,0.15)"
-                      stroke="#3ECF8E"
+                      fill="rgba(79,140,255,0.15)"
+                      stroke="#4F8CFF"
                       strokeWidth="1"
                     />
                     <path
                       d="M3.5 6L5.5 8L8.5 4"
-                      stroke="#3ECF8E"
+                      stroke="#4F8CFF"
                       strokeWidth="1.4"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -393,12 +393,13 @@ export default function WizardShellV7({
               style={{
                 flex: 1,
                 borderRadius: 12,
-                background: "rgba(62,207,142,0.05)",
-                border: "1px solid rgba(62,207,142,0.20)",
+                background:
+                  "linear-gradient(180deg, rgba(12,22,45,0.90) 0%, rgba(10,16,32,0.78) 100%)",
+                border: "1px solid rgba(79,140,255,0.18)",
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
-                boxShadow: "0 0 0 1px rgba(62,207,142,0.06) inset",
+                boxShadow: "0 0 0 1px rgba(79,140,255,0.06) inset",
               }}
             >
               {/* Advisor label bar */}
@@ -408,8 +409,9 @@ export default function WizardShellV7({
                   alignItems: "center",
                   gap: 8,
                   padding: "10px 16px",
-                  borderBottom: "1px solid rgba(62,207,142,0.14)",
-                  background: "rgba(62,207,142,0.08)",
+                  borderBottom: "1px solid rgba(79,140,255,0.14)",
+                  background:
+                    "linear-gradient(135deg, rgba(79,140,255,0.10), rgba(139,92,246,0.08))",
                   flexShrink: 0,
                 }}
               >
@@ -427,7 +429,7 @@ export default function WizardShellV7({
                       position: "absolute",
                       inset: 0,
                       borderRadius: "50%",
-                      background: "rgba(62,207,142,0.35)",
+                      background: "rgba(79,140,255,0.35)",
                       animation: "merlin-pulse 1.5s ease-in-out infinite",
                     }}
                   />
@@ -437,7 +439,7 @@ export default function WizardShellV7({
                       width: "100%",
                       height: "100%",
                       borderRadius: "50%",
-                      background: "#3ECF8E",
+                      background: "#4F8CFF",
                     }}
                   />
                 </span>
@@ -445,7 +447,7 @@ export default function WizardShellV7({
                   style={{
                     fontSize: 10,
                     fontWeight: 700,
-                    color: "rgba(62,207,142,0.80)",
+                    color: "rgba(96,165,250,0.90)",
                     textTransform: "uppercase",
                     letterSpacing: "0.09em",
                   }}
@@ -469,7 +471,7 @@ export default function WizardShellV7({
                         marginBottom: 12,
                       }}
                     >
-                      Hi, I'm <span style={{ color: "#3ECF8E" }}>Merlin</span> — your energy savings
+                      Hi, I'm <span style={{ color: "#8B5CF6" }}>Merlin</span> — your energy savings
                       advisor.
                     </div>
                     <div
@@ -541,9 +543,9 @@ export default function WizardShellV7({
                             height: 2,
                             borderRadius: 1,
                             background: isComplete
-                              ? "rgba(62, 207, 142, 0.3)"
+                              ? "rgba(79, 140, 255, 0.3)"
                               : isActive
-                                ? "rgba(62, 207, 142, 0.2)"
+                                ? "rgba(79, 140, 255, 0.2)"
                                 : "rgba(255, 255, 255, 0.06)",
                             flexShrink: 0,
                           }}
@@ -559,9 +561,9 @@ export default function WizardShellV7({
                           padding: "6px 14px",
                           borderRadius: 999,
                           background: isActive
-                            ? "rgba(62, 207, 142, 0.10)"
+                            ? "rgba(79, 140, 255, 0.10)"
                             : isComplete
-                              ? "rgba(62, 207, 142, 0.06)"
+                              ? "rgba(79, 140, 255, 0.06)"
                               : "transparent",
                           boxShadow: "none",
                           opacity: isFuture ? 0.4 : 1,
@@ -581,11 +583,11 @@ export default function WizardShellV7({
                             fontSize: 11,
                             fontWeight: 700,
                             background: isActive
-                              ? "rgba(62, 207, 142, 0.25)"
+                              ? "rgba(79, 140, 255, 0.25)"
                               : isComplete
-                                ? "rgba(62, 207, 142, 0.15)"
+                                ? "rgba(79, 140, 255, 0.15)"
                                 : "rgba(255, 255, 255, 0.06)",
-                            color: isComplete ? "#3ECF8E" : isActive ? "#fff" : "#e8ebf3",
+                            color: isComplete ? "#4F8CFF" : isActive ? "#fff" : "#e8ebf3",
                             flexShrink: 0,
                           }}
                         >
@@ -601,7 +603,7 @@ export default function WizardShellV7({
                             color: isActive
                               ? "#fff"
                               : isComplete
-                                ? "rgba(62, 207, 142, 0.8)"
+                                ? "rgba(79, 140, 255, 0.85)"
                                 : "rgba(232, 235, 243, 0.35)",
                             letterSpacing: "0.01em",
                           }}
@@ -627,9 +629,9 @@ export default function WizardShellV7({
                     gap: 6,
                     padding: "6px 12px",
                     borderRadius: 8,
-                    border: "1px solid rgba(62,207,142,0.22)",
-                    background: "rgba(62,207,142,0.05)",
-                    color: "rgba(62,207,142,0.75)",
+                    border: "1px solid rgba(79,140,255,0.24)",
+                    background: "rgba(79,140,255,0.08)",
+                    color: "rgba(96,165,250,0.85)",
                     fontSize: 12,
                     fontWeight: 600,
                     cursor: "pointer",
@@ -638,14 +640,14 @@ export default function WizardShellV7({
                     whiteSpace: "nowrap",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(62,207,142,0.12)";
-                    e.currentTarget.style.borderColor = "rgba(62,207,142,0.45)";
-                    e.currentTarget.style.color = "#3ECF8E";
+                    e.currentTarget.style.background = "rgba(79,140,255,0.16)";
+                    e.currentTarget.style.borderColor = "rgba(79,140,255,0.50)";
+                    e.currentTarget.style.color = "#BFDBFE";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(62,207,142,0.05)";
-                    e.currentTarget.style.borderColor = "rgba(62,207,142,0.22)";
-                    e.currentTarget.style.color = "rgba(62,207,142,0.75)";
+                    e.currentTarget.style.background = "rgba(79,140,255,0.08)";
+                    e.currentTarget.style.borderColor = "rgba(79,140,255,0.24)";
+                    e.currentTarget.style.color = "rgba(96,165,250,0.85)";
                   }}
                 >
                   ⚡ ProQuote
@@ -695,10 +697,10 @@ export default function WizardShellV7({
             }
             @keyframes nextBtnPulse {
               0%, 100% {
-                box-shadow: 0 0 32px rgba(62, 207, 142, 0.45), 0 4px 16px rgba(0,0,0,0.3);
+                box-shadow: 0 0 32px rgba(79, 140, 255, 0.42), 0 0 18px rgba(139,92,246,0.16), 0 4px 16px rgba(0,0,0,0.3);
               }
               50% {
-                box-shadow: 0 0 56px rgba(62, 207, 142, 0.85), 0 0 22px rgba(62, 207, 142, 0.55), 0 4px 20px rgba(0,0,0,0.35);
+                box-shadow: 0 0 56px rgba(79, 140, 255, 0.72), 0 0 22px rgba(139,92,246,0.34), 0 4px 20px rgba(0,0,0,0.35);
               }
             }
             
@@ -910,9 +912,9 @@ export default function WizardShellV7({
                         height: 6,
                         borderRadius: 3,
                         background: isComplete
-                          ? "rgba(62, 207, 142, 0.5)"
+                          ? "rgba(79, 140, 255, 0.55)"
                           : isActive
-                            ? "#3ECF8E"
+                            ? "#8B5CF6"
                             : "rgba(255, 255, 255, 0.12)",
                         transition: "all 0.25s ease",
                       }}
@@ -938,26 +940,22 @@ export default function WizardShellV7({
                     borderRadius: isFilled ? 12 : 10,
                     minHeight: isFilled ? 54 : 46,
                     background: isFilled
-                      ? "#3ECF8E"
+                      ? "linear-gradient(135deg, #4F8CFF 0%, #8B5CF6 100%)"
                       : isActive
                         ? "transparent"
                         : "rgba(255,255,255,0.03)",
                     border: isFilled
-                      ? "2px solid #3ECF8E"
+                      ? "2px solid #4F8CFF"
                       : isActive
-                        ? "2px solid #3ECF8E"
+                        ? "2px solid #4F8CFF"
                         : "2px solid rgba(255, 255, 255, 0.08)",
-                    color: isFilled
-                      ? "#0a1628"
-                      : isActive
-                        ? "#3ECF8E"
-                        : "rgba(232, 235, 243, 0.28)",
+                    color: isFilled ? "#fff" : isActive ? "#BFDBFE" : "rgba(232, 235, 243, 0.28)",
                     cursor: isActive ? "pointer" : "not-allowed",
                     fontSize: isFilled ? 16 : 14,
                     fontWeight: 700,
                     letterSpacing: "0.01em",
                     boxShadow: isFilled
-                      ? "0 0 32px rgba(62, 207, 142, 0.45), 0 4px 16px rgba(0,0,0,0.3)"
+                      ? "0 0 32px rgba(79, 140, 255, 0.40), 0 0 24px rgba(139,92,246,0.18), 0 4px 16px rgba(0,0,0,0.3)"
                       : "none",
                     animation: isFilled ? "nextBtnPulse 2s ease-in-out infinite" : "none",
                     transition: "all 0.18s ease",
@@ -965,24 +963,25 @@ export default function WizardShellV7({
                   onMouseEnter={(e) => {
                     if (isActive) {
                       if (isFilled) {
-                        e.currentTarget.style.background = "#4DDBA0";
+                        e.currentTarget.style.background =
+                          "linear-gradient(135deg, #60A5FA 0%, #A78BFA 100%)";
                         e.currentTarget.style.boxShadow =
-                          "0 0 44px rgba(62, 207, 142, 0.60), 0 4px 20px rgba(0,0,0,0.35)";
+                          "0 0 44px rgba(79, 140, 255, 0.55), 0 0 24px rgba(139,92,246,0.22), 0 4px 20px rgba(0,0,0,0.35)";
                         e.currentTarget.style.transform = "translateY(-1px)";
                       } else {
-                        e.currentTarget.style.background = "rgba(62, 207, 142, 0.10)";
-                        e.currentTarget.style.boxShadow = "0 0 16px rgba(62, 207, 142, 0.15)";
+                        e.currentTarget.style.background = "rgba(79, 140, 255, 0.10)";
+                        e.currentTarget.style.boxShadow = "0 0 16px rgba(79, 140, 255, 0.18)";
                       }
                     }
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = isFilled
-                      ? "#3ECF8E"
+                      ? "linear-gradient(135deg, #4F8CFF 0%, #8B5CF6 100%)"
                       : isActive
                         ? "transparent"
                         : "rgba(255,255,255,0.03)";
                     e.currentTarget.style.boxShadow = isFilled
-                      ? "0 0 32px rgba(62, 207, 142, 0.45), 0 4px 16px rgba(0,0,0,0.3)"
+                      ? "0 0 32px rgba(79, 140, 255, 0.40), 0 0 24px rgba(139,92,246,0.18), 0 4px 16px rgba(0,0,0,0.3)"
                       : "none";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
