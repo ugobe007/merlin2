@@ -1,16 +1,53 @@
 /* Merlin Energy — Agent-first homepage hero */
 
-import { ArrowRight, Building2, CheckCircle2, Sparkles, Zap } from "lucide-react";
+import { useState } from "react";
+import {
+  ArrowRight,
+  Building2,
+  CheckCircle2,
+  DatabaseZap,
+  Factory,
+  Hotel,
+  Plane,
+  Sparkles,
+  Store,
+  X,
+  Zap,
+} from "lucide-react";
 
 const MERLIN_ICON = "/merlin-icon.png";
 
-const telemetryRows = [
+type UseCase = {
+  type: string;
+  location: string;
+  status: string;
+  savings: string;
+  active: boolean;
+  Icon: typeof Building2;
+  opportunity: string;
+  modeledAssets: string[];
+  risk: string;
+  brief: string;
+};
+
+const telemetryRows: UseCase[] = [
   {
     type: "Hotel",
     location: "Atlanta, GA",
     status: "Optimizing TOU-GS tariff...",
     savings: "$18,400/yr",
     active: true,
+    Icon: Hotel,
+    opportunity:
+      "Peak demand charges, HVAC runtime, laundry loads, and backup resilience often hide the fastest savings path.",
+    modeledAssets: [
+      "Solar canopy + rooftop PV",
+      "Lobby/guest-room load profile",
+      "Battery demand-charge dispatch",
+    ],
+    risk: "High occupancy days can spike demand charges before operators see the bill.",
+    brief:
+      "MERLIN turns room count, ZIP, tariff, and monthly bill into an owner-ready savings brief.",
   },
   {
     type: "Car Wash",
@@ -18,6 +55,17 @@ const telemetryRows = [
     status: "Modeling 80 kW solar array...",
     savings: "$9,200/yr",
     active: false,
+    Icon: Building2,
+    opportunity:
+      "Daytime pump, dryer, vacuum, and water-heating loads line up well with solar production.",
+    modeledAssets: [
+      "PV production curve",
+      "Pump and dryer demand profile",
+      "Battery peak clipping",
+    ],
+    risk: "Demand spikes can erase margin on high-volume wash days.",
+    brief:
+      "MERLIN compares solar-only, solar + storage, and load-control paths before a vendor proposal.",
   },
   {
     type: "Manufacturing",
@@ -25,6 +73,16 @@ const telemetryRows = [
     status: "Sizing 150 kWh BESS system...",
     savings: "$42,100/yr",
     active: false,
+    Icon: Factory,
+    opportunity:
+      "Process loads, compressed air, and shift schedules create repeatable patterns MERLIN can model quickly.",
+    modeledAssets: [
+      "Shift-based load model",
+      "BESS demand management",
+      "Solar + resilience sizing",
+    ],
+    risk: "A single production peak can set the billing demand for the entire month.",
+    brief: "MERLIN helps operators separate energy savings, resiliency value, and project ROI.",
   },
   {
     type: "Supermarket",
@@ -32,12 +90,157 @@ const telemetryRows = [
     status: "Applying IRA Section 48 ITC...",
     savings: "$28,700/yr",
     active: false,
+    Icon: Store,
+    opportunity:
+      "Refrigeration, HVAC, lighting, and spoilage risk make energy strategy a margin and resilience issue.",
+    modeledAssets: ["Refrigeration baseload", "Solar self-consumption", "Backup storage runtime"],
+    risk: "Grid interruptions can turn energy exposure into inventory loss.",
+    brief:
+      "MERLIN models savings plus backup value so the CFO can compare economics and risk reduction.",
+  },
+  {
+    type: "Airport",
+    location: "Las Vegas, NV",
+    status: "Mapping campus microgrid zones...",
+    savings: "$315,000/yr",
+    active: false,
+    Icon: Plane,
+    opportunity:
+      "Airports behave like small cities: terminals, concessions, parking, ground support, and critical operations.",
+    modeledAssets: ["Campus load segmentation", "Microgrid dispatch", "Critical-load resilience"],
+    risk: "Grid constraints and outage exposure can cascade across passenger, vendor, and operations systems.",
+    brief:
+      "MERLIN frames phased infrastructure decisions before expensive engineering studies begin.",
+  },
+  {
+    type: "EV Charging Hub",
+    location: "Riverside, CA",
+    status: "Testing demand-control strategy...",
+    savings: "$76,500/yr",
+    active: false,
+    Icon: Zap,
+    opportunity:
+      "Fast charging creates intense peaks; storage and solar can protect margins and reduce interconnection pressure.",
+    modeledAssets: [
+      "Charger utilization curve",
+      "Battery peak shaving",
+      "Solar + grid import blend",
+    ],
+    risk: "Demand charges and upgrade costs can break a charging hub's unit economics.",
+    brief:
+      "MERLIN shows whether the site needs storage, load controls, or a different charging mix.",
+  },
+  {
+    type: "Data Center",
+    location: "Ashburn, VA",
+    status: "Evaluating grid capacity exposure...",
+    savings: "$1.4M/yr",
+    active: false,
+    Icon: DatabaseZap,
+    opportunity:
+      "Always-on load, utility constraints, and power availability make energy strategy existential for AI infrastructure.",
+    modeledAssets: ["24/7 load profile", "On-site generation mix", "Storage and backup resilience"],
+    risk: "Power availability, rate-case pressure, and interconnection delays can slow growth.",
+    brief:
+      "MERLIN helps teams compare grid dependency, on-site energy, and resilience economics by location.",
   },
 ];
 
 const proofItems = ["Free & Instant", "No Utility Login Required", "CFO-Ready Report"];
 
+function UseCaseModal({ useCase, onClose }: { useCase: UseCase; onClose: () => void }) {
+  const Icon = useCase.Icon;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="use-case-title"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-white/12 bg-[#111217] p-6 text-white shadow-[0_30px_120px_rgba(0,0,0,0.65)] sm:p-7"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(37,99,235,0.18),transparent_32%),radial-gradient(circle_at_90%_0%,rgba(16,185,129,0.13),transparent_30%)]" />
+        <div className="relative">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="grid h-12 w-12 place-items-center rounded-xl border border-blue-500/30 bg-blue-500/12 text-blue-400">
+                <Icon size={24} />
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.18em] text-blue-400">
+                  Use Case Brief
+                </div>
+                <h3
+                  id="use-case-title"
+                  className="mt-1 text-2xl font-black tracking-[-0.03em] text-white"
+                  style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                >
+                  {useCase.type} energy intelligence
+                </h3>
+                <div className="mt-1 text-sm text-slate-500">
+                  Example market: {useCase.location}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-slate-400 transition hover:border-white/20 hover:text-white"
+              aria-label="Close use case details"
+              onClick={onClose}
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className="mt-7 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-xl border border-white/[0.07] bg-black/25 p-4">
+              <div className="text-[10px] uppercase tracking-[0.14em] text-slate-500">
+                Estimated Savings
+              </div>
+              <div className="mt-2 text-xl font-black text-blue-400">{useCase.savings}</div>
+            </div>
+            <div className="rounded-xl border border-white/[0.07] bg-black/25 p-4 sm:col-span-2">
+              <div className="text-[10px] uppercase tracking-[0.14em] text-slate-500">
+                Primary Risk
+              </div>
+              <div className="mt-2 text-sm leading-6 text-slate-300">{useCase.risk}</div>
+            </div>
+          </div>
+
+          <p className="mt-6 text-base leading-7 text-slate-300">{useCase.opportunity}</p>
+
+          <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.05] p-4">
+            <div className="mb-3 text-[10px] uppercase tracking-[0.16em] text-slate-500">
+              What MERLIN models
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {useCase.modeledAssets.map((asset) => (
+                <div
+                  key={asset}
+                  className="rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2 text-sm text-slate-300"
+                >
+                  {asset}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-xl border border-emerald-400/18 bg-emerald-400/8 p-4 text-sm leading-6 text-slate-300">
+            <span className="font-bold text-emerald-300">MERLIN output:</span> {useCase.brief}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AgentTelemetryPanel() {
+  const [selectedUseCase, setSelectedUseCase] = useState<UseCase | null>(null);
+
   return (
     <div className="relative rounded-[1.35rem] border border-white/10 bg-[#18191D] p-6 shadow-[0_30px_100px_rgba(0,0,0,0.48),0_0_0_1px_rgba(37,99,235,0.18)] lg:p-7">
       <div className="absolute inset-0 rounded-[1.35rem] bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.14),transparent_42%)]" />
@@ -78,21 +281,26 @@ function AgentTelemetryPanel() {
           </div>
           <div className="space-y-3">
             {telemetryRows.map((row) => (
-              <div
+              <button
+                type="button"
                 key={`${row.type}-${row.location}`}
-                className={`flex items-center justify-between gap-4 rounded-xl border px-4 py-3 transition-all ${
+                className={`group flex w-full items-center justify-between gap-4 rounded-xl border px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:border-blue-500/45 hover:bg-blue-500/10 focus:outline-none focus:ring-2 focus:ring-blue-500/45 ${
                   row.active
                     ? "border-blue-500/45 bg-blue-500/12 shadow-[0_0_30px_rgba(37,99,235,0.16)]"
-                    : "border-white/[0.05] bg-black/18 opacity-55"
+                    : "border-white/[0.05] bg-black/18 opacity-70"
                 }`}
+                onClick={() => setSelectedUseCase(row)}
+                aria-label={`View ${row.type} use case details`}
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div
                     className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
-                      row.active ? "bg-blue-500/20 text-blue-500" : "bg-white/[0.04] text-slate-500"
+                      row.active
+                        ? "bg-blue-500/20 text-blue-500"
+                        : "bg-white/[0.04] text-slate-500 group-hover:text-blue-400"
                     }`}
                   >
-                    <Building2 size={15} />
+                    <row.Icon size={15} />
                   </div>
                   <div className="min-w-0">
                     <div className="truncate text-sm font-bold text-white">
@@ -108,9 +316,11 @@ function AgentTelemetryPanel() {
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="text-sm font-bold text-blue-500">{row.savings}</div>
-                  <div className="text-[10px] text-slate-500">Est. Savings</div>
+                  <div className="text-[10px] text-slate-500 group-hover:text-slate-400">
+                    View Details
+                  </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -120,6 +330,25 @@ function AgentTelemetryPanel() {
           demanding weeks of electric bills and engineering site visits, MERLIN uses independent
           tariff, solar, and facility benchmark data to estimate your energy structure instantly.
         </div>
+      </div>
+
+      {selectedUseCase && (
+        <UseCaseModal useCase={selectedUseCase} onClose={() => setSelectedUseCase(null)} />
+      )}
+    </div>
+  );
+}
+
+function MerlinIntroFlight() {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-20 hidden lg:block" aria-hidden="true">
+      <div className="merlin-intro-flight absolute left-[11%] top-[33%] flex items-center gap-2 rounded-full border border-blue-400/25 bg-[#111827]/85 px-3 py-2 text-xs font-semibold text-blue-100 shadow-[0_20px_70px_rgba(37,99,235,0.32)] backdrop-blur-md">
+        <img
+          src={MERLIN_ICON}
+          alt=""
+          className="h-7 w-7 rounded-full border border-white/20 bg-white/10 object-contain p-0.5"
+        />
+        <span>MERLIN is scanning live use cases</span>
       </div>
     </div>
   );
@@ -134,6 +363,7 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.018)_1px,transparent_1px)] bg-[size:72px_72px] opacity-35" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_62%,rgba(37,99,235,0.18),transparent_28%),radial-gradient(circle_at_74%_36%,rgba(16,185,129,0.12),transparent_32%)]" />
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#050608] to-transparent" />
+      <MerlinIntroFlight />
 
       <div className="relative z-10 mx-auto grid w-full max-w-screen-2xl items-center gap-14 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:px-8 xl:px-12">
         <div className="max-w-3xl">
@@ -204,6 +434,27 @@ export default function HeroSection() {
 
         <AgentTelemetryPanel />
       </div>
+
+      <style>{`
+        @keyframes merlinIntroFlight {
+          0% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.92); }
+          12% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+          58% { opacity: 1; transform: translate3d(46vw, 11vh, 0) scale(0.96); }
+          76% { opacity: 0.85; transform: translate3d(55vw, 3vh, 0) scale(0.78); }
+          100% { opacity: 0; transform: translate3d(57vw, 0, 0) scale(0.55); }
+        }
+
+        .merlin-intro-flight {
+          animation: merlinIntroFlight 5.8s cubic-bezier(0.16, 1, 0.3, 1) 1.1s both;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .merlin-intro-flight {
+            animation: none;
+            opacity: 0;
+          }
+        }
+      `}</style>
     </section>
   );
 }
