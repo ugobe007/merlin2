@@ -1,581 +1,209 @@
-/* Merlin Energy — Hero Section (April 2026 rebuild)
-   Strategy:
-   - Lead with the user's PROBLEM, not the product name
-   - Single dominant CTA: TrueQuote™ (ProQuote demoted to nav)
-   - Right panel: static mockup of actual TrueQuote output — show what they GET
-   - Kill the calculator widget (generic benchmarks undercut the real-data story)
-   - Story arc: problem → Merlin does the work → here's the output
-*/
+/* Merlin Energy — Agent-first homepage hero */
 
-import React from "react";
-import {
-  ArrowRight,
-  CheckCircle2,
-  ShieldCheck,
-  Zap,
-  Sun,
-  Battery,
-  TrendingDown,
-} from "lucide-react";
+import { ArrowRight, Building2, CheckCircle2, Sparkles, Zap } from "lucide-react";
 
-const SHIELD_GOLD =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663452998285/mKEEa8r3K6343KtBgXXzFc/shield-gold_53d77804.png";
+const MERLIN_ICON = "/merlin-icon.png";
 
-const trustItems = ["NREL Data", "DOE Frameworks", "Sandia Logic", "UL / IEEE"];
-
-// Industry scenarios that cycle in the mockup
-const SCENARIOS = [
+const telemetryRows = [
   {
-    industry: "Hotel",
-    name: "Grand Sierra Resort · Reno, NV",
-    savings: "$218,400",
-    utility: "NV Energy · $0.11/kWh",
-    solar: { value: "680 kW", sub: "2,176 panels" },
-    bess: { value: "500 kWh", sub: "2-hr dispatch" },
-    demand: { value: "38%", sub: "$14,200/mo" },
-    payback: "5.8 yrs",
-    npv: "$2.1M",
-    irr: "18.4%",
-    sources: ["NREL irradiance", "NV Energy EG-1", "DOE BESS sizing", "30% ITC (IRA §48)"],
+    type: "Hotel",
+    location: "Atlanta, GA",
+    status: "Optimizing TOU-GS tariff...",
+    savings: "$18,400/yr",
+    active: true,
   },
   {
-    industry: "Manufacturing",
-    name: "Apex Fabrication · Dallas, TX",
-    savings: "$342,000",
-    utility: "Oncor · $0.09/kWh",
-    solar: { value: "1.2 MW", sub: "3,840 panels" },
-    bess: { value: "800 kWh", sub: "4-hr dispatch" },
-    demand: { value: "44%", sub: "$21,800/mo" },
-    payback: "4.9 yrs",
-    npv: "$3.8M",
-    irr: "21.2%",
-    sources: ["NREL irradiance", "Oncor TOU tariff", "DOE BESS sizing", "30% ITC (IRA §48)"],
+    type: "Car Wash",
+    location: "Phoenix, AZ",
+    status: "Modeling 80 kW solar array...",
+    savings: "$9,200/yr",
+    active: false,
   },
   {
-    industry: "Data Center",
-    name: "CloudEdge Facility · Phoenix, AZ",
-    savings: "$487,200",
-    utility: "APS · $0.13/kWh",
-    solar: { value: "2.1 MW", sub: "6,720 panels" },
-    bess: { value: "2 MWh", sub: "4-hr dispatch" },
-    demand: { value: "51%", sub: "$38,400/mo" },
-    payback: "4.2 yrs",
-    npv: "$5.6M",
-    irr: "24.8%",
-    sources: ["NREL irradiance", "APS R-3 tariff", "DOE BESS sizing", "30% ITC (IRA §48)"],
+    type: "Manufacturing",
+    location: "Grand Rapids, MI",
+    status: "Sizing 150 kWh BESS system...",
+    savings: "$42,100/yr",
+    active: false,
   },
   {
-    industry: "Car Wash",
-    name: "SpeedyClean Group · Atlanta, GA",
-    savings: "$84,600",
-    utility: "Georgia Power · $0.12/kWh",
-    solar: { value: "280 kW", sub: "896 panels" },
-    bess: { value: "200 kWh", sub: "2-hr dispatch" },
-    demand: { value: "29%", sub: "$5,600/mo" },
-    payback: "6.8 yrs",
-    npv: "$0.9M",
-    irr: "14.6%",
-    sources: ["NREL irradiance", "GA Power TOU-GS", "DOE BESS sizing", "30% ITC (IRA §48)"],
+    type: "Supermarket",
+    location: "Dallas, TX",
+    status: "Applying IRA Section 48 ITC...",
+    savings: "$28,700/yr",
+    active: false,
   },
 ];
 
-// TrueQuote output mockup — example output for a hotel in Reno, NV
-function TrueQuoteMockup() {
-  const [activeIndex, setActiveIndex] = React.useState(0);
-  const [visible, setVisible] = React.useState(true);
+const proofItems = ["Free & Instant", "No Utility Login Required", "CFO-Ready Report"];
 
-  React.useEffect(() => {
-    const interval = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setActiveIndex((i) => (i + 1) % SCENARIOS.length);
-        setVisible(true);
-      }, 380);
-    }, 4200);
-    return () => clearInterval(interval);
-  }, []);
-
-  const s = SCENARIOS[activeIndex];
-
+function AgentTelemetryPanel() {
   return (
-    <div
-      style={{
-        background: "linear-gradient(160deg, #0d1420 0%, #080d18 100%)",
-        border: "1px solid rgba(255,255,255,0.10)",
-        borderRadius: 20,
-        overflow: "hidden",
-        boxShadow: "0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(62,207,142,0.08)",
-        fontFamily: "'Inter', -apple-system, sans-serif",
-        width: "100%",
-      }}
-    >
-      {/* Header bar — static chrome */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "18px 28px",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-          background: "rgba(255,255,255,0.02)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 24, height: 24 }} />
-          <span
-            style={{ fontSize: 16, fontWeight: 700, color: "#F5F0E8", letterSpacing: "0.01em" }}
-          >
-            TrueQuote™
-          </span>
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              color: "#3ECF8E",
-              background: "rgba(62,207,142,0.12)",
-              border: "1px solid rgba(62,207,142,0.25)",
-              borderRadius: 6,
-              padding: "2px 7px",
-              letterSpacing: "0.05em",
-              textTransform: "uppercase" as const,
-            }}
-          >
-            Verified
-          </span>
-        </div>
-        {/* Facility name fades with content */}
-        <div
-          style={{
-            fontSize: 13,
-            color: "rgba(255,255,255,0.30)",
-            transition: "opacity 0.38s ease",
-            opacity: visible ? 1 : 0,
-          }}
-        >
-          {s.name}
-        </div>
-      </div>
-
-      {/* Animated content block */}
-      <div style={{ transition: "opacity 0.38s ease", opacity: visible ? 1 : 0 }}>
-        {/* Hero savings row */}
-        <div
-          style={{
-            padding: "28px 28px 22px",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
-            background: "linear-gradient(135deg, rgba(234,179,8,0.07) 0%, transparent 60%)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 12,
-              color: "rgba(234,179,8,0.80)",
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase" as const,
-              marginBottom: 8,
-            }}
-          >
-            Projected Annual Savings
-          </div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-            <span
-              style={{
-                fontSize: 72,
-                fontWeight: 900,
-                color: "#EAB308",
-                lineHeight: 1,
-                fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-                letterSpacing: "-2px",
-              }}
-            >
-              {s.savings}
-            </span>
-            <span style={{ fontSize: 18, color: "rgba(255,255,255,0.40)", fontWeight: 500 }}>
-              /yr
-            </span>
-          </div>
-          <div style={{ marginTop: 8, fontSize: 14, color: "rgba(255,255,255,0.38)" }}>
-            After 30% federal ITC · {s.utility}
-          </div>
-        </div>
-
-        {/* System breakdown */}
-        <div style={{ padding: "20px 28px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            {[
-              {
-                icon: <Sun size={13} />,
-                label: "Solar",
-                value: s.solar.value,
-                sub: s.solar.sub,
-                color: "#F59E0B",
-              },
-              {
-                icon: <Battery size={13} />,
-                label: "BESS",
-                value: s.bess.value,
-                sub: s.bess.sub,
-                color: "#3B82F6",
-              },
-              {
-                icon: <TrendingDown size={13} />,
-                label: "Demand Cut",
-                value: s.demand.value,
-                sub: s.demand.sub,
-                color: "#3ECF8E",
-              },
-            ].map(({ icon, label, value, sub, color }) => (
+    <div className="relative rounded-[1.35rem] border border-white/10 bg-[#18191D] p-6 shadow-[0_30px_100px_rgba(0,0,0,0.48),0_0_0_1px_rgba(37,99,235,0.18)] lg:p-7">
+      <div className="absolute inset-0 rounded-[1.35rem] bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.14),transparent_42%)]" />
+      <div className="relative">
+        <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <img
+                src={MERLIN_ICON}
+                alt="MERLIN"
+                className="h-10 w-10 rounded-full border border-white/20 bg-white/10 object-contain p-1"
+              />
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border border-[#18191D] bg-emerald-400" />
+            </div>
+            <div>
               <div
-                key={label}
-                style={{
-                  padding: "16px",
-                  borderRadius: 12,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                }}
+                className="text-sm font-bold text-white"
+                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
               >
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6, color }}
-                >
-                  {icon}
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      letterSpacing: "0.06em",
-                      textTransform: "uppercase" as const,
-                    }}
-                  >
-                    {label}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 800,
-                    color: "rgba(255,255,255,0.92)",
-                    lineHeight: 1.1,
-                  }}
-                >
-                  {value}
-                </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>
-                  {sub}
-                </div>
+                MERLIN Agent Active
               </div>
-            ))}
+              <div className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-blue-500">
+                <Zap size={12} /> Live Processing
+              </div>
+            </div>
+          </div>
+          <div className="rounded-full border border-blue-500/25 bg-blue-500/10 px-3 py-1 text-[10px] font-medium text-blue-500">
+            NREL API Connected
           </div>
         </div>
 
-        {/* Payback + IRR row */}
-        <div style={{ padding: "18px 28px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="mt-7">
           <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 10,
-              textAlign: "center" as const,
-            }}
+            className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400"
+            style={{ fontFamily: "'JetBrains Mono', monospace" }}
           >
-            {[
-              { label: "Payback", value: s.payback },
-              { label: "25-yr NPV", value: s.npv },
-              { label: "IRR", value: s.irr },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <div
-                  style={{
-                    fontSize: 26,
-                    fontWeight: 800,
-                    color: "rgba(255,255,255,0.92)",
-                    fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-                  }}
-                >
-                  {value}
+            Live Agent Telemetry
+          </div>
+          <div className="space-y-3">
+            {telemetryRows.map((row) => (
+              <div
+                key={`${row.type}-${row.location}`}
+                className={`flex items-center justify-between gap-4 rounded-xl border px-4 py-3 transition-all ${
+                  row.active
+                    ? "border-blue-500/45 bg-blue-500/12 shadow-[0_0_30px_rgba(37,99,235,0.16)]"
+                    : "border-white/[0.05] bg-black/18 opacity-55"
+                }`}
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <div
+                    className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
+                      row.active ? "bg-blue-500/20 text-blue-500" : "bg-white/[0.04] text-slate-500"
+                    }`}
+                  >
+                    <Building2 size={15} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-bold text-white">
+                      {row.type} <span className="text-[11px] text-slate-500">{row.location}</span>
+                    </div>
+                    <div
+                      className="truncate text-[11px] text-slate-500"
+                      style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                    >
+                      {row.status}
+                    </div>
+                  </div>
                 </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "rgba(255,255,255,0.35)",
-                    marginTop: 3,
-                    textTransform: "uppercase" as const,
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  {label}
+                <div className="shrink-0 text-right">
+                  <div className="text-sm font-bold text-blue-500">{row.savings}</div>
+                  <div className="text-[10px] text-slate-500">Est. Savings</div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Data sources */}
-        <div
-          style={{
-            padding: "11px 28px",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            flexWrap: "wrap" as const,
-          }}
-        >
-          <ShieldCheck size={11} style={{ color: "rgba(62,207,142,0.50)", flexShrink: 0 }} />
-          {s.sources.map((src, i) => (
-            <React.Fragment key={src}>
-              {i > 0 && <span style={{ fontSize: 9, color: "rgba(255,255,255,0.15)" }}>·</span>}
-              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", fontWeight: 500 }}>
-                {src}
-              </span>
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-      {/* end animated block */}
-
-      {/* Industry tabs — always visible, clickable */}
-      <div
-        style={{
-          display: "flex",
-          gap: 6,
-          padding: "12px 28px 16px",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-          background: "rgba(0,0,0,0.15)",
-          flexWrap: "wrap" as const,
-        }}
-      >
-        {SCENARIOS.map((sc, i) => (
-          <button
-            key={sc.industry}
-            onClick={() => {
-              setVisible(false);
-              setTimeout(() => {
-                setActiveIndex(i);
-                setVisible(true);
-              }, 200);
-            }}
-            style={{
-              fontSize: 11,
-              padding: "4px 12px",
-              borderRadius: 20,
-              border: "1px solid",
-              borderColor: i === activeIndex ? "rgba(234,179,8,0.45)" : "rgba(255,255,255,0.08)",
-              color: i === activeIndex ? "#EAB308" : "rgba(255,255,255,0.30)",
-              background: i === activeIndex ? "rgba(234,179,8,0.10)" : "transparent",
-              cursor: "pointer",
-              fontWeight: 600,
-              letterSpacing: "0.03em",
-              transition: "all 0.2s ease",
-            }}
-          >
-            {sc.industry}
-          </button>
-        ))}
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5 }}>
-          {SCENARIOS.map((_, i) => (
-            <div
-              key={i}
-              style={{
-                width: i === activeIndex ? 16 : 5,
-                height: 5,
-                borderRadius: 3,
-                background: i === activeIndex ? "#EAB308" : "rgba(255,255,255,0.12)",
-                transition: "all 0.3s ease",
-              }}
-            />
-          ))}
+        <div className="mt-7 rounded-xl border border-white/10 bg-white/[0.07] p-4 text-sm leading-relaxed text-slate-400">
+          <span className="font-bold text-slate-300">How MERLIN bypasses friction:</span> instead of
+          demanding weeks of electric bills and engineering site visits, MERLIN uses independent
+          tariff, solar, and facility benchmark data to estimate your energy structure instantly.
         </div>
       </div>
     </div>
   );
 }
 
-// HeroSection
 export default function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center overflow-hidden pt-16 bg-[#060D1F]"
+      className="relative flex min-h-screen items-center overflow-hidden bg-[#050608] pt-20 text-white"
     >
-      {/* Background grid */}
-      <div
-        className="absolute inset-0 opacity-[0.025]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(59,130,246,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.6) 1px, transparent 1px)",
-          backgroundSize: "64px 64px",
-        }}
-      />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_30%,rgba(62,207,142,0.07)_0%,transparent_70%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.018)_1px,transparent_1px)] bg-[size:72px_72px] opacity-35" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_62%,rgba(37,99,235,0.18),transparent_28%),radial-gradient(circle_at_74%_36%,rgba(16,185,129,0.12),transparent_32%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#050608] to-transparent" />
 
-      {/* Content */}
-      <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full py-10">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-10 items-center">
-          {/* Left: story + CTA */}
-          <div className="w-full">
-            {/* Problem framing badge */}
-            <div className="animate-fade-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-slate-400 text-[11px] font-medium tracking-wide mb-4">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              Energy costs are rising. Grid capacity is tightening.
-            </div>
-
-            {/* Headline — lead with the problem */}
-            <h1
-              className="animate-fade-up-delay-1 font-bold leading-[1.02] tracking-normal mb-4"
-              style={{
-                fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif",
-                fontSize: "clamp(48px, 6.5vw, 92px)",
-              }}
-            >
-              <span className="text-white">Energy costs are</span>
-              <br />
-              <span className="text-emerald-400">a business</span>
-              <br />
-              <span className="text-white">risk.</span>
-            </h1>
-
-            {/* Subheadline */}
-            <p
-              className="animate-fade-up-delay-1 text-[18px] text-slate-400 leading-relaxed mb-5"
-              style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif", fontWeight: 400 }}
-            >
-              Merlin analyzes your facilities, utility bills, tariffs, and site constraints to show
-              where energy is costing you money, where the grid may limit growth, and which solar,
-              storage, efficiency, or resilience projects are worth pursuing.
-            </p>
-
-            {/* What you get */}
-            <div className="animate-fade-up-delay-2 flex flex-col gap-2 mb-5">
-              {[
-                "Energy cost, demand-charge, and utility-rate exposure",
-                "Solar, storage, efficiency, backup power, and resilience options",
-                "CFO-ready Merlin Brief with blockers, savings, incentives, and next steps",
-              ].map((item) => (
-                <div key={item} className="flex items-start gap-2.5">
-                  <CheckCircle2 size={15} className="text-emerald-400/70 mt-0.5 flex-shrink-0" />
-                  <span
-                    className="text-[16px] text-slate-300"
-                    style={{ fontFamily: "'Outfit', sans-serif" }}
-                  >
-                    {item}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* CTAs — primary (facility owners) + secondary (EPCs) */}
-            <div className="animate-fade-up-delay-3 flex flex-col gap-3 mb-5">
-              {/* Primary — facility owner */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <a
-                  href="/wizard"
-                  className="group inline-flex items-center gap-3 px-7 py-4 rounded-2xl font-bold text-[16px] transition-all duration-200"
-                  style={{
-                    background: "transparent",
-                    color: "#EAB308",
-                    border: "1.5px solid #EAB308",
-                    boxShadow: "0 0 20px rgba(234,179,8,0.12)",
-                    fontFamily: "'Outfit', sans-serif",
-                    textDecoration: "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.boxShadow =
-                      "0 0 36px rgba(234,179,8,0.28)";
-                    (e.currentTarget as HTMLElement).style.background = "rgba(234,179,8,0.06)";
-                    (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.boxShadow =
-                      "0 0 20px rgba(234,179,8,0.12)";
-                    (e.currentTarget as HTMLElement).style.background = "transparent";
-                    (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                  }}
-                >
-                  <img src={SHIELD_GOLD} alt="TrueQuote" style={{ width: 20, height: 20 }} />
-                  Analyze My Energy Risk
-                  <ArrowRight
-                    size={17}
-                    className="group-hover:translate-x-0.5 transition-transform"
-                  />
-                </a>
-                <span
-                  className="text-[12px] text-slate-600"
-                  style={{ fontFamily: "'Outfit', sans-serif" }}
-                >
-                  Create a Merlin Brief · Identify cost, grid, and resilience exposure
-                </span>
-              </div>
-
-              {/* Secondary — EPC / integrator */}
-              <div className="flex items-center gap-3">
-                <a
-                  href="/widget"
-                  className="group inline-flex items-center gap-2 text-[13px] font-semibold transition-all duration-200"
-                  style={{
-                    color: "rgba(56,189,248,0.75)",
-                    fontFamily: "'Outfit', sans-serif",
-                    textDecoration: "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.color = "rgba(56,189,248,1)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.color = "rgba(56,189,248,0.75)";
-                  }}
-                >
-                  <span
-                    className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
-                    style={{ background: "rgba(56,189,248,0.12)", color: "rgba(56,189,248,0.9)" }}
-                  >
-                    EPC / Integrator
-                  </span>
-                  Build professional project quotes with ProQuote™
-                  <ArrowRight
-                    size={13}
-                    className="group-hover:translate-x-0.5 transition-transform"
-                  />
-                </a>
-              </div>
-            </div>
-
-            {/* Trust bar */}
-            <div className="animate-fade-up-delay-4">
-              <p className="text-[9px] text-slate-700 uppercase tracking-widest mb-1.5 font-semibold">
-                Built on trusted data sources
-              </p>
-              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                {trustItems.map((item) => (
-                  <span key={item} className="text-[11px] text-slate-600 flex items-center gap-1.5">
-                    <Zap size={9} className="text-emerald-500/40" />
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </div>
+      <div className="relative z-10 mx-auto grid w-full max-w-screen-2xl items-center gap-14 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:px-8 xl:px-12">
+        <div className="max-w-3xl">
+          <div className="mb-9 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-[12px] font-medium tracking-[0.12em] text-blue-500">
+            <Sparkles size={13} /> Independent B2B Energy Intelligence
           </div>
 
-          {/* Right: TrueQuote output mockup — show what they GET */}
-          <div className="hidden lg:flex flex-col items-start gap-3">
-            <div
-              className="text-[10px] font-semibold tracking-widest uppercase text-slate-600"
-              style={{ fontFamily: "'Outfit', sans-serif" }}
-            >
-              ↓ Example Merlin Energy Brief
+          <h1
+            className="text-5xl font-black leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl"
+            style={{ fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif" }}
+          >
+            Cut your business
+            <br />
+            <span className="bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+              energy bills
+            </span>{" "}
+            <span className="text-emerald-400/30">by 30%.</span>
+          </h1>
+
+          <p
+            className="mt-7 max-w-2xl text-lg leading-8 text-slate-400"
+            style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif" }}
+          >
+            Meet <span className="font-bold text-slate-200">MERLIN</span>, your autonomous Energy
+            Intelligence Agent. Give MERLIN 90 seconds, your ZIP, and your monthly bill. It maps
+            your facility against utility tariffs and solar data to build your savings blueprint.
+          </p>
+
+          <form
+            className="mt-9 flex max-w-xl flex-col gap-3 sm:flex-row"
+            onSubmit={(event) => {
+              event.preventDefault();
+              window.location.href = "/wizard";
+            }}
+          >
+            <label className="sr-only" htmlFor="hero-zip">
+              Facility ZIP Code
+            </label>
+            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-white/12 bg-white/[0.07] px-4 py-3.5 text-slate-400 shadow-inner shadow-black/20 transition focus-within:border-blue-500/70 focus-within:ring-4 focus-within:ring-blue-500/10">
+              <Building2 size={16} className="shrink-0 text-slate-500" />
+              <input
+                id="hero-zip"
+                type="text"
+                inputMode="numeric"
+                maxLength={5}
+                pattern="[0-9]{5}"
+                placeholder="Enter your facility's ZIP Code"
+                className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 outline-none"
+              />
             </div>
-            <TrueQuoteMockup />
-            <div
-              className="text-[10px] text-slate-700 text-center max-w-xs leading-relaxed"
-              style={{ fontFamily: "'Outfit', sans-serif" }}
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3.5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(37,99,235,0.3)] transition hover:-translate-y-0.5 hover:bg-blue-500"
             >
-              Example output for a 450-room hotel in Reno, NV. Merlin turns energy data into a
-              practical action plan for cost, grid exposure, resilience, and execution.
-            </div>
+              Activate MERLIN <ArrowRight size={16} />
+            </button>
+          </form>
+
+          <div className="mt-7 flex flex-wrap gap-x-7 gap-y-3">
+            {proofItems.map((item) => (
+              <div key={item} className="flex items-center gap-2 text-sm text-slate-400">
+                <CheckCircle2 size={15} className="text-blue-500" />
+                {item}
+              </div>
+            ))}
           </div>
         </div>
-      </div>
 
-      {/* Bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#060D1F] to-transparent" />
+        <AgentTelemetryPanel />
+      </div>
     </section>
   );
 }

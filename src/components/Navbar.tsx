@@ -1,12 +1,8 @@
-/* Merlin Energy — Navbar
-   Wired: TrueQuote → /wizard, ProQuote → /proquote
-          Sign In / Sign Up → AuthModal (defaultMode)
-          About Merlin → AboutMerlinModal */
+/* Merlin Energy — Navbar */
 
 import { useState, useEffect } from "react";
 import { Menu, X, LogOut, User, LayoutDashboard, FileText } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
-import { AboutMerlinModal } from "@/components/modals/AboutMerlinModal";
 import { authService } from "@/services/authService";
 
 const ADMIN_EMAILS = ["ugobe07@gmail.com", "admin@merlinenergy.net", "viewer@merlinenergy.net"];
@@ -16,7 +12,6 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
-  const [showAbout, setShowAbout] = useState(false);
   const [currentUser, setCurrentUser] = useState(authService.getCurrentUser());
   const isAdmin = !!currentUser && ADMIN_EMAILS.includes(currentUser.email);
 
@@ -38,21 +33,11 @@ export default function Navbar() {
     setShowAuth(true);
     setMobileOpen(false);
   };
-  const openSignUp = () => {
-    setAuthMode("signup");
-    setShowAuth(true);
-    setMobileOpen(false);
-  };
-  const openAbout = () => {
-    setShowAbout(true);
-    setMobileOpen(false);
-  };
 
   const navLinks = [
-    { label: "Products", href: "/#products" },
-    { label: "Industries", href: "/#industries" },
-    { label: "Platform", href: "/#platform" },
-    { label: "How It Works", href: "/#workflow" },
+    { label: "Grid Exposure", href: "/#grid-exposure" },
+    { label: "How MERLIN Works", href: "/#workflow" },
+    { label: "Why Independent", href: "/#platform" },
     { label: "Pricing", href: "/pricing" },
   ];
 
@@ -61,20 +46,28 @@ export default function Navbar() {
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-[#060D1F]/92 backdrop-blur-md border-b border-white/[0.06]"
-            : "bg-transparent"
+            ? "bg-[#050608]/92 backdrop-blur-md border-b border-white/[0.06]"
+            : "bg-[#050608]/82 backdrop-blur-sm border-b border-white/[0.04]"
         }`}
       >
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 w-full">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <a href="/" className="flex items-center group">
+            <a href="/" className="flex items-center gap-3 group">
               <img
-                src="/truequote-logo.svg"
-                alt="TrueQuote — Verified Energy Quotes"
-                className="h-10 w-auto object-contain transition-opacity duration-200 group-hover:opacity-90"
-                style={{ minWidth: 160 }}
+                src="/merlin-icon.png"
+                alt="MERLIN"
+                className="h-8 w-8 rounded-md object-contain transition-opacity duration-200 group-hover:opacity-90"
               />
+              <span
+                className="text-lg font-black tracking-[-0.02em] text-white"
+                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              >
+                MERLIN
+              </span>
+              <span className="rounded-full border border-blue-500/35 bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium tracking-[0.14em] text-blue-500">
+                AGENT V2.4
+              </span>
             </a>
 
             {/* Center nav — desktop */}
@@ -89,13 +82,6 @@ export default function Navbar() {
                   {link.label}
                 </a>
               ))}
-              <button
-                onClick={openAbout}
-                className="px-4 py-2 text-sm text-slate-400 hover:text-white rounded-md hover:bg-white/[0.05] transition-all duration-200 font-medium"
-                style={{ fontFamily: "'Manrope', sans-serif" }}
-              >
-                About
-              </button>
             </nav>
 
             {/* Right nav — desktop */}
@@ -151,14 +137,13 @@ export default function Navbar() {
                   >
                     Sign In
                   </button>
-                  {/* Sign Up */}
-                  <button
-                    onClick={openSignUp}
-                    className="text-sm font-semibold text-slate-300 hover:text-white border border-white/25 hover:border-white/50 px-4 py-2 rounded-lg transition-all duration-200"
+                  <a
+                    href="/wizard"
+                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(37,99,235,0.28)] transition-all duration-200 hover:bg-blue-500"
                     style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                   >
-                    Sign Up
-                  </button>
+                    Activate Agent
+                  </a>
                 </>
               )}
             </div>
@@ -187,13 +172,6 @@ export default function Navbar() {
                 {link.label}
               </a>
             ))}
-            <button
-              onClick={openAbout}
-              className="block w-full text-left py-3 text-slate-300 hover:text-white text-sm font-medium border-b border-white/[0.04]"
-              style={{ fontFamily: "'Manrope', sans-serif" }}
-            >
-              About
-            </button>
             <div className="pt-4 flex flex-col gap-3">
               <button
                 onClick={openSignIn}
@@ -202,13 +180,13 @@ export default function Navbar() {
               >
                 Sign In
               </button>
-              <button
-                onClick={openSignUp}
-                className="px-4 py-2.5 rounded-lg text-sm font-semibold text-slate-300 border border-white/25 text-center"
+              <a
+                href="/wizard"
+                className="rounded-lg bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
                 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
               >
-                Sign Up
-              </button>
+                Activate Agent
+              </a>
             </div>
           </div>
         )}
@@ -220,16 +198,6 @@ export default function Navbar() {
         onClose={() => setShowAuth(false)}
         onLoginSuccess={() => setShowAuth(false)}
         defaultMode={authMode}
-      />
-
-      {/* About Merlin Modal */}
-      <AboutMerlinModal
-        isOpen={showAbout}
-        onClose={() => setShowAbout(false)}
-        onStartQuote={() => {
-          setShowAbout(false);
-          window.location.href = "/wizard";
-        }}
       />
     </>
   );
