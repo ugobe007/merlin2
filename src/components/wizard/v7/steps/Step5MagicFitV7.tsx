@@ -531,9 +531,9 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                     Applying your solar, storage and generator selections
                   </p>
                   <div className="mt-4 flex gap-1.5 justify-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60 animate-bounce [animation-delay:0ms]" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60 animate-bounce [animation-delay:150ms]" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60 animate-bounce [animation-delay:300ms]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400/70 animate-bounce [animation-delay:0ms]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-violet-400/70 animate-bounce [animation-delay:150ms]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-300/70 animate-bounce [animation-delay:300ms]" />
                   </div>
                 </>
               ) : (
@@ -642,7 +642,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         {goalModifiers.goalHints.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {goalModifiers.goalHints.map((hint, idx) => (
-              <span key={idx} className="text-xs text-[#3ECF8E]/80">
+              <span key={idx} className="text-xs text-violet-300/85">
                 {hint}
               </span>
             ))}
@@ -694,35 +694,35 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
               className={`
                 relative rounded-xl border-2 transition-all duration-300 cursor-pointer overflow-hidden
                 ${tier.config.cardBorder} ${tier.config.cardBg}
-                ${isSelected ? "ring-2 ring-[#3ECF8E]/50" : ""}
-                ${isRecommended && !isSelected ? "ring-1 ring-[#3ECF8E]/20" : ""}
+                ${isSelected ? "ring-2 ring-blue-400/50" : ""}
+                ${isRecommended && !isSelected ? "ring-1 ring-violet-400/20" : ""}
               `}
               onClick={() => handleSelectTier(tier.tierKey)}
             >
               {/* Recommended Badge */}
               {isRecommended && (
-                <div className="absolute -top-px left-0 right-0 h-1 bg-[#3ECF8E]" />
+                <div className="absolute -top-px left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-violet-400 to-blue-300" />
               )}
 
               <div className="p-5">
                 {/* Recommended tag */}
                 {isRecommended && (
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#3ECF8E]/10 border border-[#3ECF8E]/25 rounded-full text-[#3ECF8E] text-[11px] font-semibold mb-3">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 border border-blue-400/25 rounded-full text-blue-300 text-[11px] font-semibold mb-3">
                     Recommended
                   </div>
                 )}
 
                 {/* Selected Checkmark */}
                 {isSelected && (
-                  <div className="absolute top-4 right-4 w-7 h-7 border-2 border-[#3ECF8E] rounded-full flex items-center justify-center">
-                    <Check className="w-4 h-4 text-[#3ECF8E]" />
+                  <div className="absolute top-4 right-4 w-7 h-7 border-2 border-blue-400 rounded-full flex items-center justify-center bg-violet-500/10">
+                    <Check className="w-4 h-4 text-blue-300" />
                   </div>
                 )}
 
                 {/* TrueQuote verified label */}
                 <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mb-2">
-                  <Shield className="w-3 h-3 text-amber-500" />
-                  <span className="text-amber-400 font-semibold">TrueQuote™</span>
+                  <Shield className="w-3 h-3 text-violet-400" />
+                  <span className="text-violet-300 font-semibold">TrueQuote™</span>
                   <span>verified</span>
                 </div>
 
@@ -733,7 +733,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                 <p className="text-slate-500 text-xs font-medium mb-4">{tier.config.tagline}</p>
 
                 {/* Annual Savings - HERO */}
-                <div className="mb-4 p-3 bg-white/[0.04] rounded-xl border border-white/[0.06]">
+                <div className="mb-4 p-3 bg-blue-500/[0.05] rounded-xl border border-blue-400/[0.14]">
                   <div className="text-slate-500 text-[11px] font-semibold uppercase tracking-widest mb-1">
                     Annual Savings
                   </div>
@@ -826,7 +826,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                         </div>
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-400">Federal ITC</span>
-                          <span className="text-green-400 font-semibold tabular-nums">
+                          <span className="text-violet-300 font-semibold tabular-nums">
                             −{formatCurrency(itc)}
                           </span>
                         </div>

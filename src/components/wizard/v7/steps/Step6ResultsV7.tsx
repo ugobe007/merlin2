@@ -92,7 +92,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
 
   // Country for international currency display
   const countryCode = state.countryCode || state.location?.countryCode || "US";
-  const _currencyInfo = SUPPORTED_COUNTRIES.find(c => c.code === countryCode);
+  const _currencyInfo = SUPPORTED_COUNTRIES.find((c) => c.code === countryCode);
 
   // Badge tier resolution — deterministic, used for badge display decisions
   const _badgeResult = useMemo(
@@ -136,7 +136,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
             <span className="text-sm">{locLine}</span>
           </div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2.5">
-            <Zap className="w-5 h-5 text-[#3ECF8E]" />
+            <Zap className="w-5 h-5 text-blue-300" />
             Your Energy Quote
           </h1>
         </div>
@@ -351,35 +351,41 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
           className="relative rounded-xl overflow-hidden"
           style={{
             boxShadow:
-              "0 0 0 1px rgba(52,211,153,0.14), 0 0 50px rgba(52,211,153,0.12), 0 8px 32px rgba(0,0,0,0.35)",
+              "0 0 0 1px rgba(79,140,255,0.20), 0 0 46px rgba(79,140,255,0.16), 0 8px 32px rgba(0,0,0,0.35)",
           }}
         >
-          <div className="absolute inset-0" style={{ background: "rgba(52,211,153,0.025)" }} />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: "linear-gradient(180deg, rgba(79,140,255,0.08), rgba(139,92,246,0.05))",
+            }}
+          />
 
           <div
             className="relative p-8 rounded-xl"
             style={{
-              border: "2px solid rgba(52,211,153,0.40)",
-              background: "rgba(52,211,153,0.03)",
+              border: "2px solid rgba(79,140,255,0.36)",
+              background:
+                "linear-gradient(180deg, rgba(10,18,36,0.88) 0%, rgba(19,24,44,0.78) 100%)",
             }}
           >
             <div className="text-center">
               <div
                 className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4"
                 style={{
-                  background: "rgba(62,207,142,0.12)",
-                  border: "1px solid rgba(62,207,142,0.38)",
-                  boxShadow: "0 0 18px rgba(62,207,142,0.18)",
+                  background: "rgba(79,140,255,0.12)",
+                  border: "1px solid rgba(79,140,255,0.36)",
+                  boxShadow: "0 0 18px rgba(79,140,255,0.16)",
                 }}
               >
-                <div className="w-2 h-2 bg-[#3ECF8E] rounded-full animate-pulse" />
-                <span className="text-[#3ECF8E] font-semibold text-xs uppercase tracking-wider">
+                <div className="w-2 h-2 bg-violet-400 rounded-full animate-pulse" />
+                <span className="text-blue-200 font-semibold text-xs uppercase tracking-wider">
                   Projected Annual Savings
                 </span>
               </div>
               <div
-                className="text-5xl md:text-6xl font-bold text-[#3ECF8E] leading-none"
-                style={{ textShadow: "0 0 40px rgba(62,207,142,0.40)" }}
+                className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-300 via-violet-300 to-blue-200 bg-clip-text text-transparent leading-none"
+                style={{ textShadow: "0 0 40px rgba(79,140,255,0.24)" }}
               >
                 {fmtUSD(quote.annualSavingsUSD as number | null)}
               </div>
@@ -387,10 +393,10 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
 
               {quote.roiYears != null && Number(quote.roiYears) > 0 && (
                 <div className="mt-5 inline-flex items-center gap-4 px-5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                  <TrendingUp className="w-4 h-4 text-[#3ECF8E]" />
+                  <TrendingUp className="w-4 h-4 text-blue-300" />
                   <span className="text-sm text-slate-300">
                     Payback in{" "}
-                    <strong className="text-[#3ECF8E]">
+                    <strong className="text-violet-300">
                       {parseFloat(Number(quote.roiYears).toFixed(1))} years
                     </strong>
                   </span>
@@ -404,7 +410,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                         <>
                           <span className="text-slate-600">|</span>
                           <span className="text-sm text-slate-300">
-                            IRR <strong className="text-[#3ECF8E]">{pct.toFixed(1)}%</strong>
+                            IRR <strong className="text-blue-300">{pct.toFixed(1)}%</strong>
                           </span>
                         </>
                       );
@@ -576,8 +582,8 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
               )}
 
               {quote.peakLoadKW && (
-                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                  <Zap className="w-3.5 h-3.5 text-emerald-400" />
+                <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                  <Zap className="w-3.5 h-3.5 text-blue-300" />
                   <div className="flex flex-col">
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider">
                       Peak
@@ -594,8 +600,8 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
           <div className="p-4 bg-gradient-to-br from-slate-800/30 to-slate-900/30">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-emerald-500/10 flex items-center justify-center">
-                  <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                <div className="w-6 h-6 rounded-md bg-blue-500/10 flex items-center justify-center">
+                  <TrendingUp className="w-3.5 h-3.5 text-blue-300" />
                 </div>
                 <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
                   Financials
@@ -630,7 +636,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                         : "30%"}
                       )
                     </span>
-                    <span className="text-sm font-semibold text-emerald-400 tabular-nums">
+                    <span className="text-sm font-semibold text-violet-300 tabular-nums">
                       −
                       {fmtUSD(
                         quote.itcAmount != null
@@ -645,7 +651,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
             {/* NET COST — hero row with visible separator */}
             {quote.capexUSD != null && Number(quote.capexUSD) > 0 && (
               <div className="flex items-baseline justify-between py-2 border-t border-b border-white/[0.10] my-1.5">
-                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-blue-300 uppercase tracking-widest">
                   Net Cost
                 </span>
                 <span className="text-xl font-black text-white tabular-nums tracking-tight">
@@ -664,7 +670,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
               {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
                 <div className="flex items-center justify-between py-1.5">
                   <span className="text-xs text-slate-400">Annual Savings</span>
-                  <span className="text-sm font-semibold text-emerald-400 tabular-nums">
+                  <span className="text-sm font-semibold text-blue-300 tabular-nums">
                     {fmtUSD(quote.annualSavingsUSD as number | null)}
                   </span>
                 </div>
@@ -691,7 +697,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                       if (quote.irr == null) return "text-slate-400";
                       const raw = Number(quote.irr);
                       const pct = raw > 1 ? raw : raw * 100;
-                      return pct >= 8 ? "text-emerald-400" : "text-amber-400";
+                      return pct >= 8 ? "text-blue-300" : "text-amber-400";
                     })()}`}
                   >
                     {(() => {
@@ -710,7 +716,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                 <div className="flex items-center justify-between py-1.5">
                   <span className="text-xs text-slate-400">NPV (25yr)</span>
                   <span
-                    className={`text-sm font-semibold tabular-nums ${Number(quote.npv) >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                    className={`text-sm font-semibold tabular-nums ${Number(quote.npv) >= 0 ? "text-blue-300" : "text-red-400"}`}
                   >
                     {fmtUSD(quote.npv as number | null)}
                   </span>
@@ -729,7 +735,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
               {quote.annualSavingsUSD != null && Number(quote.annualSavingsUSD) > 0 && (
                 <div className="flex items-center justify-between py-1.5">
                   <span className="text-xs text-slate-400">10yr Cumulative</span>
-                  <span className="text-sm font-semibold text-emerald-400 tabular-nums">
+                  <span className="text-sm font-semibold text-blue-300 tabular-nums">
                     {fmtUSD(Number(quote.annualSavingsUSD) * 10)}
                   </span>
                 </div>
@@ -755,7 +761,6 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         </div>
       )}
 
-
       {/* UNIT ECONOMICS — $/kW and $/kWh ground truth */}
       {quoteReady &&
         quote.equipmentCosts &&
@@ -763,8 +768,8 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
           <div className="border border-white/[0.06] rounded-lg overflow-hidden">
             <div className="p-3">
               <div className="flex items-center gap-1.5 mb-2">
-                <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-[11px] font-semibold text-emerald-400/80 uppercase tracking-wider">
+                <DollarSign className="w-3.5 h-3.5 text-blue-400" />
+                <span className="text-[11px] font-semibold text-blue-300/80 uppercase tracking-wider">
                   Unit Economics
                 </span>
                 <span className="ml-auto text-[10px] text-slate-600 font-medium">Ground Truth</span>
@@ -854,7 +859,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
               {quote.equipmentCosts.batteryCost != null && (
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-2">
-                    <Battery className="w-3.5 h-3.5 text-emerald-400" />
+                    <Battery className="w-3.5 h-3.5 text-blue-300" />
                     <span className="text-xs text-slate-300">Battery Storage</span>
                   </div>
                   <div className="text-right">
@@ -1027,7 +1032,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                           </div>
                           <div className="mt-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
                             <div
-                              className="h-full rounded-full bg-[#3ECF8E]/40"
+                              className="h-full rounded-full bg-blue-400/40"
                               style={{ width: `${Math.min(c.pct * 100, 100)}%` }}
                             />
                           </div>
@@ -1118,10 +1123,10 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
           <button
             type="button"
             onClick={() => setShowProQuoteModal(true)}
-            className="flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl border-2 border-[#3ECF8E]/30 bg-[#3ECF8E]/[0.06] hover:border-[#3ECF8E]/50 hover:bg-[#3ECF8E]/[0.12] transition-all w-full sm:w-auto sm:shrink-0 group"
+            className="flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl border-2 border-blue-400/30 bg-blue-500/[0.08] hover:border-violet-400/50 hover:bg-violet-500/[0.12] transition-all w-full sm:w-auto sm:shrink-0 group"
           >
-            <Sparkles className="w-4 h-4 text-[#3ECF8E]" />
-            <span className="text-sm font-bold text-[#3ECF8E] tracking-wide">Open ProQuote™</span>
+            <Sparkles className="w-4 h-4 text-violet-300" />
+            <span className="text-sm font-bold text-blue-200 tracking-wide">Open ProQuote™</span>
           </button>
         </div>
       </div>

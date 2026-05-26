@@ -171,7 +171,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
     return () => {
       if (zipDebounceRef.current) clearTimeout(zipDebounceRef.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [normalizedZip, isValidZip]);
 
   const handleBusinessLookup = async () => {
@@ -269,7 +269,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
           <span
             className="merlin-gradient-text"
             style={{
-              background: "linear-gradient(135deg, #4F8CFF 0%, #22D3EE 50%, #06B6D4 100%)",
+              background: "linear-gradient(135deg, #4F8CFF 0%, #8B5CF6 56%, #7C3AED 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -328,7 +328,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                 width: 8,
                 height: 8,
                 borderRadius: "50%",
-                background: "#4ade80",
+                background: "#4F8CFF",
                 flexShrink: 0,
               }}
             />
@@ -345,7 +345,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                 <span style={{ color: "rgba(232, 235, 243, 0.35)", margin: "0 4px" }}>,</span>
               )}
               {state.location.state && (
-                <span style={{ color: "#3ECF8E" }}>{state.location.state}</span>
+                <span style={{ color: "#8B5CF6" }}>{state.location.state}</span>
               )}
             </span>
           </div>
@@ -383,10 +383,13 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                 borderRadius: 8,
                 border:
                   country === "US"
-                    ? "1px solid rgba(62,207,142,0.45)"
+                    ? "1px solid rgba(79,140,255,0.55)"
                     : "1px solid rgba(255,255,255,0.08)",
-                background: country === "US" ? "rgba(62,207,142,0.10)" : "rgba(255,255,255,0.03)",
-                color: country === "US" ? "#3ECF8E" : "rgba(232,235,243,0.70)",
+                background:
+                  country === "US"
+                    ? "linear-gradient(135deg, rgba(79,140,255,0.14), rgba(139,92,246,0.10))"
+                    : "rgba(255,255,255,0.03)",
+                color: country === "US" ? "#BFDBFE" : "rgba(232,235,243,0.70)",
                 fontWeight: 600,
                 cursor: "pointer",
                 fontSize: 14,
@@ -403,11 +406,13 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                 borderRadius: 8,
                 border:
                   country === "International"
-                    ? "1px solid rgba(62,207,142,0.45)"
+                    ? "1px solid rgba(79,140,255,0.55)"
                     : "1px solid rgba(255,255,255,0.08)",
                 background:
-                  country === "International" ? "rgba(62,207,142,0.10)" : "rgba(255,255,255,0.03)",
-                color: country === "International" ? "#3ECF8E" : "rgba(232,235,243,0.70)",
+                  country === "International"
+                    ? "linear-gradient(135deg, rgba(79,140,255,0.14), rgba(139,92,246,0.10))"
+                    : "rgba(255,255,255,0.03)",
+                color: country === "International" ? "#BFDBFE" : "rgba(232,235,243,0.70)",
                 fontWeight: 600,
                 cursor: "pointer",
                 fontSize: 14,
@@ -428,7 +433,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                     top: "50%",
                     transform: "translateY(-50%)",
                     fontSize: 18,
-                    color: "rgba(62, 207, 142, 0.4)",
+                    color: "rgba(79, 140, 255, 0.45)",
                   }}
                 >
                   ◎
@@ -466,7 +471,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                     borderRadius: 8,
                     border: "1px solid rgba(255, 255, 255, 0.06)",
                     background:
-                      "linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1))",
+                      "linear-gradient(135deg, rgba(79, 140, 255, 0.12), rgba(139, 92, 246, 0.10))",
                     fontSize: 18,
                     color: "rgba(232, 235, 243, 0.95)",
                     outline: "none",
@@ -486,9 +491,12 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                   border:
                     !isValidZip || state.isBusy
                       ? "2px solid rgba(255, 255, 255, 0.08)"
-                      : "2px solid #3ECF8E",
-                  background: "transparent",
-                  color: !isValidZip || state.isBusy ? "rgba(232, 235, 243, 0.25)" : "#3ECF8E",
+                      : "2px solid #4F8CFF",
+                  background:
+                    !isValidZip || state.isBusy
+                      ? "transparent"
+                      : "linear-gradient(135deg, rgba(79,140,255,0.10), rgba(139,92,246,0.10))",
+                  color: !isValidZip || state.isBusy ? "rgba(232, 235, 243, 0.25)" : "#BFDBFE",
                   fontSize: 14,
                   fontWeight: 600,
                   cursor: !isValidZip || state.isBusy ? "not-allowed" : "pointer",
@@ -507,8 +515,8 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                 flex: 1,
                 borderRadius: 8,
                 padding: "12px 16px",
-                background: "rgba(62, 207, 142, 0.06)",
-                border: "1px solid rgba(62, 207, 142, 0.20)",
+                background: "linear-gradient(135deg, rgba(79,140,255,0.08), rgba(15,23,42,0.55))",
+                border: "1px solid rgba(79,140,255,0.24)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -516,7 +524,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ color: "#3ECF8E", fontWeight: 600 }}>✓</span>
+                <span style={{ color: "#8B5CF6", fontWeight: 600 }}>✓</span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(232,235,243,0.92)" }}>
                     Location confirmed
@@ -542,8 +550,8 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                 style={{
                   padding: "6px 12px",
                   borderRadius: 8,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(79,140,255,0.24)",
+                  background: "rgba(79,140,255,0.08)",
                   color: "rgba(232,235,243,0.60)",
                   fontSize: 12,
                   fontWeight: 500,
@@ -577,7 +585,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                background: "rgba(62, 207, 142, 0.10)",
+                background: "linear-gradient(135deg, rgba(79,140,255,0.14), rgba(139,92,246,0.12))",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -589,7 +597,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                 height="18"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#3ECF8E"
+                stroke="#4F8CFF"
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -681,7 +689,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                 padding: "0 14px",
                 borderRadius: 8,
                 border: "1px solid rgba(255, 255, 255, 0.06)",
-                background: "rgba(255, 255, 255, 0.04)",
+                background: "rgba(15, 23, 42, 0.72)",
                 fontSize: 14,
                 color: "rgba(232, 235, 243, 0.95)",
                 outline: "none",
@@ -722,7 +730,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                 padding: "0 14px",
                 borderRadius: 8,
                 border: "1px solid rgba(255, 255, 255, 0.06)",
-                background: "rgba(255, 255, 255, 0.04)",
+                background: "rgba(15, 23, 42, 0.72)",
                 fontSize: 14,
                 color: "rgba(232, 235, 243, 0.95)",
                 outline: "none",
@@ -745,9 +753,9 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
               background:
                 isResolvingBusiness || !businessValue.trim()
                   ? "rgba(255, 255, 255, 0.04)"
-                  : "#3ECF8E",
+                  : "linear-gradient(135deg, #4F8CFF 0%, #8B5CF6 100%)",
               color:
-                isResolvingBusiness || !businessValue.trim() ? "rgba(232, 235, 243, 0.25)" : "#000",
+                isResolvingBusiness || !businessValue.trim() ? "rgba(232, 235, 243, 0.25)" : "#fff",
               fontSize: 14,
               fontWeight: 600,
               cursor: isResolvingBusiness || !businessValue.trim() ? "not-allowed" : "pointer",
@@ -799,7 +807,8 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                   width: 32,
                   height: 32,
                   borderRadius: 10,
-                  background: "rgba(62, 207, 142, 0.12)",
+                  background:
+                    "linear-gradient(135deg, rgba(79,140,255,0.14), rgba(139,92,246,0.12))",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -810,7 +819,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                 ✓
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#3ECF8E" }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#BFDBFE" }}>
                   Industry detected:{" "}
                   {state.industry
                     ? state.industry.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
@@ -854,9 +863,10 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                 style={{
                   padding: "10px 20px",
                   borderRadius: 8,
-                  border: "2px solid #3ECF8E",
-                  background: "transparent",
-                  color: "#3ECF8E",
+                  border: "2px solid #4F8CFF",
+                  background:
+                    "linear-gradient(135deg, rgba(79,140,255,0.10), rgba(139,92,246,0.10))",
+                  color: "#BFDBFE",
                   fontWeight: 600,
                   fontSize: 14,
                   cursor: "pointer",
@@ -865,10 +875,12 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                   flexShrink: 0,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(62, 207, 142, 0.1)";
+                  e.currentTarget.style.background =
+                    "linear-gradient(135deg, rgba(79,140,255,0.18), rgba(139,92,246,0.16))";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.background =
+                    "linear-gradient(135deg, rgba(79,140,255,0.10), rgba(139,92,246,0.10))";
                 }}
               >
                 Set Goals
@@ -886,7 +898,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                 gap: 10,
               }}
             >
-              <span style={{ color: "#3ECF8E", fontWeight: 600, fontSize: 14 }}>✓</span>
+              <span style={{ color: "#8B5CF6", fontWeight: 600, fontSize: 14 }}>✓</span>
               <span style={{ fontSize: 13, color: "rgba(232, 235, 243, 0.7)" }}>
                 Goals set — ready to continue
               </span>
@@ -897,7 +909,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
                   marginLeft: "auto",
                   background: "none",
                   border: "none",
-                  color: "rgba(62, 207, 142, 0.7)",
+                  color: "rgba(147, 197, 253, 0.78)",
                   fontSize: 12,
                   fontWeight: 700,
                   cursor: "pointer",
