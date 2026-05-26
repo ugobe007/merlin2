@@ -332,7 +332,9 @@ function AgentTelemetryPanel() {
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="text-sm font-bold text-blue-500">{row.savings}</div>
+                  <div className="text-sm font-bold bg-gradient-to-r from-purple-400 to-violet-400 bg-clip-text text-transparent">
+                    {row.savings}
+                  </div>
                   <div className="text-[10px] text-slate-500 group-hover:text-slate-400">
                     {row.payback}
                   </div>
@@ -379,10 +381,10 @@ export default function HeroSection() {
           >
             Reduce business
             <br />
-            <span className="text-cyan-300 drop-shadow-[0_0_22px_rgba(34,211,238,0.28)]">
+            <span className="bg-gradient-to-r from-cyan-300 to-emerald-400 bg-clip-text text-transparent drop-shadow-[0_0_22px_rgba(34,211,238,0.28)]">
               energy bills
             </span>{" "}
-            <span className="inline-block whitespace-nowrap text-[1.05em] text-purple-300 drop-shadow-[0_0_26px_rgba(168,85,247,0.32)]">
+            <span className="inline-block whitespace-nowrap text-[1.05em] bg-gradient-to-r from-purple-600 via-purple-400 to-violet-400 bg-clip-text text-transparent drop-shadow-[0_0_26px_rgba(168,85,247,0.32)]">
               by 30%.
             </span>
           </h1>

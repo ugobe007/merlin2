@@ -394,7 +394,7 @@ export default function IndustriesSection() {
                     Annual Savings
                   </div>
                   <div
-                    className="text-2xl font-extrabold text-emerald-400 tabular-nums"
+                    className="text-2xl font-extrabold bg-gradient-to-r from-purple-400 to-violet-400 bg-clip-text text-transparent tabular-nums"
                     style={{ fontFamily: "'JetBrains Mono', monospace" }}
                   >
                     {resultsVisible ? (
