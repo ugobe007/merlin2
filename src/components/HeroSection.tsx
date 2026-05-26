@@ -6,11 +6,9 @@ import {
   Building2,
   CheckCircle2,
   DatabaseZap,
-  Factory,
   Hotel,
   Plane,
   Sparkles,
-  Store,
   X,
   Zap,
 } from "lucide-react";
@@ -66,37 +64,6 @@ const telemetryRows: UseCase[] = [
     risk: "Demand spikes can erase margin on high-volume wash days.",
     brief:
       "MERLIN compares solar-only, solar + storage, and load-control paths before a vendor proposal.",
-  },
-  {
-    type: "Manufacturing",
-    location: "Grand Rapids, MI",
-    status: "Sizing 150 kWh BESS system...",
-    savings: "$42,100/yr",
-    active: false,
-    Icon: Factory,
-    opportunity:
-      "Process loads, compressed air, and shift schedules create repeatable patterns MERLIN can model quickly.",
-    modeledAssets: [
-      "Shift-based load model",
-      "BESS demand management",
-      "Solar + resilience sizing",
-    ],
-    risk: "A single production peak can set the billing demand for the entire month.",
-    brief: "MERLIN helps operators separate energy savings, resiliency value, and project ROI.",
-  },
-  {
-    type: "Supermarket",
-    location: "Dallas, TX",
-    status: "Applying IRA Section 48 ITC...",
-    savings: "$28,700/yr",
-    active: false,
-    Icon: Store,
-    opportunity:
-      "Refrigeration, HVAC, lighting, and spoilage risk make energy strategy a margin and resilience issue.",
-    modeledAssets: ["Refrigeration baseload", "Solar self-consumption", "Backup storage runtime"],
-    risk: "Grid interruptions can turn energy exposure into inventory loss.",
-    brief:
-      "MERLIN models savings plus backup value so the CFO can compare economics and risk reduction.",
   },
   {
     type: "Airport",
