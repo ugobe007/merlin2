@@ -39,12 +39,14 @@ import {
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import TrueQuoteFinancialModal from "@/components/wizard/v7/shared/TrueQuoteFinancialModal";
 import { buildV8ExportData } from "../utils/buildV8ExportData";
+import { prepareWizardHandoff } from "../types/wizardStateConverter";
 import { exportQuoteAsPDF, exportQuoteAsWord, exportQuoteAsExcel } from "@/utils/quoteExportUtils";
 import {
   isUserAuthenticated,
   peekQuotaRemaining,
   trackQuoteGenerated,
 } from "@/services/subscriptionService";
+import { trackWizardEvent } from "@/services/analyticsService";
 import { supabase } from "@/services/supabaseClient";
 import type { Json } from "@/types/database.types";
 import AuthModal from "@/components/AuthModal";
@@ -237,12 +239,12 @@ interface StatItemProps {
 
 function StatItem({ icon, label, value, accent }: StatItemProps) {
   return (
-    <div className="flex items-center gap-2 whitespace-nowrap">
+    <div className="flex flex-wrap items-center gap-2 min-w-0">
       <span className={accent || "text-slate-500"}>{icon}</span>
       <span className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
         {label}
       </span>
-      <span className="text-sm font-bold text-slate-100 tabular-nums">{value}</span>
+      <span className="text-sm font-bold text-slate-100 tabular-nums break-all">{value}</span>
     </div>
   );
 }
@@ -447,6 +449,67 @@ export default function Step5V8({ state, actions }: Props) {
     };
     sessionStorage.setItem("merlin_rfp_context", JSON.stringify(ctx));
     window.location.href = "/build-rfp";
+  }, [state]);
+
+  // ── NAVIGATE TO PROQUOTE WITH WIZARD HANDOFF ─────────────────────────
+  const openProQuotePage = useCallback(() => {
+    const selectedTier =
+      state.tiers && state.selectedTierIndex !== null ? state.tiers[state.selectedTierIndex] : null;
+
+    if (!selectedTier) {
+      void trackWizardEvent("proquote_handoff_failed", {
+        reason: "missing_selected_tier",
+        step: state.step,
+      });
+      setExportError("ProQuote handoff failed — no selected tier available.");
+      return;
+    }
+
+    const sessionId = crypto.randomUUID();
+    const handoff = prepareWizardHandoff(state, sessionId);
+
+    if (!handoff.success || !handoff.export) {
+      void trackWizardEvent("proquote_handoff_failed", {
+        reason: handoff.errors?.join(";") || "unknown",
+        step: state.step,
+      });
+      setExportError(handoff.errors?.join(" ") || "ProQuote handoff failed.");
+      return;
+    }
+
+    // Canonical Phase 4 handoff payload
+    sessionStorage.setItem("merlin_wizard_handoff_v1", JSON.stringify(handoff.export));
+
+    // Backward-compatible config consumed by existing ProQuote hook
+    sessionStorage.setItem(
+      "advancedBuilderConfig",
+      JSON.stringify({
+        batteryKW: selectedTier.bessKW ?? 0,
+        durationHours: selectedTier.durationHours ?? 2,
+        solarKW: selectedTier.solarKW ?? 0,
+        generatorKW: selectedTier.generatorKW ?? 0,
+        state: state.location?.state ?? "",
+        electricityRate: state.intel?.utilityRate ?? 0,
+        selectedIndustry: state.industry ?? "commercial",
+      })
+    );
+
+    const params = new URLSearchParams({
+      mode: "custom-config",
+      source: "wizard-v8",
+      systemSizeKW: String(Math.max(0, selectedTier.bessKW ?? 0)),
+      durationHours: String(Math.max(1, selectedTier.durationHours ?? 2)),
+    });
+
+    void trackWizardEvent("proquote_handoff_success", {
+      selectedTier: selectedTier.label,
+      bessKW: selectedTier.bessKW,
+      bessKWh: selectedTier.bessKWh,
+      annualSavings: selectedTier.annualSavings,
+      netCost: selectedTier.netCost,
+    });
+
+    window.location.href = `/pro-quote?${params.toString()}`;
   }, [state]);
 
   // ── SOCIAL MEDIA SHARING (needs tier data from below, so this will be moved after validation) ────
@@ -2514,7 +2577,8 @@ export default function Step5V8({ state, actions }: Props) {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => {
-                    window.location.href = "/pro-quote";
+                    setShowProQuoteModal(false);
+                    openProQuotePage();
                   }}
                   className="flex-1 py-2.5 rounded-lg bg-[#3ECF8E] text-slate-900 font-bold hover:bg-[#2aad70] transition-colors"
                 >

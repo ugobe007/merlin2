@@ -9,7 +9,12 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { getDashboardStats, type DailyCount, type DashboardStats, type TopItem } from "@/services/analyticsService";
+import {
+  getDashboardStats,
+  type DailyCount,
+  type DashboardStats,
+  type TopItem,
+} from "@/services/analyticsService";
 
 // ── Auth gate ─────────────────────────────────────────────────────────────────
 async function checkAuth(email: string, password: string): Promise<boolean> {
@@ -35,9 +40,11 @@ function Sparkline({
   const max = Math.max(...vals, 1);
   const pts = vals.map((v, i) => [
     PAD + (i / (vals.length - 1)) * (W - PAD * 2),
-    H - PAD - ((v / max) * (H - PAD * 2)),
+    H - PAD - (v / max) * (H - PAD * 2),
   ]);
-  const path = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+  const path = pts
+    .map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`)
+    .join(" ");
   const fill =
     pts.length > 1
       ? `${path} L${pts[pts.length - 1][0].toFixed(1)},${H - PAD} L${pts[0][0].toFixed(1)},${H - PAD} Z`
@@ -50,13 +57,15 @@ function Sparkline({
           <stop offset="100%" stopColor={color} stopOpacity="0.02" />
         </linearGradient>
       </defs>
-      {fill && (
-        <path
-          d={fill}
-          fill={`url(#sg-${color.replace("#", "")})`}
-        />
-      )}
-      <path d={path} stroke={color} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      {fill && <path d={fill} fill={`url(#sg-${color.replace("#", "")})`} />}
+      <path
+        d={path}
+        stroke={color}
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -92,14 +101,14 @@ function KpiCard({
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
         <span style={{ fontSize: 18 }}>{icon}</span>
-        <span style={{ fontSize: 13, color: "#94a3b8", fontWeight: 500, letterSpacing: "0.02em" }}>{label}</span>
+        <span style={{ fontSize: 13, color: "#94a3b8", fontWeight: 500, letterSpacing: "0.02em" }}>
+          {label}
+        </span>
       </div>
       <div style={{ fontSize: 32, fontWeight: 700, color: "#fff", lineHeight: 1 }}>
         {typeof value === "number" ? value.toLocaleString() : value}
       </div>
-      {sub && (
-        <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{sub}</div>
-      )}
+      {sub && <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{sub}</div>}
       {sparkData && sparkData.length > 0 && (
         <div style={{ marginTop: 10 }}>
           <Sparkline data={sparkData} color={color} height={40} />
@@ -126,7 +135,11 @@ function BarRow({
   const pct = max > 0 ? (count / max) * 100 : 0;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-      <span style={{ fontSize: 11, color: "#475569", width: 16, textAlign: "right", flexShrink: 0 }}>{rank}</span>
+      <span
+        style={{ fontSize: 11, color: "#475569", width: 16, textAlign: "right", flexShrink: 0 }}
+      >
+        {rank}
+      </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
           <span
@@ -144,7 +157,12 @@ function BarRow({
           <span style={{ fontSize: 12, color: "#64748b", flexShrink: 0 }}>{count}</span>
         </div>
         <div
-          style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}
+          style={{
+            height: 4,
+            background: "rgba(255,255,255,0.06)",
+            borderRadius: 2,
+            overflow: "hidden",
+          }}
         >
           <div
             style={{
@@ -290,7 +308,7 @@ function TrendChart({
     return data
       .map((d, i) => {
         const x = PAD_X + (i / (data.length - 1)) * (W - PAD_X * 2);
-        const y = H - PAD_Y - ((d.count / maxVal) * (H - PAD_Y * 2));
+        const y = H - PAD_Y - (d.count / maxVal) * (H - PAD_Y * 2);
         return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
       })
       .join(" ");
@@ -305,7 +323,10 @@ function TrendChart({
 
   const labelDates = views
     .filter((_, i) => i % 6 === 0)
-    .map((d) => ({ date: d.date, x: PAD_X + ((views.indexOf(d)) / (views.length - 1)) * (W - PAD_X * 2) }));
+    .map((d) => ({
+      date: d.date,
+      x: PAD_X + (views.indexOf(d) / (views.length - 1)) * (W - PAD_X * 2),
+    }));
 
   return (
     <div style={{ width: "100%", overflowX: "auto" }}>
@@ -346,9 +367,27 @@ function TrendChart({
         )}
 
         {/* Series lines */}
-        <path d={buildPath(views, globalMax)} stroke="#3ECF8E" strokeWidth="2" fill="none" strokeLinecap="round" />
-        <path d={buildPath(quotes, globalMax)} stroke="#60a5fa" strokeWidth="2" fill="none" strokeLinecap="round" />
-        <path d={buildPath(signups, globalMax)} stroke="#F59E0B" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <path
+          d={buildPath(views, globalMax)}
+          stroke="#3ECF8E"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d={buildPath(quotes, globalMax)}
+          stroke="#60a5fa"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <path
+          d={buildPath(signups, globalMax)}
+          stroke="#F59E0B"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
       </svg>
 
       {/* Legend */}
@@ -369,7 +408,15 @@ function TrendChart({
 }
 
 // ── TopList wrapper ───────────────────────────────────────────────────────────
-function TopList({ items, color, emptyMsg }: { items: TopItem[]; color: string; emptyMsg: string }) {
+function TopList({
+  items,
+  color,
+  emptyMsg,
+}: {
+  items: TopItem[];
+  color: string;
+  emptyMsg: string;
+}) {
   if (!items.length) {
     return <p style={{ fontSize: 13, color: "#475569" }}>{emptyMsg}</p>;
   }
@@ -377,14 +424,31 @@ function TopList({ items, color, emptyMsg }: { items: TopItem[]; color: string; 
   return (
     <>
       {items.map((item, i) => (
-        <BarRow key={item.label} label={item.label} count={item.count} max={max} color={color} rank={i + 1} />
+        <BarRow
+          key={item.label}
+          label={item.label}
+          count={item.count}
+          max={max}
+          color={color}
+          rank={i + 1}
+        />
       ))}
     </>
   );
 }
 
 // ── Recent list ───────────────────────────────────────────────────────────────
-function RecentRow({ icon, primary, secondary, time }: { icon: string; primary: string; secondary?: string; time: string }) {
+function RecentRow({
+  icon,
+  primary,
+  secondary,
+  time,
+}: {
+  icon: string;
+  primary: string;
+  secondary?: string;
+  time: string;
+}) {
   const rel = formatRelTime(time);
   return (
     <div
@@ -409,11 +473,52 @@ function RecentRow({ icon, primary, secondary, time }: { icon: string; primary: 
         >
           {primary}
         </div>
-        {secondary && (
-          <div style={{ fontSize: 11, color: "#64748b" }}>{secondary}</div>
-        )}
+        {secondary && <div style={{ fontSize: 11, color: "#64748b" }}>{secondary}</div>}
       </div>
       <span style={{ fontSize: 11, color: "#475569", flexShrink: 0 }}>{rel}</span>
+    </div>
+  );
+}
+
+function WizardStepViews({ steps }: { steps: Array<{ step: number; views: number }> }) {
+  if (!steps.length) {
+    return <p style={{ fontSize: 13, color: "#475569" }}>No wizard step events yet.</p>;
+  }
+
+  const max = Math.max(...steps.map((s) => s.views), 1);
+  return (
+    <div style={{ display: "grid", gap: 10 }}>
+      {steps.map((step) => (
+        <div
+          key={step.step}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "90px 1fr 44px",
+            gap: 10,
+            alignItems: "center",
+          }}
+        >
+          <span style={{ fontSize: 12, color: "#94a3b8" }}>Step {step.step}</span>
+          <div
+            style={{
+              height: 7,
+              background: "rgba(255,255,255,0.06)",
+              borderRadius: 999,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                width: `${Math.max(4, (step.views / max) * 100)}%`,
+                background: "#3ECF8E",
+                borderRadius: 999,
+              }}
+            />
+          </div>
+          <span style={{ fontSize: 12, color: "#cbd5e1", textAlign: "right" }}>{step.views}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -474,9 +579,19 @@ function PasswordGate({ onAuth }: { onAuth: () => void }) {
         }}
       >
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <img src="/favicon.png" alt="Merlin" width={48} height={48} style={{ borderRadius: 10, marginBottom: 12 }} />
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 4px" }}>Analytics</h1>
-          <p style={{ fontSize: 14, color: "#64748b", margin: 0 }}>Merlin Energy — internal dashboard</p>
+          <img
+            src="/favicon.png"
+            alt="Merlin"
+            width={48}
+            height={48}
+            style={{ borderRadius: 10, marginBottom: 12 }}
+          />
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 4px" }}>
+            Analytics
+          </h1>
+          <p style={{ fontSize: 14, color: "#64748b", margin: 0 }}>
+            Merlin Energy — internal dashboard
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -575,9 +690,24 @@ export default function AnalyticsDashboard() {
   const funnelSteps = s
     ? [
         { label: "Page Views", value: s.totalPageViews30d, color: "#3ECF8E", pct: 100 },
-        { label: "Quotes Built", value: s.totalQuotes30d, color: "#60a5fa", pct: Math.min(100, (s.totalQuotes30d / funnelMax) * 100) },
-        { label: "Leads", value: s.totalLeads30d, color: "#F59E0B", pct: Math.min(100, (s.totalLeads30d / funnelMax) * 100) },
-        { label: "Sign-ups", value: s.totalSignups30d, color: "#a78bfa", pct: Math.min(100, (s.totalSignups30d / funnelMax) * 100) },
+        {
+          label: "Quotes Built",
+          value: s.totalQuotes30d,
+          color: "#60a5fa",
+          pct: Math.min(100, (s.totalQuotes30d / funnelMax) * 100),
+        },
+        {
+          label: "Leads",
+          value: s.totalLeads30d,
+          color: "#F59E0B",
+          pct: Math.min(100, (s.totalLeads30d / funnelMax) * 100),
+        },
+        {
+          label: "Sign-ups",
+          value: s.totalSignups30d,
+          color: "#a78bfa",
+          pct: Math.min(100, (s.totalSignups30d / funnelMax) * 100),
+        },
       ]
     : [];
 
@@ -639,7 +769,14 @@ export default function AnalyticsDashboard() {
               opacity: loading ? 0.6 : 1,
             }}
           >
-            <span style={{ display: "inline-block", animation: loading ? "spin 1s linear infinite" : "none" }}>↻</span>
+            <span
+              style={{
+                display: "inline-block",
+                animation: loading ? "spin 1s linear infinite" : "none",
+              }}
+            >
+              ↻
+            </span>
             {loading ? "Loading…" : "Refresh"}
           </button>
           <a
@@ -680,8 +817,8 @@ export default function AnalyticsDashboard() {
         {/* ── KPI Grid ── */}
         {!s && !loading && (
           <p style={{ color: "#64748b", fontSize: 14 }}>
-            No data yet. Make sure the{" "}
-            <code style={{ color: "#3ECF8E" }}>page_views</code> table exists in Supabase.
+            No data yet. Make sure the <code style={{ color: "#3ECF8E" }}>page_views</code> table
+            exists in Supabase.
           </p>
         )}
 
@@ -794,19 +931,84 @@ export default function AnalyticsDashboard() {
               >
                 {funnelSteps.slice(1).map((step) => {
                   const prev = funnelSteps[funnelSteps.indexOf(step) - 1];
-                  const rate = prev.value > 0 ? ((step.value / prev.value) * 100).toFixed(1) : "0.0";
+                  const rate =
+                    prev.value > 0 ? ((step.value / prev.value) * 100).toFixed(1) : "0.0";
                   return (
                     <div key={step.label} style={{ fontSize: 12, color: "#64748b" }}>
                       Views → {step.label}:{" "}
                       <span style={{ color: step.color, fontWeight: 600 }}>
                         {((step.value / Math.max(funnelSteps[0].value, 1)) * 100).toFixed(2)}%
                       </span>
-                      <span style={{ color: "#334155", marginLeft: 8 }}>
-                        (prev step: {rate}%)
-                      </span>
+                      <span style={{ color: "#334155", marginLeft: 8 }}>(prev step: {rate}%)</span>
                     </div>
                   );
                 })}
+              </div>
+            </Card>
+
+            {/* Wizard V8 Funnel + Interactions */}
+            <Card title="Wizard V8 Funnel (30d)" style={{ marginBottom: 28 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 18 }}>
+                <div>
+                  <p style={{ margin: "0 0 10px", fontSize: 12, color: "#64748b" }}>
+                    Unique sessions by step view
+                  </p>
+                  <WizardStepViews steps={s.wizardEvents.stepViews} />
+                </div>
+                <div
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(255,255,255,0.05)",
+                    borderRadius: 10,
+                    padding: 12,
+                    display: "grid",
+                    gap: 8,
+                    alignContent: "start",
+                  }}
+                >
+                  {[
+                    { label: "Drop-offs", value: s.wizardEvents.dropoffs, color: "#f97316" },
+                    {
+                      label: "Completed exits",
+                      value: s.wizardEvents.completedExits,
+                      color: "#22c55e",
+                    },
+                    {
+                      label: "Stack selections",
+                      value: s.wizardEvents.stackSelections,
+                      color: "#60a5fa",
+                    },
+                    {
+                      label: "Comparison interactions",
+                      value: s.wizardEvents.comparisonInteractions,
+                      color: "#a78bfa",
+                    },
+                    {
+                      label: "ProQuote handoff success",
+                      value: s.wizardEvents.proquoteHandoffSuccess,
+                      color: "#34d399",
+                    },
+                    {
+                      label: "ProQuote handoff failed",
+                      value: s.wizardEvents.proquoteHandoffFailed,
+                      color: "#ef4444",
+                    },
+                  ].map((metric) => (
+                    <div
+                      key={metric.label}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span style={{ fontSize: 12, color: "#94a3b8" }}>{metric.label}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: metric.color }}>
+                        {metric.value.toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </Card>
 
@@ -823,9 +1025,7 @@ export default function AnalyticsDashboard() {
             </div>
 
             {/* Recent sign-ups + Recent leads */}
-            <div
-              style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
-            >
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <Card title="Recent Sign-ups">
                 {s.recentSignups.length === 0 ? (
                   <p style={{ fontSize: 13, color: "#475569" }}>No sign-ups yet.</p>

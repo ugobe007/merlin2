@@ -46,6 +46,38 @@ export async function trackPageView(path: string): Promise<void> {
   }
 }
 
+// ── Track wizard interaction events (Phase 4.3) ─────────────────────────────
+// Stores wizard events in page_views using a structured synthetic path so we
+// can query funnels without requiring a new table migration.
+export async function trackWizardEvent(
+  eventName: string,
+  payload?: Record<string, unknown>
+): Promise<void> {
+  try {
+    const params = new URLSearchParams();
+    if (payload) {
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+        const normalized =
+          typeof value === "string" || typeof value === "number" || typeof value === "boolean"
+            ? String(value)
+            : JSON.stringify(value);
+        params.set(key, normalized.slice(0, 180));
+      });
+    }
+
+    const path = `/wizard/v8/event/${encodeURIComponent(eventName)}${params.toString() ? `?${params.toString()}` : ""}`;
+
+    await db.from("page_views").insert({
+      path,
+      session_id: getSessionId(),
+      referrer: document.referrer || null,
+    });
+  } catch {
+    // Non-blocking — never throw for analytics
+  }
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface DailyCount {
   date: string; // "YYYY-MM-DD"
@@ -55,6 +87,21 @@ export interface DailyCount {
 export interface TopItem {
   label: string;
   count: number;
+}
+
+export interface WizardStepView {
+  step: number;
+  views: number;
+}
+
+export interface WizardEventMetrics {
+  stepViews: WizardStepView[];
+  dropoffs: number;
+  completedExits: number;
+  stackSelections: number;
+  comparisonInteractions: number;
+  proquoteHandoffSuccess: number;
+  proquoteHandoffFailed: number;
 }
 
 export interface DashboardStats {
@@ -76,9 +123,26 @@ export interface DashboardStats {
   // Breakdowns
   topPages: TopItem[];
   topIndustries: TopItem[];
+  wizardEvents: WizardEventMetrics;
   // Recent
   recentSignups: { email: string; created_at: string }[];
   recentLeads: { email: string; industry: string | null; created_at: string }[];
+}
+
+function parseWizardEventPath(path: string): {
+  eventName: string;
+  params: URLSearchParams;
+} | null {
+  const prefix = "/wizard/v8/event/";
+  if (!path.startsWith(prefix)) return null;
+
+  const raw = path.slice(prefix.length);
+  const [encodedEventName, queryString] = raw.split("?");
+  if (!encodedEventName) return null;
+
+  const eventName = decodeURIComponent(encodedEventName);
+  const params = new URLSearchParams(queryString ?? "");
+  return { eventName, params };
 }
 
 // ── Helper: build a 30-day date spine ─────────────────────────────────────────
@@ -126,7 +190,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       EMPTY_COUNT
     ),
     q(db.from("page_views").select("session_id").gte("created_at", ago30), EMPTY_DATA),
-    q(db.from("page_views").select("path, created_at").gte("created_at", ago30), EMPTY_DATA),
+    q(
+      db.from("page_views").select("path, created_at, session_id").gte("created_at", ago30),
+      EMPTY_DATA
+    ),
   ]);
 
   const sessionSet = new Set<string>(
@@ -134,7 +201,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       .map((r) => r.session_id)
       .filter(Boolean) as string[]
   );
-  const pvRows = (pvRaw.data ?? []) as { path: string; created_at: string }[];
+  const pvRows = (pvRaw.data ?? []) as { path: string; created_at: string; session_id?: string }[];
 
   // bucket page views by day
   const pvDayMap: Record<string, number> = {};
@@ -151,6 +218,50 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
     .map(([label, count]) => ({ label, count }));
+
+  // wizard v8 event analytics (stored in page_views path)
+  const wizardRows = pvRows
+    .map((row) => ({ ...row, parsed: parseWizardEventPath(row.path) }))
+    .filter((row) => !!row.parsed) as Array<{
+    path: string;
+    created_at: string;
+    session_id?: string;
+    parsed: { eventName: string; params: URLSearchParams };
+  }>;
+
+  const stepViewMap = new Map<number, Set<string>>();
+  let dropoffs = 0;
+  let completedExits = 0;
+  let stackSelections = 0;
+  let comparisonInteractions = 0;
+  let proquoteHandoffSuccess = 0;
+  let proquoteHandoffFailed = 0;
+
+  for (const row of wizardRows) {
+    const { eventName, params } = row.parsed;
+    const sessionKey = row.session_id || `anon-${row.created_at}`;
+
+    if (eventName === "step_view") {
+      const parsedStep = Number(params.get("step") ?? "");
+      if (Number.isFinite(parsedStep)) {
+        if (!stepViewMap.has(parsedStep)) {
+          stepViewMap.set(parsedStep, new Set<string>());
+        }
+        stepViewMap.get(parsedStep)?.add(sessionKey);
+      }
+    }
+
+    if (eventName === "dropoff") dropoffs += 1;
+    if (eventName === "wizard_exit_completed") completedExits += 1;
+    if (eventName === "stack_selection") stackSelections += 1;
+    if (eventName === "comparison_interaction") comparisonInteractions += 1;
+    if (eventName === "proquote_handoff_success") proquoteHandoffSuccess += 1;
+    if (eventName === "proquote_handoff_failed") proquoteHandoffFailed += 1;
+  }
+
+  const stepViews: WizardStepView[] = Array.from(stepViewMap.entries())
+    .map(([step, sessions]) => ({ step, views: sessions.size }))
+    .sort((a, b) => a.step - b.step);
 
   // ── saved_quotes ─────────────────────────────────────────────────────────
   const [quotesAll, quotesToday, quotesRaw] = await Promise.all([
@@ -268,6 +379,15 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     signupsByDay,
     topPages,
     topIndustries,
+    wizardEvents: {
+      stepViews,
+      dropoffs,
+      completedExits,
+      stackSelections,
+      comparisonInteractions,
+      proquoteHandoffSuccess,
+      proquoteHandoffFailed,
+    },
     recentSignups: (recentSignupsRaw.data ?? []) as { email: string; created_at: string }[],
     recentLeads: (recentLeadsRaw.data ?? []) as {
       email: string;
@@ -277,4 +397,4 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   };
 }
 
-export const analyticsService = { trackPageView, getDashboardStats };
+export const analyticsService = { trackPageView, trackWizardEvent, getDashboardStats };

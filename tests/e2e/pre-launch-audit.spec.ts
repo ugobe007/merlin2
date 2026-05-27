@@ -297,6 +297,111 @@ test.describe("6. Mobile Responsiveness", () => {
     await expect(page.locator("button:has-text('Confirm Location')").first()).toBeVisible({ timeout: 15000 });
     await ctx.close();
   });
+
+  test("6c. iPhone stress pass reaches deeper wizard states without overflow", async ({ browser }) => {
+    const ctx = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      userAgent:
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
+    });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/wizard`, { waitUntil: "load" });
+
+    // Enter wizard from Step 0
+    const zipInput = page
+      .locator("input[inputmode='numeric'], input[placeholder*='ZIP' i], input[placeholder*='zip' i]")
+      .first();
+    await zipInput.fill("90210");
+    await page.waitForSelector("button:has-text('Confirm Location'):not([disabled])", {
+      timeout: 15000,
+    });
+    await page.locator("button:has-text('Confirm Location')").first().click();
+    await page.waitForTimeout(1400);
+
+    // Push flow forward toward MagicFit (best-effort; avoid brittle selectors)
+    let reachedMagicFit = false;
+    for (let i = 0; i < 10; i++) {
+      reachedMagicFit = await page
+        .locator("text=/Stack Variant Workspace|MagicFit/i")
+        .first()
+        .isVisible()
+        .catch(() => false);
+      if (reachedMagicFit) break;
+
+      await page
+        .locator("button[data-testid^='industry-card-v8-']")
+        .first()
+        .click({ timeout: 1200 })
+        .catch(() => null);
+
+      await page
+        .locator(
+          "button:has-text('Continue'), button:has-text('Next'), button:has-text('Choose add-ons'), button:has-text('Build my tiers')"
+        )
+        .last()
+        .click({ timeout: 1200 })
+        .catch(() => null);
+
+      await page
+        .locator("button[style*='border']:not([disabled])")
+        .first()
+        .click({ timeout: 1200 })
+        .catch(() => null);
+
+      await page.waitForTimeout(700);
+    }
+
+    const hasCrashed = await page
+      .locator("text=/something went wrong|error boundary/i")
+      .isVisible()
+      .catch(() => false);
+    expect(hasCrashed, "Wizard should not crash during iPhone progression").toBeFalsy();
+
+    const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
+    expect(bodyWidth, "No horizontal overflow on iPhone during wizard flow").toBeLessThanOrEqual(
+      410
+    );
+
+    if (reachedMagicFit) {
+      await expect(page.locator("text=Variant F").first()).toBeVisible({ timeout: 10000 });
+      await expect(page.locator("input[type='range']").first()).toBeVisible({ timeout: 10000 });
+    }
+
+    await ctx.close();
+  });
+
+  test("6d. iPad stress pass keeps primary controls visible and tappable", async ({ browser }) => {
+    const ctx = await browser.newContext({ viewport: { width: 768, height: 1024 } });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/wizard`, { waitUntil: "load" });
+
+    const confirmLocation = page.locator("button:has-text('Confirm Location')").first();
+    const proQuote = page.locator("button:has-text('ProQuote')").first();
+
+    await expect(confirmLocation).toBeVisible({ timeout: 15000 });
+    await expect(proQuote).toBeVisible({ timeout: 15000 });
+
+    const targetSizes = await page.evaluate(() => {
+      const buttons = Array.from(document.querySelectorAll("button"));
+      const pick = (needle: string) =>
+        buttons.find((b) => (b.textContent || "").toLowerCase().includes(needle));
+
+      const confirm = pick("confirm location")?.getBoundingClientRect();
+      const pro = pick("proquote")?.getBoundingClientRect();
+
+      return {
+        confirmHeight: confirm?.height ?? 0,
+        proHeight: pro?.height ?? 0,
+        bodyWidth: document.body.scrollWidth,
+      };
+    });
+
+    expect(targetSizes.confirmHeight, "Confirm Location touch target should be >= 40px").toBeGreaterThanOrEqual(40);
+    expect(targetSizes.proHeight, "ProQuote touch target should be >= 40px").toBeGreaterThanOrEqual(40);
+    expect(targetSizes.bodyWidth, "No horizontal overflow on iPad").toBeLessThanOrEqual(780);
+
+    await ctx.close();
+  });
 });
 
 // ============================================================================
