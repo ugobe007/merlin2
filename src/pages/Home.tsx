@@ -7,6 +7,7 @@ import GridCongestionSection from "@/components/GridCongestionSection";
 import AudienceStrip from "@/components/AudienceStrip";
 import IndustriesSection from "@/components/IndustriesSection";
 import WorkflowSection from "@/components/WorkflowSection";
+import EnergyStackingSection from "@/components/EnergyStackingSection";
 import PlatformSection from "@/components/PlatformSection";
 import ValueSection from "@/components/ValueSection";
 
@@ -20,6 +21,7 @@ export default function Home() {
       <HeroSection />
       <GridCongestionSection />
       <WorkflowSection />
+      <EnergyStackingSection />
       <AudienceStrip />
       {/* <ProductsSection /> */}
       <IndustriesSection />
@@ -107,6 +109,7 @@ export default function Home() {
               <ul className="space-y-3">
                 {[
                   { label: "How It Works", href: "#workflow" },
+                  { label: "Energy Stacking", href: "#energy-stacking" },
                   { label: "Platform", href: "#platform" },
                   { label: "Market Intel", href: "/market-intelligence" },
                   { label: "News", href: "/news" },

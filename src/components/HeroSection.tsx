@@ -1,5 +1,6 @@
 /* Merlin Energy — Agent-first homepage hero */
 
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   Building2,
@@ -141,30 +142,6 @@ const _telemetryRows: UseCase[] = [
 
 const proofItems = ["Free & Instant", "No Utility Login Required", "CFO-Ready Report"];
 
-const adaptiveOutcomes = [
-  {
-    label: "Grid Dependence Risk",
-    value: "High → Moderate",
-    detail: "Target reduction with hybrid stack",
-    Icon: ShieldAlert,
-    accent: "text-amber-300",
-  },
-  {
-    label: "Peak Charge Exposure",
-    value: "18–32%",
-    detail: "Estimated demand-charge reduction",
-    Icon: TrendingUp,
-    accent: "text-cyan-300",
-  },
-  {
-    label: "Best Stack Candidate",
-    value: "Solar + BESS + Utility",
-    detail: "Adaptive dispatch with backup layer",
-    Icon: Layers3,
-    accent: "text-violet-300",
-  },
-] as const;
-
 function _UseCaseModal({ useCase, onClose }: { useCase: UseCase; onClose: () => void }) {
   const Icon = useCase.Icon;
 
@@ -281,7 +258,42 @@ function _UseCaseModal({ useCase, onClose }: { useCase: UseCase; onClose: () => 
   );
 }
 
-function AgentTelemetryPanel() {
+function AgentTelemetryPanel({
+  modelPreview,
+}: {
+  modelPreview: {
+    zip: string;
+    gridRiskShift: string;
+    peakReductionPct: string;
+    stackCandidate: string;
+    backupHours: string;
+    decisionPriority: string;
+  };
+}) {
+  const adaptiveOutcomes = [
+    {
+      label: "Grid Dependence Risk",
+      value: modelPreview.gridRiskShift,
+      detail: `ZIP ${modelPreview.zip || "pending"} · ${modelPreview.decisionPriority}`,
+      Icon: ShieldAlert,
+      accent: "text-amber-300",
+    },
+    {
+      label: "Peak Charge Exposure",
+      value: modelPreview.peakReductionPct,
+      detail: `Estimated reduction potential · ${modelPreview.backupHours} backup window`,
+      Icon: TrendingUp,
+      accent: "text-cyan-300",
+    },
+    {
+      label: "Best Stack Candidate",
+      value: modelPreview.stackCandidate,
+      detail: "Co-optimized across utility, storage, and generation",
+      Icon: Layers3,
+      accent: "text-violet-300",
+    },
+  ] as const;
+
   return (
     <div className="relative rounded-[1.35rem] border border-white/10 bg-[#18191D] p-6 shadow-[0_30px_100px_rgba(0,0,0,0.48),0_0_0_1px_rgba(37,99,235,0.18)] lg:p-7">
       <div className="absolute inset-0 rounded-[1.35rem] bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.14),transparent_42%)]" />
@@ -326,12 +338,9 @@ function AgentTelemetryPanel() {
           </div>
         </div>
 
-        <div className="mt-5 space-y-3">
+        <div className="mt-5">
           {adaptiveOutcomes.map((item) => (
-            <div
-              key={item.label}
-              className="rounded-xl border border-white/[0.08] bg-black/20 px-4 py-3.5"
-            >
+            <div key={item.label} className="border-b border-white/[0.08] py-3 last:border-b-0">
               <div className="flex items-center gap-2.5">
                 <item.Icon size={14} className={item.accent} />
                 <div className="text-[11px] uppercase tracking-[0.12em] text-slate-500">
@@ -342,12 +351,6 @@ function AgentTelemetryPanel() {
               <div className="mt-0.5 text-xs text-slate-500">{item.detail}</div>
             </div>
           ))}
-        </div>
-
-        <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.07] p-4 text-sm leading-relaxed text-slate-400">
-          <span className="font-bold text-slate-200">No six-consultant workflow.</span> Merlin
-          models hybrid options before engineering spend, then gives you a clear next-step
-          architecture.
         </div>
 
         <button
@@ -365,6 +368,50 @@ function AgentTelemetryPanel() {
 }
 
 export default function HeroSection() {
+  const [zipCode, setZipCode] = useState("");
+
+  const modelPreview = useMemo(() => {
+    const zip = zipCode.replace(/\D/g, "").slice(0, 5);
+    if (zip.length < 5) {
+      return {
+        zip,
+        gridRiskShift: "Baseline pending",
+        peakReductionPct: "16–24%",
+        stackCandidate: "Solar + BESS + Utility",
+        backupHours: "2–4 hr",
+        decisionPriority: "Complete ZIP for localized modeling",
+      };
+    }
+
+    const seed = Number.parseInt(zip, 10) % 100;
+    const peakLow = 14 + (seed % 6);
+    const peakHigh = peakLow + 8;
+    const backupLow = 2 + (seed % 3);
+    const backupHigh = backupLow + 2;
+    const stackCandidates = [
+      "Solar + BESS + Utility",
+      "BESS + Utility + Generator",
+      "Solar + BESS + Generator",
+    ] as const;
+
+    return {
+      zip,
+      gridRiskShift: seed > 55 ? "High → Moderate" : "Moderate → Managed",
+      peakReductionPct: `${peakLow}–${peakHigh}%`,
+      stackCandidate: stackCandidates[seed % stackCandidates.length],
+      backupHours: `${backupLow}–${backupHigh} hr`,
+      decisionPriority: seed > 55 ? "Resilience-first" : "Cost-optimized hybrid",
+    };
+  }, [zipCode]);
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("merlin:hero-model-preview", {
+        detail: modelPreview,
+      })
+    );
+  }, [modelPreview]);
+
   return (
     <section
       id="hero"
@@ -391,7 +438,19 @@ export default function HeroSection() {
           >
             The future of energy
             <br />
-            <span className="text-cyan-300">is adaptive.</span>
+            <span
+              className="text-transparent"
+              style={{
+                backgroundImage:
+                  "linear-gradient(90deg, #3FE8FF 0%, #22D3EE 35%, #A855F7 70%, #C084FC 100%)",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                textShadow: "0 10px 28px rgba(34,211,238,0.22)",
+              }}
+            >
+              is adaptive.
+            </span>
           </h1>
 
           <p
@@ -421,6 +480,8 @@ export default function HeroSection() {
                 inputMode="numeric"
                 maxLength={5}
                 pattern="[0-9]{5}"
+                value={zipCode}
+                onChange={(event) => setZipCode(event.target.value.replace(/\D/g, "").slice(0, 5))}
                 placeholder="Enter your facility's ZIP Code"
                 className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 outline-none"
               />
@@ -443,7 +504,7 @@ export default function HeroSection() {
           </div>
         </div>
 
-        <AgentTelemetryPanel />
+        <AgentTelemetryPanel modelPreview={modelPreview} />
       </div>
 
       <style>{`

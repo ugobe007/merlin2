@@ -37,6 +37,7 @@ export default function Navbar() {
   const navLinks = [
     { label: "Grid Exposure", href: "/#grid-exposure" },
     { label: "How MERLIN Works", href: "/#workflow" },
+    { label: "Energy Stacking", href: "/#energy-stacking" },
     { label: "Why Independent", href: "/#platform" },
     { label: "Our Story", href: "/#our-story" },
     { label: "Pricing", href: "/pricing" },
