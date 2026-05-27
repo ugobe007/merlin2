@@ -4,28 +4,46 @@ import { useEffect, useState } from "react";
 
 const layers = [
   {
-    title: "Demand Baseline",
-    detail: "Facility load profile and tariff exposure baseline.",
+    title: "Utility Power",
+    detail: "Your grid baseline, tariff structure, and utility exposure.",
     liveKey: "zip",
     color: "from-slate-500/30 to-slate-500/5",
+    livePrefix: "Context:",
   },
   {
-    title: "Supply Mix",
-    detail: "Utility, storage, generation, and renewable composition.",
+    title: "Battery Storage",
+    detail: "Peak shaving and resilience capacity layered over utility service.",
     liveKey: "stackCandidate",
     color: "from-cyan-500/30 to-cyan-500/5",
+    livePrefix: "Candidate:",
   },
   {
-    title: "Dispatch Logic",
-    detail: "Peak-shaving strategy and resilience dispatch controls.",
+    title: "Solar",
+    detail: "Daytime generation paired to load timing and site economics.",
     liveKey: "peakReductionPct",
-    color: "from-emerald-500/30 to-emerald-500/5",
+    color: "from-amber-500/30 to-amber-500/5",
+    livePrefix: "Impact:",
   },
   {
-    title: "Financial Outcome",
-    detail: "Risk-adjusted economics and operating continuity value.",
-    liveKey: "decisionPriority",
+    title: "Generator Backup",
+    detail: "Continuity layer for outages and critical operations coverage.",
+    liveKey: "backupHours",
+    color: "from-emerald-500/30 to-emerald-500/5",
+    livePrefix: "Window:",
+  },
+  {
+    title: "AI Load Optimization",
+    detail: "Dispatch logic that adapts to peaks, tariffs, and risk posture.",
+    liveKey: "peakReductionPct",
     color: "from-violet-500/30 to-violet-500/5",
+    livePrefix: "Modeled shift:",
+  },
+  {
+    title: "Dynamic Rate Arbitrage",
+    detail: "Financial control from timing power flows against rate structures.",
+    liveKey: "decisionPriority",
+    color: "from-fuchsia-500/30 to-fuchsia-500/5",
+    livePrefix: "Priority:",
   },
 ] as const;
 
@@ -83,13 +101,13 @@ export default function EnergyStackingSection() {
             className="mt-4 text-base leading-7 text-slate-300 sm:text-lg"
             style={{ fontFamily: "'Manrope', sans-serif" }}
           >
-            Not one asset. Not one quote. Merlin models demand, supply, dispatch, and economics as
-            one adaptive system.
+            One building is no longer one power source. Merlin orchestrates a modern Energy Stack™
+            as an adaptive, software-native infrastructure system.
           </p>
         </div>
 
         <div className="relative mt-10 rounded-2xl border border-cyan-300/20 bg-[#0A1227]/90 p-5 shadow-[0_24px_90px_rgba(8,145,178,0.12)] sm:p-7">
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {layers.map((layer, index) => (
               <div key={layer.title} className="relative">
                 <div
@@ -106,7 +124,7 @@ export default function EnergyStackingSection() {
                   </div>
                   <div className="mt-2 text-sm leading-6 text-slate-300">{layer.detail}</div>
                   <div className="mt-3 border-t border-white/[0.16] pt-2 text-xs text-cyan-200/95">
-                    Live model: {preview[layer.liveKey]}
+                    {layer.livePrefix} {preview[layer.liveKey]}
                   </div>
                 </div>
                 {index < layers.length - 1 && (
