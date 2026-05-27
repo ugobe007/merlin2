@@ -64,9 +64,7 @@ export default function PlatformSection() {
               className="text-4xl lg:text-5xl font-extrabold text-white mb-6 leading-tight"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
-              More than a quote.
-              <br />
-              <span className="gradient-text">A faster way to decide.</span>
+              Decision platform for adaptive energy.
             </h2>
             <p
               className="text-slate-400 text-base leading-relaxed mb-8"
