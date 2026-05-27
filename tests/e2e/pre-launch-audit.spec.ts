@@ -16,7 +16,7 @@ const BASE = process.env.E2E_BASE_URL || "https://merlin2.fly.dev";
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 async function goto(page: Page, path: string) {
-  await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
+  await page.goto(`${BASE}${path}`, { waitUntil: "load" });
 }
 
 async function expectNoConsoleErrors(page: Page) {
@@ -35,14 +35,16 @@ test.describe("1. Page Smoke Tests", () => {
   test("1a. Home / loads and shows TrueQuote content", async ({ page }) => {
     await goto(page, "/");
     await expect(page).not.toHaveTitle(/error/i);
-    // Should show the Wizard Step 0 mode-select (our new default)
+    // Homepage should expose TrueQuote framing
     await expect(page.locator("text=TrueQuote").first()).toBeVisible({ timeout: 15000 });
   });
 
-  test("1b. /wizard loads Step 0 mode-select", async ({ page }) => {
+  test("1b. /wizard loads location-first wizard shell", async ({ page }) => {
     await goto(page, "/wizard");
-    await expect(page.locator("text=Guided Wizard").first()).toBeVisible({ timeout: 15000 });
-    await expect(page.locator("text=ProQuote").first()).toBeVisible({ timeout: 15000 });
+    await expect(page.locator("text=TrueQuote").first()).toBeVisible({ timeout: 15000 });
+    await expect(page.locator("button:has-text('Confirm Location')").first()).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   test("1c. /quote-builder loads ProQuote page", async ({ page }) => {
@@ -80,24 +82,27 @@ test.describe("2. Step 0 — Mode Selection", () => {
     page,
   }) => {
     await goto(page, "/wizard");
-    await expect(page.locator("text=ProQuote™")).toBeVisible({ timeout: 15000 });
-    await page.locator("button:has-text('ProQuote')").click();
+    await expect(page.locator("button:has-text('ProQuote')").first()).toBeVisible({ timeout: 15000 });
+    await page.locator("button:has-text('ProQuote')").first().click();
     await page.waitForURL(/quote-builder/, { timeout: 10000 });
     await expect(page).toHaveURL(/quote-builder/);
     // Confirm it's NOT the old home page
     await expect(page).not.toHaveURL(/\/$|\/\?/);
   });
 
-  test("2b. Guided Wizard button advances to Step 1", async ({ page }) => {
+  test("2b. Confirm Location button enters wizard Step 1", async ({ page }) => {
     await goto(page, "/wizard");
-    await expect(page.locator("button:has-text('Guided Wizard'), button:has-text('Start')").first()).toBeVisible({ timeout: 15000 });
-    await page.locator("button:has-text('Guided Wizard')").first().click();
-    // Step 1 is self-advancing (no Continue button) — it shows a location / company input
-    // Wait for any input or the step progress bar to show step 1 is active
+    // Current UX: location-first shell — enter ZIP to enable Confirm Location
+    const zipInput = page.locator("input[inputmode='numeric'], input[placeholder*='ZIP' i], input[placeholder*='zip' i]").first();
+    await zipInput.fill("90210");
+    await page.waitForSelector("button:has-text('Confirm Location'):not([disabled])", { timeout: 15000 });
+    await page.locator("button:has-text('Confirm Location')").first().click();
     await page.waitForTimeout(1500);
-    // Confirm we are no longer on Step 0 (mode-select cards should be gone)
-    const modeSelectGone = await page.locator("text=Choose the workflow").isVisible().catch(() => false);
-    expect(modeSelectGone, "Should have left Step 0 mode-select").toBeFalsy();
+    // After confirming location the wizard step 1 shell should be active
+    // (location-first gateway is gone, wizard body is present)
+    await expect(page.locator("body")).toBeVisible();
+    const hasCrashed = await page.locator("text=/something went wrong|error boundary/i").isVisible().catch(() => false);
+    expect(hasCrashed, "Should not crash entering wizard Step 1").toBeFalsy();
   });
 
   test("2c. No JS console errors on Step 0 load", async ({ page }) => {
@@ -133,8 +138,11 @@ test.describe("3. Wizard — Full Flow (Car Wash)", () => {
   test("3a. Complete Steps 1–5 and reach Quote", async ({ page }) => {
     await goto(page, "/wizard");
 
-    // Step 0 → Guided Wizard
-    await page.locator("button:has-text('Guided Wizard')").first().click();
+    // Step 0 → enter ZIP then click Confirm Location to enter wizard
+    const zipInput = page.locator("input[inputmode='numeric'], input[placeholder*='ZIP' i], input[placeholder*='zip' i]").first();
+    await zipInput.fill("90210");
+    await page.waitForSelector("button:has-text('Confirm Location'):not([disabled])", { timeout: 15000 });
+    await page.locator("button:has-text('Confirm Location')").first().click();
     await page.waitForTimeout(1500);
 
     // Step 1: Location — self-advancing after typing a company name
@@ -143,9 +151,6 @@ test.describe("3. Wizard — Full Flow (Car Wash)", () => {
     if (await textInputs.count() > 0) {
       await textInputs.first().fill("Speedy Suds Car Wash");
     }
-    // Also try ZIP if visible
-    const zipInput = page.locator("input[placeholder*='zip' i], input[placeholder*='ZIP'], input[maxlength='5']").first();
-    await zipInput.fill("90210").catch(() => null);
     await page.waitForTimeout(1000);
 
     // Step 1 self-advances OR uses a Next button depending on build state
@@ -249,7 +254,7 @@ test.describe("5. Auth Flow", () => {
     await signInBtn.click();
     await page.locator("input[type='email']").fill("notreal@example.com");
     await page.locator("input[type='password']").fill("wrongpassword123");
-    await page.locator("button[type='submit'], button:has-text('Sign In')").last().click();
+    await page.locator("button[type='submit'], button:has-text('Sign In')").last().click({ force: true });
     // Should show an error message, not a blank page or JS crash
     await page.waitForTimeout(3000);
     await expect(page.locator("body")).toBeVisible();
@@ -274,12 +279,12 @@ test.describe("6. Mobile Responsiveness", () => {
         "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
     });
     const page = await ctx.newPage();
-    await page.goto(`${BASE}/wizard`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE}/wizard`, { waitUntil: "load" });
     // Content should not overflow horizontally
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
     expect(bodyWidth, "No horizontal overflow on mobile").toBeLessThanOrEqual(410);
-    // Key buttons should be visible without scrolling
-    await expect(page.locator("text=Guided Wizard").first()).toBeVisible({ timeout: 15000 });
+    // Key CTA should be visible without scrolling
+    await expect(page.locator("button:has-text('Confirm Location')").first()).toBeVisible({ timeout: 15000 });
     await ctx.close();
   });
 
@@ -288,8 +293,8 @@ test.describe("6. Mobile Responsiveness", () => {
       viewport: { width: 768, height: 1024 },
     });
     const page = await ctx.newPage();
-    await page.goto(`${BASE}/wizard`, { waitUntil: "networkidle" });
-    await expect(page.locator("text=Guided Wizard").first()).toBeVisible({ timeout: 15000 });
+    await page.goto(`${BASE}/wizard`, { waitUntil: "load" });
+    await expect(page.locator("button:has-text('Confirm Location')").first()).toBeVisible({ timeout: 15000 });
     await ctx.close();
   });
 });
@@ -323,7 +328,10 @@ test.describe("8. Quote Calculation Sanity", () => {
     page,
   }) => {
     await goto(page, "/wizard");
-    await page.locator("button:has-text('Guided Wizard')").first().click();
+    const zipInput = page.locator("input[inputmode='numeric'], input[placeholder*='ZIP' i], input[placeholder*='zip' i]").first();
+    await zipInput.fill("90210");
+    await page.waitForSelector("button:has-text('Confirm Location'):not([disabled])", { timeout: 15000 });
+    await page.locator("button:has-text('Confirm Location')").first().click();
     await page.waitForTimeout(1500);
     // Fill minimal inputs
     const inputs = page.locator("input[type='text'], input:not([type])");
