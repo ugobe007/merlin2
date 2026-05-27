@@ -637,7 +637,7 @@ export function generateEmailHTML(report: DailyReport): string {
     <div class="footer">
       <p>Merlin Energy Intelligence • <a href="https://merlinenergy.net">merlinenergy.net</a></p>
       <p>You're receiving this because you subscribed to daily BESS market updates.</p>
-      <p><a href="#">Unsubscribe</a> • <a href="#">Update Preferences</a></p>
+      <p><a href="mailto:support@merlin.energy?subject=Unsubscribe%20from%20Daily%20BESS%20Updates">Unsubscribe</a> • <a href="mailto:support@merlin.energy?subject=Update%20Daily%20BESS%20Preferences">Update Preferences</a></p>
     </div>
   </div>
 </body>

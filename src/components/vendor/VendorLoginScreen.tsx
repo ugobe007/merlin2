@@ -158,7 +158,7 @@ const VendorLoginScreen: React.FC<VendorLoginScreenProps> = ({
               </button>
 
               <p className="text-center text-sm text-slate-500 mt-4">
-                <a href="#" className="text-[#3ECF8E] hover:underline">
+                <a href="/support" className="text-[#3ECF8E] hover:underline">
                   Forgot password?
                 </a>
               </p>
