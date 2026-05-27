@@ -5,10 +5,8 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import GridCongestionSection from "@/components/GridCongestionSection";
 import AudienceStrip from "@/components/AudienceStrip";
-import IndustriesSection from "@/components/IndustriesSection";
 import WorkflowSection from "@/components/WorkflowSection";
 import EnergyStackingSection from "@/components/EnergyStackingSection";
-import PlatformSection from "@/components/PlatformSection";
 import ValueSection from "@/components/ValueSection";
 
 const WIZARD_URL =
@@ -23,9 +21,6 @@ export default function Home() {
       <WorkflowSection />
       <EnergyStackingSection />
       <AudienceStrip />
-      {/* <ProductsSection /> */}
-      <IndustriesSection />
-      <PlatformSection />
       <ValueSection />
 
       {/* Footer */}
@@ -104,13 +99,14 @@ export default function Home() {
                 className="text-white text-xs font-semibold uppercase tracking-widest mb-4"
                 style={{ fontFamily: "'Outfit', sans-serif" }}
               >
-                Platform
+                Explore
               </h4>
               <ul className="space-y-3">
                 {[
                   { label: "How It Works", href: "#workflow" },
                   { label: "Energy Stacking", href: "#energy-stacking" },
-                  { label: "Platform", href: "#platform" },
+                  { label: "Grid Exposure", href: "#grid-exposure" },
+                  { label: "Our Story", href: "#our-story" },
                   { label: "Market Intel", href: "/market-intelligence" },
                   { label: "News", href: "/news" },
                   { label: "Support", href: "/support" },
