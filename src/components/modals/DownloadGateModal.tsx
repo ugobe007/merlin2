@@ -6,12 +6,22 @@
  * Replaces the separate EmailCaptureModal with auth-aware behavior
  */
 
-import React, { useState, useEffect } from 'react';
-import { X, Mail, User, Building2, CheckCircle, AlertCircle, Download, UserCheck, Sparkles } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
-import { authService } from '../../services/authService';
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  Mail,
+  User,
+  Building2,
+  CheckCircle,
+  AlertCircle,
+  Download,
+  UserCheck,
+  Sparkles,
+} from "lucide-react";
+import { supabase } from "../../services/supabaseClient";
+import { authService } from "../../services/authService";
 
-type DownloadType = 'pdf' | 'excel' | 'word' | 'certificate';
+type DownloadType = "pdf" | "excel" | "word" | "certificate";
 
 interface DownloadGateModalProps {
   isOpen: boolean;
@@ -27,10 +37,10 @@ interface DownloadGateModalProps {
 }
 
 const DOWNLOAD_LABELS: Record<DownloadType, { icon: string; label: string; color: string }> = {
-  pdf: { icon: '📄', label: 'PDF Quote', color: 'from-red-500 to-red-600' },
-  excel: { icon: '📊', label: 'Excel Quote', color: 'from-green-500 to-green-600' },
-  word: { icon: '📝', label: 'Word Quote', color: 'from-blue-500 to-blue-600' },
-  certificate: { icon: '🏆', label: 'Power Certificate', color: 'from-purple-500 to-indigo-600' },
+  pdf: { icon: "📄", label: "PDF Quote", color: "from-red-500 to-red-600" },
+  excel: { icon: "📊", label: "Excel Quote", color: "from-green-500 to-green-600" },
+  word: { icon: "📝", label: "Word Quote", color: "from-blue-500 to-blue-600" },
+  certificate: { icon: "🏆", label: "Power Certificate", color: "from-purple-500 to-indigo-600" },
 };
 
 const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
@@ -39,14 +49,14 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
   onProceedWithDownload,
   onShowLogin,
   downloadType,
-  quoteData
+  quoteData,
 }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: '',
+    name: "",
+    email: "",
+    company: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,8 +74,10 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
     try {
       // Check both authService (local) and Supabase
       const localUser = authService.getCurrentUser();
-      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user: supabaseUser },
+      } = await supabase.auth.getUser();
+
       if (localUser || supabaseUser) {
         setIsLoggedIn(true);
         // Auto-proceed with download after a brief moment
@@ -77,7 +89,7 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
         setIsLoggedIn(false);
       }
     } catch (err) {
-      console.error('Auth check error:', err);
+      console.error("Auth check error:", err);
       setIsLoggedIn(false);
     } finally {
       setIsCheckingAuth(false);
@@ -89,7 +101,7 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
   const downloadInfo = DOWNLOAD_LABELS[downloadType];
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     setError(null);
   };
 
@@ -100,22 +112,22 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!formData.name.trim()) {
-      setError('Please enter your name');
+      setError("Please enter your name");
       return;
     }
     if (!formData.email.trim()) {
-      setError('Please enter your email');
+      setError("Please enter your email");
       return;
     }
     if (!validateEmail(formData.email)) {
-      setError('Please enter a valid email address');
+      setError("Please enter a valid email address");
       return;
     }
     if (!formData.company.trim()) {
-      setError('Please enter your company name');
+      setError("Please enter your company name");
       return;
     }
 
@@ -124,8 +136,8 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
 
     try {
       // Generate a temporary password
-      const tempPassword = Math.random().toString(36).slice(-12) + 'A1!';
-      
+      const tempPassword = Math.random().toString(36).slice(-12) + "A1!";
+
       // Try to sign up with Supabase Auth
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
@@ -140,16 +152,16 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
 
       if (signUpError) {
         // If user already exists, that's fine - we'll proceed anyway
-        if (!signUpError.message.includes('already registered')) {
-          console.error('Sign up error:', signUpError);
+        if (!signUpError.message.includes("already registered")) {
+          console.error("Sign up error:", signUpError);
         }
       }
 
       // Also save to local authService for immediate access
       const userId = authData?.user?.id || `local_${Date.now()}`;
-      
+
       // Save lead info to localStorage (backup)
-      const leads = JSON.parse(localStorage.getItem('merlin_download_leads') || '[]');
+      const leads = JSON.parse(localStorage.getItem("merlin_download_leads") || "[]");
       leads.push({
         ...formData,
         userId,
@@ -157,11 +169,11 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
         quoteData,
         timestamp: new Date().toISOString(),
       });
-      localStorage.setItem('merlin_download_leads', JSON.stringify(leads));
+      localStorage.setItem("merlin_download_leads", JSON.stringify(leads));
 
       // Try to save to Supabase (non-blocking)
       try {
-        await (supabase as any).from('download_leads').insert({
+        await (supabase as any).from("download_leads").insert({
           name: formData.name,
           email: formData.email,
           company: formData.company,
@@ -171,23 +183,24 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
         });
       } catch (dbErr) {
         // Table might not exist - that's OK
-        if (import.meta.env.DEV) { console.log('Lead table insert (may not exist):', dbErr); }
+        if (import.meta.env.DEV) {
+          console.log("Lead table insert (may not exist):", dbErr);
+        }
       }
 
       setSuccess(true);
-      
+
       // Wait for success animation then proceed with download
       setTimeout(() => {
         onProceedWithDownload();
         onClose();
         // Reset form
-        setFormData({ name: '', email: '', company: '' });
+        setFormData({ name: "", email: "", company: "" });
         setSuccess(false);
       }, 1500);
-
     } catch (err: any) {
-      console.error('Sign up error:', err);
-      setError(err.message || 'Failed to create account. Please try again.');
+      console.error("Sign up error:", err);
+      setError(err.message || "Failed to create account. Please try again.");
       setIsLoading(false);
     }
   };
@@ -228,27 +241,27 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
           {/* Header */}
-          <div className={`bg-gradient-to-r ${downloadInfo.color} px-6 py-5 relative overflow-hidden`}>
+          <div
+            className={`bg-gradient-to-r ${downloadInfo.color} px-6 py-5 relative overflow-hidden`}
+          >
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            
+
             <div className="relative z-10 flex justify-between items-start">
               <div className="flex items-center gap-3">
                 <div className="text-4xl">{downloadInfo.icon}</div>
                 <div>
                   <h2 className="text-xl font-bold text-white">Download {downloadInfo.label}</h2>
-                  <p className="text-white/80 text-sm mt-0.5">
-                    Create a free account to continue
-                  </p>
+                  <p className="text-white/80 text-sm mt-0.5">Create a free account to continue</p>
                 </div>
               </div>
               <button
@@ -270,9 +283,7 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
                   <CheckCircle className="w-10 h-10 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">Success! 🎉</h3>
-                <p className="text-gray-600">
-                  Your download is starting...
-                </p>
+                <p className="text-gray-600">Your download is starting...</p>
               </div>
             ) : (
               // Sign Up Form
@@ -296,7 +307,7 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
                     <input
                       type="text"
                       value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      onChange={(e) => handleInputChange("name", e.target.value)}
                       placeholder="John Smith"
                       disabled={isLoading}
                       className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -315,7 +326,7 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
                     <input
                       type="email"
                       value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
                       placeholder="john@company.com"
                       disabled={isLoading}
                       className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -334,7 +345,7 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
                     <input
                       type="text"
                       value={formData.company}
-                      onChange={(e) => handleInputChange('company', e.target.value)}
+                      onChange={(e) => handleInputChange("company", e.target.value)}
                       placeholder="Acme Corp"
                       disabled={isLoading}
                       className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -353,7 +364,8 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
 
                 {/* Privacy Notice */}
                 <p className="text-xs text-gray-500 text-center">
-                  By signing up, you agree to receive occasional updates about battery storage solutions.
+                  By signing up, you agree to receive occasional updates about battery storage
+                  solutions.
                 </p>
 
                 {/* Submit Button */}
@@ -382,7 +394,18 @@ const DownloadGateModal: React.FC<DownloadGateModalProps> = ({
           {!success && (
             <div className="border-t border-gray-100 px-6 py-3 bg-gray-50">
               <p className="text-xs text-center text-gray-500">
-                Already have an account? <a href="#" className="text-purple-600 font-medium hover:underline" onClick={(e) => { e.preventDefault(); onClose(); onShowLogin?.(); }}>Sign in</a> for instant access.
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  className="text-purple-600 font-medium hover:underline"
+                  onClick={() => {
+                    onClose();
+                    onShowLogin?.();
+                  }}
+                >
+                  Sign in
+                </button>{" "}
+                for instant access.
               </p>
             </div>
           )}

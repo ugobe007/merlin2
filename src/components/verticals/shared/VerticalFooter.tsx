@@ -2,13 +2,13 @@
  * SHARED VERTICAL FOOTER
  * ======================
  * Footer with brand name, links, and copyright.
- * 
+ *
  * Created: Feb 7, 2026 — Phase 2 Vertical Unification
  */
 
-import React from 'react';
-import type { VerticalConfig } from '@/config/verticalConfig';
-import merlinImage from '@/assets/images/new_profile_merlin.png';
+import React from "react";
+import type { VerticalConfig } from "@/config/verticalConfig";
+import merlinImage from "@/assets/images/new_profile_merlin.png";
 
 interface VerticalFooterProps {
   config: VerticalConfig;
@@ -29,12 +29,20 @@ export function VerticalFooter({ config }: VerticalFooterProps) {
             </div>
           </div>
           <div className={`flex items-center gap-6 text-${theme.accent}-200/70 text-sm`}>
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-white transition-colors">Contact</a>
+            <a href="/privacy" className="hover:text-white transition-colors">
+              Privacy Policy
+            </a>
+            <a href="/privacy" className="hover:text-white transition-colors">
+              Terms of Service
+            </a>
+            <a href="/support" className="hover:text-white transition-colors">
+              Contact
+            </a>
           </div>
         </div>
-        <div className={`mt-8 pt-8 border-t border-white/10 text-center text-${theme.accent}-200/50 text-sm`}>
+        <div
+          className={`mt-8 pt-8 border-t border-white/10 text-center text-${theme.accent}-200/50 text-sm`}
+        >
           © {new Date().getFullYear()} {brandName}. All rights reserved.
         </div>
       </div>
