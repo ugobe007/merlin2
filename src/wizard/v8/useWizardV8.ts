@@ -56,6 +56,7 @@ import { getCriticalLoadWithSource } from "@/services/benchmarkSources";
 import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
 import { buildTiers } from "./step4Logic";
 import type { LocationData } from "./wizardState";
+import { trackWizardEvent } from "@/services/analyticsService";
 
 // Country list for matching user input to country names
 const INTERNATIONAL_COUNTRIES = [
@@ -226,6 +227,61 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   const zipDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const tierBuildRef = useRef<TierBuildCache | null>(null);
+  const previousStepRef = useRef<WizardStep | null>(null);
+  const latestStateRef = useRef<WizardState>(state);
+
+  useEffect(() => {
+    latestStateRef.current = state;
+  }, [state]);
+
+  // ── Analytics: step views + transitions ────────────────────────────────
+  useEffect(() => {
+    const fromStep = previousStepRef.current;
+    const toStep = state.step;
+
+    if (fromStep === null) {
+      void trackWizardEvent("step_view", {
+        step: toStep,
+        industry: state.industry ?? "unknown",
+      });
+      previousStepRef.current = toStep;
+      return;
+    }
+
+    if (fromStep !== toStep) {
+      void trackWizardEvent("step_transition", {
+        fromStep,
+        toStep,
+        hasLocation: !!state.location,
+        hasIntel: !!state.intel,
+        hasIndustry: !!state.industry,
+      });
+      void trackWizardEvent("step_view", {
+        step: toStep,
+        industry: state.industry ?? "unknown",
+      });
+      previousStepRef.current = toStep;
+    }
+  }, [state.step, state.industry, state.location, state.intel]);
+
+  // ── Analytics: drop-off capture on unload/unmount ─────────────────────
+  useEffect(() => {
+    const captureDropoff = () => {
+      const snapshot = latestStateRef.current;
+      const eventName = snapshot.step >= 6 ? "wizard_exit_completed" : "dropoff";
+      void trackWizardEvent(eventName, {
+        step: snapshot.step,
+        completionPercent: Math.min(100, Math.round((Number(snapshot.step) / 6) * 100)),
+        hasTierSelection: snapshot.selectedTierIndex !== null,
+      });
+    };
+
+    window.addEventListener("beforeunload", captureDropoff);
+    return () => {
+      captureDropoff();
+      window.removeEventListener("beforeunload", captureDropoff);
+    };
+  }, []);
 
   // ── Step 1: Raw input → debounced intel fetch ───────────────────────────
 
@@ -1230,9 +1286,18 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     dispatch({ type: "SET_TIERS", tiers });
   }, []);
 
-  const setTiersStatus = useCallback((status: WizardState["tiersStatus"]) => {
-    dispatch({ type: "SET_TIERS_STATUS", status });
-  }, []);
+  const setTiersStatus = useCallback(
+    (status: WizardState["tiersStatus"]) => {
+      if (status === "fetching") {
+        void trackWizardEvent("stack_generation_started", {
+          step: state.step,
+          industry: state.industry ?? "unknown",
+        });
+      }
+      dispatch({ type: "SET_TIERS_STATUS", status });
+    },
+    [state.step, state.industry]
+  );
 
   const getOrStartTierBuild = useCallback((nextState: WizardState) => {
     const key = createTierBuildKey(nextState);
@@ -1247,27 +1312,50 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
   // ── Step 5 ────────────────────────────────────────────────────────────────
 
-  const selectTier = useCallback((index: 0 | 1 | 2) => {
-    dispatch({ type: "SELECT_TIER", index });
-  }, []);
+  const selectTier = useCallback(
+    (index: 0 | 1 | 2) => {
+      const tier = state.tiers?.[index];
+      void trackWizardEvent("stack_selection", {
+        tierIndex: index,
+        tierLabel: tier?.label ?? "unknown",
+        annualSavings: tier?.annualSavings ?? 0,
+        netCost: tier?.netCost ?? 0,
+        paybackYears: tier?.paybackYears ?? 0,
+      });
+      dispatch({ type: "SELECT_TIER", index });
+    },
+    [state.tiers]
+  );
 
   // ── Navigation ────────────────────────────────────────────────────────────
 
-  const goToStep = useCallback(async (step: WizardStep) => {
-    // ⚡ REMOVED SKIP LOGIC - Step 4 (Add-ons) should ALWAYS show
-    // Even if no addons initially selected, we show intelligent recommendations
-    // User can skip addons by clicking Continue, but we always present the opportunity
+  const goToStep = useCallback(
+    async (step: WizardStep) => {
+      // ⚡ REMOVED SKIP LOGIC - Step 4 (Add-ons) should ALWAYS show
+      // Even if no addons initially selected, we show intelligent recommendations
+      // User can skip addons by clicking Continue, but we always present the opportunity
 
-    // ⚡ REMOVED MANUAL TIER BUILDING - useEffect handles it proactively
-    // Tiers are built in background during Step 3/4 via useEffect
-    // Navigation just moves to the next step - tiers should already be ready
+      // ⚡ REMOVED MANUAL TIER BUILDING - useEffect handles it proactively
+      // Tiers are built in background during Step 3/4 via useEffect
+      // Navigation just moves to the next step - tiers should already be ready
 
-    dispatch({ type: "GO_TO_STEP", step });
-  }, []);
+      void trackWizardEvent("step_navigate", {
+        fromStep: state.step,
+        toStep: step,
+        hasTierSelection: state.selectedTierIndex !== null,
+      });
+      dispatch({ type: "GO_TO_STEP", step });
+    },
+    [state.step, state.selectedTierIndex]
+  );
 
   const goBack = useCallback(() => {
+    void trackWizardEvent("step_back", {
+      fromStep: state.step,
+      toStep: Math.max(1, Number(state.step) - 1),
+    });
     dispatch({ type: "GO_BACK" });
-  }, []);
+  }, [state.step]);
 
   const reset = useCallback(() => {
     if (abortRef.current) abortRef.current.abort();
@@ -1331,12 +1419,20 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       .then((tiers) => {
         clearTimeout(watchdog);
         devLog("[useWizardV8] ✅ Background tier build complete", tiers.length);
+        void trackWizardEvent("stack_generation_completed", {
+          tierCount: tiers.length,
+          recommendedPaybackYears: tiers[1]?.paybackYears ?? 0,
+          recommendedAnnualSavings: tiers[1]?.annualSavings ?? 0,
+        });
         dispatch({ type: "SET_TIERS", tiers });
         dispatch({ type: "SET_TIERS_STATUS", status: "ready" });
       })
       .catch((error) => {
         clearTimeout(watchdog);
         console.error("[useWizardV8] ❌ Tier build failed:", error);
+        void trackWizardEvent("stack_generation_failed", {
+          reason: (error as Error)?.message ?? "unknown",
+        });
         dispatch({ type: "SET_TIERS_STATUS", status: "error" });
         if (tierBuildRef.current?.key === createTierBuildKey(state)) {
           tierBuildRef.current = null;

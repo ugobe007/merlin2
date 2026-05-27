@@ -18,9 +18,10 @@
  */
 
 import React from "react";
-import type { WizardState, WizardActions } from "../wizardState";
+import type { WizardState, WizardActions, QuoteTier } from "../wizardState";
 import { Loader2, AlertTriangle, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { calculateSystemCosts, EQUIPMENT_UNIT_COSTS } from "@/services/pricingServiceV45";
+import { trackWizardEvent } from "@/services/analyticsService";
 
 // ============================================================================
 // TIER DESIGN CONFIG
@@ -187,6 +188,109 @@ function formatCurrency(value: number): string {
     return `$${(value / 1_000).toFixed(0)}K`;
   }
   return `$${value.toFixed(0)}`;
+}
+
+type StackVariantId = "A" | "B" | "C" | "D" | "E" | "F";
+
+const STACK_VARIANTS: Array<{
+  id: StackVariantId;
+  name: string;
+  description: string;
+  costBias: number; // + = cheaper, - = more expensive
+  resilienceBias: number; // + = more resilient
+  peakBias: number; // + = stronger peak shaving
+}> = [
+  {
+    id: "A",
+    name: "Balanced",
+    description: "Baseline Merlin recommendation",
+    costBias: 0,
+    resilienceBias: 0,
+    peakBias: 0,
+  },
+  {
+    id: "B",
+    name: "Cost First",
+    description: "Lower CapEx, faster payback",
+    costBias: 18,
+    resilienceBias: -10,
+    peakBias: -5,
+  },
+  {
+    id: "C",
+    name: "Resilience First",
+    description: "More outage protection",
+    costBias: -15,
+    resilienceBias: 20,
+    peakBias: 8,
+  },
+  {
+    id: "D",
+    name: "Demand Shield",
+    description: "Peak shaving emphasis",
+    costBias: -8,
+    resilienceBias: 6,
+    peakBias: 25,
+  },
+  {
+    id: "E",
+    name: "TOU Arbitrage",
+    description: "Rate-spread optimization",
+    costBias: 4,
+    resilienceBias: -4,
+    peakBias: 16,
+  },
+  {
+    id: "F",
+    name: "Grid Exit Ready",
+    description: "Maximum autonomy posture",
+    costBias: -20,
+    resilienceBias: 26,
+    peakBias: 12,
+  },
+];
+
+function clampScore(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function computeVariantMetrics(
+  tiers: [QuoteTier, QuoteTier, QuoteTier],
+  variant: (typeof STACK_VARIANTS)[number],
+  weights: { costWeight: number; resilienceWeight: number }
+): {
+  score: number;
+  annualSavingsDeltaPct: number;
+  netCostDeltaPct: number;
+  paybackDeltaYears: number;
+  peakExposure: number;
+} {
+  const rec = tiers[1];
+  const baseResilience = rec.generatorKW > 0 ? 74 : 55;
+  const basePeak = clampScore((rec.bessKW / Math.max(rec.peakLoadKW || rec.bessKW || 1, 1)) * 100);
+
+  const costScore = clampScore(70 + variant.costBias + weights.costWeight * 0.18);
+  const resilienceScore = clampScore(62 + variant.resilienceBias + weights.resilienceWeight * 0.2);
+  const peakScore = clampScore(basePeak * 0.6 + 26 + variant.peakBias * 0.8);
+
+  const score = clampScore(costScore * 0.45 + resilienceScore * 0.35 + peakScore * 0.2);
+
+  // Approximate comparative financial impact vs baseline Recommended tier
+  const annualSavingsDeltaPct = Number(
+    (variant.peakBias * 0.45 + variant.resilienceBias * 0.2).toFixed(1)
+  );
+  const netCostDeltaPct = Number(
+    ((-variant.costBias * 0.55 + variant.resilienceBias * 0.2) * 0.6).toFixed(1)
+  );
+  const paybackDeltaYears = Number(((netCostDeltaPct - annualSavingsDeltaPct) / 100).toFixed(2));
+
+  return {
+    score,
+    annualSavingsDeltaPct,
+    netCostDeltaPct,
+    paybackDeltaYears,
+    peakExposure: clampScore((basePeak + variant.peakBias + baseResilience * 0.1) * 0.9),
+  };
 }
 
 // ============================================================================
@@ -617,6 +721,45 @@ export default function Step4V8({ state, actions }: Props) {
   const [selectionConfirmation, setSelectionConfirmation] = React.useState<string | null>(null);
   const [expandedCostBreakdown, setExpandedCostBreakdown] = React.useState<number | null>(null);
   const [expandedITCTier, setExpandedITCTier] = React.useState<number | null>(null);
+  const [selectedStackVariant, setSelectedStackVariant] = React.useState<StackVariantId>("A");
+  const [costPriority, setCostPriority] = React.useState(55);
+
+  const resiliencePriority = 100 - costPriority;
+
+  const variantCards = React.useMemo(() => {
+    if (!tiers) return [];
+    return STACK_VARIANTS.map((variant) => ({
+      ...variant,
+      metrics: computeVariantMetrics(tiers, variant, {
+        costWeight: costPriority,
+        resilienceWeight: resiliencePriority,
+      }),
+    }));
+  }, [tiers, costPriority, resiliencePriority]);
+
+  const selectedVariantMetrics = React.useMemo(() => {
+    return variantCards.find((card) => card.id === selectedStackVariant)?.metrics;
+  }, [variantCards, selectedStackVariant]);
+
+  React.useEffect(() => {
+    if (!tiers) return;
+    void trackWizardEvent("stack_comparison_view", {
+      step: 5,
+      tierCount: tiers.length,
+      hasRecommended: !!tiers[1],
+      hasComplete: !!tiers[2],
+    });
+    // fire once when this view mounts with tiers
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!tiers]);
+
+  React.useEffect(() => {
+    void trackWizardEvent("stack_variant_selected", {
+      variant: selectedStackVariant,
+      costPriority,
+      resiliencePriority,
+    });
+  }, [selectedStackVariant, costPriority, resiliencePriority]);
 
   // Log only when tiersStatus changes, not on every render
   React.useEffect(() => {
@@ -879,7 +1022,7 @@ export default function Step4V8({ state, actions }: Props) {
           </div>
         )}
         {selectionConfirmation && (
-          <div className="mt-4 inline-flex items-center gap-3 rounded-xl border border-emerald-400/40 bg-emerald-500/12 px-5 py-3 shadow-[0_0_30px_rgba(16,185,129,0.18)]">
+          <div className="mt-4 flex w-full max-w-full items-center gap-3 rounded-xl border border-emerald-400/40 bg-emerald-500/12 px-4 py-3 shadow-[0_0_30px_rgba(16,185,129,0.18)] sm:inline-flex sm:w-auto sm:max-w-[680px] sm:px-5">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white">
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                 <path
@@ -889,12 +1032,171 @@ export default function Step4V8({ state, actions }: Props) {
                 />
               </svg>
             </div>
-            <p className="text-sm font-semibold text-emerald-200">{selectionConfirmation}</p>
+            <p className="text-sm font-semibold text-emerald-200 break-words">
+              {selectionConfirmation}
+            </p>
           </div>
         )}
       </div>
 
       {/* Goal Rankings - context before choices */}
+      <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 mx-2 md:mx-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <div>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+              Stack Variant Workspace
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              Choose a strategy lens (A–F) and adjust optimization weights.
+            </p>
+          </div>
+          <div className="w-full min-w-0 md:w-auto md:min-w-[220px]">
+            <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1">
+              <span>Cost priority</span>
+              <span>Resilience priority</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={costPriority}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                setCostPriority(next);
+                void trackWizardEvent("stack_weight_adjusted", {
+                  costPriority: next,
+                  resiliencePriority: 100 - next,
+                });
+              }}
+              className="w-full accent-emerald-500"
+            />
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1 font-medium">
+              <span>{costPriority}%</span>
+              <span>{resiliencePriority}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+          {variantCards.map((variant) => {
+            const isActive = selectedStackVariant === variant.id;
+            return (
+              <button
+                key={variant.id}
+                type="button"
+                onClick={() => setSelectedStackVariant(variant.id)}
+                className={`text-left rounded-lg border p-3 transition-all ${
+                  isActive
+                    ? "border-emerald-400/60 bg-emerald-500/10"
+                    : "border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15]"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold text-white">
+                      Variant {variant.id} · {variant.name}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{variant.description}</p>
+                  </div>
+                  <span className="text-sm font-extrabold text-emerald-300">
+                    {variant.metrics.score}
+                  </span>
+                </div>
+
+                <div className="mt-2.5 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-emerald-500"
+                    style={{ width: `${variant.metrics.score}%` }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 mt-2 text-[10px]">
+                  <div>
+                    <p className="text-slate-500">Savings Δ</p>
+                    <p
+                      className={`${variant.metrics.annualSavingsDeltaPct >= 0 ? "text-emerald-400" : "text-amber-300"}`}
+                    >
+                      {variant.metrics.annualSavingsDeltaPct >= 0 ? "+" : ""}
+                      {variant.metrics.annualSavingsDeltaPct}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Net Cost Δ</p>
+                    <p
+                      className={`${variant.metrics.netCostDeltaPct <= 0 ? "text-emerald-400" : "text-amber-300"}`}
+                    >
+                      {variant.metrics.netCostDeltaPct >= 0 ? "+" : ""}
+                      {variant.metrics.netCostDeltaPct}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Peak Score</p>
+                    <p className="text-slate-200">{variant.metrics.peakExposure}</p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {selectedVariantMetrics && (
+          <div className="mt-4 p-3 rounded-lg border border-emerald-500/20 bg-emerald-500/[0.05]">
+            <p className="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold mb-2">
+              Financial impact preview — Variant {selectedStackVariant}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              <div>
+                <p className="text-slate-500">Annual savings impact</p>
+                <div className="h-2 rounded-full bg-slate-800 overflow-hidden mt-1 mb-1">
+                  <div
+                    className="h-full bg-emerald-500"
+                    style={{
+                      width: `${Math.min(100, Math.max(6, 50 + selectedVariantMetrics.annualSavingsDeltaPct * 2))}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-emerald-300 font-semibold">
+                  {selectedVariantMetrics.annualSavingsDeltaPct >= 0 ? "+" : ""}
+                  {selectedVariantMetrics.annualSavingsDeltaPct}% vs baseline
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-500">Net project cost impact</p>
+                <div className="h-2 rounded-full bg-slate-800 overflow-hidden mt-1 mb-1">
+                  <div
+                    className="h-full bg-amber-400"
+                    style={{
+                      width: `${Math.min(100, Math.max(6, 50 + selectedVariantMetrics.netCostDeltaPct * 2))}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-amber-300 font-semibold">
+                  {selectedVariantMetrics.netCostDeltaPct >= 0 ? "+" : ""}
+                  {selectedVariantMetrics.netCostDeltaPct}% vs baseline
+                </p>
+              </div>
+
+              <div>
+                <p className="text-slate-500">Payback shift estimate</p>
+                <div className="h-2 rounded-full bg-slate-800 overflow-hidden mt-1 mb-1">
+                  <div
+                    className="h-full bg-sky-400"
+                    style={{
+                      width: `${Math.min(100, Math.max(6, 50 + selectedVariantMetrics.paybackDeltaYears * 20))}%`,
+                    }}
+                  />
+                </div>
+                <p className="text-sky-300 font-semibold">
+                  {selectedVariantMetrics.paybackDeltaYears >= 0 ? "+" : ""}
+                  {selectedVariantMetrics.paybackDeltaYears.toFixed(2)} years
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       <GoalRankingsPanel tiers={tiers} />
 
       {/* Cards Grid — 2 options: Recommended + Complete (Starter reserved for future) */}
@@ -1216,6 +1518,11 @@ export default function Step4V8({ state, actions }: Props) {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          void trackWizardEvent("comparison_interaction", {
+                            interaction: "toggle_itc_basis",
+                            tierIndex,
+                            expanded: expandedITCTier !== tierIndex,
+                          });
                           setExpandedITCTier(expandedITCTier === tierIndex ? null : tierIndex);
                         }}
                         className="flex items-center gap-1 text-emerald-500 hover:text-emerald-400 transition-colors text-left"
@@ -1398,6 +1705,11 @@ export default function Step4V8({ state, actions }: Props) {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
+                        void trackWizardEvent("comparison_interaction", {
+                          interaction: "toggle_cost_stack",
+                          tierIndex,
+                          expanded: expandedCostBreakdown !== tierIndex,
+                        });
                         setExpandedCostBreakdown(
                           expandedCostBreakdown === tierIndex ? null : tierIndex
                         );
@@ -1477,6 +1789,11 @@ export default function Step4V8({ state, actions }: Props) {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    void trackWizardEvent("comparison_interaction", {
+                      interaction: "toggle_cost_breakdown",
+                      tierIndex,
+                      expanded: expandedCostBreakdown !== tierIndex,
+                    });
                     setExpandedCostBreakdown(
                       expandedCostBreakdown === tierIndex ? null : tierIndex
                     );
