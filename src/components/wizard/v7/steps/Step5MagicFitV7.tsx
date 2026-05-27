@@ -69,6 +69,16 @@ interface Props {
   };
 }
 
+const STACK_VARIANTS: Record<TierKey, { stackName: string; strategy: string }> = {
+  starter: { stackName: "Stack A", strategy: "Cost Optimized" },
+  perfectFit: { stackName: "Stack B", strategy: "Balanced" },
+  beastMode: { stackName: "Stack C", strategy: "Resilience Optimized" },
+};
+
+function clampScore(value: number, min = 10, max = 98): number {
+  return Math.max(min, Math.min(max, Math.round(value)));
+}
+
 export default function Step5MagicFitV7({ state, actions }: Props) {
   const [tiers, setTiers] = useState<TierQuote[]>([]);
   const [selectedTier, setSelectedTier] = useState<TierKey | null>(null);
@@ -556,6 +566,41 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   // Build equipment summary for the selected tier (or perfectFit as default)
   const _summaryTier = tiers.find((t) => t.tierKey === (selectedTier || "perfectFit"));
 
+  const peakLoad = Math.max(data.peakLoadKW || 0, 1);
+  const comparisonWorkspace = tiers
+    .filter((tier) => tier.quote)
+    .map((tier) => {
+      const quote = tier.quote;
+      const batteries = quote.equipment?.batteries;
+      const bessKW = batteries
+        ? (batteries.unitPowerMW ?? 0) * (batteries.quantity ?? 0) * 1000
+        : 0;
+      const solarKW = quote.equipment?.solar ? (quote.equipment.solar.totalMW ?? 0) * 1000 : 0;
+      const genKW = quote.equipment?.generators
+        ? (quote.equipment.generators.unitPowerMW ?? 0) *
+          (quote.equipment.generators.quantity ?? 0) *
+          1000
+        : 0;
+      const payback = quote.financials?.paybackYears ?? 8;
+      const roi10 = quote.financials?.roi10Year ?? 0;
+      const annualSavings = quote.financials?.annualSavings ?? 0;
+
+      const stackCoverageRatio = (solarKW + bessKW + genKW * 0.6) / peakLoad;
+
+      return {
+        tierKey: tier.tierKey,
+        stackName: STACK_VARIANTS[tier.tierKey].stackName,
+        strategy: STACK_VARIANTS[tier.tierKey].strategy,
+        scores: {
+          costStability: clampScore(88 - payback * 6 + annualSavings / 50000),
+          gridDependence: clampScore(92 - stackCoverageRatio * 26, 8, 95), // lower is better
+          outageResilience: clampScore(baseDuration * 12 + (genKW > 0 ? 24 : 8)),
+          peakExposure: clampScore(94 - (bessKW / peakLoad) * 48, 8, 95), // lower is better
+          roiEfficiency: clampScore(roi10 * 0.95),
+        },
+      };
+    });
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* TrueQuote Financial Modal — full ROI, 10yr cashflow, sensitivity */}
@@ -632,7 +677,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
       {/* Inline guidance */}
       <div className="space-y-2">
         <p className="text-sm leading-relaxed text-slate-400">
-          Three system options for your{" "}
+          Three stack architectures for your{" "}
           <span className="text-slate-200 font-medium">{getIndustryLabel(data.industry)}</span>{" "}
           facility
           <span className="text-slate-500"> · sized by Merlin based on your profile and goals</span>
@@ -648,6 +693,65 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Stack Comparison Workspace */}
+      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">
+              Comparison Workspace
+            </div>
+            <div className="mt-1 text-base font-semibold text-white">Energy Stack Score™</div>
+          </div>
+          <div className="text-[11px] text-slate-500">
+            Lower is better for Grid Dependence and Peak Exposure
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 lg:grid-cols-3">
+          {comparisonWorkspace.map((stack) => (
+            <div
+              key={stack.tierKey}
+              className="rounded-lg border border-white/[0.08] bg-slate-950/40 p-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-bold text-white">{stack.stackName}</div>
+                <div className="text-[10px] uppercase tracking-[0.12em] text-slate-400">
+                  {stack.strategy}
+                </div>
+              </div>
+              <div className="mt-3 space-y-1.5 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Cost Stability</span>
+                  <span className="font-semibold text-blue-300">{stack.scores.costStability}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Grid Dependence</span>
+                  <span className="font-semibold text-amber-300">
+                    {stack.scores.gridDependence}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Outage Resilience</span>
+                  <span className="font-semibold text-emerald-300">
+                    {stack.scores.outageResilience}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Peak Exposure</span>
+                  <span className="font-semibold text-violet-300">{stack.scores.peakExposure}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">ROI Efficiency</span>
+                  <span className="font-semibold text-indigo-300">
+                    {stack.scores.roiEfficiency}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Tier Cards Grid */}
@@ -727,10 +831,17 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                 </div>
 
                 {/* Tier Name + Tagline */}
-                <h3 className={`${tier.config.headlineClass} mb-1 leading-tight`}>
-                  {tier.config.name}
-                </h3>
-                <p className="text-slate-500 text-xs font-medium mb-4">{tier.config.tagline}</p>
+                <div className="mb-4">
+                  <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">
+                    {STACK_VARIANTS[tier.tierKey].stackName}
+                  </div>
+                  <h3 className={`${tier.config.headlineClass} mb-1 leading-tight`}>
+                    {tier.config.name}
+                  </h3>
+                  <p className="text-slate-500 text-xs font-medium">
+                    {STACK_VARIANTS[tier.tierKey].strategy}
+                  </p>
+                </div>
 
                 {/* Annual Savings - HERO */}
                 <div className="mb-4 p-3 bg-blue-500/[0.05] rounded-xl border border-blue-400/[0.14]">
@@ -877,7 +988,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                       Selected
                     </span>
                   ) : (
-                    `Select ${tier.config.name}`
+                    `Select ${STACK_VARIANTS[tier.tierKey].stackName}`
                   )}
                 </button>
               </div>

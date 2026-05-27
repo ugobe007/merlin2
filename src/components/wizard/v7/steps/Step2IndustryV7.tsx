@@ -151,7 +151,7 @@ const Step2IndustryV7 = React.memo(function Step2IndustryV7({ state, actions }: 
         {/* Inline guidance */}
         <div>
           <div style={{ fontSize: 14, color: DARK.textSecondary, lineHeight: 1.6 }}>
-            Select your industry
+            Select your operating profile
             <span
               style={{ color: "rgba(232,235,243,0.25)", margin: "0 8px" }}
               className="hidden sm:inline"
@@ -166,7 +166,7 @@ const Step2IndustryV7 = React.memo(function Step2IndustryV7({ state, actions }: 
             </span>
           </div>
           <div style={{ fontSize: 12, color: "rgba(232,235,243,0.35)", marginTop: 4 }}>
-            This determines your facility's energy profile and custom questions.
+            This shapes your stack architecture, risk signals, and follow-up questions.
           </div>
         </div>
 
@@ -182,7 +182,7 @@ const Step2IndustryV7 = React.memo(function Step2IndustryV7({ state, actions }: 
               letterSpacing: "0.5px",
             }}
           >
-            Select Industry
+            Operating Profiles
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
