@@ -376,13 +376,13 @@ export default function HeroSection() {
           </div>
 
           <h1
-            className="text-5xl font-black leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl"
+            className="text-5xl font-black leading-[0.98] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl"
             style={{ fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif" }}
           >
-            The operating system for
+            The future of energy
             <br />
-            <span className="bg-gradient-to-r from-cyan-300 to-emerald-400 bg-clip-text text-transparent drop-shadow-[0_0_22px_rgba(34,211,238,0.28)]">
-              energy independence.
+            <span className="bg-gradient-to-r from-cyan-300 via-emerald-300 to-violet-300 bg-clip-text text-transparent drop-shadow-[0_0_28px_rgba(56,189,248,0.36)]">
+              is adaptive.
             </span>
           </h1>
 
@@ -390,8 +390,9 @@ export default function HeroSection() {
             className="mt-7 max-w-2xl text-lg leading-8 text-slate-400"
             style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif" }}
           >
-            The grid is getting more expensive. Merlin models your solar, storage, generator, and
-            utility options before you start.
+            Merlin uses <span className="font-semibold text-slate-200">Energy Stacking™</span> to
+            model intelligent combinations of battery storage, utility power, generators, and
+            renewable energy systems.
           </p>
 
           <form
@@ -418,9 +419,9 @@ export default function HeroSection() {
             </div>
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3.5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(37,99,235,0.3)] transition hover:-translate-y-0.5 hover:bg-blue-500"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-400/70 bg-transparent px-5 py-3.5 text-sm font-semibold text-blue-300 transition hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-200"
             >
-              See My Energy Options <ArrowRight size={16} />
+              Activate Agent <ArrowRight size={16} />
             </button>
           </form>
 
