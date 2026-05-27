@@ -1,14 +1,16 @@
 /* Merlin Energy — Agent-first homepage hero */
 
-import { useState } from "react";
 import {
   ArrowRight,
   Building2,
   CheckCircle2,
   DatabaseZap,
   Hotel,
+  Layers3,
   Plane,
+  ShieldAlert,
   Sparkles,
+  TrendingUp,
   X,
   Zap,
 } from "lucide-react";
@@ -32,7 +34,7 @@ type UseCase = {
   roiNote: string;
 };
 
-const telemetryRows: UseCase[] = [
+const _telemetryRows: UseCase[] = [
   {
     type: "Hotel",
     location: "Atlanta, GA",
@@ -139,7 +141,31 @@ const telemetryRows: UseCase[] = [
 
 const proofItems = ["Free & Instant", "No Utility Login Required", "CFO-Ready Report"];
 
-function UseCaseModal({ useCase, onClose }: { useCase: UseCase; onClose: () => void }) {
+const adaptiveOutcomes = [
+  {
+    label: "Grid Dependence Risk",
+    value: "High → Moderate",
+    detail: "Target reduction with hybrid stack",
+    Icon: ShieldAlert,
+    accent: "text-amber-300",
+  },
+  {
+    label: "Peak Charge Exposure",
+    value: "18–32%",
+    detail: "Estimated demand-charge reduction",
+    Icon: TrendingUp,
+    accent: "text-cyan-300",
+  },
+  {
+    label: "Best Stack Candidate",
+    value: "Solar + BESS + Utility",
+    detail: "Adaptive dispatch with backup layer",
+    Icon: Layers3,
+    accent: "text-violet-300",
+  },
+] as const;
+
+function _UseCaseModal({ useCase, onClose }: { useCase: UseCase; onClose: () => void }) {
   const Icon = useCase.Icon;
 
   return (
@@ -256,8 +282,6 @@ function UseCaseModal({ useCase, onClose }: { useCase: UseCase; onClose: () => v
 }
 
 function AgentTelemetryPanel() {
-  const [selectedUseCase, setSelectedUseCase] = useState<UseCase | null>(null);
-
   return (
     <div className="relative rounded-[1.35rem] border border-white/10 bg-[#18191D] p-6 shadow-[0_30px_100px_rgba(0,0,0,0.48),0_0_0_1px_rgba(37,99,235,0.18)] lg:p-7">
       <div className="absolute inset-0 rounded-[1.35rem] bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.14),transparent_42%)]" />
@@ -277,84 +301,65 @@ function AgentTelemetryPanel() {
                 className="text-sm font-bold text-white"
                 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
               >
-                MERLIN Energy Briefs
+                Your Adaptive Energy Snapshot
               </div>
-              <div className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-blue-500">
-                <Zap size={12} /> Quote + ROI previews
+              <div className="mt-0.5 text-xs font-semibold text-cyan-300">
+                Energy Stacking™ decision preview
               </div>
             </div>
           </div>
-          <div className="rounded-full border border-blue-500/25 bg-blue-500/10 px-3 py-1 text-[10px] font-medium text-blue-500">
-            Agent-Generated Examples
+          <div className="rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 py-1 text-[10px] font-medium text-cyan-200">
+            Decision-first output
           </div>
         </div>
 
-        <div className="mt-7">
+        <div className="mt-6 rounded-xl border border-cyan-300/20 bg-cyan-300/[0.08] p-4">
           <div
-            className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400"
+            className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-200/90"
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           >
-            Click a facility type
+            What Merlin identifies in minutes
           </div>
-          <div className="space-y-3">
-            {telemetryRows.map((row) => (
-              <button
-                type="button"
-                key={`${row.type}-${row.location}`}
-                className={`group flex w-full items-center justify-between gap-4 rounded-xl border px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:border-blue-500/45 hover:bg-blue-500/10 focus:outline-none focus:ring-2 focus:ring-blue-500/45 ${
-                  row.active
-                    ? "border-blue-500/45 bg-blue-500/12 shadow-[0_0_30px_rgba(37,99,235,0.16)]"
-                    : "border-white/[0.05] bg-black/18 opacity-70"
-                }`}
-                onClick={() => setSelectedUseCase(row)}
-                aria-label={`View ${row.type} use case details`}
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div
-                    className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
-                      row.active
-                        ? "bg-blue-500/20 text-blue-500"
-                        : "bg-white/[0.04] text-slate-500 group-hover:text-blue-400"
-                    }`}
-                  >
-                    <row.Icon size={15} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-bold text-white">
-                      {row.type} <span className="text-[11px] text-slate-500">{row.location}</span>
-                    </div>
-                    <div
-                      className="truncate text-[11px] text-slate-500"
-                      style={{ fontFamily: "'JetBrains Mono', monospace" }}
-                    >
-                      {row.status}
-                    </div>
-                  </div>
-                </div>
-                <div className="shrink-0 text-right">
-                  <div className="text-sm font-bold bg-gradient-to-r from-purple-400 to-violet-400 bg-clip-text text-transparent">
-                    {row.savings}
-                  </div>
-                  <div className="text-[10px] text-slate-500 group-hover:text-slate-400">
-                    {row.payback}
-                  </div>
-                </div>
-              </button>
-            ))}
+          <div className="mt-1 text-sm leading-6 text-slate-300">
+            Utility volatility, demand-charge spikes, and resilience exposure translated into a
+            prioritized stack strategy.
           </div>
         </div>
 
-        <div className="mt-7 rounded-xl border border-white/10 bg-white/[0.07] p-4 text-sm leading-relaxed text-slate-400">
-          <span className="font-bold text-slate-300">How MERLIN bypasses friction:</span> instead of
-          demanding weeks of electric bills and engineering site visits, MERLIN uses independent
-          tariff, solar, and facility benchmark data to draft a first-pass quote and ROI case
-          instantly.
+        <div className="mt-5 space-y-3">
+          {adaptiveOutcomes.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-xl border border-white/[0.08] bg-black/20 px-4 py-3.5"
+            >
+              <div className="flex items-center gap-2.5">
+                <item.Icon size={14} className={item.accent} />
+                <div className="text-[11px] uppercase tracking-[0.12em] text-slate-500">
+                  {item.label}
+                </div>
+              </div>
+              <div className={`mt-1 text-sm font-bold ${item.accent}`}>{item.value}</div>
+              <div className="mt-0.5 text-xs text-slate-500">{item.detail}</div>
+            </div>
+          ))}
         </div>
+
+        <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.07] p-4 text-sm leading-relaxed text-slate-400">
+          <span className="font-bold text-slate-200">No six-consultant workflow.</span> Merlin
+          models hybrid options before engineering spend, then gives you a clear next-step
+          architecture.
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = "/wizard";
+          }}
+          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/70 bg-transparent px-4 py-3 text-sm font-semibold text-cyan-200 transition hover:-translate-y-0.5 hover:border-cyan-200 hover:text-cyan-100"
+        >
+          Run Adaptive Energy Model <ArrowRight size={15} />
+        </button>
       </div>
-
-      {selectedUseCase && (
-        <UseCaseModal useCase={selectedUseCase} onClose={() => setSelectedUseCase(null)} />
-      )}
     </div>
   );
 }
@@ -376,14 +381,17 @@ export default function HeroSection() {
           </div>
 
           <h1
-            className="text-5xl font-black leading-[0.98] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl"
-            style={{ fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif" }}
+            className="text-5xl font-black leading-[0.96] tracking-[-0.045em] text-white antialiased sm:text-6xl lg:text-7xl"
+            style={{
+              fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif",
+              WebkitFontSmoothing: "antialiased",
+              MozOsxFontSmoothing: "grayscale",
+              textShadow: "0 1px 0 rgba(255,255,255,0.08), 0 14px 36px rgba(2,6,23,0.42)",
+            }}
           >
             The future of energy
             <br />
-            <span className="bg-gradient-to-r from-cyan-300 via-emerald-300 to-violet-300 bg-clip-text text-transparent drop-shadow-[0_0_28px_rgba(56,189,248,0.36)]">
-              is adaptive.
-            </span>
+            <span className="text-cyan-300">is adaptive.</span>
           </h1>
 
           <p

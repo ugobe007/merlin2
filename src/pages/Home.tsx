@@ -3,9 +3,7 @@
 
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import OntologySection from "@/components/OntologySection";
 import GridCongestionSection from "@/components/GridCongestionSection";
-import StatusQuoSection from "@/components/StatusQuoSection";
 import AudienceStrip from "@/components/AudienceStrip";
 import IndustriesSection from "@/components/IndustriesSection";
 import WorkflowSection from "@/components/WorkflowSection";
@@ -20,10 +18,8 @@ export default function Home() {
     <div className="min-h-screen bg-[#060D1F]">
       <Navbar />
       <HeroSection />
-      <OntologySection />
       <GridCongestionSection />
       <WorkflowSection />
-      <StatusQuoSection />
       <AudienceStrip />
       {/* <ProductsSection /> */}
       <IndustriesSection />

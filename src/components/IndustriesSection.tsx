@@ -218,29 +218,6 @@ export default function IndustriesSection() {
   return (
     <section id="industries" className="py-10 bg-[#060D1F]">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
-        {/* ── Section header ──────────────────────────────────────────── */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2.5 mb-3">
-            <span className="h-px w-8 bg-emerald-500" />
-            <span
-              className="text-[10px] text-emerald-400 font-bold uppercase tracking-[0.22em]"
-              style={{ fontFamily: "'Outfit', sans-serif" }}
-            >
-              Free · No Signup · Instant
-            </span>
-          </div>
-          <h2
-            className="text-3xl lg:text-4xl font-extrabold text-white mb-2 leading-tight"
-            style={{ fontFamily: "'Nunito', sans-serif" }}
-          >
-            Run a quick estimate for your facility.
-          </h2>
-          <p className="text-slate-300 text-sm" style={{ fontFamily: "'Nunito Sans', sans-serif" }}>
-            Enter your monthly bill amount and peak demand — same engine that powers full TrueQuote™
-            models. No account, no upload required.
-          </p>
-        </div>
-
         {/* ── Estimate form — clean bordered strip ── */}
         <div className="rounded-xl border border-emerald-500/25 overflow-hidden shadow-lg shadow-emerald-500/5">
           {/* Emerald top accent stripe */}

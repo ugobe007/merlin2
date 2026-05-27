@@ -9,19 +9,8 @@ const SHIELD_BLUE =
 
 export default function ValueSection() {
   return (
-    <section className="py-16 bg-[#060D1F] border-t border-white/[0.05]">
+    <section id="our-story" className="py-16 bg-[#060D1F] border-t border-white/[0.05]">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
-        {/* Eyebrow */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-5 h-px bg-sky-500/40" />
-          <span
-            className="text-[10px] text-sky-400/60 uppercase tracking-[0.25em] font-semibold"
-            style={{ fontFamily: "'JetBrains Mono', monospace" }}
-          >
-            Our story
-          </span>
-        </div>
-
         <div className="grid lg:grid-cols-[1fr_320px] gap-12 xl:gap-20 items-start">
           {/* ── Left: Founder narrative ── */}
           <div>
