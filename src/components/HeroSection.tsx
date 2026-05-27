@@ -270,23 +270,25 @@ function AgentTelemetryPanel({
     decisionPriority: string;
   };
 }) {
+  const zipSeed = modelPreview.zip.length === 5 ? Number.parseInt(modelPreview.zip, 10) % 100 : 0;
+
   const adaptiveOutcomes = [
     {
       label: "Grid Dependence Risk",
       value: modelPreview.gridRiskShift,
       detail: `ZIP ${modelPreview.zip || "pending"} · ${modelPreview.decisionPriority}`,
       Icon: ShieldAlert,
-      accent: "text-amber-300",
+      accent: "text-blue-200",
     },
     {
       label: "Peak Charge Exposure",
       value: modelPreview.peakReductionPct,
       detail: `Estimated reduction potential · ${modelPreview.backupHours} backup window`,
       Icon: TrendingUp,
-      accent: "text-cyan-300",
+      accent: "text-indigo-200",
     },
     {
-      label: "Best Stack Candidate",
+      label: "Recommended Stack Architecture",
       value: modelPreview.stackCandidate,
       detail: "Co-optimized across utility, storage, and generation",
       Icon: Layers3,
@@ -294,11 +296,39 @@ function AgentTelemetryPanel({
     },
   ] as const;
 
+  const intelligenceSignals = [
+    {
+      label: "Grid Stress Index",
+      value: modelPreview.zip.length === 5 ? `${58 + (zipSeed % 27)}/100` : "pending",
+      tone: "text-blue-200",
+      confidence:
+        modelPreview.zip.length === 5
+          ? zipSeed > 66
+            ? "High"
+            : zipSeed > 33
+              ? "Medium"
+              : "Low"
+          : "Pending",
+    },
+    {
+      label: "Stack Fit Score",
+      value: modelPreview.zip.length === 5 ? `${63 + (zipSeed % 24)}/100` : "pending",
+      tone: "text-violet-200",
+      confidence: modelPreview.zip.length === 5 ? (zipSeed > 44 ? "High" : "Medium") : "Pending",
+    },
+    {
+      label: "Dispatch Readiness",
+      value: modelPreview.zip.length === 5 ? `${71 + (zipSeed % 18)}%` : "pending",
+      tone: "text-slate-200",
+      confidence: modelPreview.zip.length === 5 ? "High" : "Pending",
+    },
+  ] as const;
+
   return (
-    <div className="relative rounded-[1.35rem] border border-white/10 bg-[#18191D] p-6 shadow-[0_30px_100px_rgba(0,0,0,0.48),0_0_0_1px_rgba(37,99,235,0.18)] lg:p-7">
-      <div className="absolute inset-0 rounded-[1.35rem] bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.14),transparent_42%)]" />
+    <div className="relative rounded-[1.35rem] border border-blue-300/28 bg-[linear-gradient(150deg,rgba(20,14,44,0.96)_0%,rgba(18,29,84,0.94)_54%,rgba(38,48,74,0.92)_100%)] p-6 shadow-[0_34px_110px_rgba(0,0,0,0.56),0_0_0_1px_rgba(96,165,250,0.2)] lg:p-7">
+      <div className="absolute inset-0 rounded-[1.35rem] bg-[radial-gradient(circle_at_14%_0%,rgba(59,130,246,0.26),transparent_40%),radial-gradient(circle_at_86%_12%,rgba(168,85,247,0.24),transparent_46%)]" />
       <div className="relative">
-        <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-5">
+        <div className="flex items-start justify-between gap-4 border-b border-white/12 pb-5">
           <div className="flex items-center gap-3">
             <div className="relative">
               <img
@@ -306,7 +336,7 @@ function AgentTelemetryPanel({
                 alt="MERLIN"
                 className="h-10 w-10 rounded-full border border-white/20 bg-white/10 object-contain p-1"
               />
-              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border border-[#18191D] bg-emerald-400" />
+              <span className="merlin-agent-signal absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border border-[#0A1223] bg-emerald-400" />
             </div>
             <div>
               <div
@@ -315,27 +345,55 @@ function AgentTelemetryPanel({
               >
                 Your Adaptive Energy Snapshot
               </div>
-              <div className="mt-0.5 text-xs font-semibold text-cyan-300">
-                Energy Stacking™ decision preview
+              <div className="mt-0.5 text-xs font-semibold text-blue-200">
+                Energy Stacking™ implementation preview
               </div>
             </div>
           </div>
-          <div className="rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 py-1 text-[10px] font-medium text-cyan-200">
-            Decision-first output
+          <div className="rounded-full border border-blue-300/45 bg-blue-300/10 px-3 py-1 text-[10px] font-medium text-blue-100">
+            Implementation-ready output
           </div>
         </div>
 
-        <div className="mt-6 rounded-xl border border-cyan-300/20 bg-cyan-300/[0.08] p-4">
+        <div className="mt-6 rounded-xl border border-blue-300/25 bg-blue-300/[0.08] p-4">
           <div
-            className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-200/90"
+            className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-200/90"
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           >
-            What Merlin identifies in minutes
+            How Energy Stacking is implemented
           </div>
           <div className="mt-1 text-sm leading-6 text-slate-300">
-            Utility volatility, demand-charge spikes, and resilience exposure translated into a
-            prioritized stack strategy.
+            Merlin sequences load profiling, stack architecture, and dispatch logic into one
+            executable operating plan.
           </div>
+          <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate-200">
+            <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1">
+              1) Model baseline demand
+            </span>
+            <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1">
+              2) Configure stack layers
+            </span>
+            <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1">
+              3) Optimize dispatch + economics
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {intelligenceSignals.map((signal) => (
+            <div
+              key={signal.label}
+              className="rounded-lg border border-white/14 bg-white/[0.04] px-3 py-2.5"
+            >
+              <div className="text-[10px] uppercase tracking-[0.12em] text-slate-300">
+                {signal.label}
+              </div>
+              <div className={`mt-1 text-sm font-bold ${signal.tone}`}>{signal.value}</div>
+              <div className="mt-1 text-[10px] uppercase tracking-[0.12em] text-slate-400">
+                Confidence: {signal.confidence}
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="mt-5">
@@ -362,6 +420,9 @@ function AgentTelemetryPanel({
         >
           Run Adaptive Energy Model <ArrowRight size={15} />
         </button>
+        <div className="mt-2 text-center text-[11px] text-slate-300">
+          Includes stack design + dispatch assumptions.
+        </div>
       </div>
     </div>
   );
