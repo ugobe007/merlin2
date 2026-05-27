@@ -2,141 +2,198 @@
  * PRICING PAGE — Standalone route-accessible pricing page
  * ========================================================
  * Route: /pricing
- * 
+ *
  * Supabase dark theme, 4 tiers, billing toggle, Stripe-ready.
  * Created: Feb 16, 2026
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
-  Check, ArrowLeft, Zap, Crown, Building2,
-  Shield, Users, FileText, BarChart3, Globe, Code,
-  Star, Sparkles, ChevronRight, Battery, Sun, Wind,
-  Cpu, Settings, Plug, Atom, Wrench, TrendingUp,
-  Award, CircleDollarSign, Package, Loader2, User, Rocket,
-} from 'lucide-react';
-import merlinIcon from '@/assets/images/new_small_profile_.png';
-import { createCheckoutSession, getEffectiveTier } from '@/services/subscriptionService';
-import type { SubscriptionTier } from '@/types/commerce';
+  Check,
+  ArrowLeft,
+  Zap,
+  Crown,
+  Building2,
+  Shield,
+  Users,
+  FileText,
+  BarChart3,
+  Globe,
+  Code,
+  Star,
+  Sparkles,
+  ChevronRight,
+  Battery,
+  Sun,
+  Wind,
+  Cpu,
+  Settings,
+  Plug,
+  Atom,
+  Wrench,
+  TrendingUp,
+  Award,
+  CircleDollarSign,
+  Package,
+  Loader2,
+  User,
+  Rocket,
+} from "lucide-react";
+import merlinIcon from "@/assets/images/new_small_profile_.png";
+import { createCheckoutSession, getEffectiveTier } from "@/services/subscriptionService";
+import type { SubscriptionTier } from "@/types/commerce";
 
 // Tailwind safelist: static class maps prevent dynamic class purging
-const COLOR_CLASSES: Record<string, { iconBg: string; iconBorder: string; iconText: string; checkText: string }> = {
-  green:   { iconBg: 'bg-green-500/10',   iconBorder: 'border-green-500/20',   iconText: 'text-green-400',   checkText: 'text-green-400' },
-  slate:   { iconBg: 'bg-slate-500/10',   iconBorder: 'border-slate-500/20',   iconText: 'text-slate-400',   checkText: 'text-slate-400' },
-  emerald: { iconBg: 'bg-emerald-500/10', iconBorder: 'border-emerald-500/20', iconText: 'text-emerald-400', checkText: 'text-emerald-400' },
-  cyan:    { iconBg: 'bg-cyan-500/10',    iconBorder: 'border-cyan-500/20',    iconText: 'text-cyan-400',    checkText: 'text-cyan-400' },
-  blue:    { iconBg: 'bg-blue-500/10',    iconBorder: 'border-blue-500/20',    iconText: 'text-blue-400',    checkText: 'text-blue-400' },
+const COLOR_CLASSES: Record<
+  string,
+  { iconBg: string; iconBorder: string; iconText: string; checkText: string }
+> = {
+  green: {
+    iconBg: "bg-green-500/10",
+    iconBorder: "border-green-500/20",
+    iconText: "text-green-400",
+    checkText: "text-green-400",
+  },
+  slate: {
+    iconBg: "bg-slate-500/10",
+    iconBorder: "border-slate-500/20",
+    iconText: "text-slate-400",
+    checkText: "text-slate-400",
+  },
+  emerald: {
+    iconBg: "bg-emerald-500/10",
+    iconBorder: "border-emerald-500/20",
+    iconText: "text-emerald-400",
+    checkText: "text-emerald-400",
+  },
+  cyan: {
+    iconBg: "bg-cyan-500/10",
+    iconBorder: "border-cyan-500/20",
+    iconText: "text-cyan-400",
+    checkText: "text-cyan-400",
+  },
+  blue: {
+    iconBg: "bg-blue-500/10",
+    iconBorder: "border-blue-500/20",
+    iconText: "text-blue-400",
+    checkText: "text-blue-400",
+  },
 };
 
 const PLANS = [
   {
-    id: 'free',
-    name: '7-Day Trial',
+    id: "free",
+    name: "7-Day Trial",
     icon: User,
     monthlyPrice: 0,
     annualPrice: 0,
     badge: null,
-    description: 'Start with 7 days of access. After the trial, continue on the first level for $14.99/mo.',
-    color: 'green',
-    borderColor: 'border-green-500/20',
-    badgeBg: '',
-    ctaText: 'Start 7-Day Trial',
-    ctaStyle: 'border border-green-500/30 text-green-400 hover:bg-green-500/10 hover:border-green-500/50',
+    description:
+      "Start with 7 days of access. After the trial, continue on the first level for $14.99/mo.",
+    color: "green",
+    borderColor: "border-green-500/20",
+    badgeBg: "",
+    ctaText: "Start 7-Day Trial",
+    ctaStyle:
+      "border border-green-500/30 text-green-400 hover:bg-green-500/10 hover:border-green-500/50",
     features: [
-      '5 quote exports per month',
-      'BESS sizing & configuration',
-      'TrueQuote™ verified calculations',
-      'MagicFit tier comparison',
-      'PDF export (Merlin branded)',
-      '3 saved projects',
-      'Email support',
+      "5 quote exports per month",
+      "BESS sizing & configuration",
+      "TrueQuote™ verified calculations",
+      "MagicFit tier comparison",
+      "PDF export (Merlin branded)",
+      "3 saved projects",
+      "Email support",
     ],
     limits: { quotes: 5, projects: 3, team: 1, api: 0 },
   },
   {
-    id: 'starter',
-    name: 'Builder',
+    id: "starter",
+    name: "Builder",
     icon: Zap,
     monthlyPrice: 29.99,
     annualPrice: 299.9,
     badge: null,
-    description: 'Everything you need to build professional BESS quotes and win projects.',
-    color: 'slate',
-    borderColor: 'border-white/[0.08]',
-    badgeBg: '',
-    ctaText: 'Subscribe — $29.99/mo',
-    ctaStyle: 'border border-white/20 text-white hover:bg-white/[0.06]',
+    description: "Everything you need to build professional BESS quotes and win projects.",
+    color: "slate",
+    borderColor: "border-white/[0.08]",
+    badgeBg: "",
+    ctaText: "Subscribe — $29.99/mo",
+    ctaStyle: "border border-white/20 text-white hover:bg-white/[0.06]",
     features: [
-      '15 quotes per month',
-      'BESS sizing & configuration',
-      'ROI & simple payback analysis',
-      'TrueQuote™ verified calculations',
-      'PDF export (Merlin branded)',
-      '10 saved projects',
-      'Equipment comparison tool',
-      '2 advanced financial analyses/mo ✨',
-      '2 market intelligence reports/mo ✨',
-      'Email support',
+      "15 quotes per month",
+      "BESS sizing & configuration",
+      "ROI & simple payback analysis",
+      "TrueQuote™ verified calculations",
+      "PDF export (Merlin branded)",
+      "10 saved projects",
+      "Equipment comparison tool",
+      "2 advanced financial analyses/mo ✨",
+      "2 market intelligence reports/mo ✨",
+      "Email support",
     ],
     limits: { quotes: 15, projects: 10, team: 1, api: 0 },
   },
   {
-    id: 'pro',
-    name: 'Pro',
+    id: "pro",
+    name: "Pro",
     icon: Crown,
     monthlyPrice: 49.99,
     annualPrice: 499.9,
-    badge: 'Most Popular',
-    description: 'Advanced analytics and professional deliverables for consultants and developers.',
-    color: 'emerald',
-    borderColor: 'border-emerald-500/30',
-    badgeBg: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-    ctaText: 'Subscribe — $49.99/mo',
-    ctaStyle: 'border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50',
+    badge: "Most Popular",
+    description: "Advanced analytics and professional deliverables for consultants and developers.",
+    color: "emerald",
+    borderColor: "border-emerald-500/30",
+    badgeBg: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+    ctaText: "Subscribe — $49.99/mo",
+    ctaStyle:
+      "border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50",
     features: [
-      '100 quotes per month',
-      'NPV, IRR & DCF analysis',
-      'TrueQuote™ source attribution',
-      'AI-powered recommendations',
-      'Export to Word, Excel, PDF',
-      '50 saved projects',
-      'Custom logo on quotes',
-      'Sensitivity analysis',
-      'Financing calculator',
-      '10 advanced financial analyses/mo',
-      '10 market intelligence reports/mo',
-      'Utility rate explorer',
-      'ITC incentive calculator',
-      'Priority email support',
+      "100 quotes per month",
+      "NPV, IRR & DCF analysis",
+      "TrueQuote™ source attribution",
+      "AI-powered recommendations",
+      "Export to Word, Excel, PDF",
+      "50 saved projects",
+      "Custom logo on quotes",
+      "Sensitivity analysis",
+      "Financing calculator",
+      "10 advanced financial analyses/mo",
+      "10 market intelligence reports/mo",
+      "Utility rate explorer",
+      "ITC incentive calculator",
+      "Priority email support",
     ],
     limits: { quotes: 100, projects: 50, team: 1, api: 100 },
   },
   {
-    id: 'advanced',
-    name: 'Advanced',
+    id: "advanced",
+    name: "Advanced",
     icon: Building2,
     monthlyPrice: 99,
     annualPrice: 990,
-    badge: 'Best Value',
-    description: 'Full platform with bank-ready models, team collaboration, and market intelligence.',
-    color: 'cyan',
-    borderColor: 'border-cyan-500/30',
-    badgeBg: 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20',
-    ctaText: 'Start Advanced Trial',
-    ctaStyle: 'border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50',
+    badge: "Best Value",
+    description:
+      "Full platform with bank-ready models, team collaboration, and market intelligence.",
+    color: "cyan",
+    borderColor: "border-cyan-500/30",
+    badgeBg: "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20",
+    ctaText: "Start Advanced Trial",
+    ctaStyle:
+      "border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50",
     features: [
-      'Everything in Pro',
-      'Monte Carlo risk analysis',
-      '8760 hourly dispatch simulation',
-      'Battery degradation modeling',
-      'Dynamic ITC calculator (IRA 2022)',
-      'Real-time market intelligence',
-      'Team workspace (5 members)',
-      'Unlimited projects',
-      'White-label branding',
-      'Bank-ready financial models',
-      'API access (1,000 calls/mo)',
-      'Phone + priority support',
+      "Everything in Pro",
+      "Monte Carlo risk analysis",
+      "8760 hourly dispatch simulation",
+      "Battery degradation modeling",
+      "Dynamic ITC calculator (IRA 2022)",
+      "Real-time market intelligence",
+      "Team workspace (5 members)",
+      "Unlimited projects",
+      "White-label branding",
+      "Bank-ready financial models",
+      "API access (1,000 calls/mo)",
+      "Phone + priority support",
     ],
     limits: { quotes: -1, projects: -1, team: 5, api: 1000 },
   },
@@ -145,71 +202,91 @@ const PLANS = [
 const VENDOR_API_FEATURES = [
   {
     icon: Code,
-    title: 'RESTful Pricing API',
-    description: 'Submit and update product pricing programmatically. JSON/CSV/XML feed support.',
+    title: "RESTful Pricing API",
+    description: "Submit and update product pricing programmatically. JSON/CSV/XML feed support.",
   },
   {
     icon: Globe,
-    title: 'Webhook Notifications',
-    description: 'Get notified when RFQs match your products, quotes are generated, or pricing is requested.',
+    title: "Webhook Notifications",
+    description:
+      "Get notified when RFQs match your products, quotes are generated, or pricing is requested.",
   },
   {
     icon: BarChart3,
-    title: 'Market Intelligence',
-    description: 'Access aggregated market data, pricing trends, and demand forecasts via API.',
+    title: "Market Intelligence",
+    description: "Access aggregated market data, pricing trends, and demand forecasts via API.",
   },
   {
     icon: Shield,
-    title: 'Scoped API Keys',
-    description: 'Fine-grained permissions: pricing:read, products:write, rfq:respond, and more.',
+    title: "Scoped API Keys",
+    description: "Fine-grained permissions: pricing:read, products:write, rfq:respond, and more.",
   },
   {
     icon: FileText,
-    title: 'Product Catalog Sync',
-    description: 'Automatically sync your product catalog — specs, pricing, lead times, warranties.',
+    title: "Product Catalog Sync",
+    description:
+      "Automatically sync your product catalog — specs, pricing, lead times, warranties.",
   },
   {
     icon: Users,
-    title: 'RFQ Auto-Response',
-    description: 'Configure automatic responses to matching RFQs based on your pricing rules.',
+    title: "RFQ Auto-Response",
+    description: "Configure automatic responses to matching RFQs based on your pricing rules.",
   },
 ];
 
 const EQUIPMENT_CATEGORIES = [
-  { icon: Battery, label: 'Batteries', desc: 'LFP, NMC, NCA, Flow, Sodium-Ion — all chemistries' },
-  { icon: Cpu, label: 'Inverters & PCS', desc: 'String, central, and hybrid inverters' },
-  { icon: Settings, label: 'Transformers', desc: 'Step-up, step-down, pad-mount, dry-type' },
-  { icon: Wrench, label: 'BOS Equipment', desc: 'Patch panels, AC/DC switchgear, breakers, combiner boxes' },
-  { icon: Sun, label: 'Solar + Equipment', desc: 'Panels, trackers, racking, optimizers, microinverters' },
-  { icon: Wind, label: 'Wind + Equipment', desc: 'Turbines, towers, controllers, grid-tie systems' },
-  { icon: Zap, label: 'Power Generators', desc: 'Natural gas, diesel, dual-fuel, fuel cells, Mainspring' },
-  { icon: Plug, label: 'EV Chargers', desc: 'Level 2, DCFC, HPC — hardware, make-ready, install' },
-  { icon: Atom, label: 'Nuclear / SMR', desc: 'Small modular reactors, micro-reactors, fusion pilot units' },
+  { icon: Battery, label: "Batteries", desc: "LFP, NMC, NCA, Flow, Sodium-Ion — all chemistries" },
+  { icon: Cpu, label: "Inverters & PCS", desc: "String, central, and hybrid inverters" },
+  { icon: Settings, label: "Transformers", desc: "Step-up, step-down, pad-mount, dry-type" },
+  {
+    icon: Wrench,
+    label: "BOS Equipment",
+    desc: "Patch panels, AC/DC switchgear, breakers, combiner boxes",
+  },
+  {
+    icon: Sun,
+    label: "Solar + Equipment",
+    desc: "Panels, trackers, racking, optimizers, microinverters",
+  },
+  {
+    icon: Wind,
+    label: "Wind + Equipment",
+    desc: "Turbines, towers, controllers, grid-tie systems",
+  },
+  {
+    icon: Zap,
+    label: "Power Generators",
+    desc: "Natural gas, diesel, dual-fuel, fuel cells, Mainspring",
+  },
+  { icon: Plug, label: "EV Chargers", desc: "Level 2, DCFC, HPC — hardware, make-ready, install" },
+  {
+    icon: Atom,
+    label: "Nuclear / SMR",
+    desc: "Small modular reactors, micro-reactors, fusion pilot units",
+  },
 ];
 
 export default function PricingPage() {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
-  const [activeSection, setActiveSection] = useState<'plans' | 'vendor-api'>('plans');
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+  const [activeSection, setActiveSection] = useState<"plans" | "vendor-api">("plans");
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const currentTier = getEffectiveTier();
 
-  const getPrice = (plan: typeof PLANS[0]) => {
+  const getPrice = (plan: (typeof PLANS)[0]) => {
     if (plan.monthlyPrice === -1) return null;
     if (plan.monthlyPrice === 0) return 0;
-    return billingCycle === 'annual'
-      ? Math.round(plan.annualPrice / 12)
-      : plan.monthlyPrice;
+    return billingCycle === "annual" ? Math.round(plan.annualPrice / 12) : plan.monthlyPrice;
   };
 
-  const getAnnualSavings = (plan: typeof PLANS[0]) => {
+  const getAnnualSavings = (plan: (typeof PLANS)[0]) => {
     if (plan.monthlyPrice <= 0) return 0;
     return plan.monthlyPrice * 12 - plan.annualPrice;
   };
 
   const handleSelectPlan = async (planId: string) => {
     // Free plan → route to signup
-    if (planId === 'free') {
-      window.location.href = '/signup';
+    if (planId === "free") {
+      window.location.href = "/wizard";
       return;
     }
 
@@ -222,47 +299,58 @@ export default function PricingPage() {
       // Call checkout session — uses Stripe if price IDs configured, else local trial
       const { url, sessionId } = await createCheckoutSession(
         planId as SubscriptionTier,
-        billingCycle,
+        billingCycle
       );
 
       // Store pending upgrade for post-checkout verification
       localStorage.setItem(
-        'pending_upgrade',
-        JSON.stringify({ tier: planId, billing: billingCycle, sessionId }),
+        "pending_upgrade",
+        JSON.stringify({ tier: planId, billing: billingCycle, sessionId })
       );
 
       // Navigate to checkout URL (Stripe hosted page or local redirect)
-      if (url.startsWith('http')) {
+      if (url.startsWith("http")) {
         window.location.href = url;
       } else {
         // Local trial activated — redirect to wizard
         window.location.href = url;
       }
     } catch (err) {
-      console.error('[PricingPage] Checkout error:', err);
-      alert('Something went wrong. Please try again or contact support.');
+      console.error("[PricingPage] Checkout error:", err);
+      alert("Something went wrong. Please try again or contact support.");
     } finally {
       setCheckoutLoading(null);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-white">
+    <div className="min-h-screen bg-[#050608] text-white">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-[#0f1117]/80 backdrop-blur-xl border-b border-white/[0.06]">
+      <nav className="sticky top-0 z-50 bg-[#050608]/90 backdrop-blur-xl border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <a href="/" className="flex items-center gap-2 text-white/60 hover:text-white transition-colors">
+            <a
+              href="/"
+              className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+            >
               <ArrowLeft className="w-4 h-4" />
               <img src={merlinIcon} alt="Merlin" className="w-8 h-8 rounded-lg" />
               <span className="font-bold text-lg">Merlin</span>
             </a>
           </div>
           <div className="flex items-center gap-6">
-            <a href="/wizard" className="text-sm text-white/50 hover:text-white transition-colors">Wizard</a>
-            <a href="/account" className="text-sm text-white/50 hover:text-white transition-colors">Account</a>
-            <a href="/vendor" className="text-sm text-white/50 hover:text-white transition-colors">Vendors</a>
-            <a href="/support" className="text-sm text-white/50 hover:text-white transition-colors">Support</a>
+            <a href="/wizard" className="text-sm text-white/50 hover:text-white transition-colors">
+              Wizard
+            </a>
+            <a href="/account" className="text-sm text-white/50 hover:text-white transition-colors">
+              Account
+            </a>
+            <a href="/vendor" className="text-sm text-white/50 hover:text-white transition-colors">
+              Vendors
+            </a>
+            <a href="/support" className="text-sm text-white/50 hover:text-white transition-colors">
+              Support
+            </a>
           </div>
         </div>
       </nav>
@@ -270,39 +358,40 @@ export default function PricingPage() {
       {/* Hero */}
       <div className="relative overflow-hidden">
         {/* Subtle glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/[0.04] rounded-full blur-[100px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[680px] h-[320px] bg-cyan-500/[0.06] rounded-full blur-[120px]" />
+        <div className="absolute top-16 right-[16%] w-[360px] h-[220px] bg-violet-500/[0.07] rounded-full blur-[120px]" />
 
         <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-8 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-400/30 bg-cyan-500/10 text-cyan-300 text-sm font-medium mb-6">
             <Sparkles className="w-3.5 h-3.5" />
-            7-day trial, then plans from $14.99/mo
+            Adaptive Energy plans · 7-day trial
           </div>
           <h1 className="text-5xl font-black tracking-tight mb-4">
-            Simple, transparent pricing
+            Pricing for Adaptive Energy operators
           </h1>
-          <p className="text-xl text-white/50 max-w-2xl mx-auto mb-8">
-            Professional BESS analysis starts with a 7-day trial, then plans from $14.99/mo.
-            Every plan includes TrueQuote™ verified calculations.
+          <p className="text-xl text-white/55 max-w-3xl mx-auto mb-8">
+            Energy Stacking™ models, verified economics, and decision-ready outputs. Start with a
+            7-day trial, then scale by workflow depth and team size.
           </p>
 
           {/* Section Toggle */}
           <div className="flex justify-center gap-2 mb-8">
             <button
-              onClick={() => setActiveSection('plans')}
+              onClick={() => setActiveSection("plans")}
               className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                activeSection === 'plans'
-                  ? 'bg-white/[0.08] text-white border border-white/[0.12]'
-                  : 'text-white/40 hover:text-white/70'
+                activeSection === "plans"
+                  ? "bg-white/[0.08] text-white border border-white/[0.12]"
+                  : "text-white/40 hover:text-white/70"
               }`}
             >
               User Plans
             </button>
             <button
-              onClick={() => setActiveSection('vendor-api')}
+              onClick={() => setActiveSection("vendor-api")}
               className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                activeSection === 'vendor-api'
-                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                  : 'text-white/40 hover:text-white/70'
+                activeSection === "vendor-api"
+                  ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                  : "text-white/40 hover:text-white/70"
               }`}
             >
               <span className="flex items-center gap-1.5">
@@ -313,27 +402,27 @@ export default function PricingPage() {
           </div>
 
           {/* Billing Toggle (for plans section) */}
-          {activeSection === 'plans' && (
+          {activeSection === "plans" && (
             <div className="flex justify-center">
               <div className="bg-white/[0.04] rounded-xl p-1 inline-flex border border-white/[0.08]">
                 <button
-                  onClick={() => setBillingCycle('monthly')}
+                  onClick={() => setBillingCycle("monthly")}
                   className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                    billingCycle === 'monthly'
-                      ? 'border border-emerald-500/40 text-emerald-400'
-                      : 'text-white/50 hover:text-white border border-transparent'
+                    billingCycle === "monthly"
+                      ? "border border-emerald-500/40 text-emerald-400"
+                      : "text-white/50 hover:text-white border border-transparent"
                   }`}
                 >
                   Monthly
                 </button>
                 <button
-                  onClick={() => setBillingCycle('annual')}
+                  onClick={() => setBillingCycle("annual")}
                   className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all relative ${
-                    billingCycle === 'annual'
-                      ? 'border border-emerald-500/40 text-emerald-400'
-                      : 'text-white/50 hover:text-white border border-transparent'
+                    billingCycle === "annual"
+                      ? "border border-emerald-500/40 text-emerald-400"
+                      : "text-white/50 hover:text-white border border-transparent"
                   }`}
-                  >
+                >
                   Annual
                   <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full border border-emerald-500/30">
                     -17%
@@ -346,10 +435,10 @@ export default function PricingPage() {
       </div>
 
       {/* PLANS SECTION */}
-      {activeSection === 'plans' && (
+      {activeSection === "plans" && (
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="grid md:grid-cols-3 gap-5">
-            {PLANS.filter(p => p.id !== 'advanced').map((plan) => {
+            {PLANS.filter((p) => p.id !== "advanced").map((plan) => {
               const price = getPrice(plan);
               const savings = getAnnualSavings(plan);
               const Icon = plan.icon;
@@ -361,7 +450,9 @@ export default function PricingPage() {
                 >
                   {/* Badge */}
                   {plan.badge && (
-                    <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold ${plan.badgeBg}`}>
+                    <div
+                      className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold ${plan.badgeBg}`}
+                    >
                       {plan.badge}
                     </div>
                   )}
@@ -369,7 +460,9 @@ export default function PricingPage() {
                   {/* Header */}
                   <div className="mb-5">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className={`w-9 h-9 rounded-lg ${COLOR_CLASSES[plan.color]?.iconBg} flex items-center justify-center border ${COLOR_CLASSES[plan.color]?.iconBorder}`}>
+                      <div
+                        className={`w-9 h-9 rounded-lg ${COLOR_CLASSES[plan.color]?.iconBg} flex items-center justify-center border ${COLOR_CLASSES[plan.color]?.iconBorder}`}
+                      >
                         <Icon className={`w-4.5 h-4.5 ${COLOR_CLASSES[plan.color]?.iconText}`} />
                       </div>
                       <h3 className="text-lg font-bold text-white">{plan.name}</h3>
@@ -393,10 +486,8 @@ export default function PricingPage() {
                       <div>
                         <span className="text-3xl font-black text-white">${price}</span>
                         <span className="text-sm text-white/40 ml-1">/ mo</span>
-                        {billingCycle === 'annual' && savings > 0 && (
-                          <p className="text-xs text-emerald-400 mt-1">
-                            Save ${savings}/year
-                          </p>
+                        {billingCycle === "annual" && savings > 0 && (
+                          <p className="text-xs text-emerald-400 mt-1">Save ${savings}/year</p>
                         )}
                       </div>
                     )}
@@ -408,14 +499,14 @@ export default function PricingPage() {
                     disabled={checkoutLoading !== null || plan.id === currentTier}
                     className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all mb-5 ${
                       plan.id === currentTier
-                        ? 'border border-white/20 text-white/40 cursor-default'
+                        ? "border border-white/20 text-white/40 cursor-default"
                         : checkoutLoading === plan.id
-                          ? 'border border-white/20 text-white/60 cursor-wait'
+                          ? "border border-white/20 text-white/60 cursor-wait"
                           : plan.ctaStyle
                     }`}
                   >
                     {plan.id === currentTier ? (
-                      'Current Plan'
+                      "Current Plan"
                     ) : checkoutLoading === plan.id ? (
                       <span className="inline-flex items-center gap-2">
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -429,12 +520,14 @@ export default function PricingPage() {
                   {/* Features */}
                   <div className="flex-1">
                     <p className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-3">
-                      {plan.id === 'free' ? 'Includes' : 'Key features'}
+                      {plan.id === "free" ? "Includes" : "Key features"}
                     </p>
                     <ul className="space-y-2">
                       {plan.features.map((feature, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-white/60">
-                          <Check className={`w-4 h-4 mt-0.5 flex-shrink-0 ${COLOR_CLASSES[plan.color]?.checkText}`} />
+                          <Check
+                            className={`w-4 h-4 mt-0.5 flex-shrink-0 ${COLOR_CLASSES[plan.color]?.checkText}`}
+                          />
                           {feature}
                         </li>
                       ))}
@@ -447,7 +540,7 @@ export default function PricingPage() {
 
           {/* Advanced — Inline Panel */}
           {(() => {
-            const adv = PLANS.find(p => p.id === 'advanced')!;
+            const adv = PLANS.find((p) => p.id === "advanced")!;
             return (
               <div className="mt-4 rounded-xl border border-cyan-500/15 bg-white/[0.025] px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:bg-white/[0.04] hover:border-cyan-500/25 transition-all">
                 {/* Label */}
@@ -458,36 +551,63 @@ export default function PricingPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-white">Advanced</span>
-                      <span className="px-1.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 text-[10px] font-bold border border-cyan-500/20">Best Value</span>
+                      <span className="px-1.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 text-[10px] font-bold border border-cyan-500/20">
+                        Best Value
+                      </span>
                     </div>
                     <p className="text-xs text-white/40">
-                      {billingCycle === 'annual' ? `$${Math.round(adv.annualPrice / 12)}/mo · billed annually` : '$99/mo'}
+                      {billingCycle === "annual"
+                        ? `$${Math.round(adv.annualPrice / 12)}/mo · billed annually`
+                        : "$99/mo"}
                     </p>
                   </div>
                 </div>
 
                 {/* Feature pills */}
                 <div className="flex-1 flex flex-wrap gap-1.5 min-w-0">
-                  {['Monte Carlo risk', '8760 dispatch sim', 'Battery degradation', 'Dynamic ITC (IRA 2022)', 'Real-time market intel', 'Team workspace (5)', 'Unlimited projects', 'White-label branding', 'Bank-ready models', 'API access'].map((f) => (
-                    <span key={f} className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-[11px] text-white/50 whitespace-nowrap">{f}</span>
+                  {[
+                    "Monte Carlo risk",
+                    "8760 dispatch sim",
+                    "Battery degradation",
+                    "Dynamic ITC (IRA 2022)",
+                    "Real-time market intel",
+                    "Team workspace (5)",
+                    "Unlimited projects",
+                    "White-label branding",
+                    "Bank-ready models",
+                    "API access",
+                  ].map((f) => (
+                    <span
+                      key={f}
+                      className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-[11px] text-white/50 whitespace-nowrap"
+                    >
+                      {f}
+                    </span>
                   ))}
                 </div>
 
                 {/* CTA */}
                 <button
-                  onClick={() => handleSelectPlan('advanced')}
-                  disabled={checkoutLoading !== null || 'advanced' === currentTier}
+                  onClick={() => handleSelectPlan("advanced")}
+                  disabled={checkoutLoading !== null || "advanced" === currentTier}
                   className={`shrink-0 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                    'advanced' === currentTier
-                      ? 'border border-white/20 text-white/40 cursor-default'
-                      : checkoutLoading === 'advanced'
-                        ? 'border border-white/20 text-white/60 cursor-wait'
-                        : 'border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50'
+                    "advanced" === currentTier
+                      ? "border border-white/20 text-white/40 cursor-default"
+                      : checkoutLoading === "advanced"
+                        ? "border border-white/20 text-white/60 cursor-wait"
+                        : "border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50"
                   }`}
                 >
-                  {'advanced' === currentTier ? 'Current Plan' : checkoutLoading === 'advanced'
-                    ? <span className="inline-flex items-center gap-2"><Loader2 className="w-3.5 h-3.5 animate-spin" />Processing…</span>
-                    : 'Start Advanced Trial →'}
+                  {"advanced" === currentTier ? (
+                    "Current Plan"
+                  ) : checkoutLoading === "advanced" ? (
+                    <span className="inline-flex items-center gap-2">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Processing…
+                    </span>
+                  ) : (
+                    "Start Advanced Trial →"
+                  )}
                 </button>
               </div>
             );
@@ -501,7 +621,10 @@ export default function PricingPage() {
               </div>
               <div>
                 <h4 className="text-base font-bold text-white">Need a Business account?</h4>
-                <p className="text-sm text-white/40 mt-0.5">Unlimited API, custom integrations, dedicated support, and 99.9% SLA — tailored to your organization.</p>
+                <p className="text-sm text-white/40 mt-0.5">
+                  Unlimited API, custom integrations, dedicated support, and 99.9% SLA — tailored to
+                  your organization.
+                </p>
               </div>
             </div>
             <a
@@ -515,14 +638,15 @@ export default function PricingPage() {
           {/* Comparison note */}
           <div className="text-center mt-8">
             <p className="text-sm text-white/30">
-              All plans include NREL ATB 2024 benchmarks · IRA 2022 ITC calculations · TrueQuote™ audit trails · 7-day trial, then plans from $14.99/mo
+              All plans include NREL ATB 2024 benchmarks · IRA 2022 ITC calculations · TrueQuote™
+              audit trails · 7-day trial, then plans from $14.99/mo
             </p>
           </div>
         </div>
       )}
 
       {/* VENDOR API SECTION */}
-      {activeSection === 'vendor-api' && (
+      {activeSection === "vendor-api" && (
         <div className="max-w-6xl mx-auto px-6 py-12">
           {/* API Hero */}
           <div className="bg-gradient-to-br from-cyan-500/[0.06] to-blue-500/[0.04] rounded-2xl border border-cyan-500/20 p-8 mb-10">
@@ -538,9 +662,11 @@ export default function PricingPage() {
                   </span>
                 </div>
                 <p className="text-white/50 text-lg mb-4 max-w-xl">
-                  Stop chasing vendor quotes manually. Merlin automates pricing collection, product configurations, 
-                  and bid management across <span className="text-cyan-400 font-semibold">every equipment category</span> — batteries, solar, wind, 
-                  generators, EV chargers, and more. Test configurations in ProQuote™ with TrueQuote™ verification.
+                  Stop chasing vendor quotes manually. Merlin automates pricing collection, product
+                  configurations, and bid management across{" "}
+                  <span className="text-cyan-400 font-semibold">every equipment category</span> —
+                  batteries, solar, wind, generators, EV chargers, and more. Test configurations in
+                  ProQuote™ with TrueQuote™ verification.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <a
@@ -571,14 +697,19 @@ export default function PricingPage() {
                 </div>
                 <pre className="p-4 text-xs font-mono leading-relaxed overflow-x-auto">
                   <code>
-                    <span className="text-cyan-400">curl</span>{' '}
-                    <span className="text-white/60">-X POST</span>{' \\\n  '}
-                    <span className="text-emerald-400">https://api.merlin.energy/v1/pricing</span>{' \\\n  '}
-                    <span className="text-white/60">-H</span>{' '}
-                    <span className="text-amber-400">"Authorization: Bearer mk_live_..."</span>{' \\\n  '}
-                    <span className="text-white/60">-d</span>{' '}
-                    <span className="text-blue-300">{'\'{"product":"BESS-LFP-4h",'}</span>{'\n   '}
-                    <span className="text-blue-300">{'     "price_kwh": 118.50,'}</span>{'\n   '}
+                    <span className="text-cyan-400">curl</span>{" "}
+                    <span className="text-white/60">-X POST</span>
+                    {" \\\n  "}
+                    <span className="text-emerald-400">https://api.merlin.energy/v1/pricing</span>
+                    {" \\\n  "}
+                    <span className="text-white/60">-H</span>{" "}
+                    <span className="text-amber-400">"Authorization: Bearer mk_live_..."</span>
+                    {" \\\n  "}
+                    <span className="text-white/60">-d</span>{" "}
+                    <span className="text-blue-300">{'\'{"product":"BESS-LFP-4h",'}</span>
+                    {"\n   "}
+                    <span className="text-blue-300">{'     "price_kwh": 118.50,'}</span>
+                    {"\n   "}
                     <span className="text-blue-300">{'     "lead_weeks": 12}\''}</span>
                   </code>
                 </pre>
@@ -588,16 +719,24 @@ export default function PricingPage() {
 
           {/* Equipment Categories */}
           <h3 className="text-xl font-bold text-white mb-2">Equipment Categories</h3>
-          <p className="text-white/40 mb-6 text-sm">Manage pricing and configurations for every product type — all from one platform.</p>
+          <p className="text-white/40 mb-6 text-sm">
+            Manage pricing and configurations for every product type — all from one platform.
+          </p>
           <div className="grid grid-cols-3 lg:grid-cols-9 gap-3 mb-12">
             {EQUIPMENT_CATEGORIES.map((cat, i) => {
               const CatIcon = cat.icon;
               return (
-                <div key={i} className="bg-white/[0.03] rounded-xl border border-white/[0.08] p-3 text-center hover:bg-white/[0.05] hover:border-cyan-500/20 transition-all group" title={cat.desc}>
+                <div
+                  key={i}
+                  className="bg-white/[0.03] rounded-xl border border-white/[0.08] p-3 text-center hover:bg-white/[0.05] hover:border-cyan-500/20 transition-all group"
+                  title={cat.desc}
+                >
                   <div className="w-9 h-9 mx-auto rounded-lg bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 mb-2 group-hover:bg-cyan-500/20 transition-colors">
                     <CatIcon className="w-4.5 h-4.5 text-cyan-400" />
                   </div>
-                  <p className="text-[11px] font-semibold text-white/60 leading-tight">{cat.label}</p>
+                  <p className="text-[11px] font-semibold text-white/60 leading-tight">
+                    {cat.label}
+                  </p>
                 </div>
               );
             })}
@@ -610,8 +749,10 @@ export default function PricingPage() {
               Why Vendors Choose Merlin
             </h3>
             <p className="text-white/40 mb-5 max-w-3xl">
-              Normally, vendors spend weeks collecting pricing sheets, product specs, and configuration data from dozens of 3rd-party suppliers.
-              Merlin automates <span className="text-white/70 font-medium">all of it</span> — then lets you validate every configuration with ProQuote™ and the TrueQuote™ stamp of approval.
+              Normally, vendors spend weeks collecting pricing sheets, product specs, and
+              configuration data from dozens of 3rd-party suppliers. Merlin automates{" "}
+              <span className="text-white/70 font-medium">all of it</span> — then lets you validate
+              every configuration with ProQuote™ and the TrueQuote™ stamp of approval.
             </p>
             <div className="grid md:grid-cols-3 gap-5">
               <div className="flex items-start gap-3">
@@ -620,7 +761,10 @@ export default function PricingPage() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-white text-sm">Automated Price Collection</h4>
-                  <p className="text-xs text-white/40 mt-0.5">Pull pricing from batteries, solar, wind, generators, EV chargers, and nuclear — no spreadsheets needed.</p>
+                  <p className="text-xs text-white/40 mt-0.5">
+                    Pull pricing from batteries, solar, wind, generators, EV chargers, and nuclear —
+                    no spreadsheets needed.
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -629,7 +773,10 @@ export default function PricingPage() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-white text-sm">TrueQuote™ Verified</h4>
-                  <p className="text-xs text-white/40 mt-0.5">Test your product configurations in ProQuote™. Every number traced to NREL, IEEE, and IRA sources.</p>
+                  <p className="text-xs text-white/40 mt-0.5">
+                    Test your product configurations in ProQuote™. Every number traced to NREL,
+                    IEEE, and IRA sources.
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -638,7 +785,10 @@ export default function PricingPage() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-white text-sm">Right-to-Bid Positioning</h4>
-                  <p className="text-xs text-white/40 mt-0.5">Get positioned in front of active buyers. Priority placement when your products match RFQ requirements.</p>
+                  <p className="text-xs text-white/40 mt-0.5">
+                    Get positioned in front of active buyers. Priority placement when your products
+                    match RFQ requirements.
+                  </p>
                 </div>
               </div>
             </div>
@@ -668,7 +818,8 @@ export default function PricingPage() {
           <div className="bg-white/[0.03] rounded-2xl border border-white/[0.08] p-8">
             <h3 className="text-xl font-bold text-white mb-2">Vendor Plans</h3>
             <p className="text-white/40 mb-6">
-              Everything you need to manage pricing, products, and bids across all energy equipment categories.
+              Everything you need to manage pricing, products, and bids across all energy equipment
+              categories.
             </p>
 
             <div className="grid md:grid-cols-3 gap-5">
@@ -678,37 +829,109 @@ export default function PricingPage() {
                   Most Popular
                 </div>
                 <h4 className="font-bold text-white mb-1">Starter</h4>
-                <p className="text-2xl font-black text-emerald-400 mb-1">$14.99<span className="text-sm text-white/40">/mo</span></p>
+                <p className="text-2xl font-black text-emerald-400 mb-1">
+                  $14.99<span className="text-sm text-white/40">/mo</span>
+                </p>
                 <p className="text-xs text-white/40 mb-4">Full platform access for vendors</p>
                 <ul className="space-y-2 text-sm text-white/50">
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />API access (1,000 calls/mo)</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />Right-to-bid positioning</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />ProQuote™ quote building</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />Product & price management</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" /><span>Config tools: <span className="text-white/70">batteries, inverters, transformers, switchgear, panels</span></span></li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" /><span>Config tools: <span className="text-white/70">solar, wind, generators, EV chargers, nuclear</span></span></li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />TrueQuote™ verified configurations</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />RFQ notifications & matching</li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    API access (1,000 calls/mo)
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    Right-to-bid positioning
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    ProQuote™ quote building
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    Product & price management
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    <span>
+                      Config tools:{" "}
+                      <span className="text-white/70">
+                        batteries, inverters, transformers, switchgear, panels
+                      </span>
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    <span>
+                      Config tools:{" "}
+                      <span className="text-white/70">
+                        solar, wind, generators, EV chargers, nuclear
+                      </span>
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    TrueQuote™ verified configurations
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    RFQ notifications & matching
+                  </li>
                 </ul>
-                <a href="/vendor" className="block w-full mt-5 py-2.5 rounded-lg text-sm font-semibold text-center border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all">Get Started</a>
+                <a
+                  href="/vendor"
+                  className="block w-full mt-5 py-2.5 rounded-lg text-sm font-semibold text-center border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all"
+                >
+                  Get Started
+                </a>
               </div>
 
               {/* Pro API $99/mo */}
               <div className="bg-cyan-500/[0.04] rounded-xl border border-cyan-500/20 p-5">
                 <h4 className="font-bold text-white mb-1">Pro</h4>
-                <p className="text-2xl font-black text-cyan-400 mb-1">$99<span className="text-sm text-white/40">/mo</span></p>
+                <p className="text-2xl font-black text-cyan-400 mb-1">
+                  $99<span className="text-sm text-white/40">/mo</span>
+                </p>
                 <p className="text-xs text-white/40 mb-4">For high-volume vendor partners</p>
                 <ul className="space-y-2 text-sm text-white/50">
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Everything in Starter</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />10,000 API calls/month</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Automated pricing feeds</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Webhook notifications</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Market intelligence API</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Priority bid placement</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Bulk product catalog sync</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />Priority support</li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />
+                    Everything in Starter
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />
+                    10,000 API calls/month
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />
+                    Automated pricing feeds
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />
+                    Webhook notifications
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />
+                    Market intelligence API
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />
+                    Priority bid placement
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />
+                    Bulk product catalog sync
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />
+                    Priority support
+                  </li>
                 </ul>
-                <a href="/vendor" className="block w-full mt-5 py-2.5 rounded-lg text-sm font-semibold text-center border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all">Upgrade to Pro</a>
+                <a
+                  href="/vendor"
+                  className="block w-full mt-5 py-2.5 rounded-lg text-sm font-semibold text-center border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all"
+                >
+                  Upgrade to Pro
+                </a>
               </div>
 
               {/* Enterprise API */}
@@ -717,15 +940,41 @@ export default function PricingPage() {
                 <p className="text-2xl font-black text-white mb-1">Custom</p>
                 <p className="text-xs text-white/40 mb-4">Unlimited + dedicated support</p>
                 <ul className="space-y-2 text-sm text-white/50">
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />Everything in Pro</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />Unlimited API calls</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />Custom integrations</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />Dedicated endpoint</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />SLA guarantee</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />Dedicated account manager</li>
-                  <li className="flex items-start gap-2"><Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />White-label API</li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />
+                    Everything in Pro
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />
+                    Unlimited API calls
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />
+                    Custom integrations
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />
+                    Dedicated endpoint
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />
+                    SLA guarantee
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />
+                    Dedicated account manager
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />
+                    White-label API
+                  </li>
                 </ul>
-                <a href="mailto:sales@merlin.energy?subject=Enterprise Vendor API" className="block w-full mt-5 py-2.5 rounded-lg text-sm font-semibold text-center border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50 transition-all">Contact Sales</a>
+                <a
+                  href="mailto:sales@merlin.energy?subject=Enterprise Vendor API"
+                  className="block w-full mt-5 py-2.5 rounded-lg text-sm font-semibold text-center border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50 transition-all"
+                >
+                  Contact Sales
+                </a>
               </div>
             </div>
           </div>
@@ -733,10 +982,10 @@ export default function PricingPage() {
           {/* Trust badges */}
           <div className="flex flex-wrap justify-center gap-6 mt-10">
             {[
-              { icon: Shield, label: 'SOC 2 Type II' },
-              { icon: Globe, label: 'RESTful API' },
-              { icon: Star, label: 'NREL Compliant' },
-              { icon: Code, label: 'OpenAPI 3.0' },
+              { icon: Shield, label: "SOC 2 Type II" },
+              { icon: Globe, label: "RESTful API" },
+              { icon: Star, label: "NREL Compliant" },
+              { icon: Code, label: "OpenAPI 3.0" },
             ].map((badge, i) => {
               const BadgeIcon = badge.icon;
               return (
@@ -754,11 +1003,16 @@ export default function PricingPage() {
       <div className="border-t border-white/[0.06] mt-12">
         <div className="max-w-7xl mx-auto px-6 py-8 text-center">
           <p className="text-sm text-white/30">
-            Questions? <a href="mailto:sales@merlin.energy" className="text-emerald-400/70 hover:text-emerald-400">Contact sales</a> or visit <a href="/support" className="text-emerald-400/70 hover:text-emerald-400">Support</a>
+            Questions?{" "}
+            <a href="mailto:sales@merlin.energy" className="text-cyan-300/80 hover:text-cyan-200">
+              Contact sales
+            </a>{" "}
+            or visit{" "}
+            <a href="/support" className="text-cyan-300/80 hover:text-cyan-200">
+              Support
+            </a>
           </p>
-          <p className="text-xs text-white/20 mt-2">
-            © 2026 Merlin Energy. All rights reserved.
-          </p>
+          <p className="text-xs text-white/20 mt-2">© 2026 Merlin Energy. All rights reserved.</p>
         </div>
       </div>
     </div>

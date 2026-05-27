@@ -48,14 +48,14 @@ export default function FinalCTA() {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <a
-                href="#"
+                href="/wizard"
                 className="btn-glow px-8 py-4 rounded-xl text-base font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-all duration-200 text-center"
                 style={{ fontFamily: "'Outfit', sans-serif" }}
               >
                 Start a TrueQuote →
               </a>
               <a
-                href="#"
+                href="/vendor"
                 className="px-8 py-4 rounded-xl text-base font-semibold text-slate-300 border border-white/15 hover:border-white/30 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] transition-all duration-200 text-center"
                 style={{ fontFamily: "'Outfit', sans-serif" }}
               >
@@ -92,10 +92,10 @@ export default function FinalCTA() {
             {/* Links */}
             <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm text-slate-600">
               {[
-                { label: "Products", href: "/#products" },
-                { label: "Industries", href: "/#industries" },
+                { label: "Grid Exposure", href: "/#grid-exposure" },
+                { label: "Our Story", href: "/#our-story" },
                 { label: "How It Works", href: "/#workflow" },
-                { label: "Platform", href: "/#platform" },
+                { label: "Energy Stacking", href: "/#energy-stacking" },
                 { label: "Privacy", href: "/privacy" },
                 { label: "Terms", href: "/terms" },
               ].map((link) => (
