@@ -5,7 +5,7 @@ import { defineConfig, devices } from '@playwright/test';
  * See https://playwright.dev/docs/test-configuration
  */
 const PORT = process.env.E2E_PORT || '5177';
-const BASE_URL = process.env.E2E_BASE_URL || `http://localhost:${PORT}`;
+const BASE_URL = process.env.E2E_BASE_URL || (process.env.CI ? `http://localhost:${PORT}` : 'https://merlin2.fly.dev');
 
 export default defineConfig({
   // Explicitly tell vitest NOT to run
