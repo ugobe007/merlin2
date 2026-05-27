@@ -379,13 +379,10 @@ export default function HeroSection() {
             className="text-5xl font-black leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl"
             style={{ fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif" }}
           >
-            Reduce business
+            The operating system for
             <br />
             <span className="bg-gradient-to-r from-cyan-300 to-emerald-400 bg-clip-text text-transparent drop-shadow-[0_0_22px_rgba(34,211,238,0.28)]">
-              energy bills
-            </span>{" "}
-            <span className="inline-block whitespace-nowrap text-[1.05em] bg-gradient-to-r from-purple-600 via-purple-400 to-violet-400 bg-clip-text text-transparent drop-shadow-[0_0_26px_rgba(168,85,247,0.32)]">
-              by 30%.
+              energy independence.
             </span>
           </h1>
 
@@ -393,9 +390,8 @@ export default function HeroSection() {
             className="mt-7 max-w-2xl text-lg leading-8 text-slate-400"
             style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif" }}
           >
-            Meet <span className="font-bold text-slate-200">MERLIN</span>, your autonomous Energy
-            Intelligence Agent. Give MERLIN 90 seconds, your ZIP, and your monthly bill. It maps
-            your facility against utility tariffs and solar data to build your savings blueprint.
+            The grid is getting more expensive. Merlin models your solar, storage, generator, and
+            utility options before you start.
           </p>
 
           <form
@@ -424,7 +420,7 @@ export default function HeroSection() {
               type="submit"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3.5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(37,99,235,0.3)] transition hover:-translate-y-0.5 hover:bg-blue-500"
             >
-              Activate MERLIN <ArrowRight size={16} />
+              See My Energy Options <ArrowRight size={16} />
             </button>
           </form>
 
