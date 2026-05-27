@@ -95,13 +95,13 @@ const INDUSTRY_URGENCY: Record<string, { label: string; badgeClass: string; head
   },
   retail: {
     label: "LOWER",
-    badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/25",
+    badgeClass: "bg-blue-500/10 text-blue-300 border-blue-500/25",
     headline:
       "POS systems and refrigeration are the priority. BESS alone may cover short outages — a generator extends protection beyond battery duration.",
   },
   warehouse: {
     label: "LOWER",
-    badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/25",
+    badgeClass: "bg-blue-500/10 text-blue-300 border-blue-500/25",
     headline:
       "Operations can pause — but cold storage and security cannot. A generator protects the critical subset of loads that can't stop.",
   },
@@ -113,7 +113,7 @@ const INDUSTRY_URGENCY: Record<string, { label: string; badgeClass: string; head
   },
   ev_charging: {
     label: "LOWER",
-    badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/25",
+    badgeClass: "bg-blue-500/10 text-blue-300 border-blue-500/25",
     headline:
       "EV charging is convenience infrastructure. Backup power keeps priority chargers available and protects your grid interconnection equipment.",
   },
@@ -204,6 +204,40 @@ export default function Step4OptionsV7({ state, actions }: Props) {
   const industryLabel = (industryMeta.label as string) || "Commercial";
   const isPricingPending = pricingStatus === "pending";
 
+  const stackLayers = [
+    {
+      label: "Utility Layer",
+      detail:
+        data.utilityRate > 0 ? `${data.utilityRate.toFixed(2)} / kWh` : "Baseline utility exposure",
+      status: data.utilityRate > 0 ? "Active" : "Baseline",
+      accent: "text-blue-300",
+    },
+    {
+      label: "Battery Layer",
+      detail:
+        data.bessKW > 0
+          ? `${Math.round(data.bessKW).toLocaleString()} kW · ${Math.round(data.durationHours || 0)}h`
+          : "Sized in prior step",
+      status: data.bessKW > 0 ? "Configured" : "Pending",
+      accent: "text-violet-300",
+    },
+    {
+      label: "Generator Layer",
+      detail:
+        recommendedGenKW > 0
+          ? `${recommendedGenKW.toLocaleString()} kW backup`
+          : "Optional resilience layer",
+      status: state.step4AddOns?.includeGenerator ? "Added" : "Available",
+      accent: "text-amber-300",
+    },
+    {
+      label: "Optimization Layer",
+      detail: `Critical load ${Math.round(criticalLoadPct * 100)}% · ${urgency.label} risk`,
+      status: isPricingPending ? "Modeling" : "Ready",
+      accent: "text-emerald-300",
+    },
+  ] as const;
+
   // ── Power risk analysis — TrueQuote™ sourced ──
   // getCriticalLoadWithSource() traces critical load % back to IEEE 446, NEC,
   // and LADWP — the same authoritative sources shown in the TrueQuote audit.
@@ -216,7 +250,53 @@ export default function Step4OptionsV7({ state, actions }: Props) {
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
-      {/* ── Power Risk Assessment ── */}
+      {/* ── Energy Stack Composer ── */}
+      <div className="rounded-xl border border-white/[0.06] bg-[linear-gradient(155deg,rgba(18,16,39,0.95)_0%,rgba(18,29,73,0.92)_52%,rgba(33,36,52,0.9)_100%)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">
+              Energy Stack Composer
+            </div>
+            <h2 className="mt-1 text-xl font-bold text-white">Build your operating stack</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-300 max-w-2xl">
+              Merlin layers utility, storage, backup power, and optimization into one stack model so
+              you can see how resilience and economics move together.
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">
+              Stack state
+            </div>
+            <div className="mt-1 text-sm font-semibold text-blue-200">
+              {state.step4AddOns?.includeGenerator ? "Generator layer added" : "Base stack ready"}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-4">
+          {stackLayers.map((layer, index) => (
+            <div
+              key={layer.label}
+              className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-4"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-xs uppercase tracking-[0.14em] text-slate-400">
+                  Layer {index + 1}
+                </div>
+                <div
+                  className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${layer.accent}`}
+                >
+                  {layer.status}
+                </div>
+              </div>
+              <div className={`mt-2 text-sm font-bold ${layer.accent}`}>{layer.label}</div>
+              <div className="mt-2 text-xs leading-5 text-slate-300">{layer.detail}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Stack Readiness ── */}
       <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
         {/* Header */}
         <div className="px-5 py-4 flex items-start gap-3">
@@ -226,7 +306,7 @@ export default function Step4OptionsV7({ state, actions }: Props) {
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
               <span className="text-sm font-semibold text-slate-100">
-                {industryLabel} · Power Resilience
+                {industryLabel} · Stack Resilience
               </span>
               <span
                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
@@ -262,7 +342,7 @@ export default function Step4OptionsV7({ state, actions }: Props) {
                 label: "Merlin Recommends",
                 value: recommendedGenKW > 0 ? `${recommendedGenKW.toLocaleString()} kW` : "—",
                 sub: "critical load + 25% reserve",
-                accent: "text-[#3ECF8E]",
+                accent: "text-blue-300",
               },
             ].map((m) => (
               <div key={m.label} className="px-5 py-3">
@@ -279,11 +359,9 @@ export default function Step4OptionsV7({ state, actions }: Props) {
 
       {/* Pricing status indicator */}
       {isPricingPending && (
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#3ECF8E]/[0.08] border border-[#3ECF8E]/15">
-          <Loader2 className="w-4 h-4 text-[#3ECF8E] animate-spin" />
-          <span className="text-sm text-[#3ECF8E] font-medium">
-            Calculating your system sizing…
-          </span>
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-blue-500/[0.08] border border-blue-400/15">
+          <Loader2 className="w-4 h-4 text-blue-300 animate-spin" />
+          <span className="text-sm text-blue-300 font-medium">Calculating your system sizing…</span>
         </div>
       )}
       {/* Generator — optional backup power, included in core quote */}
@@ -307,10 +385,10 @@ export default function Step4OptionsV7({ state, actions }: Props) {
       <button
         type="button"
         onClick={() => setShowProQuoteModal(true)}
-        className="group w-full flex items-center justify-between gap-3 px-5 py-4 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:border-[#3ECF8E]/20 hover:bg-[#3ECF8E]/[0.03] transition-all"
+        className="group w-full flex items-center justify-between gap-3 px-5 py-4 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:border-blue-400/20 hover:bg-blue-500/[0.03] transition-all"
       >
         <div className="flex items-center gap-3">
-          <Sparkles className="w-4 h-4 text-[#3ECF8E] opacity-70 group-hover:opacity-100 transition-opacity" />
+          <Sparkles className="w-4 h-4 text-violet-300 opacity-70 group-hover:opacity-100 transition-opacity" />
           <div className="text-left">
             <span className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">
               Need full control?
@@ -320,7 +398,7 @@ export default function Step4OptionsV7({ state, actions }: Props) {
             </span>
           </div>
         </div>
-        <span className="text-xs font-semibold text-[#3ECF8E]/60 group-hover:text-[#3ECF8E] tracking-wide uppercase transition-colors">
+        <span className="text-xs font-semibold text-blue-300/60 group-hover:text-blue-300 tracking-wide uppercase transition-colors">
           Learn more →
         </span>
       </button>

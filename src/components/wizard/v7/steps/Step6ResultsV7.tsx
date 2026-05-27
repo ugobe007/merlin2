@@ -137,7 +137,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
           </div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2.5">
             <Zap className="w-5 h-5 text-blue-300" />
-            Your Energy Quote
+            Compare Stack Outcomes
           </h1>
         </div>
         <div className="flex gap-2.5">
@@ -154,7 +154,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
               className="h-9 px-3.5 rounded-lg border border-white/[0.08] bg-white/[0.04] text-slate-300 hover:bg-white/[0.06] font-medium text-sm flex items-center gap-1.5 transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              Refresh Quote
+              Refresh Stack Model
             </button>
           )}
           <button
@@ -176,7 +176,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
           <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-semibold text-red-300 mb-1">
-              Quote calculation issue detected
+              Stack calculation issue detected
             </p>
             <ul className="space-y-0.5">
               {sanityResult.errors.map((err, i) => (
@@ -186,7 +186,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
               ))}
             </ul>
             <p className="text-xs text-red-500/70 mt-1.5">
-              Numbers shown may be inaccurate. Try adjusting your inputs or restarting the quote.
+              Numbers shown may be inaccurate. Try adjusting your inputs or restarting the stack.
             </p>
           </div>
         </div>
@@ -195,7 +195,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         <div className="flex items-start gap-3 p-3.5 rounded-xl border border-amber-500/25 bg-amber-500/[0.05]">
           <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <div>
-            <p className="text-xs font-semibold text-amber-300 mb-1">Quote review notes</p>
+            <p className="text-xs font-semibold text-amber-300 mb-1">Stack review notes</p>
             <ul className="space-y-0.5">
               {sanityResult.warnings.map((w, i) => (
                 <li key={i} className="text-xs text-amber-400/80">
@@ -380,7 +380,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
               >
                 <div className="w-2 h-2 bg-violet-400 rounded-full animate-pulse" />
                 <span className="text-blue-200 font-semibold text-xs uppercase tracking-wider">
-                  Projected Annual Savings
+                  Energy Security + Annual Savings
                 </span>
               </div>
               <div
@@ -630,7 +630,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
                 Number(quote.grossCost ?? quote.capexUSD) > 0 && (
                   <div className="flex items-center justify-between py-1.5">
                     <span className="text-xs text-slate-400">
-                      Federal ITC (
+                      Federal ITC Credit (
                       {quote.itcRate != null
                         ? `${Math.round(Number(quote.itcRate) * 100)}%`
                         : "30%"}

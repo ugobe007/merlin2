@@ -72,26 +72,33 @@ const Step6ResultsV7 = lazy(() =>
 // ⚠️ STEP_ORDER removed — import WIZARD_STEP_ORDER from wizardStepGates.ts (SSOT)
 
 // ✅ Single source of truth: labels (used by shell)
-const STEP_LABELS = ["Location", "Industry", "Profile", "Options", "MagicFit", "Quote"] as const;
+const STEP_LABELS = [
+  "Energy Profile",
+  "Risk Map",
+  "Stack Builder",
+  "Optimize Stack",
+  "Compare Outcomes",
+  "Deploy Strategy",
+] as const;
 
 // Next hints (base — overridden dynamically for location step)
 const NEXT_HINTS: Record<WizardStepId, string> = {
-  location: "industry + load profile → savings estimate",
-  industry: "load profile → savings estimate",
-  profile: "options → MagicFit → quote",
-  options: "MagicFit → quote",
-  magicfit: "your final quote",
-  results: "finalize your quote",
+  location: "risk map → stack builder",
+  industry: "risk map → stack builder",
+  profile: "build stack → compare outcomes",
+  options: "optimize stack → compare outcomes",
+  magicfit: "compare outcomes → deploy strategy",
+  results: "deploy strategy",
 };
 
 // Contextual Next button labels (base — overridden dynamically for location step)
 const NEXT_LABELS: Record<WizardStepId, string> = {
-  location: "Choose Industry →",
-  industry: "Build Profile →",
-  profile: "See Options →",
-  options: "See MagicFit →",
-  magicfit: "See My Quote →",
-  results: "Done",
+  location: "Identify Risks →",
+  industry: "Map Stack Inputs →",
+  profile: "Build Energy Stack →",
+  options: "Optimize Stack →",
+  magicfit: "Compare Outcomes →",
+  results: "Deploy Strategy",
 };
 
 function WizardV7Page() {
