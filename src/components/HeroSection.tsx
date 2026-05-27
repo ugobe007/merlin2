@@ -436,7 +436,7 @@ export default function HeroSection() {
               textShadow: "0 1px 0 rgba(255,255,255,0.08), 0 14px 36px rgba(2,6,23,0.42)",
             }}
           >
-            The future of energy
+            Reduce Grid Dependence
             <br />
             <span
               className="text-transparent"
@@ -449,7 +449,7 @@ export default function HeroSection() {
                 textShadow: "0 10px 28px rgba(34,211,238,0.22)",
               }}
             >
-              is adaptive.
+              Through Energy Stacking.
             </span>
           </h1>
 
@@ -458,8 +458,8 @@ export default function HeroSection() {
             style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif" }}
           >
             Merlin uses <span className="font-semibold text-slate-200">Energy Stacking™</span> to
-            model intelligent combinations of battery storage, utility power, generators, and
-            renewable energy systems.
+            orchestrate utility, battery, solar, generator, and AI load optimization into one
+            decision-ready infrastructure strategy.
           </p>
 
           <form
