@@ -139,7 +139,7 @@ export default function Navbar() {
                   </button>
                   <a
                     href="/wizard"
-                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(37,99,235,0.28)] transition-all duration-200 hover:bg-blue-500"
+                    className="rounded-lg border border-blue-400/70 bg-transparent px-4 py-2 text-sm font-semibold text-blue-300 transition-all duration-200 hover:border-blue-300 hover:text-blue-200"
                     style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                   >
                     Activate Agent
@@ -182,7 +182,7 @@ export default function Navbar() {
               </button>
               <a
                 href="/wizard"
-                className="rounded-lg bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
+                className="rounded-lg border border-blue-400/70 bg-transparent px-4 py-2.5 text-center text-sm font-semibold text-blue-300"
                 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
               >
                 Activate Agent
