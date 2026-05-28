@@ -21,7 +21,8 @@ const C = {
   purple: "#9b6dff",
   purpleSoft: "rgba(155,109,255,0.08)",
   purpleBorder: "rgba(130,100,255,0.45)",
-  amber: "#f59e0b",
+  amber: "#fbbf24",
+  amberHot: "#f97316",
   sky: "#4f8aff",
   green: "#34d399",
   red: "#f87171",
@@ -62,16 +63,16 @@ function deriveTradeoffs(tier: QuoteTier, peakKW: number) {
   return { peakExposure, gridIndependence, savingsPotential };
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, color }: { children: React.ReactNode; color?: string }) {
   return (
     <div
       style={{
-        fontSize: 10,
-        fontWeight: 700,
-        letterSpacing: "0.15em",
+        fontSize: 13,
+        fontWeight: 800,
+        letterSpacing: "0.06em",
         textTransform: "uppercase" as const,
-        color: C.textMuted,
-        marginBottom: 10,
+        color: color ?? "rgba(232,235,243,0.90)",
+        marginBottom: 12,
       }}
     >
       {children}
@@ -404,7 +405,7 @@ export function Step4V8({ state, actions }: Props) {
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <Panel>
-            <SectionLabel>Stack Components</SectionLabel>
+            <SectionLabel color={C.sky}>🔧 Stack Components</SectionLabel>
             <StackRow
               icon="☀️"
               name="Solar PV"
@@ -532,7 +533,8 @@ export function Step4V8({ state, actions }: Props) {
               max={100}
               value={strategyValue}
               onChange={(e) => handleStrategyChange(Number(e.target.value))}
-              style={{ width: "100%", accentColor: C.amber, cursor: "pointer", height: 6 }}
+              className="amber-range"
+              style={{ width: "100%" }}
             />
             <div
               style={{
@@ -554,30 +556,48 @@ export function Step4V8({ state, actions }: Props) {
               style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 14 }}
             >
               {[
-                { label: "BESS", value: `${tier.bessKWh} kWh` },
-                { label: "Solar", value: tier.solarKW > 0 ? `${tier.solarKW} kW` : "—" },
+                { label: "BESS", value: `${tier.bessKWh} kWh`, color: C.purple },
+                {
+                  label: "Solar",
+                  value: tier.solarKW > 0 ? `${tier.solarKW} kW` : "—",
+                  color: C.amber,
+                },
                 {
                   label: "Generator",
                   value: tier.generatorKW > 0 ? `${tier.generatorKW} kW` : "—",
+                  color: C.green,
                 },
-              ].map(({ label, value }) => (
+              ].map(({ label, value, color }) => (
                 <div
-                  key={label}
+                  key={`${label}-${tierIdx}`}
+                  className="tier-chip-animate"
                   style={{
                     background: "rgba(255,255,255,0.03)",
                     border: `1px solid ${C.panelBorder}`,
                     borderRadius: 8,
-                    padding: "8px 10px",
+                    padding: "10px 10px",
                     textAlign: "center" as const,
                   }}
                 >
-                  <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 3 }}>{label}</div>
                   <div
                     style={{
-                      fontSize: 13,
+                      fontSize: 10,
+                      color: C.textMuted,
+                      marginBottom: 4,
                       fontWeight: 700,
-                      color: C.text,
+                      letterSpacing: "0.10em",
+                      textTransform: "uppercase" as const,
+                    }}
+                  >
+                    {label}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 800,
+                      color,
                       fontVariantNumeric: "tabular-nums" as const,
+                      transition: "all 0.3s ease",
                     }}
                   >
                     {value}
@@ -601,7 +621,7 @@ export function Step4V8({ state, actions }: Props) {
           <Panel
             style={{ border: `1px solid ${C.purpleBorder}`, background: "rgba(155,109,255,0.05)" }}
           >
-            <SectionLabel>Live Financial Model</SectionLabel>
+            <SectionLabel color={C.purple}>💰 Live Financial Model</SectionLabel>
             <div
               style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}
             >
@@ -676,7 +696,7 @@ export function Step4V8({ state, actions }: Props) {
           </Panel>
 
           <Panel>
-            <SectionLabel>Stack Cost Breakdown</SectionLabel>
+            <SectionLabel color={C.sky}>📊 Stack Cost Breakdown</SectionLabel>
             <BreakdownRow
               label="Solar PV"
               amount={solarCost}
@@ -733,7 +753,7 @@ export function Step4V8({ state, actions }: Props) {
           </Panel>
 
           <Panel>
-            <SectionLabel>Stack Tradeoffs</SectionLabel>
+            <SectionLabel color={C.green}>⚖️ Stack Tradeoffs</SectionLabel>
             <TradeoffRow label="Peak Grid Exposure" value={tradeoffs.peakExposure} invert />
             <TradeoffRow label="Grid Independence" value={tradeoffs.gridIndependence} />
             <TradeoffRow label="Savings Potential" value={tradeoffs.savingsPotential} />
@@ -837,11 +857,18 @@ export function Step4V8({ state, actions }: Props) {
         </p>
       </div>
 
-      <style>
-        {
-          "@media (max-width: 720px) { .stack-builder-grid { grid-template-columns: 1fr !important; } } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }"
-        }
-      </style>
+      <style>{`
+        @media (max-width: 720px) { .stack-builder-grid { grid-template-columns: 1fr !important; } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes chip-flash { 0% { box-shadow: 0 0 0 0 rgba(251,191,36,0.55); background: rgba(251,191,36,0.18); } 60% { box-shadow: 0 0 0 6px rgba(251,191,36,0); } 100% { background: rgba(255,255,255,0.03); box-shadow: none; } }
+        .tier-chip-animate { animation: chip-flash 0.55s ease-out forwards; }
+        input.amber-range { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.10); outline: none; cursor: pointer; }
+        input.amber-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 10px rgba(251,191,36,0.70); cursor: pointer; border: 2px solid #f97316; transition: transform 0.15s; }
+        input.amber-range::-webkit-slider-thumb:hover { transform: scale(1.15); }
+        input.amber-range::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: linear-gradient(90deg, rgba(251,191,36,0.35), rgba(249,115,22,0.50)); }
+        input.amber-range::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 10px rgba(251,191,36,0.70); cursor: pointer; border: 2px solid #f97316; }
+        input.amber-range::-moz-range-track { height: 8px; border-radius: 4px; background: linear-gradient(90deg, rgba(251,191,36,0.35), rgba(249,115,22,0.50)); }
+      `}</style>
     </div>
   );
 }
