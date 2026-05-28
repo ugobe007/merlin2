@@ -7,9 +7,9 @@ import type { BusinessData, WizardActions, WizardState } from "../wizardState";
 const GOOGLE_MAPS_API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) ?? "";
 
 const T = {
-  accent: "#3ECF8E",
-  accentSoft: "rgba(62,207,142,0.10)",
-  accentBorder: "rgba(62,207,142,0.28)",
+  accent: "#4F8CFF",
+  accentSoft: "rgba(79,140,255,0.10)",
+  accentBorder: "rgba(79,140,255,0.28)",
   textPrimary: "rgba(232,235,243,0.98)",
   textSecondary: "rgba(232,235,243,0.64)",
   textMuted: "rgba(232,235,243,0.42)",
@@ -896,7 +896,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                     borderRight: "1px solid rgba(255,255,255,0.08)",
                     background:
                       country === "US"
-                        ? "linear-gradient(135deg, rgba(62,207,142,0.22), rgba(62,207,142,0.12))"
+                        ? "linear-gradient(135deg, rgba(79,140,255,0.22), rgba(79,140,255,0.12))"
                         : "transparent",
                     color: country === "US" ? T.accent : T.textSecondary,
                     fontSize: 15,
@@ -929,7 +929,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                     border: "none",
                     background:
                       country === "International"
-                        ? "linear-gradient(135deg, rgba(62,207,142,0.22), rgba(62,207,142,0.12))"
+                        ? "linear-gradient(135deg, rgba(79,140,255,0.22), rgba(79,140,255,0.12))"
                         : "transparent",
                     color: country === "International" ? T.accent : T.textSecondary,
                     fontSize: 15,
