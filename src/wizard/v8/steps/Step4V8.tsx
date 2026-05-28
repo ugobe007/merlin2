@@ -143,18 +143,33 @@ function TradeoffRow({ label, value, invert }: { label: string; value: number; i
   const goodness = invert ? 100 - value : value;
   const barColor = goodness >= 66 ? C.green : goodness >= 33 ? C.amber : C.red;
   const textLabel = goodness >= 66 ? "HIGH" : goodness >= 33 ? "MED" : "LOW";
+  const descriptor =
+    goodness >= 66
+      ? invert
+        ? "Well covered"
+        : "Strong"
+      : goodness >= 33
+        ? invert
+          ? "Moderate exposure"
+          : "Moderate"
+        : invert
+          ? "High exposure"
+          : "Low";
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div style={{ marginBottom: 14 }}>
       <div
-        style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: 12 }}
+        style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, fontSize: 12 }}
       >
-        <span style={{ color: C.textSub }}>{label}</span>
-        <span style={{ color: barColor, fontWeight: 600 }}>{textLabel}</span>
+        <span style={{ color: C.textSub, fontWeight: 600 }}>{label}</span>
+        <span style={{ color: barColor, fontWeight: 700 }}>{textLabel}</span>
+      </div>
+      <div style={{ marginBottom: 4 }}>
+        <span style={{ fontSize: 10, color: C.textMuted }}>{descriptor}</span>
       </div>
       <div
         style={{
-          height: 5,
-          borderRadius: 3,
+          height: 8,
+          borderRadius: 4,
           background: "rgba(255,255,255,0.06)",
           overflow: "hidden",
         }}
@@ -163,9 +178,10 @@ function TradeoffRow({ label, value, invert }: { label: string; value: number; i
           style={{
             height: "100%",
             width: `${goodness}%`,
-            background: barColor,
-            borderRadius: 3,
+            background: `linear-gradient(90deg, ${barColor}cc, ${barColor})`,
+            borderRadius: 4,
             transition: "width 0.4s ease",
+            boxShadow: `0 0 8px ${barColor}55`,
           }}
         />
       </div>
@@ -187,19 +203,34 @@ function BreakdownRow({
   if (amount === 0) return null;
   const pct = Math.max(4, Math.min(100, Math.round((Math.abs(amount) / Math.max(total, 1)) * 100)));
   return (
-    <div style={{ marginBottom: 10 }}>
+    <div style={{ marginBottom: 12 }}>
       <div
-        style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 11 }}
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+          marginBottom: 5,
+        }}
       >
-        <span style={{ color: C.textSub }}>{label}</span>
-        <span style={{ color, fontWeight: 600, fontVariantNumeric: "tabular-nums" as const }}>
+        <div>
+          <div style={{ fontSize: 12, color: C.textSub, fontWeight: 600 }}>{label}</div>
+          <div style={{ fontSize: 10, color: C.textMuted, marginTop: 1 }}>{pct}% of gross cost</div>
+        </div>
+        <span
+          style={{
+            fontSize: 13,
+            color,
+            fontWeight: 700,
+            fontVariantNumeric: "tabular-nums" as const,
+          }}
+        >
           {fmt$(amount)}
         </span>
       </div>
       <div
         style={{
-          height: 4,
-          borderRadius: 2,
+          height: 8,
+          borderRadius: 4,
           background: "rgba(255,255,255,0.05)",
           overflow: "hidden",
         }}
@@ -208,9 +239,10 @@ function BreakdownRow({
           style={{
             height: "100%",
             width: `${pct}%`,
-            background: color,
-            borderRadius: 2,
+            background: `linear-gradient(90deg, ${color}aa, ${color})`,
+            borderRadius: 4,
             transition: "width 0.4s ease",
+            boxShadow: `0 0 8px ${color}44`,
           }}
         />
       </div>
@@ -360,7 +392,9 @@ export function Step4V8({ state, actions }: Props) {
         <p
           style={{ fontSize: 13, color: C.textSub, marginTop: 6, lineHeight: 1.55, maxWidth: 600 }}
         >
-          Adjust the optimization strategy and watch your financial model update in real time.
+          Review your system components, then use the strategy slider to balance cost vs.
+          resilience. When the financial model reflects your goals, confirm your stack to see your
+          full quote.
         </p>
       </div>
 
@@ -419,17 +453,40 @@ export function Step4V8({ state, actions }: Props) {
                 type="button"
                 onClick={() => actions.goToStep(3.5 as WizardStep)}
                 style={{
-                  background: "transparent",
-                  border: "none",
-                  color: C.textMuted,
-                  fontSize: 11,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  background: "rgba(79,138,255,0.07)",
+                  border: "1px solid rgba(79,138,255,0.22)",
+                  borderRadius: 8,
+                  color: C.sky,
+                  fontSize: 12,
+                  fontWeight: 600,
                   cursor: "pointer",
-                  padding: 0,
-                  textDecoration: "underline",
-                  textUnderlineOffset: 3,
+                  padding: "8px 14px",
+                  width: "100%",
+                  justifyContent: "center",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(79,138,255,0.14)";
+                  e.currentTarget.style.borderColor = "rgba(79,138,255,0.40)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(79,138,255,0.07)";
+                  e.currentTarget.style.borderColor = "rgba(79,138,255,0.22)";
                 }}
               >
-                ← Adjust component scope
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path
+                    d="M8 10L4 6.5L8 3"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Change system components
               </button>
             </div>
           </Panel>
@@ -664,7 +721,46 @@ export function Step4V8({ state, actions }: Props) {
         </div>
       </div>
 
-      <div style={{ marginTop: 28, display: "flex", justifyContent: "flex-end" }}>
+      <div
+        style={{
+          marginTop: 28,
+          padding: "20px 24px",
+          borderRadius: 14,
+          background:
+            "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(79,138,255,0.08) 100%)",
+          border: "1.5px solid rgba(124,58,237,0.35)",
+          display: "flex",
+          flexDirection: "column" as const,
+          gap: 12,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: "rgba(124,58,237,0.18)",
+              border: "1px solid rgba(124,58,237,0.40)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              fontSize: 16,
+            }}
+          >
+            ✅
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 3 }}>
+              Ready to confirm your stack?
+            </div>
+            <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.55 }}>
+              Once confirmed, Merlin generates your full TrueQuote™ — including financing options,
+              incentives, and matched installer recommendations.
+            </div>
+          </div>
+        </div>
         <button
           type="button"
           onClick={() => {
@@ -677,26 +773,48 @@ export function Step4V8({ state, actions }: Props) {
             actions.goToStep(6 as WizardStep);
           }}
           style={{
-            padding: "14px 32px",
+            width: "100%",
+            padding: "15px 32px",
             borderRadius: 10,
             background: "transparent",
-            border: `1.5px solid ${C.purple}`,
-            color: C.purple,
-            fontSize: 15,
+            border: `2px solid #7c3aed`,
+            color: "#c4b5fd",
+            fontSize: 16,
             fontWeight: 700,
             cursor: "pointer",
             letterSpacing: "0.02em",
-            transition: "box-shadow 0.15s",
+            transition: "all 0.18s ease",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            boxShadow: "0 0 20px rgba(124,58,237,0.22)",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = "0 0 0 3px rgba(130,100,255,0.25)";
+            e.currentTarget.style.borderColor = "#9b6dff";
+            e.currentTarget.style.boxShadow = "0 0 32px rgba(124,58,237,0.40)";
+            e.currentTarget.style.transform = "translateY(-1px)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = "none";
+            e.currentTarget.style.borderColor = "#7c3aed";
+            e.currentTarget.style.boxShadow = "0 0 20px rgba(124,58,237,0.22)";
+            e.currentTarget.style.transform = "translateY(0)";
           }}
         >
-          Deploy Your Stack →
+          <span>Confirm Your Energy Stack</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M3 8h10M9 4l4 4-4 4"
+              stroke="currentColor"
+              strokeWidth="1.9"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
+        <p style={{ fontSize: 11, color: C.textMuted, textAlign: "center" as const, margin: 0 }}>
+          You can revisit and adjust your stack at any time before finalizing.
+        </p>
       </div>
 
       <style>
