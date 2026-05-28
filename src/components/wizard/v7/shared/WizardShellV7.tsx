@@ -604,7 +604,7 @@ export default function WizardShellV7({
                           padding: "5px 12px",
                           borderRadius: 999,
                           background: isActive
-                            ? "linear-gradient(135deg, #4f8aff, #9b6dff)"
+                            ? "linear-gradient(135deg, #4f8aff, #7c3aed)"
                             : isComplete
                               ? "rgba(52,211,153,0.10)"
                               : "transparent",
@@ -613,7 +613,7 @@ export default function WizardShellV7({
                             : isComplete
                               ? "1px solid rgba(52,211,153,0.25)"
                               : "none",
-                          boxShadow: isActive ? "0 0 12px rgba(155,109,255,0.40)" : "none",
+                          boxShadow: isActive ? "0 0 12px rgba(124,58,237,0.45)" : "none",
                           opacity: isFuture ? 0.4 : 1,
                           transition: "all 0.2s ease",
                           whiteSpace: "nowrap",
@@ -1057,7 +1057,7 @@ export default function WizardShellV7({
                         background: isComplete
                           ? "rgba(79, 140, 255, 0.55)"
                           : isActive
-                            ? "#8B5CF6"
+                            ? "#7c3aed"
                             : "rgba(255, 255, 255, 0.12)",
                         transition: "all 0.25s ease",
                       }}
@@ -1084,24 +1084,24 @@ export default function WizardShellV7({
                     minHeight: isFilled ? 54 : 46,
                     background: "transparent",
                     border: isFilled
-                      ? "2px solid #9b6dff"
+                      ? "2px solid #7c3aed"
                       : isActive
                         ? "2px solid #4f8aff"
                         : "2px solid rgba(255,255,255,0.08)",
-                    color: isFilled ? "#c4aaff" : isActive ? "#BFDBFE" : "rgba(232,235,243,0.28)",
+                    color: isFilled ? "#c4b5fd" : isActive ? "#BFDBFE" : "rgba(232,235,243,0.28)",
                     cursor: isActive ? "pointer" : "not-allowed",
                     fontSize: isFilled ? 16 : 14,
                     fontWeight: 700,
                     letterSpacing: "0.01em",
-                    boxShadow: isFilled ? "0 0 20px rgba(155,109,255,0.25)" : "none",
+                    boxShadow: isFilled ? "0 0 20px rgba(124,58,237,0.30)" : "none",
                     animation: "none",
                     transition: "all 0.18s ease",
                   }}
                   onMouseEnter={(e) => {
                     if (isActive) {
                       if (isFilled) {
-                        e.currentTarget.style.borderColor = "#b399ff";
-                        e.currentTarget.style.boxShadow = "0 0 28px rgba(155,109,255,0.40)";
+                        e.currentTarget.style.borderColor = "#9b6dff";
+                        e.currentTarget.style.boxShadow = "0 0 28px rgba(124,58,237,0.45)";
                         e.currentTarget.style.transform = "translateY(-1px)";
                       } else {
                         e.currentTarget.style.background = "rgba(99,120,255,0.06)";
@@ -1111,12 +1111,12 @@ export default function WizardShellV7({
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = "transparent";
                     e.currentTarget.style.borderColor = isFilled
-                      ? "#9b6dff"
+                      ? "#7c3aed"
                       : isActive
                         ? "#4f8aff"
                         : "rgba(255,255,255,0.08)";
                     e.currentTarget.style.boxShadow = isFilled
-                      ? "0 0 20px rgba(155,109,255,0.25)"
+                      ? "0 0 20px rgba(124,58,237,0.30)"
                       : "none";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}

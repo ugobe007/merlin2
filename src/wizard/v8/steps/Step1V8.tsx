@@ -774,7 +774,7 @@ export function Step1V8({ state, actions }: Step1Props) {
               textTransform: "lowercase",
             }}
           >
-            get your <span style={{ color: T.accent }}>free energy quote</span>
+            build your <span style={{ color: T.accent }}>energy stack</span>
           </h1>
           <p
             style={{
@@ -784,9 +784,65 @@ export function Step1V8({ state, actions }: Step1Props) {
               color: T.textSecondary,
             }}
           >
-            Enter your ZIP and Merlin pulls live utility rates, solar data, and demand charges for
-            your location — then builds a real financial model. No vendor. No sales call.
+            Merlin stacks solar, battery storage, demand management, and grid optimization into one
+            financial model — calibrated to your utility tariff, load profile, and incentives. No
+            vendor. No sales call.
           </p>
+        </div>
+
+        {/* ── Energy Stacking™ explainer chip ── */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          {[
+            { icon: "☀️", label: "Solar" },
+            { icon: "🔋", label: "Battery" },
+            { icon: "⚡", label: "Demand Mgmt" },
+            { icon: "🤖", label: "AI Load Opt" },
+          ].map(({ icon, label }, i, arr) => (
+            <React.Fragment key={label}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  background: "rgba(124,58,237,0.10)",
+                  border: "1px solid rgba(124,58,237,0.28)",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "#c4b5fd",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <span style={{ fontSize: 12 }}>{icon}</span>
+                {label}
+              </div>
+              {i < arr.length - 1 && (
+                <span style={{ fontSize: 10, color: "rgba(99,120,255,0.45)", fontWeight: 700 }}>
+                  +
+                </span>
+              )}
+            </React.Fragment>
+          ))}
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: "rgba(124,58,237,0.60)",
+              letterSpacing: "0.10em",
+              textTransform: "uppercase",
+              marginLeft: 4,
+            }}
+          >
+            = Energy Stack™
+          </span>
         </div>
 
         {/* ── Journey preview strip ── */}
@@ -805,22 +861,22 @@ export function Step1V8({ state, actions }: Step1Props) {
             [
               {
                 icon: "📍",
-                label: "Location",
-                sub: "ZIP auto-detected",
+                label: "Your Site",
+                sub: "live utility + solar data",
                 iconBg: "rgba(79,138,255,0.12)",
                 iconBorder: "rgba(79,138,255,0.25)",
               },
               {
-                icon: "🏢",
-                label: "Industry",
-                sub: "picks your defaults",
+                icon: "⚡",
+                label: "Energy Stack",
+                sub: "solar · battery · demand",
                 iconBg: "rgba(155,109,255,0.12)",
                 iconBorder: "rgba(155,109,255,0.25)",
               },
               {
-                icon: "⚡",
-                label: "TrueQuote",
-                sub: "full financial model",
+                icon: "📊",
+                label: "Financial Model",
+                sub: "ROI · payback · IRR",
                 iconBg: "rgba(245,158,11,0.12)",
                 iconBorder: "rgba(245,158,11,0.25)",
               },
@@ -1818,7 +1874,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                     letterSpacing: "0.05em",
                   }}
                 >
-                  ⚡ Grid Connection Status
+                  ⚡ How reliable is your grid?
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
                   {[
