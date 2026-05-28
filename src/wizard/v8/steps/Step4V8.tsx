@@ -364,7 +364,15 @@ export function Step4V8({ state, actions }: Props) {
   const industryLabel = industry?.replace(/_/g, " ") ?? "your facility";
 
   return (
-    <div style={{ maxWidth: 1060, margin: "0 auto", padding: "0 4px 40px", color: C.text }}>
+    <div
+      style={{
+        maxWidth: 1060,
+        margin: "0 auto",
+        padding: "0 4px 40px",
+        color: C.text,
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      }}
+    >
       <div style={{ marginBottom: 28, paddingTop: 4 }}>
         <div
           style={{
@@ -385,7 +393,7 @@ export function Step4V8({ state, actions }: Props) {
             color: C.text,
             margin: 0,
             letterSpacing: "-0.4px",
-            fontFamily: "Outfit, sans-serif",
+            fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif",
           }}
         >
           Build Your Energy Stack™
@@ -534,21 +542,33 @@ export function Step4V8({ state, actions }: Props) {
               value={strategyValue}
               onChange={(e) => handleStrategyChange(Number(e.target.value))}
               className="amber-range"
-              style={{ width: "100%" }}
+              style={{
+                width: "100%",
+                background: `linear-gradient(to right, #fbbf24 0%, #f97316 ${strategyValue}%, rgba(255,255,255,0.14) ${strategyValue}%, rgba(255,255,255,0.14) 100%)`,
+              }}
             />
             <div
               style={{
                 marginTop: 14,
-                padding: "12px 14px",
+                padding: "14px 16px",
                 borderRadius: 10,
-                background: C.purpleSoft,
-                border: `1px solid ${C.purpleBorder}`,
+                background: "rgba(251,191,36,0.07)",
+                border: `1px solid rgba(251,191,36,0.30)`,
               }}
             >
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.purple, marginBottom: 4 }}>
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 800,
+                  color: C.amber,
+                  marginBottom: 5,
+                  fontFamily: "'Outfit', sans-serif",
+                  letterSpacing: "-0.2px",
+                }}
+              >
                 {strategyInfo.label}
               </div>
-              <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 13, color: C.textSub, lineHeight: 1.55 }}>
                 {strategyInfo.sub}
               </div>
             </div>
@@ -862,12 +882,10 @@ export function Step4V8({ state, actions }: Props) {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes chip-flash { 0% { box-shadow: 0 0 0 0 rgba(251,191,36,0.55); background: rgba(251,191,36,0.18); } 60% { box-shadow: 0 0 0 6px rgba(251,191,36,0); } 100% { background: rgba(255,255,255,0.03); box-shadow: none; } }
         .tier-chip-animate { animation: chip-flash 0.55s ease-out forwards; }
-        input.amber-range { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.10); outline: none; cursor: pointer; }
-        input.amber-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 10px rgba(251,191,36,0.70); cursor: pointer; border: 2px solid #f97316; transition: transform 0.15s; }
-        input.amber-range::-webkit-slider-thumb:hover { transform: scale(1.15); }
-        input.amber-range::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: linear-gradient(90deg, rgba(251,191,36,0.35), rgba(249,115,22,0.50)); }
-        input.amber-range::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 10px rgba(251,191,36,0.70); cursor: pointer; border: 2px solid #f97316; }
-        input.amber-range::-moz-range-track { height: 8px; border-radius: 4px; background: linear-gradient(90deg, rgba(251,191,36,0.35), rgba(249,115,22,0.50)); }
+        input.amber-range { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 4px; outline: none; cursor: pointer; }
+        input.amber-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fde68a, #fbbf24 55%, #f97316); box-shadow: 0 0 12px rgba(251,191,36,0.80), 0 2px 6px rgba(0,0,0,0.40); cursor: pointer; border: 2px solid rgba(255,255,255,0.25); transition: transform 0.15s, box-shadow 0.15s; }
+        input.amber-range::-webkit-slider-thumb:hover { transform: scale(1.18); box-shadow: 0 0 20px rgba(251,191,36,0.95), 0 2px 8px rgba(0,0,0,0.50); }
+        input.amber-range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fde68a, #fbbf24 55%, #f97316); box-shadow: 0 0 12px rgba(251,191,36,0.80); cursor: pointer; border: 2px solid rgba(255,255,255,0.25); }
       `}</style>
     </div>
   );
