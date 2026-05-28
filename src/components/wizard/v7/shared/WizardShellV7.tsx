@@ -689,24 +689,28 @@ export default function WizardShellV7({
                     gap: 6,
                     padding: "7px 14px",
                     borderRadius: 9,
-                    border: "none",
-                    background: "linear-gradient(135deg, #f59e0b, #fb923c)",
-                    color: "#fff",
+                    border: "1.5px solid #f59e0b",
+                    background: "transparent",
+                    color: "#f59e0b",
                     fontSize: 12,
                     fontWeight: 700,
                     cursor: "pointer",
                     letterSpacing: "0.04em",
                     textTransform: "uppercase" as const,
-                    boxShadow: "0 4px 16px rgba(245,158,11,0.28)",
+                    boxShadow: "none",
                     transition: "all 0.15s ease",
                     whiteSpace: "nowrap",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(245,158,11,0.45)";
+                    e.currentTarget.style.borderColor = "#fbbf24";
+                    e.currentTarget.style.color = "#fbbf24";
+                    e.currentTarget.style.background = "rgba(245,158,11,0.07)";
                     e.currentTarget.style.transform = "translateY(-1px)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = "0 4px 16px rgba(245,158,11,0.28)";
+                    e.currentTarget.style.borderColor = "#f59e0b";
+                    e.currentTarget.style.color = "#f59e0b";
+                    e.currentTarget.style.background = "transparent";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
@@ -986,8 +990,8 @@ export default function WizardShellV7({
                 padding: "11px 20px",
                 borderRadius: 10,
                 minHeight: 46,
-                background: canGoBack ? "rgba(255, 255, 255, 0.04)" : "transparent",
-                border: canGoBack ? "1px solid rgba(255, 255, 255, 0.09)" : "1px solid transparent",
+                background: "transparent",
+                border: canGoBack ? "1px solid rgba(255,255,255,0.18)" : "1px solid transparent",
                 color: canGoBack ? "rgba(232, 235, 243, 0.65)" : "rgba(232, 235, 243, 0.18)",
                 cursor: canGoBack ? "pointer" : "not-allowed",
                 fontSize: 14,
@@ -996,17 +1000,15 @@ export default function WizardShellV7({
               }}
               onMouseEnter={(e) => {
                 if (canGoBack) {
-                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.07)";
-                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.14)";
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)";
                   e.currentTarget.style.color = "rgba(232, 235, 243, 0.9)";
                 }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = canGoBack
-                  ? "rgba(255, 255, 255, 0.04)"
-                  : "transparent";
+                e.currentTarget.style.background = "transparent";
                 e.currentTarget.style.borderColor = canGoBack
-                  ? "rgba(255, 255, 255, 0.09)"
+                  ? "rgba(255,255,255,0.18)"
                   : "transparent";
                 e.currentTarget.style.color = canGoBack
                   ? "rgba(232, 235, 243, 0.65)"
@@ -1080,49 +1082,41 @@ export default function WizardShellV7({
                     padding: isFilled ? "14px 28px" : "11px 22px",
                     borderRadius: isFilled ? 12 : 10,
                     minHeight: isFilled ? 54 : 46,
-                    background: isFilled
-                      ? "linear-gradient(135deg, #4F8CFF 0%, #8B5CF6 100%)"
-                      : isActive
-                        ? "transparent"
-                        : "rgba(255,255,255,0.03)",
+                    background: "transparent",
                     border: isFilled
-                      ? "2px solid #4F8CFF"
+                      ? "2px solid #9b6dff"
                       : isActive
                         ? "2px solid #4F8CFF"
-                        : "2px solid rgba(255, 255, 255, 0.08)",
-                    color: isFilled ? "#fff" : isActive ? "#BFDBFE" : "rgba(232, 235, 243, 0.28)",
+                        : "2px solid rgba(255,255,255,0.08)",
+                    color: isFilled ? "#c4aaff" : isActive ? "#BFDBFE" : "rgba(232,235,243,0.28)",
                     cursor: isActive ? "pointer" : "not-allowed",
                     fontSize: isFilled ? 16 : 14,
                     fontWeight: 700,
                     letterSpacing: "0.01em",
-                    boxShadow: isFilled
-                      ? "0 0 32px rgba(79, 140, 255, 0.40), 0 0 24px rgba(139,92,246,0.18), 0 4px 16px rgba(0,0,0,0.3)"
-                      : "none",
-                    animation: isFilled ? "nextBtnPulse 2s ease-in-out infinite" : "none",
+                    boxShadow: isFilled ? "0 0 20px rgba(155,109,255,0.25)" : "none",
+                    animation: "none",
                     transition: "all 0.18s ease",
                   }}
                   onMouseEnter={(e) => {
                     if (isActive) {
                       if (isFilled) {
-                        e.currentTarget.style.background =
-                          "linear-gradient(135deg, #60A5FA 0%, #A78BFA 100%)";
-                        e.currentTarget.style.boxShadow =
-                          "0 0 44px rgba(79, 140, 255, 0.55), 0 0 24px rgba(139,92,246,0.22), 0 4px 20px rgba(0,0,0,0.35)";
+                        e.currentTarget.style.borderColor = "#b399ff";
+                        e.currentTarget.style.boxShadow = "0 0 28px rgba(155,109,255,0.40)";
                         e.currentTarget.style.transform = "translateY(-1px)";
                       } else {
-                        e.currentTarget.style.background = "rgba(79, 140, 255, 0.10)";
-                        e.currentTarget.style.boxShadow = "0 0 16px rgba(79, 140, 255, 0.18)";
+                        e.currentTarget.style.background = "rgba(79,140,255,0.06)";
                       }
                     }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = isFilled
-                      ? "linear-gradient(135deg, #4F8CFF 0%, #8B5CF6 100%)"
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.borderColor = isFilled
+                      ? "#9b6dff"
                       : isActive
-                        ? "transparent"
-                        : "rgba(255,255,255,0.03)";
+                        ? "#4F8CFF"
+                        : "rgba(255,255,255,0.08)";
                     e.currentTarget.style.boxShadow = isFilled
-                      ? "0 0 32px rgba(79, 140, 255, 0.40), 0 0 24px rgba(139,92,246,0.18), 0 4px 16px rgba(0,0,0,0.3)"
+                      ? "0 0 20px rgba(155,109,255,0.25)"
                       : "none";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}

@@ -191,8 +191,8 @@ export default function HeroMainBand({
                     maxWidth: "420px",
                   }}
                 >
-                  Instant, bankable BESS & solar quotes — every number traced to NREL, EIA, and IRA
-                  2022. No vendor runaround.
+                  Merlin uses Energy Stacking™ to orchestrate utility, battery, solar, generator,
+                  and AI load optimization into one decision-ready project plan.
                 </div>
 
                 {/* CTA Button - Emerald Ghost */}
@@ -247,8 +247,8 @@ export default function HeroMainBand({
                   className="inline-flex items-center justify-center gap-2.5 mb-6 transition-all duration-200 cursor-pointer"
                   style={{
                     background: "transparent",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    color: "rgba(255,255,255,0.65)",
+                    border: "1.5px solid #f59e0b",
+                    color: "#f59e0b",
                     borderRadius: "14px",
                     fontWeight: 700,
                     fontSize: "15px",
@@ -258,14 +258,14 @@ export default function HeroMainBand({
                     maxWidth: "420px",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)";
-                    e.currentTarget.style.color = "#fff";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                    e.currentTarget.style.borderColor = "#fbbf24";
+                    e.currentTarget.style.color = "#fbbf24";
+                    e.currentTarget.style.background = "rgba(245,158,11,0.06)";
                     e.currentTarget.style.transform = "translateY(-2px)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
-                    e.currentTarget.style.color = "rgba(255,255,255,0.65)";
+                    e.currentTarget.style.borderColor = "#f59e0b";
+                    e.currentTarget.style.color = "#f59e0b";
                     e.currentTarget.style.background = "transparent";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
