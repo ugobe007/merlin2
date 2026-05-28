@@ -797,7 +797,7 @@ export function Step1V8({ state, actions }: Step1Props) {
             gap: 8,
             padding: "12px 14px",
             borderRadius: 12,
-            background: "rgba(255,255,255,0.01)",
+            background: "transparent",
             border: "1px solid rgba(99,120,255,0.12)",
           }}
         >
@@ -913,7 +913,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                     flex: 1,
                     height: "100%",
                     border: "none",
-                    borderRight: "1px solid rgba(255,255,255,0.08)",
+                    borderRight: "1px solid rgba(99,120,255,0.18)",
                     background:
                       country === "US"
                         ? "linear-gradient(135deg, rgba(79,140,255,0.22), rgba(79,140,255,0.12))"
@@ -1210,7 +1210,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                   border: "none",
                   background: isZipReady
                     ? "linear-gradient(135deg, #4f8aff, #9b6dff)"
-                    : "rgba(255,255,255,0.04)",
+                    : "transparent",
                   color: isZipReady ? "#fff" : T.textMuted,
                   fontWeight: 700,
                   fontSize: 15,
@@ -1387,7 +1387,7 @@ export function Step1V8({ state, actions }: Step1Props) {
 
             {/* Divider */}
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
+              <div style={{ flex: 1, height: 1, background: "rgba(99,120,255,0.18)" }} />
               <span
                 style={{
                   fontSize: 10,
@@ -1399,7 +1399,7 @@ export function Step1V8({ state, actions }: Step1Props) {
               >
                 or match your business
               </span>
-              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
+              <div style={{ flex: 1, height: 1, background: "rgba(99,120,255,0.18)" }} />
             </div>
 
             <div>
@@ -1477,7 +1477,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                 <div
                   style={{
                     borderRadius: 12,
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(99,120,255,0.18)",
                     background: "rgba(8,11,20,0.98)",
                     overflow: "hidden",
                   }}
@@ -1491,7 +1491,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                         width: "100%",
                         padding: "12px 14px",
                         border: "none",
-                        borderTop: index === 0 ? "none" : "1px solid rgba(255,255,255,0.06)",
+                        borderTop: index === 0 ? "none" : "1px solid rgba(99,120,255,0.18)",
                         background: "transparent",
                         color: T.textPrimary,
                         textAlign: "left",
@@ -1560,11 +1560,9 @@ export function Step1V8({ state, actions }: Step1Props) {
                   border:
                     businessName.trim() && !isResolvingBusiness
                       ? `1px solid ${T.accentBorder}`
-                      : "1px solid rgba(255,255,255,0.08)",
+                      : "1px solid rgba(99,120,255,0.22)",
                   background:
-                    businessName.trim() && !isResolvingBusiness
-                      ? T.accentSoft
-                      : "rgba(255,255,255,0.03)",
+                    businessName.trim() && !isResolvingBusiness ? T.accentSoft : "#111a3e",
                   color: businessName.trim() && !isResolvingBusiness ? T.accent : T.textMuted,
                   fontSize: 14,
                   fontWeight: 800,
@@ -1583,13 +1581,13 @@ export function Step1V8({ state, actions }: Step1Props) {
           <div
             style={{
               borderRadius: 16,
-              background: "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03))",
+              background: "#111a3e",
               border: "1px solid rgba(255,255,255,0.10)",
               overflow: "hidden",
               boxShadow: "0 8px 30px rgba(0,0,0,0.28)",
             }}
           >
-            <div style={{ padding: 24, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <div style={{ padding: 24, borderBottom: "1px solid rgba(99,120,255,0.18)" }}>
               <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
                 {activeBusiness.photoUrl ? (
                   <div style={{ width: 96, flexShrink: 0 }}>
@@ -1707,8 +1705,8 @@ export function Step1V8({ state, actions }: Step1Props) {
                   style={{
                     overflow: "hidden",
                     borderRadius: 14,
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(99,120,255,0.18)",
+                    background: "#111a3e",
                   }}
                 >
                   <iframe
@@ -1732,8 +1730,8 @@ export function Step1V8({ state, actions }: Step1Props) {
                   style={{
                     padding: 14,
                     borderRadius: 12,
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.06)",
+                    background: "#111a3e",
+                    border: "1px solid rgba(99,120,255,0.18)",
                   }}
                 >
                   <div style={{ fontSize: 10, textTransform: "uppercase", color: T.textMuted }}>
@@ -1752,8 +1750,8 @@ export function Step1V8({ state, actions }: Step1Props) {
                   style={{
                     padding: 14,
                     borderRadius: 12,
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.06)",
+                    background: "#111a3e",
+                    border: "1px solid rgba(99,120,255,0.18)",
                   }}
                 >
                   <div style={{ fontSize: 10, textTransform: "uppercase", color: T.textMuted }}>
@@ -1773,8 +1771,8 @@ export function Step1V8({ state, actions }: Step1Props) {
                     style={{
                       padding: 14,
                       borderRadius: 12,
-                      background: "rgba(255,255,255,0.03)",
-                      border: "1px solid rgba(255,255,255,0.06)",
+                      background: "#111a3e",
+                      border: "1px solid rgba(99,120,255,0.18)",
                     }}
                   >
                     <div style={{ fontSize: 10, textTransform: "uppercase", color: T.textMuted }}>
@@ -1855,7 +1853,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                         background:
                           state.gridReliability === option.value
                             ? "rgba(62, 207, 142, 0.15)"
-                            : "rgba(255,255,255,0.02)",
+                            : "#111a3e",
                         color: state.gridReliability === option.value ? T.accent : T.textSecondary,
                         fontSize: 13,
                         fontWeight: 600,
@@ -1900,7 +1898,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                             justifyContent: "center",
                             fontSize: 10,
                             fontWeight: 800,
-                            color: "#0D1117",
+                            color: "#0f172a",
                             transition: "all 0.15s ease",
                             boxShadow:
                               state.gridReliability === option.value

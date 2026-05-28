@@ -1008,6 +1008,289 @@ export default function Step5V8({ state, actions }: Props) {
       )}
 
       {/* ================================================================
+          YOUR NEXT STEPS — Build Your Energy Stack
+      ================================================================ */}
+      <div
+        style={{
+          background: "linear-gradient(135deg, rgba(17,26,62,0.95) 0%, rgba(13,18,48,0.98) 100%)",
+          border: "1.5px solid rgba(99,120,255,0.28)",
+          borderRadius: 16,
+          padding: "24px 28px",
+          boxShadow: "0 0 40px rgba(79,138,255,0.08), 0 8px 32px rgba(0,0,0,0.3)",
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-5">
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: "rgba(155,109,255,0.15)",
+              border: "1px solid rgba(155,109,255,0.35)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <ClipboardList className="w-4 h-4" style={{ color: "#9b6dff" }} />
+          </div>
+          <div>
+            <p
+              className="text-[10px] font-bold tracking-[0.16em] uppercase"
+              style={{ color: "#9b6dff" }}
+            >
+              Your Path Forward
+            </p>
+            <h2 className="text-base font-bold text-white leading-tight">
+              Here's how to build your energy stack
+            </h2>
+          </div>
+        </div>
+
+        {/* Steps grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Step 1 — Export Quote */}
+          <div
+            style={{
+              background: "rgba(79,138,255,0.06)",
+              border: "1px solid rgba(79,138,255,0.20)",
+              borderRadius: 12,
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: "rgba(79,138,255,0.18)",
+                border: "1px solid rgba(79,138,255,0.40)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                fontSize: 11,
+                fontWeight: 800,
+                color: "#4f8aff",
+              }}
+            >
+              1
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white mb-0.5">Save your quote</p>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Export as PDF, Word, or Excel to share with your team or lender.
+              </p>
+              <button
+                onClick={() => {
+                  const el = document.getElementById("step5-export-section");
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                style={{
+                  marginTop: 8,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#4f8aff",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                Go to Export <span style={{ fontSize: 13 }}>↓</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Step 2 — Review Financing */}
+          <div
+            style={{
+              background: "rgba(52,211,153,0.05)",
+              border: "1px solid rgba(52,211,153,0.18)",
+              borderRadius: 12,
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: "rgba(52,211,153,0.15)",
+                border: "1px solid rgba(52,211,153,0.35)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                fontSize: 11,
+                fontWeight: 800,
+                color: "#34d399",
+              }}
+            >
+              2
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white mb-0.5">Review financing options</p>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Compare C-PACE, PACE, SBA 7(a), and equipment financing programs matched to your
+                project.
+              </p>
+              <button
+                onClick={() => {
+                  const el = document.getElementById("step5-financing-section");
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                style={{
+                  marginTop: 8,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#34d399",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                See Financing <span style={{ fontSize: 13 }}>↓</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Step 3 — Find Installer */}
+          <div
+            style={{
+              background: "rgba(245,158,11,0.05)",
+              border: "1px solid rgba(245,158,11,0.18)",
+              borderRadius: 12,
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: "rgba(245,158,11,0.15)",
+                border: "1px solid rgba(245,158,11,0.35)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                fontSize: 11,
+                fontWeight: 800,
+                color: "#f59e0b",
+              }}
+            >
+              3
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white mb-0.5">Find a certified installer</p>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Merlin matched installers in your area who specialize in commercial energy storage.
+              </p>
+              <button
+                onClick={() => {
+                  const el = document.getElementById("step5-installers-section");
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                style={{
+                  marginTop: 8,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#f59e0b",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                View Installers <span style={{ fontSize: 13 }}>↓</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Step 4 — ProQuote */}
+          <div
+            style={{
+              background: "rgba(155,109,255,0.06)",
+              border: "1px solid rgba(155,109,255,0.22)",
+              borderRadius: 12,
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: "rgba(155,109,255,0.18)",
+                border: "1px solid rgba(155,109,255,0.40)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                fontSize: 11,
+                fontWeight: 800,
+                color: "#9b6dff",
+              }}
+            >
+              4
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white mb-0.5">
+                Get your full engineering package
+              </p>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                ProQuote™ adds custom equipment sizing, DCF/IRR modeling, and bank-ready
+                documentation.
+              </p>
+              <button
+                onClick={openProQuotePage}
+                style={{
+                  marginTop: 8,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#9b6dff",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                Upgrade to ProQuote™ <span style={{ fontSize: 13 }}>→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ================================================================
           ROI GUARDRAIL BANNER — shown when payback was auto-adjusted
       ================================================================ */}
       {tier.guardrail?.applied && (
@@ -1769,6 +2052,7 @@ export default function Step5V8({ state, actions }: Props) {
       {/* ================================================================
           FINANCING & FUNDING OPTIONS
       ================================================================ */}
+      <div id="step5-financing-section" />
       {(() => {
         const netCost = tier?.netCost ?? 0;
         if (netCost < 10000) return null;
@@ -1996,6 +2280,7 @@ export default function Step5V8({ state, actions }: Props) {
       {/* ================================================================
           RECOMMENDED INSTALLERS
       ================================================================ */}
+      <div id="step5-installers-section" />
       {location?.state && (
         <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
           <div className="flex items-center gap-3 mb-4">
@@ -2135,6 +2420,7 @@ export default function Step5V8({ state, actions }: Props) {
       {/* ================================================================
           EXPORT / DOWNLOAD — PDF, Word, Excel
       ================================================================ */}
+      <div id="step5-export-section" />
       <div className="rounded-xl border-2 border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.03] p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
           <div className="flex-1 min-w-0">
