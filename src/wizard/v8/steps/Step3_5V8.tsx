@@ -299,15 +299,15 @@ function ConfirmBtn({
         @keyframes confirmGlow {
           0%, 100% {
             box-shadow: none;
-            border-color: rgba(52,211,153,0.55);
-            color: rgba(52,211,153,0.7);
+            border-color: rgba(79,140,255,0.55);
+            color: rgba(79,140,255,0.7);
             text-shadow: none;
           }
           50% {
-            box-shadow: 0 0 0 2px rgba(52,211,153,0.25), 0 0 18px 4px rgba(52,211,153,0.35);
-            border-color: rgba(52,211,153,1.0);
-            color: #34d399;
-            text-shadow: 0 0 8px rgba(52,211,153,0.6);
+            box-shadow: 0 0 0 2px rgba(79,140,255,0.25), 0 0 18px 4px rgba(79,140,255,0.35);
+            border-color: rgba(79,140,255,1.0);
+            color: #4F8CFF;
+            text-shadow: 0 0 8px rgba(79,140,255,0.6);
           }
         }
       `;
@@ -326,12 +326,12 @@ function ConfirmBtn({
           gap: 7,
           padding: "9px 14px",
           borderRadius: 8,
-          background: "rgba(62,207,142,0.10)",
-          border: "2px solid #3ECF8E",
-          boxShadow: "0 0 0 3px rgba(62,207,142,0.12), 0 0 14px rgba(62,207,142,0.28)",
+          background: "rgba(79,140,255,0.10)",
+          border: "2px solid #4F8CFF",
+          boxShadow: "0 0 0 3px rgba(79,140,255,0.12), 0 0 14px rgba(79,140,255,0.28)",
           fontSize: 13,
           fontWeight: 700,
-          color: "#3ECF8E",
+          color: "#4F8CFF",
           letterSpacing: "0.04em",
         }}
       >
@@ -340,13 +340,13 @@ function ConfirmBtn({
             width: 18,
             height: 18,
             borderRadius: "50%",
-            background: "#3ECF8E",
+            background: "#4F8CFF",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontSize: 10,
             fontWeight: 900,
-            color: "#0D1117",
+            color: "#fff",
             flexShrink: 0,
           }}
         >
@@ -359,9 +359,9 @@ function ConfirmBtn({
             marginLeft: 6,
             padding: "2px 8px",
             borderRadius: 5,
-            border: "1px solid rgba(62,207,142,0.3)",
+            border: "1px solid rgba(79,140,255,0.3)",
             background: "transparent",
-            color: "rgba(62,207,142,0.6)",
+            color: "rgba(79,140,255,0.6)",
             fontSize: 11,
             fontWeight: 600,
             cursor: "pointer",
@@ -379,39 +379,39 @@ function ConfirmBtn({
         width: "100%",
         padding: needsConfirm ? "14px 16px" : "11px 16px",
         borderRadius: 10,
-        border: needsConfirm ? "2px solid #3ECF8E" : "1.5px solid rgba(52,211,153,0.3)",
-        background: needsConfirm ? "#3ECF8E" : "transparent",
+        border: needsConfirm ? "2px solid #4F8CFF" : "1.5px solid rgba(79,140,255,0.3)",
+        background: needsConfirm ? "#4F8CFF" : "transparent",
         cursor: "pointer",
         fontSize: needsConfirm ? 14 : 13,
         fontWeight: 800,
         letterSpacing: "0.07em",
         textTransform: "uppercase" as const,
-        color: needsConfirm ? "#0D1117" : "#34d399",
+        color: needsConfirm ? "#fff" : "#4F8CFF",
         transition: "background 0.15s, border-color 0.15s, box-shadow 0.15s",
         boxShadow: needsConfirm
-          ? "0 0 0 3px rgba(52,211,153,0.25), 0 2px 12px rgba(52,211,153,0.35)"
+          ? "0 0 0 3px rgba(79,140,255,0.25), 0 2px 12px rgba(79,140,255,0.35)"
           : "none",
         animation: "none",
         position: "relative" as const,
       }}
       onMouseEnter={(e) => {
         if (needsConfirm) {
-          (e.currentTarget as HTMLButtonElement).style.background = "#34d399";
+          (e.currentTarget as HTMLButtonElement).style.background = "#6BA3FF";
           (e.currentTarget as HTMLButtonElement).style.boxShadow =
-            "0 0 0 4px rgba(52,211,153,0.3), 0 4px 16px rgba(52,211,153,0.45)";
+            "0 0 0 4px rgba(79,140,255,0.3), 0 4px 16px rgba(79,140,255,0.45)";
         } else {
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(52,211,153,1.0)";
-          (e.currentTarget as HTMLButtonElement).style.color = "#34d399";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(79,140,255,1.0)";
+          (e.currentTarget as HTMLButtonElement).style.color = "#4F8CFF";
         }
       }}
       onMouseLeave={(e) => {
         if (needsConfirm) {
-          (e.currentTarget as HTMLButtonElement).style.background = "#3ECF8E";
+          (e.currentTarget as HTMLButtonElement).style.background = "#4F8CFF";
           (e.currentTarget as HTMLButtonElement).style.boxShadow =
-            "0 0 0 3px rgba(52,211,153,0.25), 0 2px 12px rgba(52,211,153,0.35)";
+            "0 0 0 3px rgba(79,140,255,0.25), 0 2px 12px rgba(79,140,255,0.35)";
         } else {
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(52,211,153,0.3)";
-          (e.currentTarget as HTMLButtonElement).style.color = "#34d399";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(79,140,255,0.3)";
+          (e.currentTarget as HTMLButtonElement).style.color = "#4F8CFF";
         }
       }}
     >
@@ -978,13 +978,13 @@ function SolarCard({
                     width: 20,
                     height: 20,
                     borderRadius: "50%",
-                    background: "#3ECF8E",
+                    background: "#4F8CFF",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: 11,
                     fontWeight: 900,
-                    color: "#0D1117",
+                    color: "#fff",
                     flexShrink: 0,
                   }}
                 >
@@ -1005,7 +1005,7 @@ function SolarCard({
                 <span style={{ fontSize: 13, color: "rgba(148,163,184,0.6)" }}>{pct}%</span>
               )}
               {savingsK > 0 && (
-                <span style={{ fontSize: 13, color: "#3ECF8E", fontWeight: 600 }}>
+                <span style={{ fontSize: 13, color: "#4F8CFF", fontWeight: 600 }}>
                   +${savingsK}K
                 </span>
               )}
@@ -1201,9 +1201,7 @@ function SolarCard({
                         lineHeight: 1.2,
                       }}
                     >
-                      {carportActive
-                        ? `✓ ${canopyLabel} Added`
-                        : `+ Add ${canopyLabel}`}
+                      {carportActive ? `✓ ${canopyLabel} Added` : `+ Add ${canopyLabel}`}
                     </div>
                     <div
                       style={{
@@ -2625,13 +2623,13 @@ function BackupGeneratorCard({
                     width: 20,
                     height: 20,
                     borderRadius: "50%",
-                    background: "#3ECF8E",
+                    background: "#4F8CFF",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: 11,
                     fontWeight: 900,
-                    color: "#0D1117",
+                    color: "#fff",
                     flexShrink: 0,
                   }}
                 >
@@ -2639,7 +2637,7 @@ function BackupGeneratorCard({
                 </div>
               )}
               {savingsK > 0 && (
-                <span style={{ fontSize: 13, color: "#3ECF8E", fontWeight: 700 }}>
+                <span style={{ fontSize: 13, color: "#4F8CFF", fontWeight: 700 }}>
                   +${savingsK}K
                 </span>
               )}
@@ -3599,8 +3597,8 @@ export default function Step3_5V8({ state, actions }: Props) {
           padding: "17px 24px",
           borderRadius: 12,
           border: "none",
-          background: "linear-gradient(135deg, #3ECF8E 0%, #2aad70 100%)",
-          color: "#080B10",
+          background: "linear-gradient(135deg, #4F8CFF 0%, #8B5CF6 100%)",
+          color: "#fff",
           fontSize: 16,
           fontWeight: 900,
           cursor: "pointer",
@@ -3608,16 +3606,16 @@ export default function Step3_5V8({ state, actions }: Props) {
           alignItems: "center",
           justifyContent: "center",
           gap: 10,
-          boxShadow: "0 4px 20px rgba(16,185,129,0.40)",
+          boxShadow: "0 4px 20px rgba(79,140,255,0.40)",
           marginTop: 8,
           letterSpacing: "0.01em",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = "0 6px 28px rgba(16,185,129,0.55)";
+          e.currentTarget.style.boxShadow = "0 6px 28px rgba(79,140,255,0.55)";
           e.currentTarget.style.transform = "translateY(-1px)";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = "0 4px 20px rgba(16,185,129,0.40)";
+          e.currentTarget.style.boxShadow = "0 4px 20px rgba(79,140,255,0.40)";
           e.currentTarget.style.transform = "translateY(0)";
         }}
       >

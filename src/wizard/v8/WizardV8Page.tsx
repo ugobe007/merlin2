@@ -45,7 +45,14 @@ const Step5V8 = lazy(() => import("./steps/Step5V8"));
 
 // Step labels — index 0 = step 0 (Mode Select), index 1 = step 1 (Location), etc.
 // Note: Step 3.5 (Add-ons) is inserted between Profile and MagicFit
-const STEP_LABELS = ["Location", "Industry", "Profile", "Add-ons", "MagicFit", "Quote"];
+const STEP_LABELS = [
+  "Site",
+  "Facility",
+  "Load Profile",
+  "Stack Scope",
+  "Energy Stack",
+  "Your Quote",
+];
 
 // Map WizardStep (1|2|3|3.5|4|5|6) → display index (0-5) for WizardShellV7.
 // Step 0 (Mode Select) renders outside the shell — no progress bar needed.
@@ -58,7 +65,7 @@ function wizardStepToDisplayIndex(step: number): number {
 }
 
 // ── Accent helpers ────────────────────────────────────────────────────────────
-const ACCENT = "#3ECF8E";
+const ACCENT = "#4F8CFF";
 const T = {
   secondary: "rgba(255,255,255,0.60)",
   muted: "rgba(255,255,255,0.35)",
@@ -399,17 +406,17 @@ function getAdvisorContent(
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
-            Pick your configuration.
+            Build your energy stack.
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            Three tiers sized to your facility — each with different{" "}
-            {hi("battery size, annual savings, and payback period")}.
+            Choose a stack strategy optimized for your facility's{" "}
+            {hi("grid exposure, load profile, and resilience requirements")}.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
             {[
-              "Essential — right-sized, lowest cost",
-              "Optimized — best value (recommended)",
-              "Premium — maximum performance",
+              "Variant A–F: different cost vs. resilience balance",
+              "Adjust optimization weights in real time",
+              "Two stack sizes — right-sized or full coverage",
             ].map(bullet)}
           </div>
         </div>
@@ -480,8 +487,8 @@ function getAdvisorContent(
           )}
 
           <div style={{ fontSize: 12.5, color: T.secondary, lineHeight: 1.6 }}>
-            Three tiers — {hi("Essential")}, {hi("Optimized")}, {hi("Premium")} — sized for your
-            facility. Compare and pick the one that fits your goals.
+            Your energy stack is configured and sized for your facility. Review the financial
+            details and {hi("download your TrueQuote™")} to share with your team.
           </div>
         </div>
       );

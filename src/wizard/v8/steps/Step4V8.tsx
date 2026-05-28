@@ -35,11 +35,10 @@ const TIER_CONFIG = {
     cardBorder: "border-slate-700/50",
     cardBg: "bg-gradient-to-b from-slate-900 to-slate-950",
     cardHover: "card-starter",
-    accentColor: "text-emerald-400",
+    accentColor: "text-blue-400",
     chipBg: "bg-white/5 border-white/10",
     chipText: "text-slate-300",
-    buttonClass:
-      "text-emerald-400 bg-transparent border-emerald-500/70 hover:bg-emerald-500/10 font-bold",
+    buttonClass: "text-blue-400 bg-transparent border-blue-500/70 hover:bg-blue-500/10 font-bold",
     metricBg: "bg-white/5",
   },
   1: {
@@ -47,15 +46,14 @@ const TIER_CONFIG = {
     name: "Recommended",
     tagline: "Best ROI · Most popular",
     headlineClass: "headline-perfect",
-    cardBorder: "border-emerald-400/70",
-    cardBg: "bg-gradient-to-b from-emerald-900/70 via-slate-900/90 to-slate-950",
+    cardBorder: "border-blue-400/70",
+    cardBg: "bg-gradient-to-b from-blue-900/50 via-violet-900/30 to-slate-950",
     cardHover: "card-perfect card-recommended",
-    accentColor: "text-emerald-300",
-    chipBg: "bg-emerald-500/15 border-emerald-400/50",
-    chipText: "text-emerald-100",
-    buttonClass:
-      "text-emerald-300 bg-transparent border-emerald-400 hover:bg-emerald-500/15 font-bold",
-    metricBg: "bg-emerald-500/10",
+    accentColor: "text-blue-300",
+    chipBg: "bg-blue-500/15 border-blue-400/50",
+    chipText: "text-blue-100",
+    buttonClass: "text-blue-300 bg-transparent border-blue-400 hover:bg-blue-500/15 font-bold",
+    metricBg: "bg-blue-500/10",
   },
   2: {
     // COMPLETE
@@ -887,26 +885,28 @@ export default function Step4V8({ state, actions }: Props) {
     return (
       <div className="flex flex-col items-center justify-center py-20 max-w-2xl mx-auto">
         {/* Spinner */}
-        <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mb-6" />
+        <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-6" />
 
         {/* Main message */}
-        <h3 className="text-xl font-semibold text-white mb-2">Generating Your MagicFit Options</h3>
-        <p className="text-slate-400 mb-8">Building 2 optimized configurations for your facility</p>
+        <h3 className="text-xl font-semibold text-white mb-2">Building Your Energy Stack</h3>
+        <p className="text-slate-400 mb-8">
+          Sizing 2 optimized stack configurations for your facility
+        </p>
 
         {/* Progress bar */}
         <div className="w-full space-y-3">
           {/* Bar container */}
           <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-emerald-500 transition-all duration-300 ease-out"
+              className="h-full bg-blue-500 transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
 
           {/* Current step */}
           <div className="flex items-center gap-2 text-sm">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <p className="text-emerald-400 font-medium">{loadingSteps[loadingStep]}</p>
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+            <p className="text-blue-400 font-medium">{loadingSteps[loadingStep]}</p>
           </div>
 
           {/* Step indicators */}
@@ -915,7 +915,7 @@ export default function Step4V8({ state, actions }: Props) {
               <div
                 key={idx}
                 className={`h-1 rounded-full transition-all duration-300 ${
-                  idx <= loadingStep ? "bg-emerald-500" : "bg-slate-700"
+                  idx <= loadingStep ? "bg-blue-500" : "bg-slate-700"
                 }`}
               />
             ))}
@@ -992,19 +992,19 @@ export default function Step4V8({ state, actions }: Props) {
 
       {/* Header */}
       <div className="text-center">
-        <p className="text-emerald-500/60 uppercase tracking-[0.3em] text-xs font-medium mb-3">
-          MagicFit™ — 2 Configurations
+        <p className="text-blue-400/60 uppercase tracking-[0.3em] text-xs font-medium mb-3">
+          Energy Stack Builder
         </p>
         <h1
           className="text-2xl md:text-3xl font-bold text-white mb-3"
           style={{ fontFamily: "Outfit, sans-serif" }}
         >
-          Select Your Configuration
+          Select Your Stack Strategy
         </h1>
         <p className="text-slate-400 text-sm max-w-2xl mx-auto">
           {selectedTierIndex === null
-            ? "Each configuration is sized to your facility profile. Select one to continue."
-            : 'Selection confirmed. Review the details and click "See your quote" to proceed.'}
+            ? "Choose a strategy variant and stack size — sized to your facility's load profile and resilience goals."
+            : 'Stack configured. Review the details and click "See your quote" to proceed.'}
         </p>
         {selectedTierIndex === null && (
           <div className="mt-3 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg inline-block">
@@ -1022,8 +1022,8 @@ export default function Step4V8({ state, actions }: Props) {
           </div>
         )}
         {selectionConfirmation && (
-          <div className="mt-4 flex w-full max-w-full items-center gap-3 rounded-xl border border-emerald-400/40 bg-emerald-500/12 px-4 py-3 shadow-[0_0_30px_rgba(16,185,129,0.18)] sm:inline-flex sm:w-auto sm:max-w-[680px] sm:px-5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white">
+          <div className="mt-4 flex w-full max-w-full items-center gap-3 rounded-xl border border-blue-400/40 bg-blue-500/10 px-4 py-3 shadow-[0_0_30px_rgba(79,140,255,0.18)] sm:inline-flex sm:w-auto sm:max-w-[680px] sm:px-5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-500 text-white">
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
@@ -1032,7 +1032,7 @@ export default function Step4V8({ state, actions }: Props) {
                 />
               </svg>
             </div>
-            <p className="text-sm font-semibold text-emerald-200 break-words">
+            <p className="text-sm font-semibold text-blue-200 break-words">
               {selectionConfirmation}
             </p>
           </div>
@@ -1043,11 +1043,11 @@ export default function Step4V8({ state, actions }: Props) {
       <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 mx-2 md:mx-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
           <div>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
-              Stack Variant Workspace
+            <p className="text-[10px] font-bold text-blue-400/60 uppercase tracking-[0.2em]">
+              Stack Strategy Selector
             </p>
             <p className="text-xs text-slate-400 mt-1">
-              Choose a strategy lens (A–F) and adjust optimization weights.
+              Choose a strategy variant (A–F) and set your cost vs. resilience priority.
             </p>
           </div>
           <div className="w-full min-w-0 md:w-auto md:min-w-[220px]">
@@ -1087,7 +1087,7 @@ export default function Step4V8({ state, actions }: Props) {
                 onClick={() => setSelectedStackVariant(variant.id)}
                 className={`text-left rounded-lg border p-3 transition-all ${
                   isActive
-                    ? "border-emerald-400/60 bg-emerald-500/10"
+                    ? "border-blue-400/60 bg-blue-500/10"
                     : "border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15]"
                 }`}
               >
@@ -1098,14 +1098,14 @@ export default function Step4V8({ state, actions }: Props) {
                     </p>
                     <p className="text-[11px] text-slate-400 mt-0.5">{variant.description}</p>
                   </div>
-                  <span className="text-sm font-extrabold text-emerald-300">
+                  <span className="text-sm font-extrabold text-blue-300">
                     {variant.metrics.score}
                   </span>
                 </div>
 
                 <div className="mt-2.5 h-1.5 rounded-full bg-slate-800 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-emerald-500"
+                    className="h-full rounded-full bg-blue-500"
                     style={{ width: `${variant.metrics.score}%` }}
                   />
                 </div>
@@ -1114,7 +1114,7 @@ export default function Step4V8({ state, actions }: Props) {
                   <div>
                     <p className="text-slate-500">Savings Δ</p>
                     <p
-                      className={`${variant.metrics.annualSavingsDeltaPct >= 0 ? "text-emerald-400" : "text-amber-300"}`}
+                      className={`${variant.metrics.annualSavingsDeltaPct >= 0 ? "text-blue-400" : "text-amber-300"}`}
                     >
                       {variant.metrics.annualSavingsDeltaPct >= 0 ? "+" : ""}
                       {variant.metrics.annualSavingsDeltaPct}%
@@ -1123,7 +1123,7 @@ export default function Step4V8({ state, actions }: Props) {
                   <div>
                     <p className="text-slate-500">Net Cost Δ</p>
                     <p
-                      className={`${variant.metrics.netCostDeltaPct <= 0 ? "text-emerald-400" : "text-amber-300"}`}
+                      className={`${variant.metrics.netCostDeltaPct <= 0 ? "text-blue-400" : "text-amber-300"}`}
                     >
                       {variant.metrics.netCostDeltaPct >= 0 ? "+" : ""}
                       {variant.metrics.netCostDeltaPct}%
@@ -1140,8 +1140,8 @@ export default function Step4V8({ state, actions }: Props) {
         </div>
 
         {selectedVariantMetrics && (
-          <div className="mt-4 p-3 rounded-lg border border-emerald-500/20 bg-emerald-500/[0.05]">
-            <p className="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold mb-2">
+          <div className="mt-4 p-3 rounded-lg border border-blue-500/20 bg-blue-500/[0.05]">
+            <p className="text-[11px] uppercase tracking-wider text-blue-400 font-semibold mb-2">
               Financial impact preview — Variant {selectedStackVariant}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
@@ -1149,13 +1149,13 @@ export default function Step4V8({ state, actions }: Props) {
                 <p className="text-slate-500">Annual savings impact</p>
                 <div className="h-2 rounded-full bg-slate-800 overflow-hidden mt-1 mb-1">
                   <div
-                    className="h-full bg-emerald-500"
+                    className="h-full bg-blue-500"
                     style={{
                       width: `${Math.min(100, Math.max(6, 50 + selectedVariantMetrics.annualSavingsDeltaPct * 2))}%`,
                     }}
                   />
                 </div>
-                <p className="text-emerald-300 font-semibold">
+                <p className="text-blue-300 font-semibold">
                   {selectedVariantMetrics.annualSavingsDeltaPct >= 0 ? "+" : ""}
                   {selectedVariantMetrics.annualSavingsDeltaPct}% vs baseline
                 </p>
@@ -1224,7 +1224,7 @@ export default function Step4V8({ state, actions }: Props) {
               className={`
                 relative rounded-2xl overflow-hidden cursor-pointer
                 ${config.cardBg} border-2 ${config.cardHover}
-                ${isSelected ? "border-emerald-500/60 card-selected" : config.cardBorder}
+                ${isSelected ? "border-blue-500/60 card-selected" : config.cardBorder}
                 ${isPerfectFit ? "order-first lg:order-1" : "order-last lg:order-2"}
                 transition-all duration-300
               `}
@@ -1232,7 +1232,7 @@ export default function Step4V8({ state, actions }: Props) {
               {/* SELECTED CHECKMARK BADGE */}
               {isSelected && (
                 <div className="absolute top-4 right-4 z-20 checkmark-appear">
-                  <div className="bg-emerald-500 rounded-full p-1.5 shadow-sm">
+                  <div className="bg-blue-500 rounded-full p-1.5 shadow-sm">
                     <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
@@ -1246,15 +1246,15 @@ export default function Step4V8({ state, actions }: Props) {
 
               {/* SELECTION OVERLAY */}
               {isSelected && (
-                <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/6 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-b from-blue-500/6 via-transparent to-transparent pointer-events-none" />
               )}
 
               {/* BEST VALUE Banner (Perfect Fit only) */}
               {isPerfectFit && (
                 <>
-                  <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400" />
+                  <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-400 via-violet-400 to-blue-400" />
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
-                    <div className="bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 px-5 py-1.5 rounded-b-lg text-[11px] font-black tracking-[0.15em] shadow-lg">
+                    <div className="bg-gradient-to-r from-blue-500 to-violet-500 text-white px-5 py-1.5 rounded-b-lg text-[11px] font-black tracking-[0.15em] shadow-lg">
                       ⭐ RECOMMENDED
                     </div>
                   </div>

@@ -60,7 +60,7 @@ const DARK = {
   textPrimary: "#ffffff",
   textSecondary: "rgba(255,255,255,0.60)",
   textMuted: "rgba(255,255,255,0.35)",
-  accent: "#3ECF8E",
+  accent: "#4F8CFF",
 };
 
 const DISPLAY_ORDER = [
@@ -148,15 +148,15 @@ export function Step2V8({ state, actions }: Props) {
                   actions.setIndustry(it.slug as IndustrySlug);
                   actions.goToStep(3);
                 }}
-                className="rounded-xl text-left overflow-hidden transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                className="rounded-xl text-left overflow-hidden transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 style={{
                   border: `${isSelected ? "2px" : "1px"} solid ${
-                    isSelected ? "#3ECF8E" : DARK.cardBorder
+                    isSelected ? "#4F8CFF" : DARK.cardBorder
                   }`,
                   padding: 0,
-                  background: isSelected ? "rgba(62,207,142,0.10)" : DARK.cardBg,
+                  background: isSelected ? "rgba(79,140,255,0.10)" : DARK.cardBg,
                   boxShadow: isSelected
-                    ? "0 0 0 3px rgba(62,207,142,0.18), 0 0 36px rgba(62,207,142,0.30)"
+                    ? "0 0 0 3px rgba(79,140,255,0.18), 0 0 36px rgba(79,140,255,0.30)"
                     : "none",
                   cursor: "pointer",
                   position: "relative",
@@ -166,7 +166,7 @@ export function Step2V8({ state, actions }: Props) {
                     e.currentTarget.style.background = DARK.cardHoverBg;
                     e.currentTarget.style.borderColor = DARK.accent;
                     e.currentTarget.style.boxShadow =
-                      "0 0 0 1px rgba(62,207,142,0.10), 0 4px 18px rgba(0,0,0,0.3)";
+                      "0 0 0 1px rgba(79,140,255,0.10), 0 4px 18px rgba(0,0,0,0.3)";
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -187,15 +187,15 @@ export function Step2V8({ state, actions }: Props) {
                       width: 22,
                       height: 22,
                       borderRadius: "50%",
-                      background: "rgba(62,207,142,0.90)",
+                      background: "rgba(79,140,255,0.90)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontSize: 12,
                       fontWeight: 700,
-                      color: "#0D1117",
+                      color: "#fff",
                       zIndex: 10,
-                      boxShadow: "0 0 10px rgba(62,207,142,0.55)",
+                      boxShadow: "0 0 10px rgba(79,140,255,0.55)",
                     }}
                   >
                     ✓
@@ -208,7 +208,7 @@ export function Step2V8({ state, actions }: Props) {
                     className="relative h-20 sm:h-28 md:h-[120px] overflow-hidden"
                     style={{
                       borderBottom: `1px solid ${
-                        isSelected ? "rgba(62,207,142,0.35)" : DARK.cardBorder
+                        isSelected ? "rgba(79,140,255,0.35)" : DARK.cardBorder
                       }`,
                     }}
                   >
