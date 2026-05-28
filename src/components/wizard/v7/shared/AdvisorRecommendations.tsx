@@ -137,7 +137,7 @@ function getAdvisorRecommendations(state: WizardV7State, quote: DisplayQuote): R
       icon: "📉",
       title: "Improve your payback period",
       description: `Your current payback is ~${Math.round(payback)} years. Adding solar generation can significantly reduce grid electricity costs and accelerate your return on investment.`,
-      accent: "emerald",
+      accent: "blue",
     });
   }
 
@@ -173,11 +173,11 @@ const ACCENT_STYLES: Record<string, { border: string; bg: string; text: string; 
     text: "text-red-300",
     glow: "shadow-red-500/10",
   },
-  emerald: {
-    border: "border-emerald-500/25",
-    bg: "bg-emerald-500/[0.06]",
-    text: "text-emerald-300",
-    glow: "shadow-emerald-500/10",
+  blue: {
+    border: "border-blue-500/25",
+    bg: "bg-blue-500/[0.06]",
+    text: "text-blue-300",
+    glow: "shadow-blue-500/10",
   },
 };
 
@@ -203,13 +203,13 @@ export default function AdvisorRecommendations({
   if (recommendations.length === 0) {
     // No recommendations — show a positive message
     return (
-      <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] p-4">
+      <div className="rounded-xl border border-blue-500/25 bg-blue-500/[0.06] p-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
-            <Check className="w-5 h-5 text-emerald-400" />
+          <div className="w-10 h-10 rounded-lg bg-blue-500/15 border border-blue-500/25 flex items-center justify-center">
+            <Check className="w-5 h-5 text-blue-300" />
           </div>
           <div>
-            <div className="font-semibold text-sm text-emerald-200">System Looks Great</div>
+            <div className="font-semibold text-sm text-blue-200">System Looks Great</div>
             <div className="text-xs text-slate-400 mt-0.5">
               Your configuration is well-optimized for your facility's needs.
             </div>
@@ -225,8 +225,8 @@ export default function AdvisorRecommendations({
       <button type="button" onClick={() => setExpanded(!expanded)} className="w-full">
         <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 flex items-center justify-between hover:bg-white/[0.05] transition-all cursor-pointer">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-[#3ECF8E]" />
+            <div className="w-10 h-10 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-violet-300" />
             </div>
             <div className="text-left">
               <div className="font-semibold text-sm text-slate-200">Merlin's Recommendations</div>
@@ -268,7 +268,7 @@ export default function AdvisorRecommendations({
             <button
               type="button"
               onClick={() => actions.goToStep?.("options")}
-              className="text-xs text-[#3ECF8E] hover:text-[#3ECF8E]/80 underline underline-offset-2 transition-colors font-medium"
+              className="text-xs text-blue-300 hover:text-blue-200 underline underline-offset-2 transition-colors font-medium"
             >
               ← Configure add-ons in Options step
             </button>

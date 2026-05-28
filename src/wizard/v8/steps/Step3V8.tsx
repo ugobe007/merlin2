@@ -772,24 +772,22 @@ export function Step3V8({ state, actions }: Props) {
               gap: 8,
               padding: "11px 20px",
               borderRadius: 10,
-              border: "none",
-              background: "linear-gradient(135deg, #4F8CFF 0%, #8B5CF6 100%)",
-              color: "#fff",
+              background: "transparent",
+              color: "#8B5CF6",
+              border: "1.5px solid #8B5CF6",
               fontSize: 13,
-              fontWeight: 900,
+              fontWeight: 700,
               cursor: "pointer",
               whiteSpace: "nowrap",
               flexShrink: 0,
-              boxShadow: "0 4px 14px rgba(79,140,255,0.30)",
+              boxShadow: "none",
               letterSpacing: "0.01em",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = "0 6px 20px rgba(79,140,255,0.45)";
-              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 0 0 2px rgba(139,92,246,0.30)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = "0 4px 14px rgba(79,140,255,0.30)";
-              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "none";
             }}
           >
             Use Smart Defaults → Skip to Add-ons
@@ -991,22 +989,20 @@ export function Step3V8({ state, actions }: Props) {
               gap: 8,
               padding: "13px 22px",
               borderRadius: 10,
-              border: "none",
-              background: "linear-gradient(135deg, #4F8CFF 0%, #8B5CF6 100%)",
-              color: "#fff",
+              background: "transparent",
+              border: "1.5px solid #8B5CF6",
+              color: "#8B5CF6",
               fontSize: 14,
-              fontWeight: 900,
+              fontWeight: 700,
               cursor: "pointer",
-              boxShadow: "0 4px 16px rgba(79,140,255,0.35)",
+              boxShadow: "none",
               letterSpacing: "0.01em",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = "0 6px 24px rgba(79,140,255,0.50)";
-              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 0 0 2px rgba(139,92,246,0.25)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = "0 4px 16px rgba(79,140,255,0.35)";
-              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "none";
             }}
           >
             Choose add-ons

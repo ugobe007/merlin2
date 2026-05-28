@@ -166,7 +166,7 @@ export default function ExportBar({
   ];
 
   return (
-    <div className="rounded-xl border-2 border-[#3ECF8E]/20 bg-[#3ECF8E]/[0.03] p-4 sm:p-6">
+    <div className="rounded-xl border-2 border-blue-400/20 bg-blue-500/[0.03] p-4 sm:p-6">
       <div
         style={{
           display: "flex",
@@ -240,17 +240,17 @@ export default function ExportBar({
                 minWidth: 0,
                 border: locked
                   ? "2px solid rgba(148,163,184,0.15)"
-                  : "2px solid rgba(62,207,142,0.30)",
+                  : "2px solid rgba(79,140,255,0.30)",
                 background: locked
                   ? "rgba(148,163,184,0.04)"
                   : exporting === format
-                    ? "rgba(62,207,142,0.15)"
-                    : "rgba(62,207,142,0.06)",
+                    ? "rgba(79,140,255,0.15)"
+                    : "rgba(79,140,255,0.06)",
                 color: locked
                   ? "rgba(148,163,184,0.45)"
                   : exporting !== null && exporting !== format
                     ? "rgba(232,235,243,0.3)"
-                    : "rgba(62,207,142,0.9)",
+                    : "rgba(147,197,253,0.95)",
                 cursor: locked ? "pointer" : exporting !== null ? "not-allowed" : "pointer",
                 fontWeight: 700,
                 fontSize: 15,
@@ -313,22 +313,20 @@ export default function ExportBar({
 
       {/* ── SAVE PROMPT: Appears after successful export for unauthenticated users ── */}
       {showSavePrompt && (
-        <div className="mt-3 rounded-xl border border-[#3ECF8E]/25 bg-[#3ECF8E]/[0.04] p-3 sm:p-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="mt-3 rounded-xl border border-blue-400/25 bg-blue-500/[0.04] p-3 sm:p-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 flex items-center justify-center shrink-0">
-              <Bookmark className="w-4 h-4 text-[#3ECF8E]" />
+            <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-400/20 flex items-center justify-center shrink-0">
+              <Bookmark className="w-4 h-4 text-blue-300" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-[#3ECF8E]">
-                Save this quote to your account
-              </div>
+              <div className="text-sm font-bold text-blue-300">Save this quote to your account</div>
               <div className="text-xs text-slate-400 mt-0.5">
                 Create a free account to save, revisit, and compare your BESS quotes anytime.
               </div>
             </div>
             <button
               onClick={() => setShowAuthModal(true)}
-              className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#3ECF8E]/10 border border-[#3ECF8E]/25 text-[#3ECF8E] text-sm font-bold hover:bg-[#3ECF8E]/20 hover:border-[#3ECF8E]/40 transition-all cursor-pointer"
+              className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-500/10 border border-blue-400/25 text-blue-300 text-sm font-bold hover:bg-blue-500/20 hover:border-blue-400/40 transition-all cursor-pointer"
             >
               Sign Up Free →
             </button>
@@ -339,10 +337,10 @@ export default function ExportBar({
       {/* ── LEAD CAPTURE GATE: Name + Email before first export ── */}
       {showLeadGate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 max-w-sm w-full border border-[#3ECF8E]/30 shadow-2xl shadow-[#3ECF8E]/10 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 max-w-sm w-full border border-blue-400/30 shadow-2xl shadow-blue-500/10 animate-in fade-in zoom-in-95 duration-200">
             <div className="text-center mb-5">
-              <div className="w-12 h-12 rounded-xl bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 flex items-center justify-center mx-auto mb-3">
-                <FileText className="w-6 h-6 text-[#3ECF8E]" />
+              <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-400/20 flex items-center justify-center mx-auto mb-3">
+                <FileText className="w-6 h-6 text-blue-300" />
               </div>
               <h3 className="text-lg font-bold text-white">Get Your Quote</h3>
               <p className="text-xs text-slate-400 mt-1">
@@ -355,7 +353,7 @@ export default function ExportBar({
                 required
                 value={leadForm.name}
                 onChange={(e) => setLeadForm({ ...leadForm, name: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/30 outline-none transition-all"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/30 outline-none transition-all"
                 placeholder="Your name *"
               />
               <input
@@ -363,21 +361,21 @@ export default function ExportBar({
                 required
                 value={leadForm.email}
                 onChange={(e) => setLeadForm({ ...leadForm, email: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/30 outline-none transition-all"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/30 outline-none transition-all"
                 placeholder="Email address *"
               />
               <input
                 type="text"
                 value={leadForm.company}
                 onChange={(e) => setLeadForm({ ...leadForm, company: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-[#3ECF8E]/50 focus:border-[#3ECF8E]/30 outline-none transition-all"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-white/30 focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/30 outline-none transition-all"
                 placeholder="Company (optional)"
               />
               <button
                 type="button"
                 onClick={() => void handleLeadSubmit()}
                 disabled={leadSubmitting || !leadForm.name.trim() || !leadForm.email.includes("@")}
-                className="w-full bg-[#3ECF8E] hover:bg-[#3ECF8E]/90 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-400 hover:to-violet-400 disabled:bg-slate-700 disabled:text-slate-500 text-white py-2.5 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2"
               >
                 {leadSubmitting ? (
                   <div className="w-4 h-4 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin" />

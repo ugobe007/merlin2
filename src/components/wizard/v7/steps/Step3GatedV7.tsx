@@ -27,10 +27,15 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import type { IndustryTemplateV1, TemplatePart, TemplateQuestion, OptionItem } from "@/wizard/v7/templates/types";
+import type {
+  IndustryTemplateV1,
+  TemplatePart,
+  TemplateQuestion,
+  OptionItem,
+} from "@/wizard/v7/templates/types";
 import type { WizardV7LifeSignals } from "@/wizard/v7/hooks/useWizardV7";
 import Step3SystemAssist from "@/components/wizard/v7/shared/Step3SystemAssist";
-import { devLog, devWarn } from '@/wizard/v7/debug/devLog';
+import { devLog, devWarn } from "@/wizard/v7/debug/devLog";
 
 // =============================================================================
 // TYPES
@@ -48,10 +53,10 @@ interface Step3GatedProps {
   /**
    * SSOT ACTIONS (provenance-aware)
    * These stamp meta correctly so the face never lies.
-   * 
+   *
    * NOTE: Signatures match useWizardV7 hook exports exactly:
    * - setStep3Answer(id, value) → onAnswerChange
-   * - resetToDefaults({ partId }) → onResetPart  
+   * - resetToDefaults({ partId }) → onResetPart
    * - markDefaultsApplied(partId) → onDefaultsApplied
    * - hasDefaultsApplied(partId) → hasDefaultsApplied
    * - canResetToDefaults(partId) → canResetToDefaults
@@ -61,26 +66,26 @@ interface Step3GatedProps {
    */
   /** Update single answer (stamps source="user") */
   onAnswerChange: (id: string, value: unknown) => void;
-  
+
   /** Reset to defaults for a part (rewrites provenance) */
   onResetPart: (partId: string) => void;
-  
+
   /** Mark defaults applied for a part (FSM tracking) */
   onDefaultsApplied: (partId: string) => void;
-  
+
   /** Check if defaults already applied for a part (from SSOT) */
   hasDefaultsApplied: (partId: string) => boolean;
 
   /** SSOT-authoritative: Check if part has ANY defaults (for button visibility) */
   canResetToDefaults: (partId: string) => boolean;
-  
+
   /** SSOT-authoritative: Check if defaults can be applied (exist + not yet applied) */
   canApplyDefaults: (partId: string) => boolean;
-  
+
   /** SSOT action: Apply defaults for a part (batch apply + stamp provenance) */
   /** NOTE: Optional - if not provided, uses onResetPart as fallback */
   applyStep3Defaults?: (partId: string) => void;
-  
+
   /** SSOT helper: Get default value for a specific question */
   getDefaultForQuestion: (questionId: string) => unknown;
 
@@ -160,10 +165,10 @@ const isEmptyish = (v: unknown): boolean => {
 const equalish = (a: unknown, b: unknown): boolean => {
   // Both empty = equal
   if (isEmptyish(a) && isEmptyish(b)) return true;
-  
+
   // Primitives + NaN handling
   if (Object.is(a, b)) return true;
-  
+
   // Arrays (shallow compare)
   if (Array.isArray(a) && Array.isArray(b)) {
     if (a.length !== b.length) return false;
@@ -172,7 +177,7 @@ const equalish = (a: unknown, b: unknown): boolean => {
     }
     return true;
   }
-  
+
   // Objects (stable stringify fallback)
   if (typeof a === "object" && typeof b === "object" && a && b) {
     try {
@@ -181,7 +186,7 @@ const equalish = (a: unknown, b: unknown): boolean => {
       return false;
     }
   }
-  
+
   return false;
 };
 
@@ -310,12 +315,15 @@ export default function Step3GatedV7({
     if (import.meta.env.DEV) {
       devLog("[Step3Gated] Template changed, reset to part 0:", templateIdentity);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [templateIdentity]);
 
   // ---------------------------------------------------------------------------
   // DERIVED: Parts (from template or derived from questions)
   // ---------------------------------------------------------------------------
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const questions = template?.questions ?? [];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const defaults = template?.defaults ?? {};
 
   // BACKWARD COMPAT: If template has no parts, derive them from questions
@@ -332,10 +340,7 @@ export default function Step3GatedV7({
   }, [template]);
 
   // Fix #2: Memoize questionMap to avoid rebuilding on every render
-  const questionMap = useMemo(
-    () => new Map(questions.map((q) => [q.id, q])),
-    [questions]
-  );
+  const questionMap = useMemo(() => new Map(questions.map((q) => [q.id, q])), [questions]);
 
   const getPartQuestions = useCallback(
     (part: TemplatePart) =>
@@ -412,10 +417,24 @@ export default function Step3GatedV7({
     if (anyApplied) {
       onDefaultsApplied(currentPart.id);
       if (import.meta.env.DEV) {
-        devLog(`[Step3Gated] Applied defaults for Part ${partIndex + 1} (${currentPart.id}):`, applied);
+        devLog(
+          `[Step3Gated] Applied defaults for Part ${partIndex + 1} (${currentPart.id}):`,
+          applied
+        );
       }
     }
-  }, [partIndex, currentPart, template, getPartQuestions, defaults, answers, hasDefaultsApplied, onAnswerChange, onDefaultsApplied, isFieldTouched]);
+  }, [
+    partIndex,
+    currentPart,
+    template,
+    getPartQuestions,
+    defaults,
+    answers,
+    hasDefaultsApplied,
+    onAnswerChange,
+    onDefaultsApplied,
+    isFieldTouched,
+  ]);
 
   // ---------------------------------------------------------------------------
   // HANDLERS (delegate to SSOT callbacks)
@@ -460,18 +479,18 @@ export default function Step3GatedV7({
   // ---------------------------------------------------------------------------
   const modifiedFieldCount = useMemo(() => {
     if (!currentPart) return 0;
-    
+
     let count = 0;
     for (const q of currentQuestions) {
       const currentValue = answers[q.id];
       const defaultValue = getDefaultForQuestion(q.id);
-      
+
       // Compare using equalish (handles arrays, objects, whitespace)
       if (!equalish(currentValue, defaultValue)) {
         count++;
       }
     }
-    
+
     return count;
   }, [currentPart, currentQuestions, answers, getDefaultForQuestion]);
 
@@ -582,7 +601,7 @@ export default function Step3GatedV7({
                       isCurrent
                         ? "bg-purple-600 text-white"
                         : isCompleted
-                          ? "bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600/30"
+                          ? "bg-blue-600/20 text-blue-300 hover:bg-blue-600/30"
                           : "bg-white/5 text-slate-500",
                     ].join(" ")}
                     title={part.label}
@@ -613,7 +632,7 @@ export default function Step3GatedV7({
               modifiedFieldCount={modifiedFieldCount}
             />
           )}
-          
+
           {/* Part Header */}
           {currentPart && (
             <div className="mb-8">
@@ -821,9 +840,7 @@ function QuestionField({ question, value, onChange }: QuestionFieldProps) {
                   type="checkbox"
                   checked={checked}
                   onChange={(e) => {
-                    const next = e.target.checked
-                      ? [...arr, v]
-                      : arr.filter((x) => x !== v);
+                    const next = e.target.checked ? [...arr, v] : arr.filter((x) => x !== v);
                     onChange(next);
                   }}
                   className="w-4 h-4 text-purple-600 bg-slate-800 border-slate-600 rounded focus:ring-purple-500"

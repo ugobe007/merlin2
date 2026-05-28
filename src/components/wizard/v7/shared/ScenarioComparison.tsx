@@ -11,15 +11,7 @@
  * Each scenario applies multipliers to key parameters to show trade-offs.
  */
 import React, { useMemo, useState } from "react";
-import {
-  Shield,
-  Zap,
-  Rocket,
-  ChevronDown,
-  Check,
-  TrendingUp,
-  ArrowUpRight,
-} from "lucide-react";
+import { Shield, Zap, Rocket, ChevronDown, Check, TrendingUp, ArrowUpRight } from "lucide-react";
 import type { DisplayQuote } from "@/wizard/v7/utils/pricingSanity";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -88,45 +80,43 @@ function safe(n: number | null, multiplier: number): number | null {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function buildScenarios(q: DisplayQuote): Scenario[] {
-  const itcRate = q.itcRate ?? 0.30;
+  const itcRate = q.itcRate ?? 0.3;
 
   // Conservative: 75% sizing → lower capex, lower savings, longer payback
   const consCapex = safe(q.capexUSD, 0.75);
-  const consSavings = safe(q.annualSavingsUSD, 0.70); // Savings don't scale linearly (demand charges)
+  const consSavings = safe(q.annualSavingsUSD, 0.7); // Savings don't scale linearly (demand charges)
   const consItc = consCapex !== null ? consCapex * itcRate : null;
   const consNet = consCapex !== null && consItc !== null ? consCapex - consItc : null;
   const consPayback =
-    consNet !== null && consSavings !== null && consSavings > 0
-      ? consNet / consSavings
-      : null;
+    consNet !== null && consSavings !== null && consSavings > 0 ? consNet / consSavings : null;
   const consNpv = safe(q.npv, 0.65);
   const consIrr = q.irr !== null ? q.irr * 0.85 : null;
-  const consRoi = consNet !== null && consSavings !== null && consNet > 0
-    ? ((consSavings * 10 - consNet) / consNet) * 100
-    : null;
+  const consRoi =
+    consNet !== null && consSavings !== null && consNet > 0
+      ? ((consSavings * 10 - consNet) / consNet) * 100
+      : null;
 
   // Balanced: current quote (1:1)
-  const balNet = q.grossCost !== null && q.itcAmount !== null
-    ? q.grossCost - q.itcAmount
-    : q.capexUSD;
-  const balRoi = balNet !== null && q.annualSavingsUSD !== null && balNet > 0
-    ? ((q.annualSavingsUSD * 10 - balNet) / balNet) * 100
-    : null;
+  const balNet =
+    q.grossCost !== null && q.itcAmount !== null ? q.grossCost - q.itcAmount : q.capexUSD;
+  const balRoi =
+    balNet !== null && q.annualSavingsUSD !== null && balNet > 0
+      ? ((q.annualSavingsUSD * 10 - balNet) / balNet) * 100
+      : null;
 
   // Aggressive: 130% sizing → higher capex, higher savings, faster payback per $
-  const aggCapex = safe(q.capexUSD, 1.30);
-  const aggSavings = safe(q.annualSavingsUSD, 1.40); // Larger systems capture more demand charge savings
+  const aggCapex = safe(q.capexUSD, 1.3);
+  const aggSavings = safe(q.annualSavingsUSD, 1.4); // Larger systems capture more demand charge savings
   const aggItc = aggCapex !== null ? aggCapex * itcRate : null;
   const aggNet = aggCapex !== null && aggItc !== null ? aggCapex - aggItc : null;
   const aggPayback =
-    aggNet !== null && aggSavings !== null && aggSavings > 0
-      ? aggNet / aggSavings
-      : null;
+    aggNet !== null && aggSavings !== null && aggSavings > 0 ? aggNet / aggSavings : null;
   const aggNpv = safe(q.npv, 1.45);
   const aggIrr = q.irr !== null ? q.irr * 1.15 : null;
-  const aggRoi = aggNet !== null && aggSavings !== null && aggNet > 0
-    ? ((aggSavings * 10 - aggNet) / aggNet) * 100
-    : null;
+  const aggRoi =
+    aggNet !== null && aggSavings !== null && aggNet > 0
+      ? ((aggSavings * 10 - aggNet) / aggNet) * 100
+      : null;
 
   return [
     {
@@ -153,9 +143,9 @@ function buildScenarios(q: DisplayQuote): Scenario[] {
       label: "Balanced",
       description: "Recommended — your quote",
       icon: <Zap className="w-4 h-4" />,
-      accentColor: "text-emerald-400",
-      accentBg: "bg-emerald-500/10",
-      borderColor: "border-emerald-500/30",
+      accentColor: "text-blue-300",
+      accentBg: "bg-blue-500/10",
+      borderColor: "border-blue-500/30",
       bessKWh: q.bessKWh,
       bessKW: q.bessKW,
       capex: q.capexUSD,
@@ -175,8 +165,8 @@ function buildScenarios(q: DisplayQuote): Scenario[] {
       accentColor: "text-amber-400",
       accentBg: "bg-amber-500/10",
       borderColor: "border-amber-500/20",
-      bessKWh: safe(q.bessKWh, 1.30),
-      bessKW: safe(q.bessKW, 1.30),
+      bessKWh: safe(q.bessKWh, 1.3),
+      bessKW: safe(q.bessKW, 1.3),
       capex: aggCapex,
       annualSavings: aggSavings,
       paybackYears: aggPayback,
@@ -208,13 +198,13 @@ function ScenarioCard({
     <div
       className={`relative rounded-xl border ${
         isRecommended
-          ? `${scenario.borderColor} ring-1 ring-emerald-500/20 bg-white/[0.04]`
+          ? `${scenario.borderColor} ring-1 ring-blue-500/20 bg-white/[0.04]`
           : "border-white/[0.06] bg-white/[0.02]"
       } overflow-hidden transition-all`}
     >
       {/* Recommended badge */}
       {isRecommended && (
-        <div className="absolute top-0 right-0 bg-emerald-500/20 text-emerald-400 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-bl-lg">
+        <div className="absolute top-0 right-0 bg-blue-500/20 text-blue-300 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-bl-lg">
           <Check className="w-2.5 h-2.5 inline mr-0.5" />
           Recommended
         </div>
@@ -227,9 +217,7 @@ function ScenarioCard({
             {scenario.icon}
           </div>
           <div>
-            <h4 className={`text-sm font-bold ${scenario.accentColor}`}>
-              {scenario.label}
-            </h4>
+            <h4 className={`text-sm font-bold ${scenario.accentColor}`}>{scenario.label}</h4>
             <p className="text-[10px] text-slate-500">{scenario.description}</p>
           </div>
         </div>
@@ -256,7 +244,7 @@ function ScenarioCard({
             {fmtUSD(scenario.netCost)}
           </div>
           {scenario.itcCredit !== null && (
-            <div className="text-[10px] text-emerald-400 mt-0.5">
+            <div className="text-[10px] text-blue-300 mt-0.5">
               ITC saves {fmtUSD(scenario.itcCredit)}
             </div>
           )}
@@ -279,7 +267,9 @@ function ScenarioCard({
           className="mt-3 w-full flex items-center justify-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition-colors py-1"
         >
           <span>{isExpanded ? "Less" : "More details"}</span>
-          <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+          <ChevronDown
+            className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+          />
         </button>
 
         {isExpanded && (
@@ -290,7 +280,10 @@ function ScenarioCard({
               value={scenario.roi10Year !== null ? `${scenario.roi10Year.toFixed(0)}%` : "—"}
               accent={scenario.roi10Year !== null && scenario.roi10Year > 0}
             />
-            <DetailRow label="System Size" value={`${fmtNum(scenario.bessKWh)} kWh / ${fmtNum(scenario.bessKW)} kW`} />
+            <DetailRow
+              label="System Size"
+              value={`${fmtNum(scenario.bessKWh)} kWh / ${fmtNum(scenario.bessKW)} kW`}
+            />
           </div>
         )}
       </div>
@@ -307,21 +300,13 @@ function MetricCell({ label, value }: { label: string; value: string }) {
   );
 }
 
-function DetailRow({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
+function DetailRow({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className="flex justify-between items-center">
       <span className="text-[10px] text-slate-500">{label}</span>
       <span
         className={`text-xs font-semibold tabular-nums ${
-          accent ? "text-emerald-400" : "text-slate-300"
+          accent ? "text-blue-300" : "text-slate-300"
         }`}
       >
         {value}
@@ -367,8 +352,9 @@ export default function ScenarioComparison({ quote }: Props) {
       {isOpen && (
         <div className="px-4 pb-4">
           <p className="text-xs text-slate-500 mb-4">
-            Compare different system sizes to find the right balance of investment and return.
-            The <span className="text-emerald-400 font-semibold">Balanced</span> option matches your current configuration.
+            Compare different system sizes to find the right balance of investment and return. The{" "}
+            <span className="text-blue-300 font-semibold">Balanced</span> option matches your
+            current configuration.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {scenarios.map((s) => (
@@ -397,28 +383,40 @@ export default function ScenarioComparison({ quote }: Props) {
               {/* Net Cost row */}
               <div className="text-slate-400 py-1 border-t border-white/[0.04]">Net Cost</div>
               {scenarios.map((s) => (
-                <div key={s.id} className="text-white font-semibold text-center py-1 border-t border-white/[0.04] tabular-nums">
+                <div
+                  key={s.id}
+                  className="text-white font-semibold text-center py-1 border-t border-white/[0.04] tabular-nums"
+                >
                   {fmtUSD(s.netCost)}
                 </div>
               ))}
               {/* Annual Savings row */}
               <div className="text-slate-400 py-1 border-t border-white/[0.04]">Savings/yr</div>
               {scenarios.map((s) => (
-                <div key={s.id} className="text-emerald-400 font-semibold text-center py-1 border-t border-white/[0.04] tabular-nums">
+                <div
+                  key={s.id}
+                  className="text-blue-300 font-semibold text-center py-1 border-t border-white/[0.04] tabular-nums"
+                >
                   {fmtUSD(s.annualSavings)}
                 </div>
               ))}
               {/* Payback row */}
               <div className="text-slate-400 py-1 border-t border-white/[0.04]">Payback</div>
               {scenarios.map((s) => (
-                <div key={s.id} className="text-white font-semibold text-center py-1 border-t border-white/[0.04] tabular-nums">
+                <div
+                  key={s.id}
+                  className="text-white font-semibold text-center py-1 border-t border-white/[0.04] tabular-nums"
+                >
                   {s.paybackYears !== null ? `${s.paybackYears.toFixed(1)}yr` : "—"}
                 </div>
               ))}
               {/* NPV row */}
               <div className="text-slate-400 py-1 border-t border-white/[0.04]">NPV</div>
               {scenarios.map((s) => (
-                <div key={s.id} className="text-white font-semibold text-center py-1 border-t border-white/[0.04] tabular-nums">
+                <div
+                  key={s.id}
+                  className="text-white font-semibold text-center py-1 border-t border-white/[0.04] tabular-nums"
+                >
                   {fmtUSD(s.npv)}
                 </div>
               ))}
@@ -427,7 +425,8 @@ export default function ScenarioComparison({ quote }: Props) {
 
           <div className="mt-3 flex items-center gap-1 text-[10px] text-slate-600">
             <ArrowUpRight className="w-3 h-3" />
-            Scenarios are derived from your current configuration. Contact sales for a custom proposal.
+            Scenarios are derived from your current configuration. Contact sales for a custom
+            proposal.
           </div>
         </div>
       )}

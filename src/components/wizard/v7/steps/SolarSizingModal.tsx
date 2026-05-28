@@ -17,15 +17,7 @@
  */
 
 import React, { useState, useMemo, useCallback } from "react";
-import {
-  X,
-  Sun,
-  Building2,
-  Zap,
-  DollarSign,
-  ArrowRight,
-  Info,
-} from "lucide-react";
+import { X, Sun, Building2, Zap, DollarSign, ArrowRight, Info } from "lucide-react";
 import merlinIcon from "@/assets/images/new_small_profile_.png";
 import {
   estimateBuildingFootprint,
@@ -188,7 +180,13 @@ export default function SolarSizingModal({
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9998]" onClick={onClose} role="button" aria-label="Close modal" tabIndex={-1} />
+      <div
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9998]"
+        onClick={onClose}
+        role="button"
+        aria-label="Close modal"
+        tabIndex={-1}
+      />
 
       {/* Modal */}
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4">
@@ -199,11 +197,13 @@ export default function SolarSizingModal({
           {/* ── Header ── */}
           <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-700/50 flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 border border-blue-400/20 flex items-center justify-center">
+                <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-blue-300" />
               </div>
               <div>
-                <h2 className="text-base sm:text-lg font-bold text-white">Solar Sizing Assistant</h2>
+                <h2 className="text-base sm:text-lg font-bold text-white">
+                  Solar Sizing Assistant
+                </h2>
                 <p className="text-[10px] sm:text-xs text-slate-400">
                   {initialEstimate.industryLabel} • Based on your Step 3 answers
                 </p>
@@ -221,22 +221,21 @@ export default function SolarSizingModal({
 
           {/* ── Two-Panel Body ── */}
           <div className="flex flex-col md:flex-row flex-1 min-h-0">
-
             {/* ════════ MOBILE: Compact Results Strip (md:hidden) ════════ */}
-            <div className="md:hidden px-4 py-3 bg-gradient-to-r from-emerald-950/30 to-slate-900 border-b border-slate-700/30">
+            <div className="md:hidden px-4 py-3 bg-gradient-to-r from-blue-950/30 to-slate-900 border-b border-slate-700/30">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <Sun className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <Sun className="w-4 h-4 text-blue-300 flex-shrink-0" />
                   <div>
-                    <div className="text-2xl font-black text-emerald-400 tabular-nums leading-none">
+                    <div className="text-2xl font-black text-blue-300 tabular-nums leading-none">
                       {fmt(effectiveKW)}
-                      <span className="text-sm font-semibold text-emerald-500/50 ml-0.5">kW</span>
+                      <span className="text-sm font-semibold text-blue-500/50 ml-0.5">kW</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-xs">
                   <div className="text-center">
-                    <div className="font-bold text-green-400">{fmtCurrency(annualSavings)}</div>
+                    <div className="font-bold text-blue-300">{fmtCurrency(annualSavings)}</div>
                     <div className="text-[9px] text-slate-500">savings/yr</div>
                   </div>
                   <div className="text-center">
@@ -258,16 +257,13 @@ export default function SolarSizingModal({
                 />
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                   Based on your{" "}
-                  <span className="font-semibold text-white">
-                    {initialEstimate.sizeDriver}
-                  </span>{" "}
-                  ({fmt(initialEstimate.unitsUsed)} {initialEstimate.sizeDriver}), your
-                  building is ~{" "}
-                  <span className="font-semibold text-emerald-300">
+                  <span className="font-semibold text-white">{initialEstimate.sizeDriver}</span> (
+                  {fmt(initialEstimate.unitsUsed)} {initialEstimate.sizeDriver}), your building is ~{" "}
+                  <span className="font-semibold text-blue-300">
                     {fmt(initialEstimate.buildingSqFt)} sq ft
                   </span>{" "}
                   with{" "}
-                  <span className="font-semibold text-emerald-300">
+                  <span className="font-semibold text-blue-300">
                     {fmt(initialEstimate.usableRoofSqFt)} sq ft
                   </span>{" "}
                   usable roof.
@@ -290,14 +286,21 @@ export default function SolarSizingModal({
                     value={buildingSqFt}
                     onChange={(e) => {
                       const raw = e.target.value;
-                      if (raw === "") { setBuildingSqFt(0); setCustomKW(null); return; }
+                      if (raw === "") {
+                        setBuildingSqFt(0);
+                        setCustomKW(null);
+                        return;
+                      }
                       const v = Number(raw);
-                      if (Number.isFinite(v) && v >= 0) { setBuildingSqFt(Math.min(v, 1000000)); setCustomKW(null); }
+                      if (Number.isFinite(v) && v >= 0) {
+                        setBuildingSqFt(Math.min(v, 1000000));
+                        setCustomKW(null);
+                      }
                     }}
                     onBlur={() => {
                       if (buildingSqFt < 100) setBuildingSqFt(100);
                     }}
-                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm pr-14 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none"
+                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm pr-14 focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 outline-none"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-500">
                     sq ft
@@ -317,7 +320,7 @@ export default function SolarSizingModal({
                       </span>
                     </span>
                   </label>
-                  <span className="text-sm font-bold text-emerald-400">
+                  <span className="text-sm font-bold text-blue-300">
                     {Math.round(roofUtilization * 100)}%
                   </span>
                 </div>
@@ -330,7 +333,7 @@ export default function SolarSizingModal({
                     setRoofUtilization(Number(e.target.value) / 100);
                     setCustomKW(null);
                   }}
-                  className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-emerald-500"
+                  className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-blue-500"
                 />
                 <div className="flex justify-between text-[10px] text-slate-600">
                   <span>10% obstructed</span>
@@ -359,7 +362,7 @@ export default function SolarSizingModal({
                         setCustomKW(null);
                       }}
                       className={`relative w-11 h-6 rounded-full transition-colors ${
-                        includeCanopy ? "bg-emerald-500" : "bg-slate-600"
+                        includeCanopy ? "bg-blue-500" : "bg-slate-600"
                       }`}
                     >
                       <span
@@ -380,7 +383,7 @@ export default function SolarSizingModal({
                             setCanopyKW(Math.max(0, Number(e.target.value) || 0));
                             setCustomKW(null);
                           }}
-                          className="w-24 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right pr-9 focus:border-emerald-500 outline-none"
+                          className="w-24 px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right pr-9 focus:border-blue-400 outline-none"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
                           kW
@@ -393,12 +396,12 @@ export default function SolarSizingModal({
             </div>
 
             {/* ════════ RIGHT: Live Results (hidden on mobile — compact strip shown above) ════════ */}
-            <div className="hidden md:flex flex-1 p-6 bg-gradient-to-br from-emerald-950/20 via-slate-900 to-slate-900 flex-col justify-center">
+            <div className="hidden md:flex flex-1 p-6 bg-gradient-to-br from-blue-950/20 via-slate-900 to-slate-900 flex-col justify-center">
               {/* Hero kW */}
               <div className="text-center mb-6">
-                <div className="text-5xl font-black text-emerald-400 tabular-nums">
+                <div className="text-5xl font-black text-blue-300 tabular-nums">
                   {fmt(effectiveKW)}
-                  <span className="text-xl font-semibold text-emerald-500/50 ml-1">kW</span>
+                  <span className="text-xl font-semibold text-blue-500/50 ml-1">kW</span>
                 </div>
                 <p className="text-xs text-slate-500 mt-1.5">
                   {calculation.maxRoofSolarKW > 0 && (
@@ -407,9 +410,7 @@ export default function SolarSizingModal({
                   {includeCanopy && canopyKW > 0 && calculation.maxRoofSolarKW > 0 && (
                     <span> + </span>
                   )}
-                  {includeCanopy && canopyKW > 0 && (
-                    <span>{fmt(canopyKW)} kW canopy</span>
-                  )}
+                  {includeCanopy && canopyKW > 0 && <span>{fmt(canopyKW)} kW canopy</span>}
                 </p>
               </div>
 
@@ -429,14 +430,14 @@ export default function SolarSizingModal({
                 </div>
                 <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/30">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <DollarSign className="w-3.5 h-3.5 text-green-400" />
+                    <DollarSign className="w-3.5 h-3.5 text-blue-300" />
                     <span className="text-[10px] text-slate-500 uppercase tracking-wider">
                       Savings
                     </span>
                   </div>
-                  <div className="text-sm font-bold text-green-400">
+                  <div className="text-sm font-bold text-blue-300">
                     {fmtCurrency(annualSavings)}
-                    <span className="text-xs font-normal text-green-500/50">/yr</span>
+                    <span className="text-xs font-normal text-blue-500/50">/yr</span>
                   </div>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/30">
@@ -477,7 +478,7 @@ export default function SolarSizingModal({
                       setCustomKW(v);
                     }}
                     placeholder={`${calculation.totalSolarKW}`}
-                    className="w-full px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right pr-9 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none placeholder:text-slate-700"
+                    className="w-full px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm text-right pr-9 focus:border-blue-400 focus:ring-1 focus:ring-blue-400/30 outline-none placeholder:text-slate-700"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
                     kW
@@ -504,7 +505,7 @@ export default function SolarSizingModal({
               <button
                 type="button"
                 onClick={handleApply}
-                className="flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                className="flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-400 hover:to-violet-400 text-white shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
               >
                 <Sun className="w-4 h-4" />
                 Use {fmt(effectiveKW)} kW

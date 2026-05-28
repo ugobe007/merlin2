@@ -276,7 +276,7 @@ export function GeneratorCard({
               style={{
                 fontSize: 20,
                 fontWeight: 800,
-                color: enabled ? "#34d399" : "rgba(248,113,113,0.8)",
+                color: enabled ? "#93c5fd" : "rgba(248,113,113,0.8)",
                 fontFamily: "Outfit, sans-serif",
               }}
             >
@@ -293,12 +293,12 @@ export function GeneratorCard({
             style={{
               padding: "8px 18px",
               borderRadius: 10,
-              border: enabled ? "1px solid #34d399" : "1px solid rgba(255,255,255,0.1)",
+              border: enabled ? "1px solid #60a5fa" : "1px solid rgba(255,255,255,0.1)",
               fontWeight: 700,
               fontSize: 13,
               cursor: "pointer",
               background: "transparent",
-              color: enabled ? "#34d399" : "rgba(232,235,243,0.5)",
+              color: enabled ? "#93c5fd" : "rgba(232,235,243,0.5)",
             }}
           >
             {enabled ? "✓ Added" : "+ Add"}
@@ -342,11 +342,11 @@ export function GeneratorCard({
                     borderRadius: 10,
                     cursor: "pointer",
                     border: isSel
-                      ? "2px solid rgba(62,207,142,0.7)" // emerald when selected
+                      ? "2px solid rgba(79,140,255,0.7)"
                       : "1px solid rgba(255,255,255,0.08)",
-                    background: isSel ? "rgba(62,207,142,0.06)" : "rgba(255,255,255,0.02)",
+                    background: isSel ? "rgba(79,140,255,0.06)" : "rgba(255,255,255,0.02)",
                     transition: "all 0.15s",
-                    boxShadow: isSel ? "0 0 0 1px rgba(62,207,142,0.15)" : "none",
+                    boxShadow: isSel ? "0 0 0 1px rgba(79,140,255,0.15)" : "none",
                   }}
                 >
                   {t.tag && (
@@ -361,7 +361,7 @@ export function GeneratorCard({
                         fontSize: 9,
                         fontWeight: 800,
                         background:
-                          t.key === "standard" ? "rgba(62,207,142,0.9)" : "rgba(239,68,68,0.9)",
+                          t.key === "standard" ? "rgba(79,140,255,0.9)" : "rgba(239,68,68,0.9)",
                         color: "#fff",
                         whiteSpace: "nowrap",
                       }}
@@ -373,7 +373,7 @@ export function GeneratorCard({
                     style={{
                       fontSize: 12,
                       fontWeight: 700,
-                      color: isSel ? "#34d399" : "rgba(232,235,243,0.7)",
+                      color: isSel ? "#93c5fd" : "rgba(232,235,243,0.7)",
                       marginBottom: 6,
                     }}
                   >
@@ -383,7 +383,7 @@ export function GeneratorCard({
                     style={{
                       fontSize: 18,
                       fontWeight: 800,
-                      color: isSel ? "#34d399" : "rgba(232,235,243,0.9)",
+                      color: isSel ? "#93c5fd" : "rgba(232,235,243,0.9)",
                       fontFamily: "Outfit, sans-serif",
                     }}
                   >
@@ -420,7 +420,7 @@ export function GeneratorCard({
                           style={{
                             fontSize: 11,
                             fontWeight: 700,
-                            color: m.highlight ? "#34d399" : "rgba(232,235,243,0.7)",
+                            color: m.highlight ? "#93c5fd" : "rgba(232,235,243,0.7)",
                           }}
                         >
                           {m.value}
@@ -438,12 +438,12 @@ export function GeneratorCard({
                         marginTop: 10,
                         padding: "5px 8px",
                         borderRadius: 6,
-                        background: "rgba(62,207,142,0.1)",
-                        border: "1px solid rgba(62,207,142,0.25)",
+                        background: "rgba(79,140,255,0.1)",
+                        border: "1px solid rgba(79,140,255,0.25)",
                       }}
                     >
-                      <span style={{ fontSize: 12, color: "#34d399" }}>✓</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: "#34d399" }}>
+                      <span style={{ fontSize: 12, color: "#93c5fd" }}>✓</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: "#93c5fd" }}>
                         Added to quote
                       </span>
                     </div>

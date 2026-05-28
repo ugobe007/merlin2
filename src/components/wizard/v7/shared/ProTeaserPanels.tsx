@@ -38,13 +38,13 @@ export default function ProTeaserPanels() {
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-white/40">P50 (expected)</span>
-                <span className="text-emerald-400 font-mono">$2.4M</span>
+                <span className="text-blue-300 font-mono">$2.4M</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-white/40">P90 (optimistic)</span>
-                <span className="text-emerald-400 font-mono">$3.1M</span>
+                <span className="text-blue-300 font-mono">$3.1M</span>
               </div>
-              <div className="h-16 mt-2 bg-gradient-to-r from-red-500/10 via-emerald-500/10 to-emerald-500/5 rounded-lg" />
+              <div className="h-16 mt-2 bg-gradient-to-r from-red-500/10 via-blue-500/10 to-blue-500/5 rounded-lg" />
             </div>
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117]/90 via-transparent to-transparent flex items-end justify-center pb-4">
@@ -70,17 +70,17 @@ export default function ProTeaserPanels() {
             <div className="space-y-2 blur-[6px]">
               <div className="flex justify-between text-xs">
                 <span className="text-white/40">Yr 1 net cash flow</span>
-                <span className="text-emerald-400 font-mono">$86,400</span>
+                <span className="text-blue-300 font-mono">$86,400</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-white/40">Cumulative yr 5</span>
-                <span className="text-emerald-400 font-mono">$432,000</span>
+                <span className="text-blue-300 font-mono">$432,000</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-white/40">Cumulative yr 10</span>
-                <span className="text-emerald-400 font-mono">$864,000</span>
+                <span className="text-blue-300 font-mono">$864,000</span>
               </div>
-              <div className="h-16 mt-2 bg-gradient-to-r from-cyan-500/5 via-cyan-500/10 to-emerald-500/10 rounded-lg" />
+              <div className="h-16 mt-2 bg-gradient-to-r from-blue-500/5 via-blue-500/10 to-violet-500/10 rounded-lg" />
             </div>
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f1117]/90 via-transparent to-transparent flex items-end justify-center pb-4">
@@ -106,15 +106,15 @@ export default function ProTeaserPanels() {
             <div className="space-y-2 blur-[6px]">
               <div className="flex justify-between text-xs">
                 <span className="text-white/40">Levered IRR</span>
-                <span className="text-emerald-400 font-mono">14.2%</span>
+                <span className="text-blue-300 font-mono">14.2%</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-white/40">DSCR (min)</span>
-                <span className="text-emerald-400 font-mono">1.35x</span>
+                <span className="text-blue-300 font-mono">1.35x</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-white/40">MACRS benefit</span>
-                <span className="text-emerald-400 font-mono">$285,000</span>
+                <span className="text-blue-300 font-mono">$285,000</span>
               </div>
               <div className="h-16 mt-2 bg-gradient-to-r from-blue-500/5 via-blue-500/10 to-indigo-500/10 rounded-lg" />
             </div>

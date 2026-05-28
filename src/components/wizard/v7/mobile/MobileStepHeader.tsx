@@ -4,7 +4,7 @@
  * Shows step number, title, and optional subtitle
  */
 
-import React from 'react';
+import React from "react";
 
 interface MobileStepHeaderProps {
   stepNumber: number;
@@ -25,9 +25,9 @@ export function MobileStepHeader({
     <div className="md:hidden px-4 pt-4 pb-3 bg-slate-950/80 backdrop-blur-lg sticky top-0 z-40 border-b border-white/5">
       {/* Step Badge + Icon */}
       <div className="flex items-center gap-3 mb-2">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#3ECF8E]/10 border border-[#3ECF8E]/20">
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20">
           {icon || (
-            <span className="text-[#3ECF8E] text-sm font-bold">
+            <span className="text-blue-300 text-sm font-bold">
               {stepNumber}/{totalSteps}
             </span>
           )}
@@ -38,9 +38,7 @@ export function MobileStepHeader({
       </div>
 
       {/* Subtitle */}
-      {subtitle && (
-        <p className="text-sm text-slate-400 leading-snug">{subtitle}</p>
-      )}
+      {subtitle && <p className="text-sm text-slate-400 leading-snug">{subtitle}</p>}
     </div>
   );
 }

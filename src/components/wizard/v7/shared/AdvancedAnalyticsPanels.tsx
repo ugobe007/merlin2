@@ -116,7 +116,9 @@ function DegradationPanel({ data }: { data: NonNullable<Metadata["degradation"]>
             <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider mb-1">
               NPV Impact
             </div>
-            <div className={`text-lg font-bold tabular-nums ${data.financialImpactPct > 10 ? "text-amber-400" : "text-emerald-400"}`}>
+            <div
+              className={`text-lg font-bold tabular-nums ${data.financialImpactPct > 10 ? "text-amber-400" : "text-blue-300"}`}
+            >
               −{fmtPct(data.financialImpactPct)}
             </div>
             <div className="text-[10px] text-slate-600">revenue loss</div>
@@ -173,19 +175,19 @@ function ITCBreakdownPanel({ data }: { data: NonNullable<Metadata["itcDetails"]>
     },
     {
       label: "Energy Community",
-      value: quals.energyCommunity ? 0.10 : 0,
+      value: quals.energyCommunity ? 0.1 : 0,
       active: quals.energyCommunity,
       desc: "Coal closure / brownfield / fossil fuel area",
     },
     {
       label: "Domestic Content",
-      value: quals.domesticContent ? 0.10 : 0,
+      value: quals.domesticContent ? 0.1 : 0,
       active: quals.domesticContent,
       desc: "100% US steel, 40%+ US manufactured",
     },
     {
       label: "Low-Income Community",
-      value: quals.lowIncome ? 0.10 : 0,
+      value: quals.lowIncome ? 0.1 : 0,
       active: quals.lowIncome,
       desc: "Located in or serving low-income area (<5 MW)",
     },
@@ -195,8 +197,8 @@ function ITCBreakdownPanel({ data }: { data: NonNullable<Metadata["itcDetails"]>
     <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
       <div className="p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Shield className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs font-semibold text-emerald-300 uppercase tracking-wider">
+          <Shield className="w-4 h-4 text-blue-300" />
+          <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">
             ITC Breakdown (IRA 2022)
           </span>
           <span className="ml-auto text-[10px] text-slate-600">{data.source}</span>
@@ -204,12 +206,10 @@ function ITCBreakdownPanel({ data }: { data: NonNullable<Metadata["itcDetails"]>
 
         {/* Total ITC rate hero */}
         <div className="flex items-baseline gap-2 mb-4">
-          <span className="text-3xl font-bold text-emerald-400 tabular-nums">
+          <span className="text-3xl font-bold text-blue-300 tabular-nums">
             {Math.round(data.totalRate * 100)}%
           </span>
-          <span className="text-sm text-slate-400">
-            = {fmtUSD(data.creditAmount)} credit
-          </span>
+          <span className="text-sm text-slate-400">= {fmtUSD(data.creditAmount)} credit</span>
         </div>
 
         {/* Bonus breakdown */}
@@ -218,9 +218,7 @@ function ITCBreakdownPanel({ data }: { data: NonNullable<Metadata["itcDetails"]>
             <div key={b.label} className="flex items-center gap-2">
               <div
                 className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold ${
-                  b.active
-                    ? "bg-emerald-500/20 text-emerald-400"
-                    : "bg-white/[0.04] text-slate-600"
+                  b.active ? "bg-blue-500/20 text-blue-300" : "bg-white/[0.04] text-slate-600"
                 }`}
               >
                 {b.active ? "✓" : "—"}
@@ -232,15 +230,13 @@ function ITCBreakdownPanel({ data }: { data: NonNullable<Metadata["itcDetails"]>
                   </span>
                   <span
                     className={`text-xs font-bold tabular-nums ${
-                      b.active ? "text-emerald-400" : "text-slate-600"
+                      b.active ? "text-blue-300" : "text-slate-600"
                     }`}
                   >
                     +{Math.round(b.value * 100)}%
                   </span>
                 </div>
-                {b.active && (
-                  <div className="text-[10px] text-slate-500 mt-0.5">{b.desc}</div>
-                )}
+                {b.active && <div className="text-[10px] text-slate-500 mt-0.5">{b.desc}</div>}
               </div>
             </div>
           ))}
@@ -256,7 +252,7 @@ function ITCBreakdownPanel({ data }: { data: NonNullable<Metadata["itcDetails"]>
 
 function UtilityRatePanel({ data }: { data: NonNullable<Metadata["utilityRates"]> }) {
   const confidenceColor: Record<string, string> = {
-    high: "text-emerald-400",
+    high: "text-blue-300",
     medium: "text-amber-400",
     low: "text-red-400",
   };
@@ -289,7 +285,8 @@ function UtilityRatePanel({ data }: { data: NonNullable<Metadata["utilityRates"]
             Electricity Rate
           </div>
           <div className="text-lg font-bold text-white tabular-nums">
-            ${data.electricityRate?.toFixed(4)}<span className="text-xs text-slate-500">/kWh</span>
+            ${data.electricityRate?.toFixed(4)}
+            <span className="text-xs text-slate-500">/kWh</span>
           </div>
         </div>
         <div>
@@ -297,7 +294,8 @@ function UtilityRatePanel({ data }: { data: NonNullable<Metadata["utilityRates"]
             Demand Charge
           </div>
           <div className="text-lg font-bold text-white tabular-nums">
-            ${data.demandCharge?.toFixed(2)}<span className="text-xs text-slate-500">/kW</span>
+            ${data.demandCharge?.toFixed(2)}
+            <span className="text-xs text-slate-500">/kW</span>
           </div>
         </div>
       </div>
@@ -375,10 +373,30 @@ function HourlySavingsPanel({
   data: NonNullable<NonNullable<Metadata["advancedAnalysis"]>["hourlySimulation"]>;
 }) {
   const categories = [
-    { label: "TOU Arbitrage", value: data.touArbitrageSavings, color: "bg-blue-400", icon: <Clock className="w-3 h-3" /> },
-    { label: "Peak Shaving", value: data.peakShavingSavings, color: "bg-violet-400", icon: <TrendingDown className="w-3 h-3" /> },
-    { label: "Demand Charges", value: data.demandChargeSavings, color: "bg-cyan-400", icon: <Zap className="w-3 h-3" /> },
-    { label: "Solar Self-Consumption", value: data.solarSelfConsumptionSavings, color: "bg-amber-400", icon: <Sun className="w-3 h-3" /> },
+    {
+      label: "TOU Arbitrage",
+      value: data.touArbitrageSavings,
+      color: "bg-blue-400",
+      icon: <Clock className="w-3 h-3" />,
+    },
+    {
+      label: "Peak Shaving",
+      value: data.peakShavingSavings,
+      color: "bg-violet-400",
+      icon: <TrendingDown className="w-3 h-3" />,
+    },
+    {
+      label: "Demand Charges",
+      value: data.demandChargeSavings,
+      color: "bg-cyan-400",
+      icon: <Zap className="w-3 h-3" />,
+    },
+    {
+      label: "Solar Self-Consumption",
+      value: data.solarSelfConsumptionSavings,
+      color: "bg-amber-400",
+      icon: <Sun className="w-3 h-3" />,
+    },
   ].filter((c) => c.value > 0);
 
   const total = categories.reduce((s, c) => s + c.value, 0);
@@ -395,7 +413,7 @@ function HourlySavingsPanel({
 
         {/* Total + source */}
         <div className="flex items-baseline gap-2 mb-4">
-          <span className="text-2xl font-bold text-emerald-400 tabular-nums">
+          <span className="text-2xl font-bold text-blue-300 tabular-nums">
             {fmtUSD(data.annualSavings)}
           </span>
           <span className="text-xs text-slate-500">/year</span>
@@ -506,19 +524,19 @@ function RiskAnalysisPanel({
           <div className="flex-1 relative h-6 flex items-center">
             <div className="absolute inset-x-0 h-2 rounded-full bg-white/[0.06]" />
             <div
-              className="absolute h-2 rounded-full bg-gradient-to-r from-red-500/30 via-emerald-500/40 to-emerald-500/30"
+              className="absolute h-2 rounded-full bg-gradient-to-r from-red-500/30 via-blue-500/40 to-violet-500/30"
               style={{ left: "10%", right: "10%" }}
             />
             {/* P50 marker */}
             <div
-              className="absolute w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-900 shadow-lg"
+              className="absolute w-3 h-3 bg-blue-300 rounded-full border-2 border-slate-900 shadow-lg"
               style={{ left: "50%", transform: "translateX(-50%)" }}
             />
           </div>
           {/* P90 — best case */}
           <div className="w-20">
             <div className="text-[10px] text-slate-600">P90</div>
-            <div className="text-xs font-bold text-emerald-400 tabular-nums">
+            <div className="text-xs font-bold text-blue-300 tabular-nums">
               {fmt(best)}
               {unit && <span className="text-[10px] text-slate-600 ml-0.5">{unit}</span>}
             </div>
@@ -551,7 +569,7 @@ function RiskAnalysisPanel({
           <div
             className={`text-2xl font-bold tabular-nums ${
               data.probabilityPositiveNPV >= 90
-                ? "text-emerald-400"
+                ? "text-blue-300"
                 : data.probabilityPositiveNPV >= 70
                   ? "text-amber-400"
                   : "text-red-400"
@@ -569,7 +587,13 @@ function RiskAnalysisPanel({
 
         {/* P10/P50/P90 bands */}
         <div className="space-y-4">
-          <Band label="NPV (25yr)" p10={data.npvP10} p50={data.npvP50} p90={data.npvP90} fmt={fmtUSD} />
+          <Band
+            label="NPV (25yr)"
+            p10={data.npvP10}
+            p50={data.npvP50}
+            p90={data.npvP90}
+            fmt={fmtUSD}
+          />
           <Band
             label="IRR"
             p10={data.irrP10}
@@ -613,7 +637,7 @@ function AnalyticsTeaserStrip({ metadata, hasSolar }: { metadata: Metadata; hasS
     chips.push({
       label: "Positive NPV",
       value: `${pct.toFixed(0)}%`,
-      color: pct >= 80 ? "text-emerald-400" : pct >= 50 ? "text-amber-400" : "text-red-400",
+      color: pct >= 80 ? "text-blue-300" : pct >= 50 ? "text-amber-400" : "text-red-400",
     });
   }
 
@@ -622,7 +646,7 @@ function AnalyticsTeaserStrip({ metadata, hasSolar }: { metadata: Metadata; hasS
     chips.push({
       label: "8760 Savings",
       value: fmtUSD(hourly.annualSavings) + "/yr",
-      color: "text-emerald-400",
+      color: "text-blue-300",
     });
   }
 
@@ -659,7 +683,9 @@ function AnalyticsTeaserStrip({ metadata, hasSolar }: { metadata: Metadata; hasS
     <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/[0.05] p-3 flex flex-wrap items-center gap-x-5 gap-y-2">
       <div className="flex items-center gap-1.5 mr-1">
         <Activity className="w-3.5 h-3.5 text-indigo-400" />
-        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Analytics</span>
+        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+          Analytics
+        </span>
       </div>
       {chips.map((chip, i) => (
         <div key={i} className="flex items-center gap-1.5">

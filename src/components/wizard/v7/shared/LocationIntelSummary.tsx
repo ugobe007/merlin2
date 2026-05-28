@@ -28,7 +28,7 @@ interface StatRowProps {
 
 const TONE_COLORS: Record<string, string> = {
   yellow: "rgba(251, 191, 36, 0.9)",
-  green: "rgba(52, 211, 153, 0.9)",
+  green: "rgba(79, 140, 255, 0.9)",
   blue: "rgba(147, 197, 253, 0.9)",
   orange: "rgba(251, 146, 60, 0.9)",
   default: "rgba(232, 235, 243, 0.7)",
@@ -134,7 +134,7 @@ export default function LocationIntelSummary({ location, intel }: Props) {
             width: 6,
             height: 6,
             borderRadius: "50%",
-            background: "#3ECF8E",
+            background: "#4f8cff",
             boxShadow: "0 0 5px rgba(62,207,142,0.5)",
             flexShrink: 0,
           }}

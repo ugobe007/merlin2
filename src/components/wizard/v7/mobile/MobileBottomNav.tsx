@@ -33,7 +33,7 @@ export function MobileBottomNav({
       {/* Progress Bar */}
       <div className="h-1 bg-slate-800">
         <div
-          className="h-full bg-gradient-to-r from-[#3ECF8E] to-[#2EA574] transition-all duration-300"
+          className="h-full bg-gradient-to-r from-blue-500 to-violet-500 transition-all duration-300"
           style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
         />
       </div>
@@ -58,7 +58,7 @@ export function MobileBottomNav({
             <div
               key={idx}
               className={`h-1.5 rounded-full transition-all ${
-                idx <= currentStep ? "w-6 bg-[#3ECF8E]" : "w-1.5 bg-white/20"
+                idx <= currentStep ? "w-6 bg-blue-500" : "w-1.5 bg-white/20"
               }`}
             />
           ))}
@@ -69,7 +69,7 @@ export function MobileBottomNav({
           type="button"
           onClick={onNext}
           disabled={!canContinue}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-[#3ECF8E] bg-transparent text-[#3ECF8E] font-semibold disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all min-w-[90px] justify-center disabled:border-slate-600 disabled:text-slate-600 hover:bg-[#3ECF8E]/10"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-blue-500 bg-transparent text-blue-300 font-semibold disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all min-w-[90px] justify-center disabled:border-slate-600 disabled:text-slate-600 hover:bg-blue-500/10"
           aria-label={isLastStep ? "Finish" : nextLabel}
         >
           <span className="text-sm">{isLastStep ? "Finish" : nextLabel}</span>
