@@ -15,16 +15,16 @@ import { trackWizardEvent } from "@/services/analyticsService";
 const C = {
   panel: "#111a3e",
   panelBorder: "rgba(99,120,255,0.18)",
-  text: "rgba(232,235,243,0.96)",
-  textSub: "rgba(232,235,243,0.55)",
-  textMuted: "rgba(232,235,243,0.32)",
+  text: "rgba(232,235,243,0.98)",
+  textSub: "rgba(232,235,243,0.64)",
+  textMuted: "rgba(232,235,243,0.42)",
   purple: "#9b6dff",
   purpleSoft: "rgba(155,109,255,0.08)",
   purpleBorder: "rgba(130,100,255,0.45)",
-  amber: "#F59E0B",
-  sky: "#38BDF8",
-  green: "#34D399",
-  red: "#F87171",
+  amber: "#f59e0b",
+  sky: "#4f8aff",
+  green: "#34d399",
+  red: "#f87171",
 };
 
 function fmt$(n: number): string {
@@ -457,7 +457,7 @@ export function Step4V8({ state, actions }: Props) {
                   alignItems: "center",
                   gap: 6,
                   background: "rgba(79,138,255,0.07)",
-                  border: "1px solid rgba(79,138,255,0.22)",
+                  border: `1px solid rgba(79,138,255,0.22)`,
                   borderRadius: 8,
                   color: C.sky,
                   fontSize: 12,
