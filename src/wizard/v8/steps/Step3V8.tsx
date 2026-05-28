@@ -469,15 +469,15 @@ export function Step3V8({ state, actions }: Props) {
                         height: 22,
                         borderRadius: "50%",
                         border: isSelected ? "none" : "1.5px solid rgba(255,255,255,0.25)",
-                        background: isSelected ? "#4F8CFF" : "transparent",
+                        background: isSelected ? "#34d399" : "transparent",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         fontSize: 11,
                         fontWeight: 700,
-                        color: "#fff",
+                        color: "#0d1230",
                         transition: "all 0.15s ease",
-                        boxShadow: isSelected ? "0 0 8px rgba(79,140,255,0.5)" : "none",
+                        boxShadow: isSelected ? "0 0 8px rgba(52,211,153,0.45)" : "none",
                       }}
                     >
                       {isSelected && "✓"}
@@ -544,13 +544,13 @@ export function Step3V8({ state, actions }: Props) {
                         height: 18,
                         borderRadius: "50%",
                         border: isSelected ? "none" : "1.5px solid rgba(255,255,255,0.25)",
-                        background: isSelected ? "#4F8CFF" : "transparent",
+                        background: isSelected ? "#34d399" : "transparent",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         fontSize: 10,
                         fontWeight: 700,
-                        color: "#fff",
+                        color: "#0d1230",
                         transition: "all 0.15s ease",
                         flexShrink: 0,
                       }}
@@ -661,8 +661,8 @@ export function Step3V8({ state, actions }: Props) {
             marginBottom: 20,
             padding: "16px 20px",
             borderRadius: 14,
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: "#111a3e",
+            border: "1px solid rgba(99,120,255,0.18)",
           }}
         >
           <div
@@ -746,8 +746,8 @@ export function Step3V8({ state, actions }: Props) {
             padding: "14px 18px",
             borderRadius: 14,
             background:
-              "linear-gradient(135deg, rgba(79,140,255,0.10) 0%, rgba(79,140,255,0.04) 100%)",
-            border: "1px solid rgba(79,140,255,0.28)",
+              "linear-gradient(135deg, rgba(155,109,255,0.10) 0%, rgba(79,138,255,0.06) 100%)",
+            border: "1px solid rgba(130,100,255,0.30)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -756,7 +756,7 @@ export function Step3V8({ state, actions }: Props) {
           }}
         >
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#4F8CFF", marginBottom: 3 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#9b6dff", marginBottom: 3 }}>
               ✓ All {visibleQuestions.length} questions pre-filled with {displayName} benchmarks
             </div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.4 }}>
@@ -773,8 +773,8 @@ export function Step3V8({ state, actions }: Props) {
               padding: "11px 20px",
               borderRadius: 10,
               background: "transparent",
-              color: "#8B5CF6",
-              border: "1.5px solid #8B5CF6",
+              color: "#9b6dff",
+              border: "1.5px solid rgba(130,100,255,0.45)",
               fontSize: 13,
               fontWeight: 700,
               cursor: "pointer",
@@ -822,11 +822,11 @@ export function Step3V8({ state, actions }: Props) {
                 marginBottom: 10,
                 borderRadius: 12,
                 border: isOpen
-                  ? "1px solid rgba(79,140,255,0.28)"
+                  ? "1px solid rgba(130,100,255,0.40)"
                   : complete
-                    ? "1px solid rgba(79,140,255,0.15)"
-                    : "1px solid rgba(255,255,255,0.08)",
-                background: isOpen ? "rgba(79,140,255,0.04)" : "rgba(255,255,255,0.02)",
+                    ? "1px solid rgba(52,211,153,0.25)"
+                    : "1px solid rgba(99,120,255,0.18)",
+                background: isOpen ? "rgba(155,109,255,0.05)" : "#111a3e",
                 transition: "border-color 0.2s ease",
                 overflow: "hidden",
               }}
@@ -864,7 +864,7 @@ export function Step3V8({ state, actions }: Props) {
                       style={{
                         fontSize: 14,
                         fontWeight: 700,
-                        color: isOpen ? "#4F8CFF" : "rgba(255,255,255,0.90)",
+                        color: isOpen ? "#9b6dff" : "rgba(255,255,255,0.90)",
                       }}
                     >
                       {sec.label}
@@ -875,13 +875,13 @@ export function Step3V8({ state, actions }: Props) {
                           width: 16,
                           height: 16,
                           borderRadius: "50%",
-                          background: "#4F8CFF",
+                          background: "#34d399",
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "center",
                           fontSize: 9,
                           fontWeight: 800,
-                          color: "#fff",
+                          color: "#0d1230",
                           flexShrink: 0,
                         }}
                       >
@@ -989,13 +989,13 @@ export function Step3V8({ state, actions }: Props) {
               gap: 8,
               padding: "13px 22px",
               borderRadius: 10,
-              background: "transparent",
-              border: "1.5px solid #8B5CF6",
-              color: "#8B5CF6",
+              background: "linear-gradient(135deg, #4f8aff, #9b6dff)",
+              border: "none",
+              color: "#fff",
               fontSize: 14,
               fontWeight: 700,
               cursor: "pointer",
-              boxShadow: "none",
+              boxShadow: "0 4px 16px rgba(79,138,255,0.30)",
               letterSpacing: "0.01em",
             }}
             onMouseEnter={(e) => {

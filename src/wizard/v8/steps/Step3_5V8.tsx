@@ -50,8 +50,8 @@ function StepperBtn({ onClick, children }: { onClick: () => void; children: Reac
         width: 34,
         height: 34,
         borderRadius: "50%",
-        background: "rgba(255,255,255,0.06)",
-        border: "1.5px solid rgba(255,255,255,0.14)",
+        background: "rgba(99,120,255,0.10)",
+        border: "1.5px solid rgba(99,120,255,0.25)",
         color: "rgba(255,255,255,0.85)",
         fontSize: 20,
         lineHeight: 1,
@@ -100,7 +100,7 @@ function AddonSlider({
           right: 0,
           height: 5,
           borderRadius: 3,
-          background: "rgba(255,255,255,0.08)",
+          background: "rgba(99,120,255,0.15)",
           top: "50%",
           transform: "translateY(-50%)",
         }}
@@ -299,14 +299,14 @@ function ConfirmBtn({
         @keyframes confirmGlow {
           0%, 100% {
             box-shadow: none;
-            border-color: rgba(139,92,246,0.55);
-            color: rgba(139,92,246,0.7);
+            border-color: rgba(130,100,255,0.55);
+            color: rgba(155,109,255,0.7);
             text-shadow: none;
           }
           50% {
-            box-shadow: 0 0 0 2px rgba(139,92,246,0.25), 0 0 18px 4px rgba(139,92,246,0.20);
-            border-color: rgba(139,92,246,1.0);
-            color: #8B5CF6;
+            box-shadow: 0 0 0 2px rgba(130,100,255,0.25), 0 0 18px 4px rgba(130,100,255,0.20);
+            border-color: rgba(130,100,255,1.0);
+            color: #9b6dff;
             text-shadow: none;
           }
         }
@@ -327,11 +327,11 @@ function ConfirmBtn({
           padding: "9px 14px",
           borderRadius: 8,
           background: "transparent",
-          border: "1.5px solid rgba(139,92,246,0.60)",
+          border: "1.5px solid rgba(130,100,255,0.60)",
           boxShadow: "none",
           fontSize: 13,
           fontWeight: 700,
-          color: "#8B5CF6",
+          color: "#9b6dff",
           letterSpacing: "0.04em",
         }}
       >
@@ -341,13 +341,13 @@ function ConfirmBtn({
             height: 18,
             borderRadius: "50%",
             background: "transparent",
-            border: "1.5px solid rgba(139,92,246,0.60)",
+            border: "1.5px solid rgba(130,100,255,0.60)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontSize: 10,
             fontWeight: 900,
-            color: "#8B5CF6",
+            color: "#9b6dff",
             flexShrink: 0,
           }}
         >
@@ -360,9 +360,9 @@ function ConfirmBtn({
             marginLeft: 6,
             padding: "2px 8px",
             borderRadius: 5,
-            border: "1px solid rgba(139,92,246,0.30)",
+            border: "1px solid rgba(130,100,255,0.35)",
             background: "transparent",
-            color: "rgba(139,92,246,0.6)",
+            color: "rgba(155,109,255,0.7)",
             fontSize: 11,
             fontWeight: 600,
             cursor: "pointer",
@@ -380,21 +380,21 @@ function ConfirmBtn({
         width: "100%",
         padding: needsConfirm ? "14px 16px" : "11px 16px",
         borderRadius: 10,
-        border: "1.5px solid #8B5CF6",
-        background: "transparent",
+        border: "none",
+        background: "linear-gradient(135deg, #4f8aff, #9b6dff)",
         cursor: "pointer",
         fontSize: needsConfirm ? 14 : 13,
         fontWeight: 700,
         letterSpacing: "0.05em",
         textTransform: "uppercase" as const,
-        color: "#8B5CF6",
+        color: "#fff",
         transition: "box-shadow 0.15s",
-        boxShadow: "none",
+        boxShadow: "0 4px 16px rgba(79,138,255,0.28)",
         animation: "none",
         position: "relative" as const,
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 0 3px rgba(139,92,246,0.22)";
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 24px rgba(79,138,255,0.45)";
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
@@ -990,7 +990,7 @@ function SolarCard({
                 <span style={{ fontSize: 13, color: "rgba(148,163,184,0.6)" }}>{pct}%</span>
               )}
               {savingsK > 0 && (
-                <span style={{ fontSize: 13, color: "#4F8CFF", fontWeight: 600 }}>
+                <span style={{ fontSize: 13, color: "#9b6dff", fontWeight: 600 }}>
                   +${savingsK}K
                 </span>
               )}
@@ -1384,7 +1384,7 @@ function SolarCard({
                 label: "Premium",
                 sub: "Max roof yield",
                 spec: "REC Alpha · 22.3%",
-                accentColor: "rgba(139,92,246,",
+                accentColor: "rgba(130,100,255,",
               },
             ] as const
           ).map(({ id, emoji, label, sub, spec, accentColor }) => {
@@ -1446,7 +1446,7 @@ function SolarCard({
                   fontSize: 11,
                   color:
                     solarPanelTier === "premium"
-                      ? "rgba(139,92,246,0.75)"
+                      ? "rgba(155,109,255,0.75)"
                       : "rgba(16,185,129,0.75)",
                   marginTop: 7,
                   lineHeight: 1.5,
@@ -1467,7 +1467,7 @@ function SolarCard({
               <div
                 style={{
                   fontSize: 11,
-                  color: "rgba(139,92,246,0.75)",
+                  color: "rgba(155,109,255,0.75)",
                   marginTop: 7,
                   lineHeight: 1.5,
                 }}
@@ -2608,13 +2608,13 @@ function BackupGeneratorCard({
                     width: 20,
                     height: 20,
                     borderRadius: "50%",
-                    background: "#4F8CFF",
+                    background: "#34d399",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: 11,
                     fontWeight: 900,
-                    color: "#fff",
+                    color: "#0d1230",
                     flexShrink: 0,
                   }}
                 >
@@ -2622,7 +2622,7 @@ function BackupGeneratorCard({
                 </div>
               )}
               {savingsK > 0 && (
-                <span style={{ fontSize: 13, color: "#4F8CFF", fontWeight: 700 }}>
+                <span style={{ fontSize: 13, color: "#9b6dff", fontWeight: 700 }}>
                   +${savingsK}K
                 </span>
               )}
@@ -3581,10 +3581,9 @@ export default function Step3_5V8({ state, actions }: Props) {
           width: "100%",
           padding: "17px 24px",
           borderRadius: 12,
+          background: "linear-gradient(135deg, #4f8aff, #9b6dff)",
           border: "none",
-          background: "transparent",
-          border: "1.5px solid #8B5CF6",
-          color: "#8B5CF6",
+          color: "#fff",
           fontSize: 16,
           fontWeight: 700,
           cursor: "pointer",
@@ -3592,12 +3591,12 @@ export default function Step3_5V8({ state, actions }: Props) {
           alignItems: "center",
           justifyContent: "center",
           gap: 10,
-          boxShadow: "none",
+          boxShadow: "0 4px 20px rgba(79,138,255,0.30)",
           marginTop: 8,
           letterSpacing: "0.01em",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.20)";
+          e.currentTarget.style.boxShadow = "0 6px 28px rgba(79,138,255,0.45)";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.boxShadow = "none";
