@@ -653,7 +653,10 @@ export default function Step5V8({ state, actions }: Props) {
   });
 
   return (
-    <div className="max-w-5xl mx-auto space-y-5 p-4">
+    <div
+      className="max-w-5xl mx-auto space-y-5 p-4"
+      style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}
+    >
       {/* ================================================================
           HEADER — Document-style quote header
       ================================================================ */}
@@ -667,7 +670,14 @@ export default function Step5V8({ state, actions }: Props) {
             <span className="text-slate-700">·</span>
             <span className="text-[10px] text-slate-500">{quoteDate}</span>
           </div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+          <h1
+            className="text-xl font-bold text-white flex items-center gap-2"
+            style={{
+              fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif",
+              fontSize: 22,
+              letterSpacing: "-0.3px",
+            }}
+          >
             <span>
               {(industry?.replace(/_/g, " ") || "Facility")
                 .split(" ")
@@ -1043,7 +1053,10 @@ export default function Step5V8({ state, actions }: Props) {
             >
               Your Path Forward
             </p>
-            <h2 className="text-base font-bold text-white leading-tight">
+            <h2
+              className="text-base font-bold text-white leading-tight"
+              style={{ fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif", fontSize: 17 }}
+            >
               Here's how to build your energy stack
             </h2>
           </div>
