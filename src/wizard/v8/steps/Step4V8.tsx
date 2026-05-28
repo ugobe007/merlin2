@@ -168,8 +168,8 @@ function TradeoffRow({ label, value, invert }: { label: string; value: number; i
       </div>
       <div
         style={{
-          height: 8,
-          borderRadius: 4,
+          height: 12,
+          borderRadius: 6,
           background: "rgba(255,255,255,0.06)",
           overflow: "hidden",
         }}
@@ -179,9 +179,9 @@ function TradeoffRow({ label, value, invert }: { label: string; value: number; i
             height: "100%",
             width: `${goodness}%`,
             background: `linear-gradient(90deg, ${barColor}cc, ${barColor})`,
-            borderRadius: 4,
+            borderRadius: 6,
             transition: "width 0.4s ease",
-            boxShadow: `0 0 8px ${barColor}55`,
+            boxShadow: `0 0 10px ${barColor}66`,
           }}
         />
       </div>
@@ -229,8 +229,8 @@ function BreakdownRow({
       </div>
       <div
         style={{
-          height: 8,
-          borderRadius: 4,
+          height: 12,
+          borderRadius: 6,
           background: "rgba(255,255,255,0.05)",
           overflow: "hidden",
         }}
@@ -240,9 +240,9 @@ function BreakdownRow({
             height: "100%",
             width: `${pct}%`,
             background: `linear-gradient(90deg, ${color}aa, ${color})`,
-            borderRadius: 4,
+            borderRadius: 6,
             transition: "width 0.4s ease",
-            boxShadow: `0 0 8px ${color}44`,
+            boxShadow: `0 0 10px ${color}55`,
           }}
         />
       </div>
@@ -456,12 +456,12 @@ export function Step4V8({ state, actions }: Props) {
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
-                  background: "rgba(79,138,255,0.07)",
-                  border: `1px solid rgba(79,138,255,0.22)`,
+                  background: "rgba(245,158,11,0.07)",
+                  border: `1px solid rgba(245,158,11,0.28)`,
                   borderRadius: 8,
-                  color: C.sky,
+                  color: C.amber,
                   fontSize: 12,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   cursor: "pointer",
                   padding: "8px 14px",
                   width: "100%",
@@ -469,12 +469,12 @@ export function Step4V8({ state, actions }: Props) {
                   transition: "all 0.15s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(79,138,255,0.14)";
-                  e.currentTarget.style.borderColor = "rgba(79,138,255,0.40)";
+                  e.currentTarget.style.background = "rgba(245,158,11,0.14)";
+                  e.currentTarget.style.borderColor = "rgba(245,158,11,0.50)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(79,138,255,0.07)";
-                  e.currentTarget.style.borderColor = "rgba(79,138,255,0.22)";
+                  e.currentTarget.style.background = "rgba(245,158,11,0.07)";
+                  e.currentTarget.style.borderColor = "rgba(245,158,11,0.28)";
                 }}
               >
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -491,16 +491,36 @@ export function Step4V8({ state, actions }: Props) {
             </div>
           </Panel>
 
-          <Panel>
-            <SectionLabel>Optimization Strategy</SectionLabel>
+          <Panel
+            style={{
+              border: "1.5px solid rgba(245,158,11,0.35)",
+              background: "rgba(245,158,11,0.03)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 14 }}>⚡</span>
+              <SectionLabel>Optimization Strategy</SectionLabel>
+            </div>
+            <p
+              style={{
+                fontSize: 11,
+                color: C.textSub,
+                lineHeight: 1.55,
+                marginBottom: 12,
+                marginTop: -4,
+              }}
+            >
+              Drag the slider to adjust your energy stack optimization — shift left for faster
+              payback, right for maximum grid resilience.
+            </p>
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 fontSize: 11,
-                color: C.textMuted,
+                color: C.amber,
                 marginBottom: 8,
-                fontWeight: 600,
+                fontWeight: 700,
               }}
             >
               <span>Cost-Focused</span>
@@ -512,7 +532,7 @@ export function Step4V8({ state, actions }: Props) {
               max={100}
               value={strategyValue}
               onChange={(e) => handleStrategyChange(Number(e.target.value))}
-              style={{ width: "100%", accentColor: C.purple, cursor: "pointer" }}
+              style={{ width: "100%", accentColor: C.amber, cursor: "pointer", height: 6 }}
             />
             <div
               style={{
