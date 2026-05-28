@@ -13,14 +13,14 @@ import type { WizardActions, WizardState, WizardStep, QuoteTier } from "../wizar
 import { trackWizardEvent } from "@/services/analyticsService";
 
 const C = {
-  panel: "rgba(255,255,255,0.03)",
-  panelBorder: "rgba(255,255,255,0.08)",
+  panel: "#111a3e",
+  panelBorder: "rgba(99,120,255,0.18)",
   text: "rgba(232,235,243,0.96)",
   textSub: "rgba(232,235,243,0.55)",
   textMuted: "rgba(232,235,243,0.32)",
-  purple: "#8B5CF6",
-  purpleSoft: "rgba(139,92,246,0.08)",
-  purpleBorder: "rgba(139,92,246,0.35)",
+  purple: "#9b6dff",
+  purpleSoft: "rgba(155,109,255,0.08)",
+  purpleBorder: "rgba(130,100,255,0.45)",
   amber: "#F59E0B",
   sky: "#38BDF8",
   green: "#34D399",
@@ -522,7 +522,7 @@ export function Step4V8({ state, actions }: Props) {
           }}
         >
           <Panel
-            style={{ border: `1px solid ${C.purpleBorder}`, background: "rgba(139,92,246,0.05)" }}
+            style={{ border: `1px solid ${C.purpleBorder}`, background: "rgba(155,109,255,0.05)" }}
           >
             <SectionLabel>Live Financial Model</SectionLabel>
             <div
@@ -689,7 +689,7 @@ export function Step4V8({ state, actions }: Props) {
             transition: "box-shadow 0.15s",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.20)";
+            e.currentTarget.style.boxShadow = "0 0 0 3px rgba(130,100,255,0.25)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.boxShadow = "none";

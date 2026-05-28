@@ -7,15 +7,16 @@ import type { BusinessData, WizardActions, WizardState } from "../wizardState";
 const GOOGLE_MAPS_API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) ?? "";
 
 const T = {
-  accent: "#8B5CF6",
-  accentSoft: "transparent",
-  accentBorder: "rgba(139,92,246,0.50)",
+  accent: "#9b6dff",
+  accentSoft: "rgba(155,109,255,0.08)",
+  accentBorder: "rgba(130,100,255,0.45)",
+  accentBlue: "#4f8aff",
   textPrimary: "rgba(232,235,243,0.98)",
   textSecondary: "rgba(232,235,243,0.64)",
   textMuted: "rgba(232,235,243,0.42)",
-  panel: "rgba(255,255,255,0.03)",
-  panelBorder: "rgba(255,255,255,0.08)",
-  input: "rgba(255,255,255,0.04)",
+  panel: "#111a3e",
+  panelBorder: "rgba(99,120,255,0.18)",
+  input: "#0d1230",
   warning: "rgba(251,191,36,0.10)",
   warningBorder: "rgba(251,191,36,0.24)",
 };
@@ -791,49 +792,68 @@ export function Step1V8({ state, actions }: Step1Props) {
         {/* ── Journey preview strip ── */}
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0,
-            padding: "10px 14px",
-            borderRadius: 10,
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.07)",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: 8,
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "rgba(255,255,255,0.01)",
+            border: "1px solid rgba(99,120,255,0.12)",
           }}
         >
           {(
             [
-              { emoji: "📍", label: "Location", sub: "ZIP auto-detected", accent: false },
-              { emoji: "🏢", label: "Industry", sub: "picks your defaults", accent: false },
-              { emoji: "⚡", label: "TrueQuote", sub: "full financial model", accent: true },
+              {
+                icon: "📍",
+                label: "Location",
+                sub: "ZIP auto-detected",
+                iconBg: "rgba(79,138,255,0.12)",
+                iconBorder: "rgba(79,138,255,0.25)",
+              },
+              {
+                icon: "🏢",
+                label: "Industry",
+                sub: "picks your defaults",
+                iconBg: "rgba(155,109,255,0.12)",
+                iconBorder: "rgba(155,109,255,0.25)",
+              },
+              {
+                icon: "⚡",
+                label: "TrueQuote",
+                sub: "full financial model",
+                iconBg: "rgba(245,158,11,0.12)",
+                iconBorder: "rgba(245,158,11,0.25)",
+              },
             ] as const
-          ).map(({ emoji, label, sub, accent }, i, arr) => (
-            <React.Fragment key={label}>
-              <div style={{ flex: 1, textAlign: "center", padding: "2px 4px" }}>
-                <div style={{ fontSize: 17, marginBottom: 3 }}>{emoji}</div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: accent ? T.accent : T.textPrimary,
-                  }}
-                >
-                  {label}
-                </div>
-                <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{sub}</div>
+          ).map(({ icon, label, sub, iconBg, iconBorder }) => (
+            <div
+              key={label}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                gap: 6,
+              }}
+            >
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 9,
+                  background: iconBg,
+                  border: `1px solid ${iconBorder}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 15,
+                }}
+              >
+                {icon}
               </div>
-              {i < arr.length - 1 && (
-                <div
-                  style={{
-                    color: "rgba(255,255,255,0.18)",
-                    fontSize: 16,
-                    flexShrink: 0,
-                    padding: "0 2px",
-                  }}
-                >
-                  ›
-                </div>
-              )}
-            </React.Fragment>
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.textPrimary }}>{label}</div>
+              <div style={{ fontSize: 10, color: T.textMuted, marginTop: -2 }}>{sub}</div>
+            </div>
           ))}
         </div>
 
@@ -1185,13 +1205,27 @@ export function Step1V8({ state, actions }: Step1Props) {
                 disabled={!isZipReady || isLocationBusy}
                 style={{
                   width: "100%",
-                  height: 46,
+                  height: 50,
                   borderRadius: 10,
-                  border: `1px solid ${isZipReady ? T.accentBorder : "rgba(255,255,255,0.08)"}`,
-                  background: isZipReady ? T.accentSoft : "rgba(255,255,255,0.03)",
-                  color: isZipReady ? T.accent : T.textMuted,
+                  border: "none",
+                  background: isZipReady
+                    ? "linear-gradient(135deg, #4f8aff, #9b6dff)"
+                    : "rgba(255,255,255,0.04)",
+                  color: isZipReady ? "#fff" : T.textMuted,
                   fontWeight: 700,
+                  fontSize: 15,
                   cursor: isZipReady ? "pointer" : "not-allowed",
+                  boxShadow: isZipReady ? "0 4px 20px rgba(79,138,255,0.35)" : "none",
+                  transition: "all 0.18s ease",
+                  letterSpacing: "0.01em",
+                }}
+                onMouseEnter={(e) => {
+                  if (isZipReady)
+                    e.currentTarget.style.boxShadow = "0 6px 26px rgba(79,138,255,0.50)";
+                }}
+                onMouseLeave={(e) => {
+                  if (isZipReady)
+                    e.currentTarget.style.boxShadow = "0 4px 20px rgba(79,138,255,0.35)";
                 }}
               >
                 {isLocationBusy ? "Checking..." : "Confirm Location"}
@@ -1209,21 +1243,21 @@ export function Step1V8({ state, actions }: Step1Props) {
                   }}
                 >
                   {[
-                    "✓ Free",
-                    "✓ No signup required",
-                    "✓ Results in ~90 sec",
-                    "✓ NREL + DOE data",
-                  ].map((item) => (
+                    { label: "✓ Free", color: "#34d399" },
+                    { label: "✓ No signup required", color: "#34d399" },
+                    { label: "✓ Results in ~90 sec", color: "#34d399" },
+                    { label: "✓ NREL + DOE data", color: "#34d399" },
+                  ].map(({ label, color }) => (
                     <span
-                      key={item}
+                      key={label}
                       style={{
                         fontSize: 11,
                         fontWeight: 600,
-                        color: "rgba(255,255,255,0.32)",
+                        color,
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {item}
+                      {label}
                     </span>
                   ))}
                 </div>

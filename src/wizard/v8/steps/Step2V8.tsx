@@ -54,13 +54,13 @@ const IMAGE_MAP: Record<string, string> = {
 };
 
 const DARK = {
-  cardBg: "rgba(255,255,255,0.05)",
-  cardBorder: "rgba(255,255,255,0.09)",
-  cardHoverBg: "rgba(255,255,255,0.08)",
-  textPrimary: "#ffffff",
-  textSecondary: "rgba(255,255,255,0.60)",
-  textMuted: "rgba(255,255,255,0.35)",
-  accent: "#4F8CFF",
+  cardBg: "#111a3e",
+  cardBorder: "rgba(99,120,255,0.18)",
+  cardHoverBg: "#162050",
+  textPrimary: "#e8eaf6",
+  textSecondary: "rgba(232,235,243,0.64)",
+  textMuted: "rgba(232,235,243,0.35)",
+  accent: "#9b6dff",
 };
 
 const DISPLAY_ORDER = [
@@ -151,12 +151,12 @@ export function Step2V8({ state, actions }: Props) {
                 className="rounded-xl text-left overflow-hidden transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 style={{
                   border: `${isSelected ? "2px" : "1px"} solid ${
-                    isSelected ? "#4F8CFF" : DARK.cardBorder
+                    isSelected ? "rgba(130,100,255,0.55)" : DARK.cardBorder
                   }`,
                   padding: 0,
-                  background: isSelected ? "rgba(79,140,255,0.10)" : DARK.cardBg,
+                  background: isSelected ? "rgba(155,109,255,0.10)" : DARK.cardBg,
                   boxShadow: isSelected
-                    ? "0 0 0 3px rgba(79,140,255,0.18), 0 0 36px rgba(79,140,255,0.30)"
+                    ? "0 0 0 3px rgba(155,109,255,0.18), 0 0 36px rgba(155,109,255,0.22)"
                     : "none",
                   cursor: "pointer",
                   position: "relative",
@@ -187,18 +187,23 @@ export function Step2V8({ state, actions }: Props) {
                       width: 22,
                       height: 22,
                       borderRadius: "50%",
-                      background: "rgba(79,140,255,0.90)",
+                      background: "#34d399",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: "#fff",
                       zIndex: 10,
-                      boxShadow: "0 0 10px rgba(79,140,255,0.55)",
+                      boxShadow: "0 0 10px rgba(52,211,153,0.50)",
                     }}
                   >
-                    ✓
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                      <path
+                        d="M2 5.5L4.5 8L9 3"
+                        stroke="#0d1230"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </div>
                 )}
 
