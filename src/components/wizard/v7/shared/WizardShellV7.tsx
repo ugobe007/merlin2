@@ -33,6 +33,16 @@ interface WizardShellV7Props {
   railWidth?: number;
   /** Called when the user clicks the ⚡ ProQuote escape button. */
   onSwitchToProQuote?: () => void;
+  /** Live utility metrics from intel — renders a telemetry bar at the bottom of the step panel */
+  telemetry?: {
+    rate?: number;
+    demand?: number;
+    solar?: number;
+    grade?: string;
+    climate?: string;
+    temp?: number;
+    utility?: string;
+  };
   children: React.ReactNode;
 }
 
@@ -85,6 +95,7 @@ export default function WizardShellV7({
   advisorContent,
   railWidth: _railWidth = 520,
   onSwitchToProQuote,
+  telemetry,
   children,
 }: WizardShellV7Props) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
@@ -143,8 +154,38 @@ export default function WizardShellV7({
           fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
           overflowX: "hidden",
           width: "100%",
+          position: "relative",
         }}
       >
+        {/* Ambient background glows */}
+        <div
+          style={{
+            position: "absolute",
+            top: "-15%",
+            left: "-10%",
+            width: 600,
+            height: 600,
+            borderRadius: "50%",
+            background: "rgba(88,28,135,0.07)",
+            filter: "blur(120px)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: "-15%",
+            right: "-10%",
+            width: 600,
+            height: 600,
+            borderRadius: "50%",
+            background: "rgba(29,78,216,0.07)",
+            filter: "blur(120px)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
         {/* Main Layout */}
         <div
           className="merlin-shell-grid"
@@ -535,21 +576,23 @@ export default function WizardShellV7({
 
                   return (
                     <React.Fragment key={`${label}-${idx}`}>
-                      {/* Connector line between steps */}
+                      {/* Chevron connector */}
                       {idx > 0 && (
-                        <div
-                          style={{
-                            width: 24,
-                            height: 2,
-                            borderRadius: 1,
-                            background: isComplete
-                              ? "rgba(79, 140, 255, 0.3)"
-                              : isActive
-                                ? "rgba(79, 140, 255, 0.2)"
-                                : "rgba(255, 255, 255, 0.06)",
-                            flexShrink: 0,
-                          }}
-                        />
+                        <svg
+                          width="10"
+                          height="10"
+                          viewBox="0 0 10 10"
+                          fill="none"
+                          style={{ flexShrink: 0, opacity: isFuture ? 0.25 : 0.45 }}
+                        >
+                          <path
+                            d="M3 1.5L7 5L3 8.5"
+                            stroke="#4a5568"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
                       )}
 
                       {/* Step pill */}
@@ -557,55 +600,72 @@ export default function WizardShellV7({
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: 8,
-                          padding: "6px 14px",
+                          gap: 6,
+                          padding: "5px 12px",
                           borderRadius: 999,
                           background: isActive
-                            ? "rgba(79, 140, 255, 0.10)"
+                            ? "linear-gradient(135deg, #4f8aff, #9b6dff)"
                             : isComplete
-                              ? "rgba(79, 140, 255, 0.06)"
+                              ? "rgba(52,211,153,0.10)"
                               : "transparent",
-                          boxShadow: "none",
+                          border: isActive
+                            ? "none"
+                            : isComplete
+                              ? "1px solid rgba(52,211,153,0.25)"
+                              : "none",
+                          boxShadow: isActive ? "0 0 12px rgba(155,109,255,0.40)" : "none",
                           opacity: isFuture ? 0.4 : 1,
                           transition: "all 0.2s ease",
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {/* Step number/check */}
+                        {/* Step number/check bubble */}
                         <div
                           style={{
-                            width: 22,
-                            height: 22,
+                            width: 18,
+                            height: 18,
                             borderRadius: "50%",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: 700,
                             background: isActive
-                              ? "rgba(79, 140, 255, 0.25)"
+                              ? "rgba(255,255,255,0.20)"
                               : isComplete
-                                ? "rgba(79, 140, 255, 0.15)"
-                                : "rgba(255, 255, 255, 0.06)",
-                            color: isComplete ? "#4F8CFF" : isActive ? "#fff" : "#e8ebf3",
+                                ? "#34d399"
+                                : "rgba(255,255,255,0.06)",
+                            color: isComplete ? "#0d1230" : "#fff",
                             flexShrink: 0,
                           }}
                         >
-                          {isComplete ? "✓" : idx + 1}
+                          {isComplete ? (
+                            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                              <path
+                                d="M1.5 4.5L3.5 6.5L7.5 2.5"
+                                stroke="#0d1230"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          ) : (
+                            idx + 1
+                          )}
                         </div>
 
-                        {/* Label — shown on active + completed, hidden on future for compactness */}
+                        {/* Label */}
                         <span
                           className="merlin-progress-label"
                           style={{
-                            fontSize: 12,
-                            fontWeight: isActive ? 600 : 500,
+                            fontSize: 11,
+                            fontWeight: isActive ? 700 : 500,
                             color: isActive
                               ? "#fff"
                               : isComplete
-                                ? "rgba(79, 140, 255, 0.85)"
+                                ? "#34d399"
                                 : "rgba(232, 235, 243, 0.35)",
-                            letterSpacing: "0.01em",
+                            letterSpacing: "0.02em",
                           }}
                         >
                           {label}
@@ -627,27 +687,27 @@ export default function WizardShellV7({
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
-                    padding: "6px 12px",
-                    borderRadius: 8,
-                    border: "1px solid rgba(79,140,255,0.24)",
-                    background: "rgba(79,140,255,0.08)",
-                    color: "rgba(96,165,250,0.85)",
+                    padding: "7px 14px",
+                    borderRadius: 9,
+                    border: "none",
+                    background: "linear-gradient(135deg, #f59e0b, #fb923c)",
+                    color: "#fff",
                     fontSize: 12,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: "pointer",
-                    letterSpacing: "0.01em",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase" as const,
+                    boxShadow: "0 4px 16px rgba(245,158,11,0.28)",
                     transition: "all 0.15s ease",
                     whiteSpace: "nowrap",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(79,140,255,0.16)";
-                    e.currentTarget.style.borderColor = "rgba(79,140,255,0.50)";
-                    e.currentTarget.style.color = "#BFDBFE";
+                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(245,158,11,0.45)";
+                    e.currentTarget.style.transform = "translateY(-1px)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(79,140,255,0.08)";
-                    e.currentTarget.style.borderColor = "rgba(79,140,255,0.24)";
-                    e.currentTarget.style.color = "rgba(96,165,250,0.85)";
+                    e.currentTarget.style.boxShadow = "0 4px 16px rgba(245,158,11,0.28)";
+                    e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
                   ⚡ ProQuote
@@ -675,6 +735,87 @@ export default function WizardShellV7({
             >
               {children}
             </div>
+
+            {/* Live Telemetry Bar — rendered when intel data is available */}
+            {telemetry && (telemetry.rate || telemetry.utility) && (
+              <div
+                style={{
+                  borderTop: "1px solid rgba(99,120,255,0.12)",
+                  padding: "10px 20px",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0 16px",
+                  rowGap: 6,
+                  fontSize: 11,
+                  color: "#4a5568",
+                  fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                  background: "rgba(255,255,255,0.01)",
+                  borderRadius: "0 0 12px 12px",
+                }}
+              >
+                {telemetry.rate != null && (
+                  <span>
+                    Rate{" "}
+                    <span style={{ color: "#f59e0b", fontWeight: 700 }}>
+                      ${telemetry.rate.toFixed(2)}/kWh
+                    </span>
+                  </span>
+                )}
+                {telemetry.demand != null && (
+                  <>
+                    <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
+                    <span>
+                      Demand{" "}
+                      <span style={{ color: "#34d399", fontWeight: 700 }}>
+                        ${telemetry.demand.toFixed(2)}/kW
+                      </span>
+                    </span>
+                  </>
+                )}
+                {telemetry.solar != null && (
+                  <>
+                    <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      ☀️{" "}
+                      <span style={{ color: "rgba(232,235,243,0.7)" }}>
+                        {telemetry.solar.toFixed(2)} hrs
+                      </span>
+                    </span>
+                  </>
+                )}
+                {telemetry.grade && (
+                  <>
+                    <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
+                    <span>
+                      Grade{" "}
+                      <span style={{ color: "#e8eaf6", fontWeight: 700 }}>{telemetry.grade}</span>
+                    </span>
+                  </>
+                )}
+                {telemetry.climate && (
+                  <>
+                    <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      🌡️ <span style={{ color: "rgba(232,235,243,0.7)" }}>{telemetry.climate}</span>
+                    </span>
+                  </>
+                )}
+                {telemetry.temp != null && (
+                  <>
+                    <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
+                    <span style={{ color: "#f87171" }}>{telemetry.temp}°F</span>
+                  </>
+                )}
+                {telemetry.utility && (
+                  <>
+                    <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
+                    <span style={{ color: "rgba(232,235,243,0.5)" }}>{telemetry.utility}</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Step transition animation + responsive */}

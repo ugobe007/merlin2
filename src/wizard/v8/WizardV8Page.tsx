@@ -764,6 +764,17 @@ export default function WizardV8Page() {
         nextHint={NEXT_HINTS[step]}
         advisorContent={advisorContent}
         railWidth={step >= 3 && step <= 4 ? 680 : 520}
+        telemetry={
+          state.intel
+            ? {
+                rate: state.intel.utilityRate,
+                demand: state.intel.demandCharge,
+                solar: state.intel.peakSunHours,
+                grade: state.intel.solarGrade,
+                utility: state.intel.utilityProvider,
+              }
+            : undefined
+        }
       >
         {/* Error banner */}
         {state.error && (
