@@ -145,7 +145,7 @@ export default function WizardShellV7({
         style={{
           minHeight: "100svh" as string,
           background: `
-            radial-gradient(ellipse 1400px 900px at 50% 15%, rgba(79,140,255,0.18) 0%, rgba(139,92,246,0.10) 34%, transparent 60%),
+            radial-gradient(ellipse 1400px 900px at 50% 15%, rgba(99,120,255,0.18) 0%, rgba(139,92,246,0.10) 34%, transparent 60%),
             linear-gradient(160deg, #080b14 0%, #0f1420 40%, #0a0d16 100%)
           `,
           color: "#e8ebf3",
@@ -206,10 +206,10 @@ export default function WizardShellV7({
           <div
             className="merlin-shell-rail"
             style={{
-              background: "rgba(255, 255, 255, 0.02)",
+              background: "#111a3e",
               borderRadius: 12,
               padding: 24,
-              border: "1px solid rgba(255, 255, 255, 0.05)",
+              border: "1px solid rgba(99,120,255,0.18)",
               display: "flex",
               flexDirection: "column",
             }}
@@ -246,8 +246,8 @@ export default function WizardShellV7({
                     width: 16,
                     height: 16,
                     borderRadius: "50%",
-                    background: "#4F8CFF",
-                    boxShadow: "0 0 8px rgba(79, 140, 255, 0.55)",
+                    background: "#4f8aff",
+                    boxShadow: "0 0 8px rgba(79,138,255,0.55)",
                   }}
                 />
               </div>
@@ -277,7 +277,7 @@ export default function WizardShellV7({
                         position: "absolute",
                         inset: 0,
                         borderRadius: "50%",
-                        background: "rgba(79,140,255,0.35)",
+                        background: "rgba(99,120,255,0.35)",
                         animation: "merlin-pulse 1.5s ease-in-out infinite",
                       }}
                     />
@@ -287,7 +287,7 @@ export default function WizardShellV7({
                         borderRadius: "50%",
                         width: "100%",
                         height: "100%",
-                        background: "#4F8CFF",
+                        background: "#4f8aff",
                       }}
                     />
                   </span>
@@ -362,7 +362,7 @@ export default function WizardShellV7({
                     />
                     <path
                       d="M7 11L9.5 13.5L14 8.5"
-                      stroke="#4F8CFF"
+                      stroke="#4f8aff"
                       strokeWidth="1.7"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -402,13 +402,13 @@ export default function WizardShellV7({
                       cx="6"
                       cy="6"
                       r="5.5"
-                      fill="rgba(79,140,255,0.15)"
-                      stroke="#4F8CFF"
+                      fill="rgba(99,120,255,0.15)"
+                      stroke="#4f8aff"
                       strokeWidth="1"
                     />
                     <path
                       d="M3.5 6L5.5 8L8.5 4"
-                      stroke="#4F8CFF"
+                      stroke="#4f8aff"
                       strokeWidth="1.4"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -436,11 +436,11 @@ export default function WizardShellV7({
                 borderRadius: 12,
                 background:
                   "linear-gradient(180deg, rgba(12,22,45,0.90) 0%, rgba(10,16,32,0.78) 100%)",
-                border: "1px solid rgba(79,140,255,0.18)",
+                border: "1px solid rgba(99,120,255,0.22)",
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
-                boxShadow: "0 0 0 1px rgba(79,140,255,0.06) inset",
+                boxShadow: "0 0 0 1px rgba(99,120,255,0.06) inset",
               }}
             >
               {/* Advisor label bar */}
@@ -450,9 +450,9 @@ export default function WizardShellV7({
                   alignItems: "center",
                   gap: 8,
                   padding: "10px 16px",
-                  borderBottom: "1px solid rgba(79,140,255,0.14)",
+                  borderBottom: "1px solid rgba(99,120,255,0.18)",
                   background:
-                    "linear-gradient(135deg, rgba(79,140,255,0.10), rgba(139,92,246,0.08))",
+                    "linear-gradient(135deg, rgba(99,120,255,0.10), rgba(155,109,255,0.08))",
                   flexShrink: 0,
                 }}
               >
@@ -470,7 +470,7 @@ export default function WizardShellV7({
                       position: "absolute",
                       inset: 0,
                       borderRadius: "50%",
-                      background: "rgba(79,140,255,0.35)",
+                      background: "rgba(99,120,255,0.35)",
                       animation: "merlin-pulse 1.5s ease-in-out infinite",
                     }}
                   />
@@ -480,7 +480,7 @@ export default function WizardShellV7({
                       width: "100%",
                       height: "100%",
                       borderRadius: "50%",
-                      background: "#4F8CFF",
+                      background: "#4f8aff",
                     }}
                   />
                 </span>
@@ -488,7 +488,7 @@ export default function WizardShellV7({
                   style={{
                     fontSize: 10,
                     fontWeight: 700,
-                    color: "rgba(96,165,250,0.90)",
+                    color: "rgba(155,109,255,0.90)",
                     textTransform: "uppercase",
                     letterSpacing: "0.09em",
                   }}
@@ -512,7 +512,7 @@ export default function WizardShellV7({
                         marginBottom: 12,
                       }}
                     >
-                      Hi, I'm <span style={{ color: "#8B5CF6" }}>Merlin</span> — your energy savings
+                      Hi, I'm <span style={{ color: "#9b6dff" }}>Merlin</span> — your energy savings
                       advisor.
                     </div>
                     <div
@@ -1086,7 +1086,7 @@ export default function WizardShellV7({
                     border: isFilled
                       ? "2px solid #9b6dff"
                       : isActive
-                        ? "2px solid #4F8CFF"
+                        ? "2px solid #4f8aff"
                         : "2px solid rgba(255,255,255,0.08)",
                     color: isFilled ? "#c4aaff" : isActive ? "#BFDBFE" : "rgba(232,235,243,0.28)",
                     cursor: isActive ? "pointer" : "not-allowed",
@@ -1104,7 +1104,7 @@ export default function WizardShellV7({
                         e.currentTarget.style.boxShadow = "0 0 28px rgba(155,109,255,0.40)";
                         e.currentTarget.style.transform = "translateY(-1px)";
                       } else {
-                        e.currentTarget.style.background = "rgba(79,140,255,0.06)";
+                        e.currentTarget.style.background = "rgba(99,120,255,0.06)";
                       }
                     }
                   }}
@@ -1113,7 +1113,7 @@ export default function WizardShellV7({
                     e.currentTarget.style.borderColor = isFilled
                       ? "#9b6dff"
                       : isActive
-                        ? "#4F8CFF"
+                        ? "#4f8aff"
                         : "rgba(255,255,255,0.08)";
                     e.currentTarget.style.boxShadow = isFilled
                       ? "0 0 20px rgba(155,109,255,0.25)"
