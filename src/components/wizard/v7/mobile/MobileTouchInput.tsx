@@ -54,8 +54,8 @@ export function MobileTouchInput({
           max={max}
           step={step}
           className={`w-full px-4 py-3.5 rounded-lg bg-white/5 border ${
-            error ? "border-red-400/50" : isFocused ? "border-[#3ECF8E]/50" : "border-white/10"
-          } text-white placeholder-slate-500 text-base focus:outline-none focus:ring-2 focus:ring-[#3ECF8E]/30 transition-all ${
+            error ? "border-red-400/50" : isFocused ? "border-blue-500/50" : "border-white/10"
+          } text-white placeholder-slate-500 text-base focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all ${
             suffix ? "pr-16" : ""
           }`}
           inputMode={
@@ -112,7 +112,7 @@ export function MobileTouchSelect({
           onChange={(e) => onChange(e.target.value)}
           className={`w-full px-4 py-3.5 rounded-lg bg-white/5 border ${
             error ? "border-red-400/50" : "border-white/10"
-          } text-white text-base focus:outline-none focus:ring-2 focus:ring-[#3ECF8E]/30 appearance-none cursor-pointer transition-all`}
+          } text-white text-base focus:outline-none focus:ring-2 focus:ring-blue-500/30 appearance-none cursor-pointer transition-all`}
         >
           <option value="" disabled>
             {placeholder}
@@ -172,12 +172,12 @@ export function MobileTouchButtonGroup({
               type="button"
               onClick={() => onChange(option.value)}
               className={`relative p-4 rounded-lg border-2 transition-all active:scale-95 ${
-                isSelected ? "border-[#3ECF8E] bg-[#3ECF8E]/10" : "border-white/10 bg-white/5"
+                isSelected ? "border-blue-500 bg-blue-500/10" : "border-white/10 bg-white/5"
               }`}
             >
               {option.icon && (
                 <div className="mb-2 flex justify-center">
-                  <div className={`text-2xl ${isSelected ? "text-[#3ECF8E]" : "text-slate-400"}`}>
+                  <div className={`text-2xl ${isSelected ? "text-blue-300" : "text-slate-400"}`}>
                     {option.icon}
                   </div>
                 </div>
@@ -191,7 +191,7 @@ export function MobileTouchButtonGroup({
                 </div>
               )}
               {isSelected && (
-                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#3ECF8E] flex items-center justify-center">
+                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
                   <svg
                     className="w-3 h-3 text-slate-900"
                     fill="none"

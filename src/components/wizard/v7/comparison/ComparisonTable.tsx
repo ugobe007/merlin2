@@ -18,6 +18,7 @@ export function ComparisonTable({ scenarioIds }: ComparisonTableProps) {
 
   useEffect(() => {
     loadComparison();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scenarioIds]);
 
   const loadComparison = async () => {
@@ -51,9 +52,7 @@ export function ComparisonTable({ scenarioIds }: ComparisonTableProps) {
               <th key={m.id} className="text-right py-3 px-4 text-white font-bold">
                 <div className="flex flex-col items-end">
                   <span className="truncate max-w-[150px]">{m.name}</span>
-                  {idx === 0 && (
-                    <span className="text-xs text-[#3ECF8E] font-normal">Baseline</span>
-                  )}
+                  {idx === 0 && <span className="text-xs text-blue-300 font-normal">Baseline</span>}
                 </div>
               </th>
             ))}
@@ -87,7 +86,7 @@ export function ComparisonTable({ scenarioIds }: ComparisonTableProps) {
               <td
                 key={m.id}
                 className={`py-3 px-4 text-right font-bold ${
-                  m.totalCost === bestCost ? "text-[#3ECF8E]" : "text-white"
+                  m.totalCost === bestCost ? "text-blue-300" : "text-white"
                 }`}
               >
                 ${m.totalCost.toLocaleString()}
@@ -102,7 +101,7 @@ export function ComparisonTable({ scenarioIds }: ComparisonTableProps) {
               <td
                 key={m.id}
                 className={`py-3 px-4 text-right font-bold ${
-                  m.annualSavings === bestSavings ? "text-[#3ECF8E]" : "text-white"
+                  m.annualSavings === bestSavings ? "text-blue-300" : "text-white"
                 }`}
               >
                 ${m.annualSavings.toLocaleString()}
@@ -117,7 +116,7 @@ export function ComparisonTable({ scenarioIds }: ComparisonTableProps) {
               <td
                 key={m.id}
                 className={`py-3 px-4 text-right font-bold ${
-                  m.paybackYears === bestPayback ? "text-[#3ECF8E]" : "text-white"
+                  m.paybackYears === bestPayback ? "text-blue-300" : "text-white"
                 }`}
               >
                 {m.paybackYears.toFixed(1)} years
@@ -132,7 +131,7 @@ export function ComparisonTable({ scenarioIds }: ComparisonTableProps) {
               <td
                 key={m.id}
                 className={`py-3 px-4 text-right font-bold ${
-                  m.costPerKwh === bestCostPerKwh ? "text-[#3ECF8E]" : "text-white"
+                  m.costPerKwh === bestCostPerKwh ? "text-blue-300" : "text-white"
                 }`}
               >
                 ${m.costPerKwh.toFixed(0)}
@@ -158,7 +157,7 @@ export function ComparisonTable({ scenarioIds }: ComparisonTableProps) {
                 <td
                   key={m.id}
                   className={`py-3 px-4 text-right font-bold ${
-                    isPositive ? "text-[#3ECF8E]" : delta < 0 ? "text-red-400" : "text-slate-500"
+                    isPositive ? "text-blue-300" : delta < 0 ? "text-red-400" : "text-slate-500"
                   }`}
                 >
                   <div className="flex items-center justify-end gap-1">
@@ -176,11 +175,11 @@ export function ComparisonTable({ scenarioIds }: ComparisonTableProps) {
       {/* Legend */}
       <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-[#3ECF8E]" />
+          <div className="w-3 h-3 rounded-full bg-blue-400" />
           <span>Best Value</span>
         </div>
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-3 h-3 text-[#3ECF8E]" />
+          <TrendingUp className="w-3 h-3 text-blue-400" />
           <span>Better than baseline</span>
         </div>
         <div className="flex items-center gap-2">

@@ -20,13 +20,13 @@ interface ITCBonusCardProps {
 
 /** Estimate the ITC rate from bonus selections (mirrors itcCalculator logic) */
 function estimateRate(b: ITCBonuses, mw: number): number {
-  let rate = b.prevailingWage || mw < 1 ? 0.30 : 0.06;
-  if (b.energyCommunity) rate += 0.10;
-  if (b.domesticContent) rate += 0.10;
+  let rate = b.prevailingWage || mw < 1 ? 0.3 : 0.06;
+  if (b.energyCommunity) rate += 0.1;
+  if (b.domesticContent) rate += 0.1;
   if (b.lowIncome && mw < 5) {
-    rate += b.lowIncome === "serves" ? 0.20 : 0.10;
+    rate += b.lowIncome === "serves" ? 0.2 : 0.1;
   }
-  return Math.min(rate, 0.70);
+  return Math.min(rate, 0.7);
 }
 
 export default function ITCBonusCard({ bonuses, onChange, capacityMW = 1 }: ITCBonusCardProps) {
@@ -50,20 +50,20 @@ export default function ITCBonusCard({ bonuses, onChange, capacityMW = 1 }: ITCB
         className="w-full flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-white/[0.02] transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-            <DollarSign className="w-4 h-4 text-emerald-400" />
+          <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+            <DollarSign className="w-4 h-4 text-blue-400" />
           </div>
           <div className="text-left">
-            <span className="text-sm font-semibold text-slate-200">
-              Federal ITC Qualification
-            </span>
+            <span className="text-sm font-semibold text-slate-200">Federal ITC Qualification</span>
             <span className="text-xs text-slate-500 ml-2">IRA 2022</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className={`text-lg font-bold tabular-nums ${
-            rate > 0.30 ? "text-emerald-400" : "text-slate-300"
-          }`}>
+          <span
+            className={`text-lg font-bold tabular-nums ${
+              rate > 0.3 ? "text-blue-300" : "text-slate-300"
+            }`}
+          >
             {rateStr}
           </span>
           {expanded ? (
@@ -78,8 +78,8 @@ export default function ITCBonusCard({ bonuses, onChange, capacityMW = 1 }: ITCB
       {expanded && (
         <div className="px-5 pb-4 pt-1 space-y-3 border-t border-white/[0.04]">
           <p className="text-xs text-slate-500 leading-relaxed">
-            Select which IRA 2022 bonus qualifications your project meets.
-            Each bonus increases your Investment Tax Credit rate.
+            Select which IRA 2022 bonus qualifications your project meets. Each bonus increases your
+            Investment Tax Credit rate.
           </p>
 
           {/* Prevailing Wage & Apprenticeship (+24%) */}
@@ -88,9 +88,10 @@ export default function ITCBonusCard({ bonuses, onChange, capacityMW = 1 }: ITCB
             onChange={() => toggle("prevailingWage")}
             label="Prevailing Wage & Apprenticeship"
             bonus="+24%"
-            hint={capacityMW < 1
-              ? "Waived for projects under 1 MW"
-              : "Davis-Bacon wages + registered apprenticeship program"
+            hint={
+              capacityMW < 1
+                ? "Waived for projects under 1 MW"
+                : "Davis-Bacon wages + registered apprenticeship program"
             }
             disabled={capacityMW < 1}
           />
@@ -127,14 +128,12 @@ export default function ITCBonusCard({ bonuses, onChange, capacityMW = 1 }: ITCB
           {/* Rate summary */}
           <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
             <span className="text-xs text-slate-500">Estimated ITC Rate</span>
-            <span className={`text-sm font-bold ${
-              rate > 0.30 ? "text-emerald-400" : "text-slate-300"
-            }`}>
+            <span
+              className={`text-sm font-bold ${rate > 0.3 ? "text-blue-300" : "text-slate-300"}`}
+            >
               {rateStr}
-              {rate > 0.30 && (
-                <span className="text-xs font-normal text-emerald-500/60 ml-1">
-                  (vs 30% standard)
-                </span>
+              {rate > 0.3 && (
+                <span className="text-xs font-normal text-blue-400/60 ml-1">(vs 30% standard)</span>
               )}
             </span>
           </div>
@@ -167,16 +166,16 @@ function BonusToggle({
       onClick={disabled ? undefined : onChange}
       className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-lg border transition-colors text-left ${
         checked
-          ? "border-emerald-500/20 bg-emerald-500/[0.04]"
+          ? "border-blue-500/20 bg-blue-500/[0.04]"
           : "border-white/[0.04] bg-transparent hover:border-white/[0.08]"
       } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
     >
       {/* Checkbox */}
-      <div className={`mt-0.5 w-4 h-4 rounded flex-shrink-0 flex items-center justify-center border ${
-        checked
-          ? "bg-emerald-500 border-emerald-500"
-          : "border-slate-600 bg-transparent"
-      }`}>
+      <div
+        className={`mt-0.5 w-4 h-4 rounded flex-shrink-0 flex items-center justify-center border ${
+          checked ? "bg-blue-500 border-blue-500" : "border-slate-600 bg-transparent"
+        }`}
+      >
         {checked && <Check className="w-3 h-3 text-white" />}
       </div>
 
@@ -186,9 +185,11 @@ function BonusToggle({
           <span className={`text-sm font-medium ${checked ? "text-slate-200" : "text-slate-400"}`}>
             {label}
           </span>
-          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
-            checked ? "bg-emerald-500/15 text-emerald-400" : "bg-white/[0.04] text-slate-500"
-          }`}>
+          <span
+            className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
+              checked ? "bg-blue-500/15 text-blue-300" : "bg-white/[0.04] text-slate-500"
+            }`}
+          >
             {bonus}
           </span>
         </div>

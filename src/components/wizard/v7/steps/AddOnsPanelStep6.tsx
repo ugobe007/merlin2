@@ -744,9 +744,9 @@ const AddOnsPanelStep6 = React.memo(function AddOnsPanelStep6({
                 <span
                   className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                   style={{
-                    color: "#34d399",
-                    background: "rgba(52,211,153,0.10)",
-                    border: "1px solid rgba(52,211,153,0.22)",
+                    color: "#4f8cff",
+                    background: "rgba(79,140,255,0.10)",
+                    border: "1px solid rgba(79,140,255,0.22)",
                   }}
                 >
                   <Check className="w-2.5 h-2.5" />
@@ -853,7 +853,7 @@ const AddOnsPanelStep6 = React.memo(function AddOnsPanelStep6({
                         </span>
                         <span
                           className="text-[11px] font-semibold tabular-nums"
-                          style={{ color: "#34d399" }}
+                          style={{ color: "#4f8cff" }}
                         >
                           {fmtK(pkg.annualSavings)}/yr
                         </span>
@@ -974,9 +974,9 @@ const AddOnsPanelStep6 = React.memo(function AddOnsPanelStep6({
                 <span
                   className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                   style={{
-                    color: "#34d399",
-                    background: "rgba(52,211,153,0.10)",
-                    border: "1px solid rgba(52,211,153,0.22)",
+                    color: "#4f8cff",
+                    background: "rgba(79,140,255,0.10)",
+                    border: "1px solid rgba(79,140,255,0.22)",
                   }}
                 >
                   <Check className="w-2.5 h-2.5" />
@@ -1084,7 +1084,7 @@ const AddOnsPanelStep6 = React.memo(function AddOnsPanelStep6({
                         </span>
                         <span
                           className="text-[11px] font-semibold tabular-nums"
-                          style={{ color: "#34d399" }}
+                          style={{ color: "#4f8cff" }}
                         >
                           {fmtK(ev.monthlyRevenue)}/mo
                         </span>

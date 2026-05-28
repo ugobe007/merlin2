@@ -75,7 +75,7 @@ export function ComparisonListPanel({
         {selectedIds.length > 1 && (
           <button
             onClick={onCompare}
-            className="px-4 py-2 rounded-lg bg-[#3ECF8E] text-slate-900 font-bold hover:bg-[#35b87c] transition-colors"
+            className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-violet-500 text-white font-bold hover:from-blue-600 hover:to-violet-600 transition-colors"
           >
             Compare Selected ({selectedIds.length})
           </button>
@@ -91,7 +91,7 @@ export function ComparisonListPanel({
               key={scenario.id}
               className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
                 isSelected
-                  ? "border-[#3ECF8E] bg-[#3ECF8E]/5"
+                  ? "border-blue-500 bg-blue-500/5"
                   : "border-white/10 bg-white/5 hover:bg-white/10"
               }`}
               onClick={() => toggleSelection(scenario.id)}
@@ -100,7 +100,7 @@ export function ComparisonListPanel({
                 {/* Checkbox */}
                 <div
                   className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                    isSelected ? "border-[#3ECF8E] bg-[#3ECF8E]" : "border-white/30"
+                    isSelected ? "border-blue-500 bg-blue-500" : "border-white/30"
                   }`}
                 >
                   {isSelected && (
@@ -213,7 +213,7 @@ export function ComparisonListPanel({
         <div className="sticky bottom-0 pt-4 pb-2 bg-gradient-to-t from-slate-950 to-transparent">
           <button
             onClick={onCompare}
-            className="w-full px-4 py-3 rounded-lg bg-[#3ECF8E] text-slate-900 font-bold hover:bg-[#35b87c] transition-colors"
+            className="w-full px-4 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-violet-500 text-white font-bold hover:from-blue-600 hover:to-violet-600 transition-colors"
           >
             Compare {selectedIds.length} Scenarios
           </button>

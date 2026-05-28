@@ -124,7 +124,7 @@ export default function TrueQuoteFinancialModal({
                 border: "1px solid rgba(16,185,129,0.2)",
               }}
             >
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <TrendingUp className="w-4 h-4 text-blue-400" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white">Financial Projection</h2>
@@ -139,9 +139,9 @@ export default function TrueQuoteFinancialModal({
           <div className="flex gap-6 text-sm">
             {[
               { label: "Investment", value: fmtUSD(totalInvestment), color: "text-slate-300" },
-              { label: "ITC", value: `-${fmtUSD(federalITC)}`, color: "text-emerald-400" },
+              { label: "ITC", value: `-${fmtUSD(federalITC)}`, color: "text-blue-300" },
               { label: "Net Cost", value: fmtUSD(netInvestment), color: "text-slate-300" },
-              { label: "Yr 1 Savings", value: fmtUSD(annualSavings), color: "text-emerald-400" },
+              { label: "Yr 1 Savings", value: fmtUSD(annualSavings), color: "text-blue-300" },
             ].map((s) => (
               <div key={s.label}>
                 <span className="text-slate-600 text-xs">{s.label}</span>
@@ -176,7 +176,7 @@ export default function TrueQuoteFinancialModal({
           {/* Year-by-Year Cash Flow Table */}
           <div className="mb-6">
             <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-emerald-400" />
+              <DollarSign className="w-4 h-4 text-blue-400" />
               Year-by-Year Cash Flow
             </h3>
             <div
@@ -206,7 +206,7 @@ export default function TrueQuoteFinancialModal({
                     <tr
                       key={i}
                       style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
-                      className={row.status.includes("Profit") ? "bg-emerald-500/[0.03]" : ""}
+                      className={row.status.includes("Profit") ? "bg-blue-500/[0.03]" : ""}
                     >
                       <td className="px-4 py-2.5 text-sm font-medium text-slate-300">
                         Year {row.year}
@@ -215,7 +215,7 @@ export default function TrueQuoteFinancialModal({
                         {row.savings}
                       </td>
                       <td
-                        className={`px-4 py-2.5 text-sm text-right font-semibold ${row.cumulative.startsWith("+") ? "text-emerald-400" : "text-slate-500"}`}
+                        className={`px-4 py-2.5 text-sm text-right font-semibold ${row.cumulative.startsWith("+") ? "text-blue-300" : "text-slate-500"}`}
                       >
                         {row.cumulative}
                       </td>
@@ -223,7 +223,7 @@ export default function TrueQuoteFinancialModal({
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${
                             row.status.includes("Profit")
-                              ? "text-emerald-400 bg-emerald-500/10"
+                              ? "text-blue-300 bg-blue-500/10"
                               : "text-slate-500 bg-white/5"
                           }`}
                         >
@@ -312,7 +312,7 @@ export default function TrueQuoteFinancialModal({
                     <tr
                       key={i}
                       style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
-                      className={i === 0 ? "bg-emerald-500/[0.03]" : ""}
+                      className={i === 0 ? "bg-blue-500/[0.03]" : ""}
                     >
                       <td className="px-4 py-2.5 text-sm text-slate-300 font-medium">
                         {row.scenario}

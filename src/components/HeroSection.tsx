@@ -296,37 +296,38 @@ function AgentTelemetryPanel({
     },
   ] as const;
 
+  const hasZipContext = modelPreview.zip.length === 5;
+
   const intelligenceSignals = [
     {
       label: "Grid Stress Index",
-      value: modelPreview.zip.length === 5 ? `${58 + (zipSeed % 27)}/100` : "pending",
+      value: `${62 + (zipSeed % 18)}/100`,
       tone: "text-amber-300",
-      confidence:
-        modelPreview.zip.length === 5
-          ? zipSeed > 66
-            ? "High"
-            : zipSeed > 33
-              ? "Medium"
-              : "Low"
-          : "Pending",
+      confidence: hasZipContext
+        ? zipSeed > 66
+          ? "High"
+          : zipSeed > 33
+            ? "Medium"
+            : "Low"
+        : "Baseline",
     },
     {
       label: "Stack Fit Score",
-      value: modelPreview.zip.length === 5 ? `${63 + (zipSeed % 24)}/100` : "pending",
+      value: `${66 + (zipSeed % 15)}/100`,
       tone: "text-emerald-300",
-      confidence: modelPreview.zip.length === 5 ? (zipSeed > 44 ? "High" : "Medium") : "Pending",
+      confidence: hasZipContext ? (zipSeed > 44 ? "High" : "Medium") : "Baseline",
     },
     {
       label: "Dispatch Readiness",
-      value: modelPreview.zip.length === 5 ? `${71 + (zipSeed % 18)}%` : "pending",
+      value: `${74 + (zipSeed % 12)}%`,
       tone: "text-indigo-300",
-      confidence: modelPreview.zip.length === 5 ? "High" : "Pending",
+      confidence: hasZipContext ? "High" : "Baseline",
     },
   ] as const;
 
   return (
-    <div className="relative rounded-[1.35rem] border border-indigo-300/30 bg-[linear-gradient(155deg,rgba(28,22,58,0.97)_0%,rgba(21,41,96,0.95)_56%,rgba(46,54,72,0.94)_100%)] p-6 shadow-[0_38px_120px_rgba(2,6,23,0.62),0_0_0_1px_rgba(129,140,248,0.18)] lg:p-7">
-      <div className="absolute inset-0 rounded-[1.35rem] bg-[radial-gradient(circle_at_14%_0%,rgba(99,102,241,0.22),transparent_42%),radial-gradient(circle_at_84%_10%,rgba(59,130,246,0.22),transparent_46%)]" />
+    <div className="relative rounded-[1.35rem] border border-indigo-300/25 bg-[linear-gradient(155deg,rgba(17,13,39,0.98)_0%,rgba(15,27,67,0.96)_56%,rgba(29,34,50,0.95)_100%)] p-6 shadow-[0_42px_130px_rgba(2,6,23,0.72),0_0_0_1px_rgba(99,102,241,0.14)] lg:p-7">
+      <div className="absolute inset-0 rounded-[1.35rem] bg-[radial-gradient(circle_at_14%_0%,rgba(99,102,241,0.16),transparent_40%),radial-gradient(circle_at_84%_10%,rgba(59,130,246,0.16),transparent_44%)]" />
       <div className="relative">
         <div className="flex items-start justify-between gap-4 border-b border-white/12 pb-5">
           <div className="flex items-center gap-3">
@@ -387,6 +388,12 @@ function AgentTelemetryPanel({
           ))}
         </div>
 
+        <div className="mt-2 text-[11px] text-slate-400">
+          {hasZipContext
+            ? `Localized to ZIP ${modelPreview.zip} for stack-specific signal modeling.`
+            : "Showing baseline stack signals. Add ZIP to localize utility and dispatch exposure."}
+        </div>
+
         <div className="mt-5">
           {adaptiveOutcomes.map((item) => (
             <div key={item.label} className="border-b border-white/[0.08] py-3 last:border-b-0">
@@ -414,11 +421,11 @@ export default function HeroSection() {
     if (zip.length < 5) {
       return {
         zip,
-        gridRiskShift: "Baseline pending",
+        gridRiskShift: "Baseline → Select ZIP to localize",
         peakReductionPct: "16–24%",
         stackCandidate: "Solar + BESS + Utility",
         backupHours: "2–4 hr",
-        decisionPriority: "Complete ZIP for localized modeling",
+        decisionPriority: "Baseline stack profile",
       };
     }
 

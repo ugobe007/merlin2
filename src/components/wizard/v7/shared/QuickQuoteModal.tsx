@@ -1,6 +1,6 @@
 /**
  * Quick Quote Modal — Custom System Size
- * 
+ *
  * ProQuote manual entry mode
  * Merlin design: Dark theme, emerald accents, clean inputs
  */
@@ -53,24 +53,32 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
             {/* Official ProQuote Badge */}
             <div className="relative">
               <div className="absolute inset-0 bg-[#68BFFA]/30 rounded-xl blur-xl"></div>
-              <img 
-                src={badgeProQuoteIcon} 
-                alt="ProQuote" 
+              <img
+                src={badgeProQuoteIcon}
+                alt="ProQuote"
                 className="relative w-16 h-16 object-contain"
               />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#68BFFA] to-cyan-300" style={{ WebkitTextStroke: '1px rgba(104, 191, 250, 0.5)', textShadow: '0 0 20px rgba(104, 191, 250, 0.6), 0 0 40px rgba(104, 191, 250, 0.3)' }}>
+                <h2
+                  className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#68BFFA] to-cyan-300"
+                  style={{
+                    WebkitTextStroke: "1px rgba(104, 191, 250, 0.5)",
+                    textShadow:
+                      "0 0 20px rgba(104, 191, 250, 0.6), 0 0 40px rgba(104, 191, 250, 0.3)",
+                  }}
+                >
                   ProQuote™
                 </h2>
-                <span className="px-2 py-0.5 text-[10px] font-bold border border-[#68BFFA]/50 text-[#68BFFA] rounded" style={{ textShadow: '0 0 10px rgba(104, 191, 250, 0.5)' }}>
+                <span
+                  className="px-2 py-0.5 text-[10px] font-bold border border-[#68BFFA]/50 text-[#68BFFA] rounded"
+                  style={{ textShadow: "0 0 10px rgba(104, 191, 250, 0.5)" }}
+                >
                   PRO
                 </span>
               </div>
-              <p className="text-sm text-slate-400">
-                Enter your target system specifications
-              </p>
+              <p className="text-sm text-slate-400">Enter your target system specifications</p>
             </div>
           </div>
           <button
@@ -82,7 +90,10 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
         </div>
 
         {/* Form - Scrollable Content */}
-        <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-200px)] scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div
+          className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-200px)] scrollbar-hide"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
           {/* System Size */}
           <div>
             <label className="block text-sm font-semibold text-white mb-2">
@@ -180,9 +191,7 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
               min="0"
               step="0.01"
             />
-            <p className="text-xs text-slate-400 mt-1.5">
-              Commercial average: $0.10-0.20/kWh
-            </p>
+            <p className="text-xs text-slate-400 mt-1.5">Commercial average: $0.10-0.20/kWh</p>
           </div>
 
           {/* Upload Option - Prominent */}
@@ -194,14 +203,15 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
               <div className="flex-1">
                 <p className="font-semibold text-white mb-0.5">Have an RFQ/RFP or Spec Sheet?</p>
                 <p className="text-xs text-slate-400">
-                  Upload your documents for faster quote generation. We'll extract your specs automatically.
+                  Upload your documents for faster quote generation. We'll extract your specs
+                  automatically.
                 </p>
               </div>
-              <button 
+              <button
                 type="button"
                 onClick={() => {
                   onClose();
-                  window.location.href = '/quote-builder?advanced=true&mode=upload';
+                  window.location.href = "/quote-builder?advanced=true&mode=upload";
                 }}
                 className="px-4 py-2 border-2 border-purple-400/50 text-purple-300 hover:border-purple-400 hover:text-purple-200 font-semibold rounded-lg transition-all text-sm"
               >
@@ -217,7 +227,8 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
               <div className="text-sm text-slate-300">
                 <p className="font-semibold text-blue-400 mb-1">TrueQuote™ Powered</p>
                 <p className="text-slate-400">
-                  All calculations source-verified. Need more precision? Use the guided wizard for facility-specific analysis.
+                  All calculations source-verified. Need more precision? Use the guided wizard for
+                  facility-specific analysis.
                 </p>
               </div>
             </div>
@@ -235,7 +246,7 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
           <button
             onClick={handleGenerate}
             disabled={!isValid}
-            className="px-6 py-2.5 border-2 border-[#3ECF8E] text-[#3ECF8E] hover:border-[#68BFFA] hover:text-[#68BFFA] disabled:border-slate-700 disabled:text-slate-600 disabled:cursor-not-allowed font-semibold rounded-lg flex items-center gap-2 transition-all"
+            className="px-6 py-2.5 border-2 border-blue-500 text-blue-300 hover:border-blue-400 hover:text-blue-200 disabled:border-slate-700 disabled:text-slate-600 disabled:cursor-not-allowed font-semibold rounded-lg flex items-center gap-2 transition-all"
           >
             Generate Quote <ArrowRight className="w-4 h-4" />
           </button>

@@ -7,9 +7,9 @@ import type { BusinessData, WizardActions, WizardState } from "../wizardState";
 const GOOGLE_MAPS_API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) ?? "";
 
 const T = {
-  accent: "#4F8CFF",
-  accentSoft: "rgba(79,140,255,0.10)",
-  accentBorder: "rgba(79,140,255,0.28)",
+  accent: "#8B5CF6",
+  accentSoft: "transparent",
+  accentBorder: "rgba(139,92,246,0.50)",
   textPrimary: "rgba(232,235,243,0.98)",
   textSecondary: "rgba(232,235,243,0.64)",
   textMuted: "rgba(232,235,243,0.42)",

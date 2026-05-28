@@ -14,7 +14,7 @@
  * - This component renders from curated schema
  */
 
-import React, { useMemo, useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, Sun } from "lucide-react";
 import SolarSizingModal, { type SolarSizingResult } from "./SolarSizingModal";
 import {
@@ -507,7 +507,7 @@ const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: P
                 px-2 py-1 text-xs font-mono rounded
                 ${
                   source === "curated-complete"
-                    ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                    ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
                     : source === "curated-legacy"
                       ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
                       : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
@@ -618,7 +618,7 @@ const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: P
               )}
             </div>
             {isComplete && (
-              <div className="flex items-center gap-2 text-green-400 text-sm">
+              <div className="flex items-center gap-2 text-blue-300 text-sm">
                 <span>✓</span>
                 <span>Ready to continue</span>
               </div>
@@ -628,7 +628,7 @@ const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: P
           {/* Progress bar (uses visible required count as denominator) */}
           <div className="mt-2 h-1.5 bg-slate-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#3ECF8E] transition-all duration-300"
+              className="h-full bg-blue-500 transition-all duration-300"
               style={{ width: `${progressPct}%` }}
             />
           </div>
@@ -727,7 +727,7 @@ const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: P
 
           {/* Show sizing result summary if user has sized solar */}
           {solarSizingResult && (
-            <div className="p-4 rounded-xl bg-gradient-to-r from-amber-950/40 to-green-950/20 border border-amber-500/20">
+            <div className="p-4 rounded-xl bg-gradient-to-r from-amber-950/40 to-blue-950/20 border border-amber-500/20">
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 <span className="text-sm font-bold text-amber-200">Solar Sized ✓</span>
@@ -740,7 +740,7 @@ const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: P
                   <div className="text-xs text-slate-400">kW System</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-green-400">
+                  <div className="text-lg font-bold text-blue-300">
                     ${(solarSizingResult.annualSavings / 1000).toFixed(0)}K
                   </div>
                   <div className="text-xs text-slate-400">/year savings</div>
@@ -792,7 +792,7 @@ const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: P
                         void actions.submitStep3();
                       }
                     }}
-                    className="px-5 py-2.5 rounded-lg font-semibold text-sm border-2 border-[#3ECF8E] text-[#3ECF8E] hover:bg-[#3ECF8E]/10 transition-all"
+                    className="px-5 py-2.5 rounded-lg font-semibold text-sm border-2 border-blue-400 text-blue-300 hover:bg-blue-500/10 transition-all"
                   >
                     Looks good — Continue →
                   </button>
@@ -829,7 +829,7 @@ const Step3ProfileV7Curated = React.memo(function Step3ProfileV7Curated(props: P
               px-6 py-3 rounded-lg font-semibold text-base transition-all
               ${
                 isComplete && state.pricingStatus !== "pending"
-                  ? "border-2 border-[#3ECF8E] text-[#3ECF8E] cursor-pointer hover:bg-[#3ECF8E]/10"
+                  ? "border-2 border-blue-400 text-blue-300 cursor-pointer hover:bg-blue-500/10"
                   : "border-2 border-slate-700 text-slate-500 cursor-not-allowed"
               }
             `}

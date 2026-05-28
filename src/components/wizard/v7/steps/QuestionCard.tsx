@@ -88,7 +88,7 @@ export default function QuestionCard({
         <div className="flex-1">
           {/* Question number + Section badge */}
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-[#3ECF8E]/15 flex items-center justify-center text-[#3ECF8E] text-xs lg:text-sm font-semibold">
+            <div className="w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-blue-500/15 flex items-center justify-center text-blue-300 text-xs lg:text-sm font-semibold">
               {index + 1}
             </div>
             <span className="px-2 py-0.5 text-slate-400 text-xs lg:text-sm font-semibold tracking-wide rounded capitalize border border-white/[0.08]">
@@ -99,7 +99,7 @@ export default function QuestionCard({
                 Required
               </span>
             )}
-            {hasValue && !isDefaultFilled && <span className="text-green-400 text-sm">✓</span>}
+            {hasValue && !isDefaultFilled && <span className="text-blue-300 text-sm">✓</span>}
             {isDefaultFilled && (
               <span className="px-2 py-0.5 bg-cyan-500/15 text-cyan-300 text-[10px] font-medium rounded-full border border-cyan-500/20 flex items-center gap-1">
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -134,8 +134,8 @@ export default function QuestionCard({
       {/* Merlin's Tip */}
       {q.merlinTip && (
         <div className="flex items-start gap-2 p-2.5 bg-white/[0.03] border border-white/[0.06] rounded-lg mb-3">
-          <div className="w-6 h-6 rounded-full bg-[#3ECF8E]/10 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-3.5 h-3.5 text-[#3ECF8E]" />
+          <div className="w-6 h-6 rounded-full bg-violet-500/10 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-3.5 h-3.5 text-violet-300" />
           </div>
           <div>
             <div className="font-semibold text-slate-300 text-xs lg:text-sm mb-0.5">
@@ -163,7 +163,7 @@ export default function QuestionCard({
                       p-3 rounded-lg border text-left transition-colors relative
                       ${
                         selected
-                          ? "border-emerald-400 text-emerald-300 font-semibold bg-transparent"
+                          ? "border-blue-400 text-blue-300 font-semibold bg-transparent"
                           : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
                       }
                       ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
@@ -171,7 +171,7 @@ export default function QuestionCard({
                   disabled={opt.disabled}
                 >
                   {selected && (
-                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 border-emerald-400 flex items-center justify-center text-emerald-400 text-xs font-bold">
+                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 border-blue-400 flex items-center justify-center text-blue-300 text-xs font-bold">
                       ✓
                     </span>
                   )}
@@ -203,7 +203,7 @@ export default function QuestionCard({
                       px-2 py-2.5 rounded-lg border text-center transition-colors relative min-h-[44px]
                       ${
                         selected
-                          ? "border-emerald-400 text-emerald-300 font-bold bg-emerald-500/[0.08]"
+                          ? "border-blue-400 text-blue-300 font-bold bg-blue-500/[0.08]"
                           : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
                       }
                       ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
@@ -211,7 +211,7 @@ export default function QuestionCard({
                   disabled={opt.disabled}
                 >
                   {selected && (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-white text-[9px] font-bold shadow-sm">
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] font-bold shadow-sm">
                       ✓
                     </span>
                   )}
@@ -449,7 +449,7 @@ export default function QuestionCard({
               <div className="space-y-3">
                 {/* Current value badge */}
                 <div className="flex justify-center">
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-lg border border-[#3ECF8E]/30 text-[#3ECF8E] font-semibold text-base">
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-lg border border-blue-400/30 text-blue-300 font-semibold text-base">
                     {sliderVal}
                     {q.unit || ""}
                   </span>
@@ -459,10 +459,10 @@ export default function QuestionCard({
                   <input
                     type="range"
                     className="w-full h-2 rounded-full appearance-none cursor-pointer
-                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#3ECF8E] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#3ECF8E]/80 [&::-webkit-slider-thumb]:cursor-pointer
-                      [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#3ECF8E] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[#3ECF8E]/80 [&::-moz-range-thumb]:cursor-pointer"
+                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-400/80 [&::-webkit-slider-thumb]:cursor-pointer
+                      [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-blue-500 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-400/80 [&::-moz-range-thumb]:cursor-pointer"
                     style={{
-                      background: `linear-gradient(to right, rgb(62 207 142) 0%, rgb(62 207 142) ${pct}%, rgb(51 65 85) ${pct}%, rgb(51 65 85) 100%)`,
+                      background: `linear-gradient(to right, rgb(79 140 255) 0%, rgb(79 140 255) ${pct}%, rgb(51 65 85) ${pct}%, rgb(51 65 85) 100%)`,
                     }}
                     min={q.range.min}
                     max={q.range.max}
@@ -497,13 +497,13 @@ export default function QuestionCard({
                     flex-1 p-3 rounded-lg border transition-colors relative
                     ${
                       value === opt
-                        ? "border-emerald-400 text-emerald-300 font-semibold bg-transparent"
+                        ? "border-blue-400 text-blue-300 font-semibold bg-transparent"
                         : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
                     }
                   `}
               >
                 {value === opt && (
-                  <span className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 border-emerald-400 flex items-center justify-center text-emerald-400 text-xs font-bold">
+                  <span className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 border-blue-400 flex items-center justify-center text-blue-300 text-xs font-bold">
                     ✓
                   </span>
                 )}

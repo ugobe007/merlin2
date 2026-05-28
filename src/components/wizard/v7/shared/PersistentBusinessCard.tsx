@@ -39,7 +39,11 @@ export function PersistentBusinessCard({ state }: Props) {
     const parts = [business?.city, business?.stateCode, business?.postal].filter(Boolean);
     if (parts.length) return parts.join(", ");
     if (state.location) {
-      const locParts = [state.location.city, state.location.state, state.location.postalCode].filter(Boolean);
+      const locParts = [
+        state.location.city,
+        state.location.state,
+        state.location.postalCode,
+      ].filter(Boolean);
       return locParts.join(", ") || state.location.formattedAddress || "—";
     }
     return "—";
@@ -85,7 +89,7 @@ export function PersistentBusinessCard({ state }: Props) {
           )}
           {annualSavings != null && Number.isFinite(annualSavings) && annualSavings > 0 && (
             <div className="text-center">
-              <div className="flex items-center gap-1 text-emerald-400">
+              <div className="flex items-center gap-1 text-blue-300">
                 <DollarSign className="w-3 h-3" />
                 <span className="text-xs font-bold tabular-nums">{fmtUSD(annualSavings)}</span>
               </div>
@@ -96,15 +100,15 @@ export function PersistentBusinessCard({ state }: Props) {
             <div className="text-center">
               <div className="flex items-center gap-1 text-purple-400">
                 <TrendingUp className="w-3 h-3" />
-                <span className="text-xs font-bold tabular-nums">{Number(roiYears).toFixed(1)}yr</span>
+                <span className="text-xs font-bold tabular-nums">
+                  {Number(roiYears).toFixed(1)}yr
+                </span>
               </div>
               <div className="text-[9px] text-slate-500 uppercase">Payback</div>
             </div>
           )}
           {!peakLoadKW && !annualSavings && (
-            <div className="text-[10px] text-slate-500 italic">
-              Estimates update as you go
-            </div>
+            <div className="text-[10px] text-slate-500 italic">Estimates update as you go</div>
           )}
         </div>
       </div>

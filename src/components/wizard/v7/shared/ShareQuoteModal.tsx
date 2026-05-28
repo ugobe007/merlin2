@@ -215,12 +215,12 @@ export function ShareQuoteModal({ quote, onClose }: ShareQuoteModalProps) {
           ) : (
             <>
               {/* Generated Link */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-green-800 font-medium mb-2">
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-blue-200 font-medium mb-2">
                   <Check className="w-5 h-5" />
                   Share link generated!
                 </div>
-                <p className="text-sm text-green-700">
+                <p className="text-sm text-blue-300">
                   Anyone with this link can view your quote (expires in {expiryDays} days)
                 </p>
               </div>
@@ -263,21 +263,21 @@ export function ShareQuoteModal({ quote, onClose }: ShareQuoteModalProps) {
               </div>
 
               {/* Social share nudge */}
-              <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-4">
+              <div className="rounded-lg bg-blue-500/[0.06] border border-blue-500/20 p-4">
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">🚀</span>
                   <div>
-                    <div className="font-semibold text-emerald-800 text-sm mb-1">
+                    <div className="font-semibold text-blue-200 text-sm mb-1">
                       Share with colleagues or clients
                     </div>
-                    <p className="text-xs text-emerald-700 leading-snug">
+                    <p className="text-xs text-blue-300/80 leading-snug">
                       Anyone with this link can view the full TrueQuote™ — savings, IRR, payback
                       timeline, and source attribution.
                     </p>
                     <div className="flex gap-2 mt-3">
                       <a
                         href={`mailto:?subject=BESS%20Quote%20from%20Merlin&body=Check%20out%20this%20BESS%20energy%20storage%20quote%3A%20${encodeURIComponent(shareUrl)}`}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg transition-colors"
+                        className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white text-xs font-medium rounded-lg transition-colors"
                       >
                         Email it
                       </a>

@@ -13,14 +13,7 @@
  * Data sourced from DisplayQuote.metadata — no extra API calls.
  */
 import React, { useMemo, useState } from "react";
-import {
-  BarChart3,
-  TrendingUp,
-  Battery,
-  Sun,
-  Activity,
-  ChevronDown,
-} from "lucide-react";
+import { BarChart3, TrendingUp, Battery, Sun, Activity, ChevronDown } from "lucide-react";
 import type { DisplayQuote } from "@/wizard/v7/utils/pricingSanity";
 
 type Metadata = NonNullable<DisplayQuote["metadata"]>;
@@ -124,7 +117,10 @@ function CumulativeSavingsChart({
 
   // Build SVG path
   const pathD = dataPoints
-    .map((d, i) => `${i === 0 ? "M" : "L"} ${xScale(d.year).toFixed(1)} ${yScale(d.cumulative).toFixed(1)}`)
+    .map(
+      (d, i) =>
+        `${i === 0 ? "M" : "L"} ${xScale(d.year).toFixed(1)} ${yScale(d.cumulative).toFixed(1)}`
+    )
     .join(" ");
 
   // Area fill below the line to zero
@@ -133,15 +129,26 @@ function CumulativeSavingsChart({
   return (
     <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
       <div className="flex items-center gap-2 mb-3">
-        <TrendingUp className="w-4 h-4 text-emerald-400" />
-        <span className="text-xs font-semibold text-emerald-300 uppercase tracking-wider">
+        <TrendingUp className="w-4 h-4 text-blue-400" />
+        <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">
           Cumulative Cash Flow (25 years)
         </span>
       </div>
 
-      <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+      <svg
+        viewBox={`0 0 ${svgW} ${svgH}`}
+        className="w-full h-auto"
+        preserveAspectRatio="xMidYMid meet"
+      >
         {/* Grid lines */}
-        <line x1={padL} y1={zeroY} x2={svgW - padR} y2={zeroY} stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" />
+        <line
+          x1={padL}
+          y1={zeroY}
+          x2={svgW - padR}
+          y2={zeroY}
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth="0.5"
+        />
         {/* Y axis labels */}
         <text x={padL - 5} y={padT + 5} fill="#6b7280" fontSize="8" textAnchor="end">
           {fmtUSD(maxVal)}
@@ -156,8 +163,8 @@ function CumulativeSavingsChart({
         {/* Area fill — green above zero, red below */}
         <defs>
           <linearGradient id="cashFlowGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-            <stop offset="50%" stopColor="#10b981" stopOpacity="0.05" />
+            <stop offset="0%" stopColor="#4f8cff" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#4f8cff" stopOpacity="0.05" />
             <stop offset="51%" stopColor="#ef4444" stopOpacity="0.05" />
             <stop offset="100%" stopColor="#ef4444" stopOpacity="0.2" />
           </linearGradient>
@@ -165,7 +172,7 @@ function CumulativeSavingsChart({
         <path d={areaD} fill="url(#cashFlowGrad)" />
 
         {/* Line */}
-        <path d={pathD} fill="none" stroke="#10b981" strokeWidth="2" />
+        <path d={pathD} fill="none" stroke="#4f8cff" strokeWidth="2" />
 
         {/* Payback marker */}
         {paybackYears !== null && paybackYears > 0 && paybackYears <= years && (
@@ -175,7 +182,7 @@ function CumulativeSavingsChart({
               y1={padT}
               x2={xScale(paybackYears)}
               y2={svgH - padB}
-              stroke="#10b981"
+              stroke="#4f8cff"
               strokeWidth="1"
               strokeDasharray="3,3"
               opacity="0.6"
@@ -183,7 +190,7 @@ function CumulativeSavingsChart({
             <text
               x={xScale(paybackYears)}
               y={padT - 2}
-              fill="#10b981"
+              fill="#4f8cff"
               fontSize="8"
               textAnchor="middle"
               fontWeight="bold"
@@ -231,7 +238,7 @@ function CumulativeSavingsChart({
               cx={xScale(dataPoints[hoverIdx].year)}
               cy={yScale(dataPoints[hoverIdx].cumulative)}
               r="4"
-              fill={dataPoints[hoverIdx].positive ? "#10b981" : "#ef4444"}
+              fill={dataPoints[hoverIdx].positive ? "#4f8cff" : "#ef4444"}
               stroke="white"
               strokeWidth="1"
             />
@@ -248,7 +255,7 @@ function CumulativeSavingsChart({
       <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500">
         <span>Net investment: {fmtUSD(netCost)}</span>
         <span>Annual savings: {fmtUSD(annualSavings)}/yr</span>
-        <span className="text-emerald-400 font-semibold">
+        <span className="text-blue-400 font-semibold">
           25yr total: {fmtUSD(annualSavings * 25 - netCost)}
         </span>
       </div>
@@ -272,7 +279,7 @@ function RiskBandsChart({
       p50: data.npvP50,
       p90: data.npvP90,
       fmt: fmtUSD,
-      color: "emerald",
+      color: "blue",
     },
     {
       label: "IRR",
@@ -309,11 +316,11 @@ function RiskBandsChart({
           const range = max - min || 1;
           const p50Pos = ((m.p50 - min) / range) * 100;
           const colorMap: Record<string, { bar: string; dot: string; label: string }> = {
-            emerald: { bar: "bg-emerald-500/20", dot: "bg-emerald-400", label: "text-emerald-400" },
+            emerald: { bar: "bg-blue-500/20", dot: "bg-blue-400", label: "text-blue-400" },
             violet: { bar: "bg-violet-500/20", dot: "bg-violet-400", label: "text-violet-400" },
             blue: { bar: "bg-blue-500/20", dot: "bg-blue-400", label: "text-blue-400" },
           };
-          const colors = colorMap[m.color] ?? colorMap.emerald;
+          const colors = colorMap[m.color] ?? colorMap.blue;
 
           return (
             <div key={m.label}>
@@ -335,8 +342,12 @@ function RiskBandsChart({
               </div>
               {/* Labels */}
               <div className="flex justify-between text-[9px] text-slate-600 mt-0.5">
-                <span>{m.inverse ? "Worst" : "Downside"}: {m.fmt(m.p10)}</span>
-                <span>{m.inverse ? "Best" : "Upside"}: {m.fmt(m.p90)}</span>
+                <span>
+                  {m.inverse ? "Worst" : "Downside"}: {m.fmt(m.p10)}
+                </span>
+                <span>
+                  {m.inverse ? "Best" : "Upside"}: {m.fmt(m.p90)}
+                </span>
               </div>
             </div>
           );
@@ -349,7 +360,7 @@ function RiskBandsChart({
         <span
           className={`text-sm font-bold tabular-nums ${
             data.probabilityPositiveNPV >= 80
-              ? "text-emerald-400"
+              ? "text-blue-400"
               : data.probabilityPositiveNPV >= 60
                 ? "text-amber-400"
                 : "text-red-400"
@@ -456,7 +467,13 @@ function MonthlySolarChart({
 // 4. BATTERY DEGRADATION CURVE (compact sparkline chart)
 // ═══════════════════════════════════════════════════════════════════════════
 
-function DegradationChart({ yearlyPct, warrantyYears }: { yearlyPct: number[]; warrantyYears: number }) {
+function DegradationChart({
+  yearlyPct,
+  warrantyYears,
+}: {
+  yearlyPct: number[];
+  warrantyYears: number;
+}) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   if (yearlyPct.length < 2) return null;
 
@@ -490,7 +507,11 @@ function DegradationChart({ yearlyPct, warrantyYears }: { yearlyPct: number[]; w
         </span>
       </div>
 
-      <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+      <svg
+        viewBox={`0 0 ${svgW} ${svgH}`}
+        className="w-full h-auto"
+        preserveAspectRatio="xMidYMid meet"
+      >
         {/* 80% warranty threshold */}
         <line
           x1={padL}
@@ -525,20 +546,37 @@ function DegradationChart({ yearlyPct, warrantyYears }: { yearlyPct: number[]; w
 
         {/* Start/end dots */}
         <circle cx={xScale(0)} cy={yScale(yearlyPct[0])} r="3" fill="#8b5cf6" />
-        <circle cx={xScale(yearlyPct.length - 1)} cy={yScale(yearlyPct[yearlyPct.length - 1])} r="3" fill="#8b5cf6" opacity="0.6" />
+        <circle
+          cx={xScale(yearlyPct.length - 1)}
+          cy={yScale(yearlyPct[yearlyPct.length - 1])}
+          r="3"
+          fill="#8b5cf6"
+          opacity="0.6"
+        />
 
         {/* Y axis labels */}
-        <text x={padL - 3} y={padT + 5} fill="#6b7280" fontSize="7" textAnchor="end">100%</text>
+        <text x={padL - 3} y={padT + 5} fill="#6b7280" fontSize="7" textAnchor="end">
+          100%
+        </text>
         <text x={padL - 3} y={yScale(minPct) + 3} fill="#6b7280" fontSize="7" textAnchor="end">
           {Math.round(minPct)}%
         </text>
 
         {/* X axis */}
-        {[0, 5, 10, 15, 20, 25].filter((y) => y < yearlyPct.length).map((y) => (
-          <text key={y} x={xScale(y)} y={svgH - 3} fill="#6b7280" fontSize="7" textAnchor="middle">
-            {y}yr
-          </text>
-        ))}
+        {[0, 5, 10, 15, 20, 25]
+          .filter((y) => y < yearlyPct.length)
+          .map((y) => (
+            <text
+              key={y}
+              x={xScale(y)}
+              y={svgH - 3}
+              fill="#6b7280"
+              fontSize="7"
+              textAnchor="middle"
+            >
+              {y}yr
+            </text>
+          ))}
 
         {/* Hover hit areas */}
         {yearlyPct.map((pct, i) => {
@@ -591,7 +629,9 @@ function DegradationChart({ yearlyPct, warrantyYears }: { yearlyPct: number[]; w
       <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500">
         <span>Year 0: 100%</span>
         <span className="text-violet-400">Warranty: {warrantyYears}yr</span>
-        <span>Year {yearlyPct.length - 1}: {yearlyPct[yearlyPct.length - 1]?.toFixed(1)}%</span>
+        <span>
+          Year {yearlyPct.length - 1}: {yearlyPct[yearlyPct.length - 1]?.toFixed(1)}%
+        </span>
       </div>
     </div>
   );
@@ -621,7 +661,7 @@ export default function QuoteCharts({ quote }: Props) {
   const netCost =
     quote.grossCost !== null && quote.itcAmount !== null
       ? quote.grossCost - quote.itcAmount
-      : quote.capexUSD ?? 0;
+      : (quote.capexUSD ?? 0);
 
   return (
     <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
@@ -666,12 +706,13 @@ export default function QuoteCharts({ quote }: Props) {
           )}
 
           {/* 4. Battery Degradation Curve */}
-          {meta?.degradation?.yearlyCapacityPct && meta.degradation.yearlyCapacityPct.length > 2 && (
-            <DegradationChart
-              yearlyPct={meta.degradation.yearlyCapacityPct}
-              warrantyYears={meta.degradation.warrantyPeriod}
-            />
-          )}
+          {meta?.degradation?.yearlyCapacityPct &&
+            meta.degradation.yearlyCapacityPct.length > 2 && (
+              <DegradationChart
+                yearlyPct={meta.degradation.yearlyCapacityPct}
+                warrantyYears={meta.degradation.warrantyPeriod}
+              />
+            )}
         </div>
       )}
     </div>
