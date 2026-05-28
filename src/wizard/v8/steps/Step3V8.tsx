@@ -279,7 +279,7 @@ export function Step3V8({ state, actions }: Props) {
           borderRadius: 12,
           padding: 0,
           marginBottom: 12,
-          border: "1px solid rgba(255,255,255,0.08)",
+          border: "1px solid rgba(99,120,255,0.18)",
         }}
       >
         {/* Question Header */}
@@ -643,7 +643,7 @@ export function Step3V8({ state, actions }: Props) {
   const answeredCount = visibleQuestions.filter((q) => isAnswered(answers[q.id])).length;
 
   return (
-    <div style={{ background: "#0D1117", minHeight: "100vh" }}>
+    <div style={{ minHeight: "100vh" }}>
       <div
         ref={sectionTopRef}
         style={{ maxWidth: 920, margin: "0 auto", padding: "16px 24px 40px" }}
@@ -956,7 +956,7 @@ export function Step3V8({ state, actions }: Props) {
               padding: "11px 18px",
               borderRadius: 10,
               border: "1px solid rgba(255,255,255,0.10)",
-              background: "rgba(255,255,255,0.04)",
+              background: "transparent",
               color: "rgba(255,255,255,0.65)",
               fontSize: 13,
               fontWeight: 600,
