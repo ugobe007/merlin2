@@ -1,7 +1,17 @@
 import express from 'express';
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 const router = express.Router();
+
+let resend = null;
+
+function getResend() {
+  const key = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY;
+  if (!key) return null;
+  if (!resend) resend = new Resend(key);
+  return resend;
+}
 
 // Configure nodemailer transporter
 // Using environment variables for email configuration
@@ -101,16 +111,29 @@ router.post('/send-demo-request', async (req, res) => {
       </html>
     `;
 
+    const to = process.env.DEMO_REQUEST_TO_EMAIL || process.env.LEAD_TO_EMAIL || 'info@merlinenergy.net';
+    const from = process.env.RESEND_FROM_EMAIL || 'Merlin Energy <hello@merlin.energy>';
+
     const mailOptions = {
-      from: process.env.EMAIL_USER || 'noreply@merlinenergy.net',
-      to: 'info@merlinenergy.net',
+      from: process.env.EMAIL_USER || from,
+      to,
       subject: `Demo Request from ${name} - ${company}`,
       html: emailHtml,
       replyTo: email
     };
 
-    // Send email
-    await transporter.sendMail(mailOptions);
+    const resendClient = getResend();
+    if (resendClient) {
+      await resendClient.emails.send({
+        from,
+        to: [to],
+        subject: mailOptions.subject,
+        html: emailHtml,
+        replyTo: email,
+      });
+    } else {
+      await transporter.sendMail(mailOptions);
+    }
 
     res.json({ 
       success: true, 
