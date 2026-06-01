@@ -367,6 +367,7 @@ export async function saveNewsletter(content: NewsletterContent): Promise<{ html
 export async function sendNewsletter(content: NewsletterContent, recipientEmail: string): Promise<boolean> {
   const resendKey = process.env.RESEND_API_KEY;
   const sendgridKey = process.env.SENDGRID_API_KEY;
+  const fromEmail = process.env.RESEND_FROM_EMAIL ?? 'Merlin AI <agent@merlinpro.energy>';
 
   if (!resendKey && !sendgridKey) {
     console.warn('⚠️ No email provider configured. Newsletter saved locally only.');
@@ -382,7 +383,7 @@ export async function sendNewsletter(content: NewsletterContent, recipientEmail:
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Merlin AI <agent@merlinpro.energy>',
+          from: fromEmail,
           to: recipientEmail,
           subject: content.subject,
           html: content.htmlBody,
