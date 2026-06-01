@@ -10,6 +10,7 @@ import demoRouter from './routes/demo.js';
 import quoteRouter from './routes/quote.js';
 import salesAgentRouter from './routes/sales-agent.js';
 import epcRouter from './routes/epc.js';
+import partnerApiRouter from './routes/partner-api.js';
 
 // Load environment variables from server/.env
 const __filename = fileURLToPath(import.meta.url);
@@ -43,6 +44,7 @@ app.use('/api/telemetry', telemetryRouter);
 app.use('/api/quote', quoteRouter);
 app.use('/api/sales-agent', salesAgentRouter);
 app.use('/api/epc', epcRouter);
+app.use('/api/partner', partnerApiRouter);
 app.use('/api', demoRouter);
 
 // Health check — used by smoke tests and uptime monitors
@@ -93,4 +95,5 @@ app.listen(PORT, () => {
   console.log(`🌎 Location endpoints: http://localhost:${PORT}/api/location`);
   console.log(`📋 Template endpoints: http://localhost:${PORT}/api/templates`);
   console.log(`📊 Telemetry endpoints: http://localhost:${PORT}/api/telemetry`);
+  console.log(`🤝 Partner API: http://localhost:${PORT}/api/partner/v1/health`);
 });
