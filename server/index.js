@@ -88,12 +88,15 @@ app.get('/api/health', async (req, res) => {
 // Legacy health path (keep for Railway/Fly health checks)
 app.get('/health', (_req, res) => res.redirect('/api/health'));
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Merlin API running on port ${PORT}`);
-  console.log(`📍 Places endpoints: http://localhost:${PORT}/api/places`);
-  console.log(`🌎 Location endpoints: http://localhost:${PORT}/api/location`);
-  console.log(`📋 Template endpoints: http://localhost:${PORT}/api/templates`);
-  console.log(`📊 Telemetry endpoints: http://localhost:${PORT}/api/telemetry`);
-  console.log(`🤝 Partner API: http://localhost:${PORT}/api/partner/v1/health`);
-});
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Merlin API running on port ${PORT}`);
+    console.log(`📍 Places endpoints: http://localhost:${PORT}/api/places`);
+    console.log(`🌎 Location endpoints: http://localhost:${PORT}/api/location`);
+    console.log(`📋 Template endpoints: http://localhost:${PORT}/api/templates`);
+    console.log(`📊 Telemetry endpoints: http://localhost:${PORT}/api/telemetry`);
+    console.log(`🤝 Partner API: http://localhost:${PORT}/api/partner/v1/health`);
+  });
+}
+
+export default app;
