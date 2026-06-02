@@ -204,6 +204,16 @@ export default function Step4OptionsV7({ state, actions }: Props) {
   const industryLabel = (industryMeta.label as string) || "Commercial";
   const isPricingPending = pricingStatus === "pending";
 
+  // ── Power risk analysis — TrueQuote™ sourced ──
+  // getCriticalLoadWithSource() traces critical load % back to IEEE 446, NEC,
+  // and LADWP — the same authoritative sources shown in the TrueQuote audit.
+  const criticalLoadInfo = getCriticalLoadWithSource(data.industry || "default");
+  const criticalLoadPct = criticalLoadInfo.percentage;
+  const criticalLoadKW = peakKW > 0 ? Math.max(0, Math.round(peakKW * criticalLoadPct)) : 0;
+  const recommendedGenKW =
+    criticalLoadKW > 0 ? Math.max(100, Math.round((criticalLoadKW * 1.25) / 50) * 50) : 0;
+  const urgency = getUrgencyConfig(data.industry || "default");
+
   const stackLayers = [
     {
       label: "Utility Layer",
@@ -237,16 +247,6 @@ export default function Step4OptionsV7({ state, actions }: Props) {
       accent: "text-emerald-300",
     },
   ] as const;
-
-  // ── Power risk analysis — TrueQuote™ sourced ──
-  // getCriticalLoadWithSource() traces critical load % back to IEEE 446, NEC,
-  // and LADWP — the same authoritative sources shown in the TrueQuote audit.
-  const criticalLoadInfo = getCriticalLoadWithSource(data.industry || "default");
-  const criticalLoadPct = criticalLoadInfo.percentage;
-  const criticalLoadKW = peakKW > 0 ? Math.max(0, Math.round(peakKW * criticalLoadPct)) : 0;
-  const recommendedGenKW =
-    criticalLoadKW > 0 ? Math.max(100, Math.round((criticalLoadKW * 1.25) / 50) * 50) : 0;
-  const urgency = getUrgencyConfig(data.industry || "default");
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
