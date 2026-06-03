@@ -283,7 +283,7 @@ const VendorPortal: React.FC = () => {
       <div className="min-h-screen bg-[#0f1117] flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-[#3ECF8E] animate-spin mx-auto mb-4" />
-          <p className="text-slate-400">Loading ProQuote™ portal...</p>
+          <p className="text-slate-400">Loading ProStack™ portal...</p>
         </div>
       </div>
     );

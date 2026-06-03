@@ -60,9 +60,9 @@ const FAQ_ITEMS: FAQItem[] = [
   // Quotes & Calculations
   {
     category: "Quotes & Calculations",
-    question: "What is TrueQuote™?",
+    question: "What is StackQuote™?",
     answer:
-      "TrueQuote™ is Merlin's core differentiator — every number in a quote is traceable to an authoritative source. Equipment costs reference NREL ATB 2024, solar pricing uses NREL Cost Benchmark data, and tax credits follow IRA 2022 rules. You can view the complete audit trail of sources for any quote.",
+      "StackQuote™ is Merlin's core differentiator — every number in a quote is traceable to an authoritative source. Equipment costs reference NREL ATB 2024, solar pricing uses NREL Cost Benchmark data, and tax credits follow IRA 2022 rules. You can view the complete audit trail of sources for any quote.",
   },
   {
     category: "Quotes & Calculations",
@@ -106,7 +106,7 @@ const FAQ_ITEMS: FAQItem[] = [
     category: "Account & Billing",
     question: "How do I upgrade to Premium?",
     answer:
-      "You can upgrade to Premium from any quote results page — look for the 'Upgrade to ProQuote' option. Premium includes all 21+ industry templates, advanced financial modeling (Monte Carlo, 8760 hourly), unlimited saved quotes, and professional export formats.",
+      "You can upgrade to Premium from any quote results page — look for the 'Upgrade to ProStack' option. Premium includes all 21+ industry templates, advanced financial modeling (Monte Carlo, 8760 hourly), unlimited saved quotes, and professional export formats.",
   },
   {
     category: "Account & Billing",
@@ -333,7 +333,7 @@ const SupportFAQ: React.FC<SupportFAQProps> = ({
                   step: 4,
                   title: "Get Your Quote",
                   description:
-                    "Receive a detailed quote with equipment sizing, costs, ROI, and TrueQuote™ sources.",
+                    "Receive a detailed quote with equipment sizing, costs, ROI, and StackQuote™ sources.",
                   icon: "📊",
                 },
               ].map((item) => (

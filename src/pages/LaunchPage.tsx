@@ -10,7 +10,7 @@ import { MerlinBatteryLogo } from "@/components/shared/MerlinBatteryLogo";
 import { Zap, ArrowRight, Battery, CheckCircle } from "lucide-react";
 
 const FEATURES = [
-  "TrueQuote™ — every number traces to NREL, IEEE, or IRA 2022",
+  "StackQuote™ — every number traces to NREL, IEEE, or IRA 2022",
   "15 commercial industries with ASHRAE/CBECS power profiles",
   "Live utility rates by zip code (EIA data, 31 major utilities)",
   "Dynamic ITC: 6–70% based on IRA 2022 prevailing wage rules",
@@ -99,7 +99,7 @@ export default function LaunchPage() {
 
           <p className="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
             Merlin is an instant BESS financial analysis tool for commercial facilities. Every quote
-            is TrueQuote™ verified — every number traces to a published source. No consultants. No
+            is StackQuote™ verified — every number traces to a published source. No consultants. No
             spreadsheets. Free.
           </p>
 
@@ -156,7 +156,7 @@ export default function LaunchPage() {
               <div className="font-semibold text-white mb-1">Hey, I'm the founder</div>
               <p className="text-sm text-slate-400 leading-relaxed">
                 I built Merlin because every BESS quote I saw was a black box — opaque assumptions,
-                hardcoded spreadsheets, $5K+ consultant fees. TrueQuote™ means you can see exactly
+                hardcoded spreadsheets, $5K+ consultant fees. StackQuote™ means you can see exactly
                 where every number comes from. NREL said $X/kWh. IRA 2022 says 30% ITC. IEEE
                 446-1995 says your critical load is 40% of peak. All of it, cited. All of it, free.
               </p>

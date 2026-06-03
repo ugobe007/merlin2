@@ -31,8 +31,8 @@ interface WizardShellV7Props {
   advisorContent?: React.ReactNode;
   /** Width of the Merlin advisor rail in px. Default 520. Increase for data-heavy steps. */
   railWidth?: number;
-  /** Called when the user clicks the ⚡ ProQuote escape button. */
-  onSwitchToProQuote?: () => void;
+  /** Called when the user clicks the ⚡ ProStack escape button. */
+  onSwitchToProStack?: () => void;
   /** Live utility metrics from intel — renders a telemetry bar at the bottom of the step panel */
   telemetry?: {
     rate?: number;
@@ -94,7 +94,7 @@ export default function WizardShellV7({
   onNext,
   advisorContent,
   railWidth: _railWidth = 520,
-  onSwitchToProQuote,
+  onSwitchToProStack,
   telemetry,
   children,
 }: WizardShellV7Props) {
@@ -307,7 +307,7 @@ export default function WizardShellV7({
               </div>
             </div>
 
-            {/* TrueQuote™ Badge — top of rail, always visible */}
+            {/* StackQuote™ Badge — top of rail, always visible */}
             <div style={{ padding: "0 0 12px" }}>
               <button
                 type="button"
@@ -342,7 +342,7 @@ export default function WizardShellV7({
                   e.currentTarget.style.background =
                     "linear-gradient(145deg, rgba(28,18,4,0.92) 0%, rgba(18,12,2,0.96) 100%)";
                 }}
-                aria-label="Learn about TrueQuote verification"
+                aria-label="Learn about StackQuote verification"
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                   <svg
@@ -376,7 +376,7 @@ export default function WizardShellV7({
                       letterSpacing: "0.01em",
                     }}
                   >
-                    TrueQuote™
+                    StackQuote™
                   </span>
                   <span
                     style={{
@@ -676,11 +676,11 @@ export default function WizardShellV7({
                 })}
               </div>
 
-              {/* ProQuote escape button — top-right, always visible */}
-              {onSwitchToProQuote ? (
+              {/* ProStack escape button — top-right, always visible */}
+              {onSwitchToProStack ? (
                 <button
                   type="button"
-                  onClick={onSwitchToProQuote}
+                  onClick={onSwitchToProStack}
                   title="Switch to full engineering mode — your inputs are saved"
                   style={{
                     flexShrink: 0,
@@ -714,7 +714,7 @@ export default function WizardShellV7({
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
-                  ⚡ ProQuote
+                  ⚡ ProStack
                 </button>
               ) : (
                 <div style={{ width: 138, flexShrink: 0 }} />

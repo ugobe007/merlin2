@@ -378,7 +378,7 @@ export default function Step3ProfileV7(props: Props) {
                 <div>
                   <span className="font-medium text-amber-100">📋 General template active</span>
                   <span className="mx-1.5 text-amber-500/50">—</span>
-                  you're in Estimate Mode. Retry industry profile to upgrade to TrueQuote™.
+                  you're in Estimate Mode. Retry industry profile to upgrade to StackQuote™.
                 </div>
                 {actions?.retryTemplate && (
                   <button

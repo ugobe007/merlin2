@@ -167,7 +167,7 @@ export type DisplayHints = {
 // DisplayQuote — The TYPED contract between sanitizeQuoteForDisplay and Step 4
 // ============================================================================
 
-/** TrueQuote validation envelope (as consumed by Step 4) */
+/** StackQuote validation envelope (as consumed by Step 4) */
 export type DisplayTrueQuoteValidation = {
   version: string;
   dutyCycle?: number;
@@ -190,7 +190,7 @@ export type DisplayConfidence = {
  *   - All `number | null` fields: null means "not available" → render "—"
  *   - All optional fields: undefined means "not included in quote"
  *   - _displayHints is ALWAYS present after sanitization
- *   - trueQuoteValidation is optional (only present for TrueQuote-tier quotes)
+ *   - trueQuoteValidation is optional (only present for StackQuote-tier quotes)
  *
  * Step 4 MUST NOT cast `quote.foo as number` — use `quote.foo ?? null` instead.
  */

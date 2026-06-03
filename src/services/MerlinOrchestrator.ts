@@ -5,7 +5,7 @@
  * RESPONSIBILITIES:
  * 1. Collect user inputs from wizard steps
  * 2. Build MerlinRequest from wizard state
- * 3. Delegate to TrueQuote Engine
+ * 3. Delegate to StackQuote Engine
  * 4. Handle errors and edge cases
  * 5. Return results for display
  * 
@@ -13,7 +13,7 @@
  * ┌─────────────────────────────────────────────────────────────┐
  * │              MERLIN ORCHESTRATOR (This file)                │
  * │  - Translates WizardState → MerlinRequest                   │
- * │  - Calls TrueQuote Engine                                   │
+ * │  - Calls StackQuote Engine                                   │
  * │  - Returns TrueQuoteAuthenticatedResult                     │
  * └─────────────────────────────────────────────────────────────┘
  *                              │
@@ -29,10 +29,10 @@
  * ┌─────────────────────────────────────────────────────────────┐
  * │              MAGIC FIT (Sub/Sub Contractor)                 │
  * │  - Generates 3 optimized options                            │
- * │  - Must be authenticated by TrueQuote                       │
+ * │  - Must be authenticated by StackQuote                       │
  * └─────────────────────────────────────────────────────────────┘
  * 
- * Part of TrueQuote Engine (Porsche 911 Architecture)
+ * Part of StackQuote Engine (Porsche 911 Architecture)
  * Version: 1.0.0
  */
 
@@ -70,7 +70,7 @@ export async function generateQuote(
     console.log('╔═══════════════════════════════════════════════════════╗');
     console.log('║           MERLIN ORCHESTRATOR v' + ORCHESTRATOR_VERSION + '                  ║');
     console.log('╠═══════════════════════════════════════════════════════╣');
-    console.log('║  Translating wizard state → TrueQuote request...      ║');
+    console.log('║  Translating wizard state → StackQuote request...      ║');
     console.log('╚═══════════════════════════════════════════════════════╝');
     console.log('');
   }
@@ -106,18 +106,18 @@ export async function generateQuote(
   }
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 3: Delegate to TrueQuote Engine
+  // STEP 3: Delegate to StackQuote Engine
   // ─────────────────────────────────────────────────────────────
   if (import.meta.env.DEV) {
     console.log('');
-    console.log('📤 Merlin: Delegating to TrueQuote Engine...');
+    console.log('📤 Merlin: Delegating to StackQuote Engine...');
   }
   
   try {
     const result = await processQuote(request);
     
     if (isRejected(result)) {
-      console.error('❌ Merlin: TrueQuote rejected the quote');
+      console.error('❌ Merlin: StackQuote rejected the quote');
       return result;
     }
 

@@ -4,7 +4,7 @@
  * Calculates solar PV system sizing and production
  *
  * SSOT: Pulls state data from database via stateSolarService
- * Part of TrueQuote Engine (Porsche 911 Architecture)
+ * Part of StackQuote Engine (Porsche 911 Architecture)
  *
  * Updated: January 6, 2026
  * - FIXED: Now reads roofSqFt field from useCaseData (Vineet's car wash bug)
@@ -105,7 +105,7 @@ const FALLBACK_STATE_DATA: Record<
 };
 
 // Industry-specific solar configurations
-// TrueQuote™ Sources:
+// StackQuote™ Sources:
 // - NREL Commercial Rooftop PV Technical Potential (2016)
 // - ICA 2024 Industry Study (car wash footprints)
 // - ASHRAE 90.1 / CBECS 2018 (building sizes)
@@ -543,7 +543,7 @@ function calculateSolarInternal(
   // ========================================================================
   // STEP 2: Calculate MAX solar that fits on available roof
   // Uses industry-specific building footprint constraints (Feb 2026 fix)
-  // TrueQuote™: Every number traceable to building footprint × usable %
+  // StackQuote™: Every number traceable to building footprint × usable %
   // ========================================================================
   const explicitRoofArea = extractRoofArea(input.useCaseData, input.industry);
   const facilitySize = extractFacilitySize(input.useCaseData, input.industry);

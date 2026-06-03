@@ -6,7 +6,7 @@
  *
  * Renders AdvancedQuoteBuilder with initialView="upload-first" so the
  * DocumentUploadZone is shown immediately. After extraction the user is
- * transitioned into the ProQuote config view within the same component.
+ * transitioned into the ProStack config view within the same component.
  */
 
 import React, { useState } from "react";

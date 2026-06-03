@@ -72,9 +72,9 @@ const VendorLoginScreen: React.FC<VendorLoginScreenProps> = ({
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-4 mb-4">
-            {/* ProQuote Blue Shield Badge */}
+            {/* ProStack Blue Shield Badge */}
             <div className="relative w-16 h-16 flex-shrink-0">
-              <img src={badgeIcon} alt="ProQuote" className="w-16 h-16 rounded-xl object-cover" />
+              <img src={badgeIcon} alt="ProStack" className="w-16 h-16 rounded-xl object-cover" />
               <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-[#0f1117]">
                 <ShieldCheck className="w-4 h-4 text-white" />
               </div>

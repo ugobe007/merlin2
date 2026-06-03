@@ -132,7 +132,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
           <div className="flex items-center gap-3">
             <TrueQuoteBadgeCanonical showTooltip={false} />
             <div>
-              <h2 className="text-lg font-semibold text-white">TrueQuote™</h2>
+              <h2 className="text-lg font-semibold text-white">StackQuote™</h2>
               <p className="text-sm text-slate-500">
                 The Quote That Shows Its Work
                 {proofContext && <span className="text-slate-600"> · {proofContext}</span>}
@@ -240,7 +240,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                   </div>
                 </div>
 
-                {/* TrueQuote */}
+                {/* StackQuote */}
                 <div
                   className={`rounded-lg p-5 transition-all duration-500 delay-150 ${
                     showComparison ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
@@ -252,7 +252,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                 >
                   <div className="flex items-center gap-2 mb-4">
                     <Shield className="w-4 h-4 text-emerald-400" />
-                    <span className="text-sm font-medium text-emerald-300">Merlin TrueQuote™</span>
+                    <span className="text-sm font-medium text-emerald-300">Merlin StackQuote™</span>
                   </div>
 
                   <div className="space-y-2 text-sm font-mono">
@@ -325,7 +325,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
             <div className="space-y-6">
               <div className="mb-2">
                 <h3 className="text-base font-semibold text-white mb-1">
-                  The Three Pillars of TrueQuote™
+                  The Three Pillars of StackQuote™
                 </h3>
                 <p className="text-sm text-slate-500">
                   Every Merlin quote meets these standards. No exceptions.
@@ -456,7 +456,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                         border: "1px solid rgba(16,185,129,0.2)",
                       }}
                     >
-                      TrueQuote™
+                      StackQuote™
                     </span>
                   </div>
 
@@ -591,7 +591,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
           }}
         >
           <span className="text-xs text-slate-600">
-            TrueQuote™ Verified · Source-attributed pricing
+            StackQuote™ Verified · Source-attributed pricing
           </span>
           <div className="flex items-center gap-3">
             <button
@@ -617,7 +617,7 @@ export const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({
                 e.currentTarget.style.background = "rgba(16,185,129,0.15)";
               }}
             >
-              Get Your TrueQuote™
+              Get Your StackQuote™
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

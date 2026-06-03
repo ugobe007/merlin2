@@ -5,7 +5,7 @@
  *
  * Created: December 28, 2025
  * Updated: January 2026 - Added IndustryInputs type support
- * Updated: January 21, 2026 - Added Progressive Model fields for TrueQuote™ accuracy
+ * Updated: January 21, 2026 - Added Progressive Model fields for StackQuote™ accuracy
  * Updated: January 21, 2026 - Phase 4: Added ModelConfidence for transparency layer
  * Updated: January 21, 2026 - Phase 5: Re-export SizingOverrides for modal integration
  */
@@ -20,7 +20,7 @@ export type { SizingOverrides } from "@/types/wizardState";
 // ============================================================================
 // MODEL CONFIDENCE (Phase 4: Jan 21, 2026)
 // ============================================================================
-// Turns TrueQuote from "a smart estimator" into "a transparent financial engine"
+// Turns StackQuote from "a smart estimator" into "a transparent financial engine"
 // Max confidence = 90% (never 100% - keeps us financially defensible)
 
 /**
@@ -425,7 +425,7 @@ export interface WizardState {
   };
 
   // ✅ SSOT-only: do not write estimates here.
-  // Populated ONLY by Step5MagicFit TrueQuote results.
+  // Populated ONLY by Step5MagicFit StackQuote results.
   // Never write MagicFit estimates or temporary calculations here.
   calculations: SystemCalculations | null;
 
@@ -439,7 +439,7 @@ export interface WizardState {
   // ⚠️ Estimates only: safe to show for preview, never export/commit as SSOT.
   // This is a "proposal/preview layer" for UX speed.
   // It must NEVER be stored in calculations (SSOT-only).
-  // Once TrueQuote authenticates, MagicFit display should be frozen or hidden.
+  // Once StackQuote authenticates, MagicFit display should be frozen or hidden.
   // Type shape is intentionally different from SystemCalculations to prevent accidental assignment.
   magicFit?: MagicFitEstimateState;
 
@@ -447,7 +447,7 @@ export interface WizardState {
   // PROGRESSIVE MODEL FIELDS (Jan 21, 2026)
   // ============================================================================
   // Collected through micro-prompts, NOT raw form fields.
-  // These enable TrueQuote to become a real financial model.
+  // These enable StackQuote to become a real financial model.
 
   // Peak & Grid Envelope (collected in Step 2.5)
   serviceSize?: ServiceSizeOption; // "What is your main electrical service?"
@@ -496,11 +496,11 @@ export type EnergyGoal =
 /**
  * Savings Preview Estimate
  *
- * ⚠️ IMPORTANT: This is NOT TrueQuote™ verified data!
+ * ⚠️ IMPORTANT: This is NOT StackQuote™ verified data!
  * - Based on industry averages and heuristics
  * - Used ONLY to show a "sneak peek" in Step 1
  * - Clearly labeled as "Estimate" in UI
- * - Real TrueQuote™ numbers calculated in Steps 4-6
+ * - Real StackQuote™ numbers calculated in Steps 4-6
  */
 export interface SavingsPreviewEstimate {
   estimatedSavingsLow: number;
@@ -516,11 +516,11 @@ export interface SavingsPreviewEstimate {
 /**
  * Teaser Preview (Jan 16, 2026)
  *
- * ⚠️ IMPORTANT: This is NOT TrueQuote™ verified data!
+ * ⚠️ IMPORTANT: This is NOT StackQuote™ verified data!
  * - Based on industry averages and rough heuristics
  * - Used ONLY to show "Sneak Peek" in Step 1 after address lookup
- * - Clearly labeled as "Estimate only — not TrueQuote Verified"
- * - Real TrueQuote™ numbers calculated in Step 5+
+ * - Clearly labeled as "Estimate only — not StackQuote Verified"
+ * - Real StackQuote™ numbers calculated in Step 5+
  */
 export interface TeaserPreview {
   // Scenario 1: BESS + Solar (save money)
@@ -737,11 +737,11 @@ export const POWER_LEVELS: PowerLevelConfig[] = [
 // ============================================================================
 
 /**
- * Base calculations (SSOT from TrueQuote baseCalculation)
+ * Base calculations (SSOT from StackQuote baseCalculation)
  * These values never change once computed and should never be overwritten by tier selection.
  */
 export interface CalculationsBase {
-  // SSOT (TrueQuote baseCalculation)
+  // SSOT (StackQuote baseCalculation)
   annualConsumptionKWh: number;
   peakDemandKW: number;
   baseBuildingLoadKW?: number; // ✅ ADDED: Real base load if available (Jan 16, 2026)
@@ -805,7 +805,7 @@ export interface SystemCalculations {
  * - Temporary estimates for UX preview
  * - Labeled as "Estimate" in UI
  * - Never exported or used for final quotes
- * - Replaced by TrueQuote results in Step 5
+ * - Replaced by StackQuote results in Step 5
  */
 export interface MagicFitEstimateState {
   fingerprint: string; // Fingerprint of inputs used for MagicFit

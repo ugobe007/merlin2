@@ -1,6 +1,6 @@
 /**
- * UNIVERSAL SOLAR SIZING FUNCTION (ProQuote/Advanced)
- * TrueQuote™ compliant: All calculations traceable to NREL/SEIA/benchmarkSources
+ * UNIVERSAL SOLAR SIZING FUNCTION (ProStack/Advanced)
+ * StackQuote™ compliant: All calculations traceable to NREL/SEIA/benchmarkSources
  *
  * @param solarCapacityKW - Desired system size (kW DC)
  * @param panelType - Panel type (monocrystalline, polycrystalline, thin-film, bifacial, perc)
@@ -66,7 +66,7 @@ export function calculateSolarSizing({
     requiredKW = Math.ceil(targetAnnualKWh / sunHours);
   }
 
-  // TrueQuote™: Get ILR ratio and source
+  // StackQuote™: Get ILR ratio and source
   const ilr = getSolarILRWithSource("dc_coupled");
 
   // Source/citation
@@ -6809,7 +6809,7 @@ export function calculateCarWashPowerSimple(
  * CAR WASH FACILITY CONSTRAINTS - Industry Standards
  * Source: International Carwash Association (ICA), ICWG (International Carwash Group)
  *
- * TrueQuote™ Sources:
+ * StackQuote™ Sources:
  * - ICA 2024 Industry Study: Typical site size and building footprints
  * - Professional Carwash & Detailing Magazine: Construction standards
  * - ICWG Market Intelligence: Express tunnel facility specs
@@ -6828,7 +6828,7 @@ export const CAR_WASH_FACILITY_CONSTRAINTS = {
 /**
  * Validate solar capacity against car wash roof constraints
  *
- * TrueQuote™ compliant: Uses ICA/ICWG industry standards for facility sizing
+ * StackQuote™ compliant: Uses ICA/ICWG industry standards for facility sizing
  *
  * @param solarKW - Requested solar capacity in kW
  * @param buildingSqFt - Total building footprint in sq ft (default: 5500 typical)
@@ -6889,7 +6889,7 @@ export function validateCarWashSolarCapacity(
  * Every industry's solar sizing MUST respect physical building constraints.
  * Max rooftop solar ≈ footprint × usableRoofPercent × SOLAR_WATTS_PER_SQFT / 1000
  *
- * TrueQuote™ Sources:
+ * StackQuote™ Sources:
  * - NREL Commercial Rooftop Solar Technical Potential (2016)
  * - CBECS 2018 Commercial Buildings Energy Survey
  * - ASHRAE 90.1 building size references
@@ -6913,7 +6913,7 @@ export interface FacilitySolarConstraint {
   canopyPotentialKW: number;
   /** Total realistic solar (roof + canopy) */
   totalRealisticSolarKW: number;
-  /** TrueQuote™ source citations */
+  /** StackQuote™ source citations */
   sources: string[];
   /** Notes about constraints */
   notes: string;
@@ -7308,7 +7308,7 @@ export const INDUSTRY_FACILITY_CONSTRAINTS: Record<string, FacilitySolarConstrai
 /**
  * Validate solar capacity against ANY industry's physical building constraints
  *
- * TrueQuote™ compliant: Uses industry-specific building footprint data
+ * StackQuote™ compliant: Uses industry-specific building footprint data
  * Generalized from validateCarWashSolarCapacity (Feb 17, 2026)
  *
  * @param industry - Industry slug (e.g., 'car_wash', 'hotel', 'office')
@@ -7494,7 +7494,7 @@ export function getCarWashSolarCapacity(
 /**
  * Source: NREL Solar Land Use Requirements, SEIA Ground-Mount Best Practices
  *
- * TrueQuote™ Sources:
+ * StackQuote™ Sources:
  * - NREL/TP-6A20-56290 (2013): "Land-Use Requirements for Solar"
  * - SEIA Ground-Mount Solar Guide (2024)
  * - DOE Solar Energy Technologies Office: Fixed-Tilt vs Tracking
@@ -7527,7 +7527,7 @@ export const GROUND_MOUNT_SOLAR_CONSTRAINTS = {
  * CARPORT SOLAR CONSTRAINTS - Industry Standards
  * Source: EV Charging + Solar Carport Integrated Systems
  *
- * TrueQuote™ Sources:
+ * StackQuote™ Sources:
  * - NREL: "Solar Photovoltaic Carport Structures" (2022)
  * - US DOE: Vehicle-to-Grid and Solar Integration
  * - Standard parking space: 9' × 18' = 162 sq ft
@@ -7561,7 +7561,7 @@ export const CARPORT_SOLAR_CONSTRAINTS = {
 /**
  * Calculate ground-mount solar capacity based on available land
  *
- * TrueQuote™ compliant: Uses NREL/SEIA land-use standards
+ * StackQuote™ compliant: Uses NREL/SEIA land-use standards
  *
  * @param availableAcres - Available land area in acres
  * @param trackingType - 'fixed-tilt' or 'single-axis-tracking'
@@ -7630,7 +7630,7 @@ export function calculateGroundMountSolarCapacity(
 /**
  * Calculate carport solar capacity based on parking spaces
  *
- * TrueQuote™ compliant: Uses NREL carport solar integration standards
+ * StackQuote™ compliant: Uses NREL carport solar integration standards
  *
  * @param parkingSpaces - Number of parking spaces to cover
  * @param includeEVChargers - Whether to include EV charging integration

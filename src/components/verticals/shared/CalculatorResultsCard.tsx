@@ -2,7 +2,7 @@
  * SHARED CALCULATOR RESULTS CARD
  * ================================
  * Displays quote results (annual savings, payback, ROI, battery size, net cost)
- * with TrueQuote attribution and CTA buttons.
+ * with StackQuote attribution and CTA buttons.
  * 
  * Identical pattern across all verticals, themed via config.
  * 
@@ -41,7 +41,7 @@ interface CalculatorResultsCardProps {
   peakKW: number;
   onBuildQuote: () => void;
   onTalkToExpert: () => void;
-  onShowTrueQuote: () => void;
+  onShowStackQuote: () => void;
 }
 
 export function CalculatorResultsCard({
@@ -51,7 +51,7 @@ export function CalculatorResultsCard({
   peakKW,
   onBuildQuote,
   onTalkToExpert,
-  onShowTrueQuote,
+  onShowStackQuote,
 }: CalculatorResultsCardProps) {
   const { theme: _theme } = config;
 
@@ -113,17 +113,17 @@ export function CalculatorResultsCard({
             </div>
           </div>
 
-          {/* TrueQuote™ Attribution */}
+          {/* StackQuote™ Attribution */}
           {quoteResult.benchmarkAudit && (
             <div className="rounded-xl p-4 border border-indigo-400/20 bg-slate-800/30 backdrop-blur-sm">
               <div className="flex items-center gap-3">
-                <TrueQuoteBadgeCanonical onClick={onShowTrueQuote} />
+                <TrueQuoteBadgeCanonical onClick={onShowStackQuote} />
                 <div className="flex-1">
                   <p className="text-xs text-slate-300/80 mb-1">
                     All costs traceable to {quoteResult.benchmarkAudit.sources?.length || 0} authoritative sources
                   </p>
                   <button
-                    onClick={onShowTrueQuote}
+                    onClick={onShowStackQuote}
                     className="text-xs text-indigo-300 hover:text-indigo-200 underline flex items-center gap-1"
                   >
                     View Source Attribution →

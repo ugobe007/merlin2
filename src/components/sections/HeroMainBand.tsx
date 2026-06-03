@@ -66,7 +66,7 @@ export default function HeroMainBand({
                   boxShadow: "20px 0 80px rgba(0,0,0,0.6)",
                 }}
               >
-                {/* TrueQuote Badge — gold shield + name + verified tag */}
+                {/* StackQuote Badge — gold shield + name + verified tag */}
                 <div className="flex justify-start w-full" style={{ maxWidth: "480px" }}>
                   <button
                     onClick={() => setShowTrueQuoteModal(true)}
@@ -123,7 +123,7 @@ export default function HeroMainBand({
                     {/* Spacer */}
                     <span style={{ width: "10px", display: "inline-block" }} />
 
-                    {/* TrueQuote name */}
+                    {/* StackQuote name */}
                     <span
                       style={{
                         fontSize: "13px",
@@ -132,7 +132,7 @@ export default function HeroMainBand({
                         letterSpacing: "0.01em",
                       }}
                     >
-                      TrueQuote™
+                      StackQuote™
                     </span>
 
                     {/* Divider */}
@@ -241,7 +241,7 @@ export default function HeroMainBand({
                   <span style={{ fontSize: "22px", marginLeft: "6px" }}>→</span>
                 </button>
 
-                {/* ProQuote - Full-width ghost button matching CTA */}
+                {/* ProStack - Full-width ghost button matching CTA */}
                 <button
                   onClick={() => setShowAdvancedQuoteBuilder(true)}
                   className="inline-flex items-center justify-center gap-2.5 mb-6 transition-all duration-200 cursor-pointer"
@@ -272,10 +272,10 @@ export default function HeroMainBand({
                 >
                   <img
                     src={badgeIcon}
-                    alt="ProQuote"
+                    alt="ProStack"
                     style={{ width: 24, height: 24, objectFit: "contain" }}
                   />
-                  <span>ProQuote™</span>
+                  <span>ProStack™</span>
                   <span
                     style={{
                       fontSize: "11px",
@@ -310,8 +310,8 @@ export default function HeroMainBand({
                       e.currentTarget.style.color = "rgba(255,255,255,0.6)";
                     }}
                   >
-                    <img src={merlinImage} alt="TrueQuote" className="w-7 h-7 rounded-full" />
-                    <span>About TrueQuote →</span>
+                    <img src={merlinImage} alt="StackQuote" className="w-7 h-7 rounded-full" />
+                    <span>About StackQuote →</span>
                   </button>
 
                   {/* Newsletter Link */}

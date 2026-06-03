@@ -52,7 +52,7 @@ export interface HeroUseCase {
   irr: string;
   /** Net cost after ITC, e.g. "$2.2M" */
   netCost: string;
-  /** TrueQuote™ audit trail — inputs that produced these outputs */
+  /** StackQuote™ audit trail — inputs that produced these outputs */
   _inputs: {
     storageSizeMW: number;
     durationHours: number;

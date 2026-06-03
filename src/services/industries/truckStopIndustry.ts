@@ -18,7 +18,7 @@
  *   • Logistics Peaks (Heavy Trucks)
  *   • Hospitality Peaks (Food/Showers)
  * 
- * Part of Merlin Energy TrueQuote Engine
+ * Part of Merlin Energy StackQuote Engine
  */
 
 // ═══════════════════════════════════════════════════════════════════════════

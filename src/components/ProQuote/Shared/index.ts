@@ -1,5 +1,5 @@
 /**
- * ProQuote Shared Components
+ * ProStack Shared Components
  * Barrel exports for easy importing
  */
 

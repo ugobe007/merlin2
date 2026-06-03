@@ -643,7 +643,7 @@ export function Step3Integration({
   // WizardV6 has its own navigation - the overlay was blocking progression
   const handleComplete = () => {
     // ✅ OPTION A (RECOMMENDED): Step 3 only stores raw inputs
-    // TrueQuote is SSOT for derived values (estimatedAnnualKwh, peakDemandKw)
+    // StackQuote is SSOT for derived values (estimatedAnnualKwh, peakDemandKw)
     // These will be computed by TrueQuoteEngineV2 in Step 5
 
     // ✅ INVARIANT A: Build the next state and assert no derived fields
@@ -652,8 +652,8 @@ export function Step3Integration({
       useCaseData: {
         ...state.useCaseData,
         inputs: answers,
-        // NOTE: estimatedAnnualKwh and peakDemandKw will be computed by TrueQuote in Step 5
-        // This ensures TrueQuote is the single source of truth for all calculations
+        // NOTE: estimatedAnnualKwh and peakDemandKw will be computed by StackQuote in Step 5
+        // This ensures StackQuote is the single source of truth for all calculations
       },
     };
 
@@ -724,8 +724,8 @@ export function Step3Integration({
 // QUOTE SUMMARY CARD - REMOVED
 // ============================================================================
 // ✅ REMOVED: QuoteSummaryCard component
-// Step 3 no longer computes derived values - TrueQuote is SSOT
-// Quote summary will be shown in Step 5 after TrueQuote computes results
+// Step 3 no longer computes derived values - StackQuote is SSOT
+// Quote summary will be shown in Step 5 after StackQuote computes results
 
 // ============================================================================
 // DEV-ONLY: Step 3 Wiring Smoke Test

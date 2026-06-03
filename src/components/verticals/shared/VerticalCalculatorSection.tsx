@@ -41,8 +41,8 @@ interface VerticalCalculatorSectionProps {
   onBuildQuote: () => void;
   /** Called when "Talk to an Expert" is clicked */
   onTalkToExpert: () => void;
-  /** Called to open TrueQuote modal */
-  onShowTrueQuote: () => void;
+  /** Called to open StackQuote modal */
+  onShowStackQuote: () => void;
   /** Expose current calculator inputs to parent for inline estimate */
   onInputsChange?: (inputs: Record<string, any>) => void;
   /** Optional: override initial state (e.g., California) */
@@ -109,7 +109,7 @@ export function VerticalCalculatorSection({
   config,
   onBuildQuote,
   onTalkToExpert,
-  onShowTrueQuote,
+  onShowStackQuote,
   onInputsChange,
   initialState = 'California',
 }: VerticalCalculatorSectionProps) {
@@ -230,7 +230,7 @@ export function VerticalCalculatorSection({
             peakKW={peakKW}
             onBuildQuote={onBuildQuote}
             onTalkToExpert={onTalkToExpert}
-            onShowTrueQuote={onShowTrueQuote}
+            onShowStackQuote={onShowStackQuote}
           />
         </div>
       </div>

@@ -9,7 +9,7 @@
  * 2. Amenity loads (restaurant, showers, laundry, store, maintenance)
  * 3. Refrigeration loads (reefer parking, cold storage)
  * 4. EV charging integration (future-proofing)
- * 5. BESS sizing (IEEE 4538388 ratio + TrueQuote™)
+ * 5. BESS sizing (IEEE 4538388 ratio + StackQuote™)
  */
 
 import { BESS_POWER_RATIOS } from '@/components/wizard/v6/constants';

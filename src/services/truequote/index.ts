@@ -1,7 +1,7 @@
 /**
- * TrueQuote™ Service Index
+ * StackQuote™ Service Index
  * =========================
- * Central export point for all TrueQuote services.
+ * Central export point for all StackQuote services.
  *
  * Created: January 21, 2026
  * Phase 5: Live Battery Sizing + Power Profile Preview

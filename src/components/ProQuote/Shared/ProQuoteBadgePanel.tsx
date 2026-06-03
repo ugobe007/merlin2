@@ -1,5 +1,5 @@
 /**
- * ProQuoteBadgePanel - ProQuote™ branding badge
+ * ProQuoteBadgePanel - ProStack™ branding badge
  * Blue shield badge with "Pro Mode" indicator
  * Used in: custom-config view
  */
@@ -36,14 +36,14 @@ export const ProQuoteBadgePanel = React.memo(function ProQuoteBadgePanel({
         e.currentTarget.style.boxShadow =
           "0 0 0 1px rgba(59,130,246,0.05), 0 4px 24px rgba(0,0,0,0.2)";
       }}
-      aria-label="Learn how ProQuote works"
+      aria-label="Learn how ProStack works"
     >
       {/* Blue Shield Badge */}
       <div className="shrink-0 relative">
         <div className="relative">
           <img
             src={badgeIcon}
-            alt="ProQuote Badge"
+            alt="ProStack Badge"
             className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
           />
           <div
@@ -61,7 +61,7 @@ export const ProQuoteBadgePanel = React.memo(function ProQuoteBadgePanel({
       {/* Badge Text */}
       <div className="flex-1 text-left min-w-0">
         <div className="flex items-center gap-2.5 mb-1">
-          <span className="text-xl font-bold text-blue-400 tracking-tight">ProQuote™</span>
+          <span className="text-xl font-bold text-blue-400 tracking-tight">ProStack™</span>
           <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400/70 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
             Pro Mode
           </span>

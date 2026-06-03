@@ -60,7 +60,7 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Products (removed TrueQuote/ProQuote) */}
+            {/* Products (removed StackQuote/ProStack) */}
             <div />
 
             {/* Industries */}
@@ -159,7 +159,7 @@ export default function Home() {
             <div className="text-slate-700 text-xs" style={{ fontFamily: "'DM Sans', sans-serif" }}>
               © {new Date().getFullYear()} Merlin Energy. All rights reserved.
             </div>
-            <div className="flex items-center gap-6">{/* Removed TrueQuote/ProQuote links */}</div>
+            <div className="flex items-center gap-6">{/* Removed StackQuote/ProStack links */}</div>
           </div>
         </div>
       </footer>

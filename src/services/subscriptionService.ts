@@ -71,7 +71,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     features: [
       '3 quote exports per month',
       'BESS sizing & configuration',
-      'TrueQuote™ verified calculations',
+      'StackQuote™ verified calculations',
       'MagicFit tier comparison',
       'PDF export (Merlin branded)',
       '3 saved projects',
@@ -101,7 +101,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
       '15 quotes per month',
       'BESS sizing & configuration',
       'ROI & simple payback analysis',
-      'TrueQuote™ verified calculations',
+      'StackQuote™ verified calculations',
       'PDF export (Merlin branded)',
       '10 saved projects',
       'Equipment comparison tool',
@@ -132,7 +132,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     features: [
       '100 quotes per month',
       'NPV, IRR & DCF analysis',
-      'TrueQuote™ source attribution',
+      'StackQuote™ source attribution',
       'AI-powered recommendations',
       'Export to Word, Excel, PDF',
       '50 saved projects',

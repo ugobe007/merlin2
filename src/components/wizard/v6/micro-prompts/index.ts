@@ -1,7 +1,7 @@
 /**
  * Micro-Prompts Index
  * ===================
- * Progressive model collection components for TrueQuote™ accuracy.
+ * Progressive model collection components for StackQuote™ accuracy.
  *
  * Philosophy: Collect essential data through micro-interactions,
  * NOT raw form fields. Each prompt takes < 3 seconds to answer.

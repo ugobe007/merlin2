@@ -20,7 +20,7 @@ const router = express.Router();
 let _resend = null;
 function getResend() {
   if (!_resend) {
-    const key = process.env.VITE_RESEND_API_KEY || process.env.RESEND_API_KEY;
+    const key = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY;
     _resend = new Resend(key || 'placeholder');
   }
   return _resend;

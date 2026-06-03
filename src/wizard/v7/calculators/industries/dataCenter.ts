@@ -23,7 +23,7 @@ export const DC_LOAD_V1_SSOT: CalculatorContract = {
       (inputs as Record<string, unknown>).rackDensityKW = rdMap[String(inputs.rackDensity)] ?? 7;
     }
     //   coolingSystem (curated: "air-cooled"/"water-cooled"/"immersion"/"hybrid") → metadata
-    //   (no direct calc impact yet — captured in assumptions for TrueQuote audit trail)
+    //   (no direct calc impact yet — captured in assumptions for StackQuote audit trail)
     if (inputs.coolingSystem) assumptions.push(`Cooling: ${inputs.coolingSystem}`);
     //   redundancy (curated: "n"/"n+1"/"2n"/"2n+1") → metadata
     if (inputs.redundancy) assumptions.push(`Redundancy: ${inputs.redundancy}`);
@@ -100,7 +100,7 @@ export const DC_LOAD_V1_SSOT: CalculatorContract = {
 
     const kWContributorsTotalKW = itLoadKWActual + coolingKW + otherKW + lightingKW + controlsKW;
 
-    // 4b. Build validation envelope (TrueQuote v1)
+    // 4b. Build validation envelope (StackQuote v1)
     const validation: CalcValidation = {
       version: "v1",
       dutyCycle,

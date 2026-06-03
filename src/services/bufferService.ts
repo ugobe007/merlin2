@@ -220,7 +220,7 @@ class BufferService {
           if (import.meta.env.DEV) console.log('🔧 Migrating: Removing old Step 3 derived values from useCaseData');
           const { estimatedAnnualKwh: _e, peakDemandKw: _p, ...cleanUseCaseData } = useCaseData;
           buffer.state.useCaseData = cleanUseCaseData as typeof buffer.state.useCaseData;
-          if (import.meta.env.DEV) console.log('✅ Migration complete: Derived values removed (TrueQuote is SSOT)');
+          if (import.meta.env.DEV) console.log('✅ Migration complete: Derived values removed (StackQuote is SSOT)');
         }
       }
       return buffer;

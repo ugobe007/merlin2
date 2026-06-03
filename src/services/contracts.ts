@@ -3,13 +3,13 @@
  * 
  * This file defines the data contracts between:
  * - Merlin (General Contractor / Orchestrator)
- * - TrueQuote (Prime Sub Contractor / Calculation Engine)
+ * - StackQuote (Prime Sub Contractor / Calculation Engine)
  * - Magic Fit (Sub/Sub Contractor / Optimization Engine)
  * 
  * ARCHITECTURE:
  * ┌─────────────────────────────────────────────────────────────┐
  * │                  MERLIN (Orchestrator)                      │
- * │  Collects inputs → Delegates to TrueQuote → Displays results│
+ * │  Collects inputs → Delegates to StackQuote → Displays results│
  * └─────────────────────────────────────────────────────────────┘
  *                              │
  *                              ▼
@@ -55,12 +55,12 @@ export type SolarType = 'monocrystalline' | 'polycrystalline' | 'thin-film';
 export type OptionTier = 'starter' | 'perfectFit' | 'beastMode';
 
 // ============================================================================
-// MERLIN REQUEST (Orchestrator → TrueQuote)
+// MERLIN REQUEST (Orchestrator → StackQuote)
 // ============================================================================
 
 /**
  * MerlinRequest: Everything the orchestrator collects from the user
- * This is the ONLY input TrueQuote needs to generate a complete quote
+ * This is the ONLY input StackQuote needs to generate a complete quote
  */
 export interface MerlinRequest {
   // ─────────────────────────────────────────────────────────────
@@ -89,12 +89,12 @@ export interface MerlinRequest {
 
   // ─────────────────────────────────────────────────────────────
   // USER PREFERENCES (Step 4)
-  // These override TrueQuote's recommendations
+  // These override StackQuote's recommendations
   // ─────────────────────────────────────────────────────────────
   preferences: {
     solar: {
       interested: boolean;
-      customSizeKw?: number;   // User override, undefined = use TrueQuote recommendation
+      customSizeKw?: number;   // User override, undefined = use StackQuote recommendation
       type?: SolarType;
     };
     generator: {
@@ -124,12 +124,12 @@ export interface MerlinRequest {
 }
 
 // ============================================================================
-// TRUEQUOTE BASE CALCULATION (Internal - TrueQuote's work)
+// TRUEQUOTE BASE CALCULATION (Internal - StackQuote's work)
 // ============================================================================
 
 /**
  * TrueQuoteBaseCalculation: The raw calculation before Magic Fit optimization
- * This represents TrueQuote's engineering recommendation
+ * This represents StackQuote's engineering recommendation
  */
 export interface TrueQuoteBaseCalculation {
   // ─────────────────────────────────────────────────────────────
@@ -241,7 +241,7 @@ export interface TrueQuoteBaseCalculation {
 }
 
 // ============================================================================
-// MAGIC FIT PROPOSAL (MagicFit → TrueQuote for approval)
+// MAGIC FIT PROPOSAL (MagicFit → StackQuote for approval)
 // ============================================================================
 
 /**
@@ -308,7 +308,7 @@ export interface SystemOption {
 }
 
 /**
- * MagicFitProposal: What Magic Fit submits to TrueQuote for authentication
+ * MagicFitProposal: What Magic Fit submits to StackQuote for authentication
  */
 export interface MagicFitProposal {
   // The 3 options
@@ -328,14 +328,14 @@ export interface MagicFitProposal {
 }
 
 // ============================================================================
-// TRUEQUOTE AUTHENTICATED RESULT (TrueQuote → Merlin)
+// TRUEQUOTE AUTHENTICATED RESULT (StackQuote → Merlin)
 // ============================================================================
 
 /**
- * AuthenticatedSystemOption: A SystemOption that TrueQuote has verified
+ * AuthenticatedSystemOption: A SystemOption that StackQuote has verified
  */
 export interface AuthenticatedSystemOption extends SystemOption {
-  // TrueQuote verification stamp
+  // StackQuote verification stamp
   verified: true;
   verificationDetails: {
     bessValid: boolean;
@@ -352,11 +352,11 @@ export interface AuthenticatedSystemOption extends SystemOption {
  * TrueQuoteAuthenticatedResult: The final output Merlin displays to the user
  * 
  * This is the ONLY data structure the UI should use for displaying quotes.
- * It has been calculated by TrueQuote and verified for accuracy.
+ * It has been calculated by StackQuote and verified for accuracy.
  */
 export interface TrueQuoteAuthenticatedResult {
   // ─────────────────────────────────────────────────────────────
-  // VERIFICATION (TrueQuote's seal of approval)
+  // VERIFICATION (StackQuote's seal of approval)
   // ─────────────────────────────────────────────────────────────
   verification: {
     verified: boolean;
@@ -378,7 +378,7 @@ export interface TrueQuoteAuthenticatedResult {
   baseCalculation: TrueQuoteBaseCalculation;
 
   // ─────────────────────────────────────────────────────────────
-  // AUTHENTICATED OPTIONS (Magic Fit's work, TrueQuote approved)
+  // AUTHENTICATED OPTIONS (Magic Fit's work, StackQuote approved)
   // ─────────────────────────────────────────────────────────────
   options: {
     starter: AuthenticatedSystemOption;
@@ -387,7 +387,7 @@ export interface TrueQuoteAuthenticatedResult {
   };
 
   // ─────────────────────────────────────────────────────────────
-  // INCENTIVES (TrueQuote calculated - single source of truth)
+  // INCENTIVES (StackQuote calculated - single source of truth)
   // ─────────────────────────────────────────────────────────────
   incentives: {
     federal: {
@@ -438,7 +438,7 @@ export interface TrueQuoteAuthenticatedResult {
 }
 
 // ============================================================================
-// REJECTION RESPONSE (when TrueQuote rejects Magic Fit's proposal)
+// REJECTION RESPONSE (when StackQuote rejects Magic Fit's proposal)
 // ============================================================================
 
 export interface TrueQuoteRejection {

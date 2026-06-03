@@ -1,5 +1,5 @@
 /**
- * Shared TypeScript interfaces for ProQuote components
+ * Shared TypeScript interfaces for ProStack components
  * Extracted from AdvancedQuoteBuilder.tsx refactoring (Feb 2026)
  */
 

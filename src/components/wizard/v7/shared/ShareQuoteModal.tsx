@@ -271,7 +271,7 @@ export function ShareQuoteModal({ quote, onClose }: ShareQuoteModalProps) {
                       Share with colleagues or clients
                     </div>
                     <p className="text-xs text-blue-300/80 leading-snug">
-                      Anyone with this link can view the full TrueQuote™ — savings, IRR, payback
+                      Anyone with this link can view the full StackQuote™ — savings, IRR, payback
                       timeline, and source attribution.
                     </p>
                     <div className="flex gap-2 mt-3">

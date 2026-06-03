@@ -1,6 +1,6 @@
 /**
  * MerlinTip - Advisor tip component with Merlin avatar
- * Used throughout ProQuote for contextual guidance
+ * Used throughout ProStack for contextual guidance
  */
 
 import React from "react";

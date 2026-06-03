@@ -1,7 +1,7 @@
 /**
  * Quick Quote Modal — Custom System Size
  *
- * ProQuote manual entry mode
+ * ProStack manual entry mode
  * Merlin design: Dark theme, emerald accents, clean inputs
  */
 
@@ -50,12 +50,12 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
           <div className="flex items-center gap-4">
-            {/* Official ProQuote Badge */}
+            {/* Official ProStack Badge */}
             <div className="relative">
               <div className="absolute inset-0 bg-[#68BFFA]/30 rounded-xl blur-xl"></div>
               <img
                 src={badgeProQuoteIcon}
-                alt="ProQuote"
+                alt="ProStack"
                 className="relative w-16 h-16 object-contain"
               />
             </div>
@@ -69,7 +69,7 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
                       "0 0 20px rgba(104, 191, 250, 0.6), 0 0 40px rgba(104, 191, 250, 0.3)",
                   }}
                 >
-                  ProQuote™
+                  ProStack™
                 </h2>
                 <span
                   className="px-2 py-0.5 text-[10px] font-bold border border-[#68BFFA]/50 text-[#68BFFA] rounded"
@@ -225,7 +225,7 @@ export function QuickQuoteModal({ onClose, onGenerate }: QuickQuoteModalProps) {
             <div className="flex gap-3">
               <Sparkles className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-slate-300">
-                <p className="font-semibold text-blue-400 mb-1">TrueQuote™ Powered</p>
+                <p className="font-semibold text-blue-400 mb-1">StackQuote™ Powered</p>
                 <p className="text-slate-400">
                   All calculations source-verified. Need more precision? Use the guided wizard for
                   facility-specific analysis.

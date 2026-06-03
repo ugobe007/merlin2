@@ -2,7 +2,7 @@
  * LOAD CALCULATOR
  * Calculates peak demand and energy consumption based on facility data
  *
- * Part of TrueQuote Engine (Porsche 911 Architecture)
+ * Part of StackQuote Engine (Porsche 911 Architecture)
  */
 
 import type { Industry } from "../contracts";

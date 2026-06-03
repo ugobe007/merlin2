@@ -8,7 +8,7 @@
  * 1. Every industry's curated field IDs are consumed by its calculator adapter
  * 2. User inputs actually change the output (no silent defaults)
  * 3. Output kW values are within sane ranges for each industry
- * 4. TrueQuote CalcValidation envelope is present and valid
+ * 4. StackQuote CalcValidation envelope is present and valid
  * 5. kW contributors sum to within 5% of peakLoadKW
  * 6. Duty cycle is in [0, 1]
  * 7. energyKWhPerDay > 0 and baseLoadKW < peakLoadKW
@@ -495,10 +495,10 @@ describe("Pipeline Integrity: Step 3 → Calculator → SSOT → Quote", () => {
     }
   });
 
-  // ── Tier 2: TrueQuote Envelope Validation ────────────────────────────────
-  describe("Tier 2: TrueQuote CalcValidation envelope", () => {
+  // ── Tier 2: StackQuote Envelope Validation ────────────────────────────────
+  describe("Tier 2: StackQuote CalcValidation envelope", () => {
     for (const tc of INDUSTRY_TESTS) {
-      it(`${tc.name}: has valid TrueQuote v1 envelope`, () => {
+      it(`${tc.name}: has valid StackQuote v1 envelope`, () => {
         const calculator = CALCULATORS_BY_ID[tc.calculatorId];
         const result = calculator.compute(tc.curatedInputs);
         validateTrueQuoteEnvelope(result, tc.name);

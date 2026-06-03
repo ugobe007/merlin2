@@ -111,7 +111,7 @@ class MerlinMemoryStore {
     this.hydrate();
   }
 
-  /** Get the last TrueQuote validation report */
+  /** Get the last StackQuote validation report */
   get lastReport() {
     return this._lastReport;
   }
@@ -135,13 +135,13 @@ class MerlinMemoryStore {
 
   // ── WRITE ─────────────────────────────────────────────────────────────────
 
-  /** Write a value to a memory slot. Notifies subscribers. Runs TrueQuote™ validation. */
+  /** Write a value to a memory slot. Notifies subscribers. Runs StackQuote™ validation. */
   set<K extends MemorySlotKey>(key: K, value: MerlinMemorySlots[K]): void {
     this.slots[key] = value;
     this.persist();
     this.notify(key);
 
-    // ── TrueQuote™ Continuous Validation ────────────────────────────────
+    // ── StackQuote™ Continuous Validation ────────────────────────────────
     this.runValidation(key, value);
 
     if (import.meta.env.DEV) {
@@ -149,7 +149,7 @@ class MerlinMemoryStore {
     }
   }
 
-  /** Run TrueQuote™ validation on a slot write */
+  /** Run StackQuote™ validation on a slot write */
   private runValidation<K extends MemorySlotKey>(key: K, value: MerlinMemorySlots[K]): void {
     try {
       const mod = getValidator();
@@ -167,11 +167,11 @@ class MerlinMemoryStore {
         const warnings = violations.filter((v) => v.severity === "warning");
         if (errors.length > 0) {
           devWarn(
-            `[TrueQuote™] 🔴 ${errors.length} error(s) on ${key}:\n${mod.formatViolations(violations)}`
+            `[StackQuote™] 🔴 ${errors.length} error(s) on ${key}:\n${mod.formatViolations(violations)}`
           );
         } else if (warnings.length > 0) {
           devInfo(
-            `[TrueQuote™] 🟡 ${warnings.length} warning(s) on ${key}:\n${mod.formatViolations(violations)}`
+            `[StackQuote™] 🟡 ${warnings.length} warning(s) on ${key}:\n${mod.formatViolations(violations)}`
           );
         }
       }
@@ -251,7 +251,7 @@ class MerlinMemoryStore {
     return this.sessionId;
   }
 
-  /** Run full TrueQuote™ validation on all slots. Returns report. */
+  /** Run full StackQuote™ validation on all slots. Returns report. */
   validate(): TrueQuoteReport | null {
     try {
       const mod = getValidator();

@@ -6,7 +6,7 @@ import type { ParsedDocument } from "@/services/documentParserService";
 /**
  * VIEW/MODAL STATE HOOK
  *
- * Manages all UI state for ProQuote views, modals, and document extraction.
+ * Manages all UI state for ProStack views, modals, and document extraction.
  * Extracted from AdvancedQuoteBuilder.tsx (Phase 1G, Feb 2026)
  *
  * State organized by domain:

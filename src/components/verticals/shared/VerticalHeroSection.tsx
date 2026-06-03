@@ -22,7 +22,7 @@ interface VerticalHeroSectionProps {
   /** Calculator input values for inline estimate */
   calculatorInputs: Record<string, any>;
   onGetQuote: () => void;
-  onShowTrueQuote: () => void;
+  onShowStackQuote: () => void;
 }
 
 // Color mappings for stat cards (3 cards with rotating accent colors)
@@ -32,7 +32,7 @@ const STAT_CARD_COLORS = [
   { bg: 'from-purple-500/20 to-purple-600/10', border: 'border-purple-400/30', value: 'text-purple-400', label: 'text-purple-200' },
 ];
 
-export function VerticalHeroSection({ config, calculatorInputs, onGetQuote: _onGetQuote, onShowTrueQuote }: VerticalHeroSectionProps) {
+export function VerticalHeroSection({ config, calculatorInputs, onGetQuote: _onGetQuote, onShowStackQuote }: VerticalHeroSectionProps) {
   const { theme, carouselImages, heroCallout, heroStats } = config;
   const BadgeIcon = config.heroBadgeIcon;
   
@@ -121,12 +121,12 @@ export function VerticalHeroSection({ config, calculatorInputs, onGetQuote: _onG
               </div>
             )}
             
-            {/* TrueQuote Badge */}
+            {/* StackQuote Badge */}
             <div className="flex items-center gap-2 mt-4">
-              <button onClick={onShowTrueQuote} className="hover:scale-105 transition-transform cursor-pointer">
+              <button onClick={onShowStackQuote} className="hover:scale-105 transition-transform cursor-pointer">
                 <TrueQuoteBadgeCanonical />
               </button>
-              <button onClick={onShowTrueQuote} className={`text-${theme.accent}-300 text-xs hover:text-white transition-colors cursor-pointer`}>
+              <button onClick={onShowStackQuote} className={`text-${theme.accent}-300 text-xs hover:text-white transition-colors cursor-pointer`}>
                 Every number sourced →
               </button>
             </div>

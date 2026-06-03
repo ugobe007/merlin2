@@ -74,7 +74,7 @@ export const CASINO_LOAD_V1_SSOT: CalculatorContract = {
     );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
-    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // ── StackQuote kW contributor breakdown ─────────────────────────
     // Casino: gaming floor (machines+lighting), HVAC (24/7), hotel, restaurants, entertainment
     const gamingMachinesPct = 0.3;
     const hvacPct = 0.25;

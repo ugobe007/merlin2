@@ -542,7 +542,7 @@ function SectionsPanel({
     { key: 'equipmentBreakdown', label: 'Equipment Breakdown', description: 'Line-item equipment costs with sources' },
     { key: 'financialAnalysis', label: 'Financial Analysis', description: 'ROI, NPV, IRR, payback period' },
     { key: 'savingsAnalysis', label: 'Savings Analysis', description: 'Demand charge savings, energy arbitrage potential' },
-    { key: 'trueQuoteSources', label: 'TrueQuote™ Sources', description: 'Source attribution for every calculation' },
+    { key: 'trueQuoteSources', label: 'StackQuote™ Sources', description: 'Source attribution for every calculation' },
     { key: 'advancedAnalysis', label: 'Advanced Analysis', description: 'Monte Carlo, 8760 dispatch, sensitivity (Advanced+)', advancedOnly: true },
     { key: 'termsAndConditions', label: 'Terms & Conditions', description: 'Legal disclaimer and quote validity' },
     { key: 'engineeringAppendix', label: 'Engineering Appendix', description: 'Detailed technical notes and assumptions' },
@@ -652,7 +652,7 @@ function LayoutPanel({
           ['pageNumbers', 'Page numbers'],
           ['dateStamp', 'Date stamp'],
           ['merlinWatermark', 'Merlin watermark'],
-          ['trueQuoteBadge', 'TrueQuote™ badge'],
+          ['trueQuoteBadge', 'StackQuote™ badge'],
         ] as const).map(([key, label]) => (
           <label key={key} className="flex items-center gap-3 cursor-pointer">
             <input
@@ -783,7 +783,7 @@ function TemplatePreview({ template }: { template: QuoteTemplate }) {
             )}
             {layout.trueQuoteBadge && (
               <span className="text-xs px-2 py-1 rounded-full border" style={{ borderColor: accentColor, color: primaryColor }}>
-                TrueQuote™ Verified
+                StackQuote™ Verified
               </span>
             )}
           </div>
@@ -834,7 +834,7 @@ function TemplatePreview({ template }: { template: QuoteTemplate }) {
         {sections.trueQuoteSources && (
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
             <div className="w-2 h-2 rounded-full bg-[#68BFFA]" />
-            <span className="text-sm text-gray-700 font-medium">TrueQuote™ Sources</span>
+            <span className="text-sm text-gray-700 font-medium">StackQuote™ Sources</span>
           </div>
         )}
         {sections.advancedAnalysis && (
@@ -863,7 +863,7 @@ function TemplatePreview({ template }: { template: QuoteTemplate }) {
       {/* Terms preview */}
       {sections.termsAndConditions && (
         <div className="px-6 py-3 bg-gray-50 text-[10px] text-gray-400 border-t border-gray-100">
-          {layout.termsText || 'This quote is valid for 30 days. Pricing subject to change. All calculations verified by TrueQuote™ methodology.'}
+          {layout.termsText || 'This quote is valid for 30 days. Pricing subject to change. All calculations verified by StackQuote™ methodology.'}
         </div>
       )}
     </div>

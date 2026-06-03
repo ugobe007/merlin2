@@ -2,7 +2,7 @@
  * CALCULATORS INDEX
  * Central export for all calculation modules
  * 
- * Part of TrueQuote Engine (Porsche 911 Architecture)
+ * Part of StackQuote Engine (Porsche 911 Architecture)
  */
 
 export * from './loadCalculator';

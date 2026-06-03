@@ -55,7 +55,7 @@ interface BusinessProfileCardProps {
   showIndustryInference?: boolean;
   /** Edit callback (V7 feature) */
   onEdit?: () => void;
-  /** TrueQuote badge click handler — opens TrueQuote explainer modal */
+  /** StackQuote badge click handler — opens StackQuote explainer modal */
   onTrueQuoteClick?: () => void;
 }
 

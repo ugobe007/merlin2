@@ -2,7 +2,7 @@
  * Pure Layer A Contract Quote Runner
  *
  * Deterministic, no React hooks, can run in Node scripts.
- * Extracts the core TrueQuote Layer A logic from useWizardV7.
+ * Extracts the core StackQuote Layer A logic from useWizardV7.
  */
 
 import { getTemplate } from "../../wizard/v7/templates/templateIndex.ts";
@@ -54,7 +54,7 @@ function enforceDetailsNamespace(
   const industryKey = details[industry];
   if (!industryKey) {
     console.warn(
-      `[TrueQuote] Details namespace mismatch: expected "${industry}" key, got: ${Object.keys(details).join(", ")}`
+      `[StackQuote] Details namespace mismatch: expected "${industry}" key, got: ${Object.keys(details).join(", ")}`
     );
     return undefined; // Reject mismatched details
   }
@@ -238,7 +238,7 @@ export function runContractQuoteCore(args: ContractQuoteArgs): ContractQuoteResu
 
   // DEV trace (mirrors useWizardV7 console logging)
   if (process.env.NODE_ENV === "development") {
-    console.group(`[TrueQuote] Load Profile Consistency: ${tpl.industry}`);
+    console.group(`[StackQuote] Load Profile Consistency: ${tpl.industry}`);
     console.log("Template:", {
       industry: tpl.industry,
       version: tpl.version,

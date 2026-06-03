@@ -1,7 +1,7 @@
 /**
  * ProQuoteHowItWorksModal.tsx
  *
- * Supabase-style explanation modal for ProQuote™.
+ * Supabase-style explanation modal for ProStack™.
  * Shows how the professional quote builder works, its tools, and workflow.
  *
  * @version 1.0.0 (Feb 2026)
@@ -24,13 +24,13 @@ import {
 interface ProQuoteHowItWorksModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onOpenProQuote?: () => void;
+  onOpenProStack?: () => void;
 }
 
 export default function ProQuoteHowItWorksModal({
   isOpen,
   onClose,
-  onOpenProQuote,
+  onOpenProStack,
 }: ProQuoteHowItWorksModalProps) {
   const [animateIn, setAnimateIn] = useState(false);
 
@@ -80,7 +80,7 @@ export default function ProQuoteHowItWorksModal({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white">
-                How <span className="text-amber-400">ProQuote™</span> Works
+                How <span className="text-amber-400">ProStack™</span> Works
               </h2>
               <p className="text-sm text-slate-500">
                 Professional-grade BESS configuration &amp; financial modeling
@@ -91,16 +91,16 @@ export default function ProQuoteHowItWorksModal({
 
         {/* ── CONTENT ── */}
         <div className="flex-1 overflow-y-auto px-6 py-5 min-h-0">
-          {/* What is ProQuote */}
+          {/* What is ProStack */}
           <div className="mb-5">
             <p className="text-sm text-slate-400 leading-relaxed">
-              ProQuote™ is Merlin's professional configuration tool for engineers, EPCs, and
+              ProStack™ is Merlin's professional configuration tool for engineers, EPCs, and
               developers who need{" "}
               <span className="text-slate-200 font-medium">
                 full control over every system parameter
               </span>
               . Design complete BESS systems with electrical specifications, renewable integration,
-              and bank-ready financial models — all powered by TrueQuote™ source-verified pricing.
+              and bank-ready financial models — all powered by StackQuote™ source-verified pricing.
             </p>
           </div>
 
@@ -133,7 +133,7 @@ export default function ProQuoteHowItWorksModal({
                 {
                   step: "4",
                   title: "Generate Quote & Export",
-                  desc: "Get a TrueQuote™-verified quote with full equipment breakdown, financial metrics, and exportable Word/Excel reports.",
+                  desc: "Get a StackQuote™-verified quote with full equipment breakdown, financial metrics, and exportable Word/Excel reports.",
                   icon: FileSpreadsheet,
                   accent: "251,191,36",
                 },
@@ -204,7 +204,7 @@ export default function ProQuoteHowItWorksModal({
             </div>
           </div>
 
-          {/* TrueQuote Integration */}
+          {/* StackQuote Integration */}
           <div
             className="rounded-lg p-4"
             style={{
@@ -214,12 +214,12 @@ export default function ProQuoteHowItWorksModal({
           >
             <div className="flex items-center gap-2 mb-2">
               <Shield className="w-4 h-4 text-emerald-400" />
-              <span className="text-sm font-semibold text-white">Powered by TrueQuote™</span>
+              <span className="text-sm font-semibold text-white">Powered by StackQuote™</span>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Every ProQuote uses the same NREL ATB 2024, IEEE, and IRA 2022 benchmarks as
-              TrueQuote™. Equipment pricing, financial calculations, and tax credits are all
-              source-verified and auditable. ProQuote simply gives you more control over the inputs.
+              Every ProStack uses the same NREL ATB 2024, IEEE, and IRA 2022 benchmarks as
+              StackQuote™. Equipment pricing, financial calculations, and tax credits are all
+              source-verified and auditable. ProStack simply gives you more control over the inputs.
             </p>
           </div>
         </div>
@@ -233,7 +233,7 @@ export default function ProQuoteHowItWorksModal({
           }}
         >
           <span className="text-xs text-slate-600">
-            Professional configuration · TrueQuote™ verified
+            Professional configuration · StackQuote™ verified
           </span>
           <div className="flex items-center gap-3">
             <button
@@ -253,9 +253,9 @@ export default function ProQuoteHowItWorksModal({
             >
               Maybe Later
             </button>
-            {onOpenProQuote && (
+            {onOpenProStack && (
               <button
-                onClick={onOpenProQuote}
+                onClick={onOpenProStack}
                 className="flex items-center gap-2 px-5 py-2 rounded-md text-sm font-semibold transition-all"
                 style={{
                   background: "rgba(251,191,36,0.12)",
@@ -270,7 +270,7 @@ export default function ProQuoteHowItWorksModal({
                 }}
               >
                 <Sliders className="w-3.5 h-3.5" />
-                Open ProQuote™ Configuration →
+                Open ProStack™ Configuration →
               </button>
             )}
           </div>

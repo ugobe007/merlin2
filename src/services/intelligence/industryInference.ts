@@ -1,7 +1,7 @@
 // Industry Inference Service (SSOT for business name → industry mapping)
 // Created: January 18, 2026
 // Purpose: Extract industry from business name with confidence score
-// TrueQuote™ Compliance: Uses database keyword mappings (not hardcoded)
+// StackQuote™ Compliance: Uses database keyword mappings (not hardcoded)
 
 import { supabase } from "@/services/supabaseClient";
 import type {

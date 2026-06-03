@@ -16,7 +16,7 @@
  * 
  * AVOIDS MULTI-TUNNEL BIAS: Defaults to single bay/tunnel unless explicitly stated
  * 
- * TrueQuote™ Sources:
+ * StackQuote™ Sources:
  * - International Carwash Association (ICA) 2024 Industry Study
  * - NREL ATB 2024 - Commercial Building Load Profiles
  * - IEEE 446-1995 (Orange Book) - Emergency and Standby Power
@@ -41,7 +41,7 @@
  * 
  * AVOIDS MULTI-TUNNEL BIAS: Defaults to single bay/tunnel unless explicitly stated
  * 
- * TrueQuote™ Sources:
+ * StackQuote™ Sources:
  * - International Carwash Association (ICA) 2024 Industry Study
  * - NREL ATB 2024 - Commercial Building Load Profiles
  * - IEEE 446-1995 (Orange Book) - Emergency and Standby Power
@@ -125,7 +125,7 @@ export interface CarWash16QResult {
   confidence: 'estimate' | 'verified';
   uncertaintyCount: number;
   
-  // TrueQuote™ sources
+  // StackQuote™ sources
   sources: string[];
 }
 
@@ -380,7 +380,7 @@ export function calculateCarWash16Q(input: CarWash16QInput): CarWash16QResult {
     confidence,
     uncertaintyCount,
     
-    // TrueQuote™ sources
+    // StackQuote™ sources
     sources,
   };
 }

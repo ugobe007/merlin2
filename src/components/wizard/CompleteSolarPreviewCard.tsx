@@ -74,7 +74,7 @@ export function CompleteSolarPreviewCard({
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">Solar Capacity Preview</h3>
-            <p className="text-sm text-amber-300">Live calculation from TrueQuote™ Engine</p>
+            <p className="text-sm text-amber-300">Live calculation from StackQuote™ Engine</p>
           </div>
         </div>
         <div className="px-3 py-1 bg-amber-500 text-amber-950 text-sm font-bold rounded-full">

@@ -555,7 +555,7 @@ export default function AdvancedQuoteBuilder({
                     <img src={merlinImage} alt="Merlin" className="w-8 h-8" />
                     <div>
                       <h1 className="text-xl font-bold text-white">System Configuration</h1>
-                      <p className="text-xs text-slate-500">ProQuote™ • Direct Input</p>
+                      <p className="text-xs text-slate-500">ProStack™ • Direct Input</p>
                     </div>
                   </div>
                 </div>
@@ -681,13 +681,13 @@ export default function AdvancedQuoteBuilder({
                   e.currentTarget.style.boxShadow =
                     "0 0 0 1px rgba(59,130,246,0.05), 0 4px 24px rgba(0,0,0,0.2)";
                 }}
-                aria-label="Learn how ProQuote works"
+                aria-label="Learn how ProStack works"
               >
                 <div className="shrink-0 relative">
                   <div className="relative">
                     <img
                       src={badgeIcon}
-                      alt="ProQuote Badge"
+                      alt="ProStack Badge"
                       className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
                     />
                     <div
@@ -704,7 +704,7 @@ export default function AdvancedQuoteBuilder({
                 <div className="flex-1 text-left min-w-0">
                   <div className="flex items-center gap-2.5 mb-1">
                     <span className="text-xl font-bold text-blue-400 tracking-tight">
-                      ProQuote™
+                      ProStack™
                     </span>
                   </div>
                   <p className="text-sm leading-snug" style={{ color: "rgba(255,255,255,0.5)" }}>
@@ -1057,7 +1057,7 @@ export default function AdvancedQuoteBuilder({
         <ProQuoteHowItWorksModal
           isOpen={showHowItWorks}
           onClose={() => setShowHowItWorks(false)}
-          onOpenProQuote={() => {
+          onOpenProStack={() => {
             setShowHowItWorks(false);
             setViewMode("custom-config");
           }}

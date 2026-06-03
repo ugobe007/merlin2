@@ -107,7 +107,7 @@ export const FINANCIAL_DEFAULTS = {
 /**
  * Calculate multi-year financial projections
  *
- * @param inputs - Financial inputs from TrueQuote calculation
+ * @param inputs - Financial inputs from StackQuote calculation
  * @param years - Number of years to project (default 10)
  * @returns Complete financial projection with yearly breakdown
  */

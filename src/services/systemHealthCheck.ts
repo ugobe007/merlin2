@@ -8,7 +8,7 @@
  * - Database schema validation
  * - Calculation SSOT compliance
  * - Workflow smoke tests
- * - TrueQuote compliance
+ * - StackQuote compliance
  * - Nested numbers/errant calculations
  * - Template format validation
  * - Wizard functionality
@@ -91,7 +91,7 @@ export async function runSystemHealthCheck(): Promise<SystemHealthReport> {
     processResult(schemaHealth, "Database Schemas"),
     processResult(ssotHealth, "SSOT Compliance"),
     processResult(workflowHealth, "Workflow Links"),
-    processResult(trueQuoteHealth, "TrueQuote Compliance"),
+    processResult(trueQuoteHealth, "StackQuote Compliance"),
     processResult(calculationHealth, "Calculation Logic"),
     processResult(templateHealth, "Template Formats"),
     processResult(wizardHealth, "Wizard Functionality"),
@@ -570,13 +570,13 @@ async function checkWorkflowLinks(): Promise<HealthCheckResult> {
 }
 
 /**
- * 6. TrueQuote Compliance
+ * 6. StackQuote Compliance
  */
 async function checkTrueQuoteCompliance(): Promise<HealthCheckResult> {
   const startTime = Date.now();
 
   try {
-    // Generate a test quote and check for TrueQuote data
+    // Generate a test quote and check for StackQuote data
     const testQuote = await QuoteEngine.generateQuote({
       storageSizeMW: 1.0,
       durationHours: 4,
@@ -599,18 +599,18 @@ async function checkTrueQuoteCompliance(): Promise<HealthCheckResult> {
     ].reduce((a, b) => a + b, 0);
 
     let status: "pass" | "warning" | "fail" = "pass";
-    let message = `TrueQuote compliance: ${complianceScore}%`;
+    let message = `StackQuote compliance: ${complianceScore}%`;
 
     if (complianceScore < 50) {
       status = "fail";
-      message = "Missing TrueQuote audit data";
+      message = "Missing StackQuote audit data";
     } else if (complianceScore < 100) {
       status = "warning";
-      message = "Incomplete TrueQuote audit data";
+      message = "Incomplete StackQuote audit data";
     }
 
     return {
-      category: "TrueQuote Compliance",
+      category: "StackQuote Compliance",
       status,
       score: complianceScore,
       message,
@@ -625,7 +625,7 @@ async function checkTrueQuoteCompliance(): Promise<HealthCheckResult> {
     };
   } catch (error) {
     return {
-      category: "TrueQuote Compliance",
+      category: "StackQuote Compliance",
       status: "error",
       score: 0,
       message: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,

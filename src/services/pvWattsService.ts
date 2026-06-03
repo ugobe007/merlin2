@@ -15,7 +15,7 @@
  * - Provides: Hourly/monthly solar production by location
  * - Factors: Latitude, longitude, tilt, azimuth, system losses, weather data
  *
- * DATA SOURCES (TrueQuote™ compliant):
+ * DATA SOURCES (StackQuote™ compliant):
  * - NREL PVWatts Version 8 (TMY3 weather data)
  * - NREL National Solar Radiation Database (NSRDB)
  * - NREL System Advisor Model (SAM) calculations
@@ -89,7 +89,7 @@ export interface PVWattsResult {
     timezone: number;
     elevation: number;
   };
-  /** TrueQuote™ attribution */
+  /** StackQuote™ attribution */
   audit: {
     source: string;
     apiVersion: string;

@@ -11,7 +11,7 @@
  * Savings = energy arbitrage + demand charge reduction + solar offset.
  * Net cost after 30% federal ITC.
  *
- * CTA: "Build My TrueQuote™" → /wizard?industry=X&state=Y[&bill=Z]
+ * CTA: "Build My StackQuote™" → /wizard?industry=X&state=Y[&bill=Z]
  */
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
@@ -616,7 +616,7 @@ export default function QuickEstimateWidget() {
               }}
             >
               <img src={SHIELD_GOLD} alt="" className="w-4 h-4 object-contain" />
-              Build My TrueQuote™
+              Build My StackQuote™
               <ChevronRight className="w-4 h-4" />
             </a>
           </div>

@@ -70,7 +70,7 @@ export const collegeConfig: VerticalConfig = {
   howItWorks: [
     { title: 'Tell Us About Your Campus', description: 'Enter enrollment, building square footage, and monthly utility bill. Takes 60 seconds.' },
     { title: 'We Model Your Campus Load', description: 'Merlin uses DOE Higher Education energy benchmarks to model your dorm, lab, and administrative loads.' },
-    { title: 'Get a Grant-Ready Proposal', description: 'Full financial model including ITC, DOE grants, and TrueQuote™ verified pricing for CFO review.' },
+    { title: 'Get a Grant-Ready Proposal', description: 'Full financial model including ITC, DOE grants, and StackQuote™ verified pricing for CFO review.' },
     { title: 'Hit Your Sustainability Goals', description: 'Battery storage + solar is the fastest path to carbon neutrality. Most campus projects pay back in 4-5 years.' },
   ],
   leadSourceTag: 'college_vertical',

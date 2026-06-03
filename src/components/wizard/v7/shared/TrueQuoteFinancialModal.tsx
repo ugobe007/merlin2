@@ -345,7 +345,7 @@ export default function TrueQuoteFinancialModal({
         >
           <div className="flex items-center gap-2 text-xs text-slate-600">
             <Shield className="w-3.5 h-3.5" />
-            <span>TrueQuote™ Verified · {new Date().toLocaleDateString()}</span>
+            <span>StackQuote™ Verified · {new Date().toLocaleDateString()}</span>
           </div>
           <button
             onClick={onClose}

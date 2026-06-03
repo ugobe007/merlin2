@@ -68,7 +68,7 @@ export const warehouseConfig: VerticalConfig = {
   howItWorks: [
     { title: 'Describe Your Facility', description: 'Enter your square footage, dock count, and refrigeration needs. Takes 60 seconds.' },
     { title: 'We Model Your Load Profile', description: 'Merlin uses DOE Commercial Building Energy Data to map your shift patterns and demand spikes.' },
-    { title: 'Get Your Storage Quote', description: 'Receive a bankable proposal with payback analysis, equipment specs, and TrueQuote™ verified pricing.' },
+    { title: 'Get Your Storage Quote', description: 'Receive a bankable proposal with payback analysis, equipment specs, and StackQuote™ verified pricing.' },
     { title: 'Start Cutting Costs', description: 'Most warehouse BESS projects pay back in under 4 years with available incentives.' },
   ],
   leadSourceTag: 'warehouse_vertical',

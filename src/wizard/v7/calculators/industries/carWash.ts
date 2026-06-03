@@ -100,7 +100,7 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
     const dutyCycle = 0.6; // 60% typical for car wash (wash cycles + idle time)
     const energyKWhPerDay = Math.round(peakLoadKW * operatingHours * dutyCycle);
 
-    // 4b. Build computed object with kWContributors (TrueQuote compliance)
+    // 4b. Build computed object with kWContributors (StackQuote compliance)
     const _computed = {
       kWContributors: {
         drying: dryersKW, // Match harness invariant key name
@@ -126,7 +126,7 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
       warnings,
     };
 
-    // 4c. Build validation envelope with canonical contributor keys (TrueQuote compliance)
+    // 4c. Build validation envelope with canonical contributor keys (StackQuote compliance)
     // Car wash process loads: drying (blowers) + waterPumps (wash system) + vacuums
     const processKW = dryersKW + waterPumpsKW + vacuumsKW;
 
@@ -172,7 +172,7 @@ export const CAR_WASH_LOAD_V1_SSOT: CalculatorContract = {
       energyKWhPerDay,
       assumptions,
       warnings,
-      validation, // TrueQuote validation envelope (namespaced, clean)
+      validation, // StackQuote validation envelope (namespaced, clean)
       raw: result,
     };
   },

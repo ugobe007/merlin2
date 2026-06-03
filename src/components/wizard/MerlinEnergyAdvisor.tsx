@@ -126,11 +126,11 @@ export function MerlinEnergyAdvisor({
               Merlin's Guidance
             </h3>
             
-            {/* TrueQuote Badge with Calculator Icon - Fixed: Changed button to div to avoid nested button */}
+            {/* StackQuote Badge with Calculator Icon - Fixed: Changed button to div to avoid nested button */}
             <div
               onClick={() => setShowTrueQuoteCalculator(!showTrueQuoteCalculator)}
               className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg transition-all group cursor-pointer"
-              title="View TrueQuote calculations"
+              title="View StackQuote calculations"
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
@@ -140,7 +140,7 @@ export function MerlinEnergyAdvisor({
                 }
               }}
             >
-              <span className="text-xs font-bold text-amber-500">TrueQuote</span>
+              <span className="text-xs font-bold text-amber-500">StackQuote</span>
               <span className="text-xs font-bold text-amber-400">™</span>
               <Calculator className="w-4 h-4 text-amber-400 group-hover:text-amber-300 transition-colors" />
               {showTrueQuoteCalculator ? (
@@ -153,7 +153,7 @@ export function MerlinEnergyAdvisor({
           
           {/* Merlin's Explanation */}
           <p className="text-white text-xs leading-relaxed mb-2">
-            I'm calculating your maximum savings potential. The Value Tracker above shows real-time savings as you answer questions. Click <span className="text-amber-400 font-semibold">TrueQuote™</span> to verify the calculations.
+            I'm calculating your maximum savings potential. The Value Tracker above shows real-time savings as you answer questions. Click <span className="text-amber-400 font-semibold">StackQuote™</span> to verify the calculations.
           </p>
           
           {/* Only show actionable tips - no fluff */}
@@ -178,12 +178,12 @@ export function MerlinEnergyAdvisor({
             </p>
           )}
 
-          {/* TrueQuote Calculator - Expandable */}
+          {/* StackQuote Calculator - Expandable */}
           {showTrueQuoteCalculator && (
             <div className="mt-4 p-4 bg-slate-900/50 border border-amber-500/30 rounded-lg">
               <div className="flex items-center gap-2 mb-3">
                 <TrueQuoteBadge size="sm" variant="default" />
-                <h4 className="text-sm font-bold text-white">How TrueQuote Works</h4>
+                <h4 className="text-sm font-bold text-white">How StackQuote Works</h4>
               </div>
               
               <div className="space-y-3 text-xs text-slate-300">

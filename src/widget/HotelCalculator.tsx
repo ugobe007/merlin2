@@ -178,7 +178,7 @@ export function HotelCalculator(props: HotelCalculatorProps) {
           <p style={{ fontSize: "14px", color: isDark ? "#94a3b8" : "#64748b", margin: 0 }}>
             Powered by{" "}
             <a href="https://merlin2.fly.dev" target="_blank" style={{ color: primaryColor }}>
-              Merlin TrueQuote™
+              Merlin StackQuote™
             </a>
           </p>
         )}

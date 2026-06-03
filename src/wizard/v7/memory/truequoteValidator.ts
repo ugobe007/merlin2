@@ -4,7 +4,7 @@
  *
  * PURPOSE:
  *   Every time Merlin Memory is written, this validator runs a battery of checks
- *   to ensure the data meets TrueQuote™ standards:
+ *   to ensure the data meets StackQuote™ standards:
  *     1. INTEGRITY — Required fields present, correct types, no NaN/Infinity
  *     2. RANGE — Values within SSOT-defined bounds (NREL, IRA, ASHRAE)
  *     3. CONSISTENCY — Cross-slot values agree (profile.peakLoadKW ≈ quote.peakLoadKW)
@@ -457,7 +457,7 @@ function validateProfile(
         message: `Contributor sum ${contributorSum.toFixed(0)} kW drifts ${(drift * 100).toFixed(1)}% from peak load ${profile.peakLoadKW.toFixed(0)} kW`,
         expected: `Within 15% of ${profile.peakLoadKW.toFixed(0)} kW`,
         actual: `${contributorSum.toFixed(0)} kW (${(drift * 100).toFixed(1)}% drift)`,
-        source: "TrueQuote™ contributor integrity rule",
+        source: "StackQuote™ contributor integrity rule",
       });
     }
   }
@@ -647,7 +647,7 @@ function validateQuote(
         message: `Quote peak load ${quote.peakLoadKW?.toFixed(0)} kW drifts ${(drift * 100).toFixed(1)}% from profile ${profile.peakLoadKW.toFixed(0)} kW`,
         expected: `Within 20% of profile: ${profile.peakLoadKW.toFixed(0)} kW`,
         actual: `${quote.peakLoadKW?.toFixed(0)} kW`,
-        source: "TrueQuote™ cross-slot consistency",
+        source: "StackQuote™ cross-slot consistency",
       });
     }
   }
@@ -665,7 +665,7 @@ function validateQuote(
         message: `Quote BESS ${quote.bessKWh?.toFixed(0)} kWh drifts from sizing ${sizing.bessKWh.toFixed(0)} kWh`,
         expected: `Within 15% of sizing: ${sizing.bessKWh.toFixed(0)} kWh`,
         actual: `${quote.bessKWh?.toFixed(0)} kWh`,
-        source: "TrueQuote™ cross-slot consistency",
+        source: "StackQuote™ cross-slot consistency",
       });
     }
   }
@@ -756,7 +756,7 @@ function validateQuote(
       category: "range",
       message: "Annual savings is negative — verify inputs",
       actual: `$${savings.toLocaleString()}`,
-      source: "TrueQuote™ sanity check",
+      source: "StackQuote™ sanity check",
     });
   }
 
@@ -776,7 +776,7 @@ function validateQuote(
           message: `Reported payback ${quote.paybackYears.toFixed(1)}y differs from simple calc ${simplePayback.toFixed(1)}y — may include ITC, degradation, or TVM adjustments`,
           expected: `≈${simplePayback.toFixed(1)} years (simple cost/savings)`,
           actual: `${quote.paybackYears.toFixed(1)} years`,
-          source: "TrueQuote™ cross-check",
+          source: "StackQuote™ cross-check",
         });
       }
     }
@@ -1064,7 +1064,7 @@ function validateSession(session: MemorySession, v: TrueQuoteViolation[]): void 
 // ============================================================================
 
 /**
- * Run the full TrueQuote™ validation suite against current memory state.
+ * Run the full StackQuote™ validation suite against current memory state.
  * Pure function — no side effects.
  */
 export function validateMemory(
@@ -1190,7 +1190,7 @@ export function validateSlot<K extends MemorySlotKey>(
 
 /** Format violations into a compact console-ready string */
 export function formatViolations(violations: TrueQuoteViolation[]): string {
-  if (violations.length === 0) return "✅ TrueQuote™ — All checks passed";
+  if (violations.length === 0) return "✅ StackQuote™ — All checks passed";
 
   const lines = violations.map((v) => {
     const icon = v.severity === "error" ? "🔴" : v.severity === "warning" ? "🟡" : "🔵";
@@ -1202,8 +1202,8 @@ export function formatViolations(violations: TrueQuoteViolation[]): string {
   const warnings = violations.filter((v) => v.severity === "warning").length;
   const header =
     errors > 0
-      ? `🔴 TrueQuote™ — ${errors} error(s), ${warnings} warning(s)`
-      : `🟡 TrueQuote™ — ${warnings} warning(s)`;
+      ? `🔴 StackQuote™ — ${errors} error(s), ${warnings} warning(s)`
+      : `🟡 StackQuote™ — ${warnings} warning(s)`;
 
   return [header, ...lines].join("\n");
 }
@@ -1216,20 +1216,20 @@ export function getComplianceBadge(report: TrueQuoteReport): {
 } {
   if (report.isTrueQuoteReady) {
     return {
-      label: "TrueQuote™ Verified",
+      label: "StackQuote™ Verified",
       color: "green",
       tooltip: `All ${report.slotsFilled.length} data slots validated. Checksum: ${report.checksum}`,
     };
   }
   if (report.isCompliant) {
     return {
-      label: "TrueQuote™ Partial",
+      label: "StackQuote™ Partial",
       color: "amber",
       tooltip: `${report.slotsFilled.length}/${report.slotsFilled.length + report.slotsEmpty.length} slots filled. ${report.warningCount} warning(s).`,
     };
   }
   return {
-    label: "TrueQuote™ Issues",
+    label: "StackQuote™ Issues",
     color: "red",
     tooltip: `${report.errorCount} error(s), ${report.warningCount} warning(s). Data integrity check failed.`,
   };

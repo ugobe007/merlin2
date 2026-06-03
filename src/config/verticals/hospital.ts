@@ -142,7 +142,7 @@ export const hospitalConfig: VerticalConfig = {
     {
       title: "Get Your Custom Quote",
       description:
-        "Receive a TrueQuote™ proposal with ROI projections, equipment specs, and compliance documentation.",
+        "Receive a StackQuote™ proposal with ROI projections, equipment specs, and compliance documentation.",
     },
     {
       title: "Deploy & Protect",

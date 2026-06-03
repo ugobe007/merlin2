@@ -8,7 +8,7 @@ export type AdvisorCardType = "discovery" | "tip" | "progress" | "action" | "sum
 export type AdvisorBadge =
   | "Estimate"
   | "Not Verified"
-  | "TrueQuote Verified"
+  | "StackQuote Verified"
   | "Recommended"
   | "Most Popular"
   | "High Opportunity"

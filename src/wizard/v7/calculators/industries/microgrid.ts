@@ -131,7 +131,7 @@ export const MICROGRID_LOAD_V1_SSOT: CalculatorContract = {
  * ARCHITECTURE CHANGE:
  * - Previous: Hardcoded calculation logic (150+ lines per calculator)
  * - New: Thin adapters that delegate to useCasePowerCalculations.ts (20-30 lines)
- * - Benefits: Single source of truth, 80% less code, TrueQuote compliant
+ * - Benefits: Single source of truth, 80% less code, StackQuote compliant
  *
  * COVERAGE:
  * - Generic adapter: Works for ALL 20+ industries via slug routing

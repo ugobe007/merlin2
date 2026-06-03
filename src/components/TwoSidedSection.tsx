@@ -1,6 +1,6 @@
 /* Merlin Energy — Two-Sided Market Section
    Answers the question every first-time visitor asks: "Who is this for?"
-   Two clear paths: Energy Buyers (free TrueQuote) + EPCs / Vendors (lead gen + ProQuote).
+   Two clear paths: Energy Buyers (free StackQuote) + EPCs / Vendors (lead gen + ProStack).
    Placement: between StatusQuoSection and IndustriesSection. */
 
 import { ArrowRight, Building2, HardHat, CheckCircle2 } from "lucide-react";
@@ -61,7 +61,7 @@ export default function TwoSidedSection() {
                 className="text-slate-400 text-sm leading-relaxed mb-6"
                 style={{ fontFamily: "'Nunito Sans', sans-serif" }}
               >
-                TrueQuote™ gives facility operators, CFOs, and project managers a complete,
+                StackQuote™ gives facility operators, CFOs, and project managers a complete,
                 independent energy project model — solar, storage, generators, EV charging — sized
                 to your actual location, load profile, and utility rate. Free. No signup. In about
                 90 seconds.
@@ -90,7 +90,7 @@ export default function TwoSidedSection() {
                   color: "#3ECF8E",
                 }}
               >
-                Get your free TrueQuote™
+                Get your free StackQuote™
                 <ArrowRight size={15} />
               </a>
             </div>
@@ -122,7 +122,7 @@ export default function TwoSidedSection() {
                 className="text-slate-400 text-sm leading-relaxed mb-6"
                 style={{ fontFamily: "'Nunito Sans', sans-serif" }}
               >
-                Every buyer who completes a TrueQuote™ generates a structured project brief —
+                Every buyer who completes a StackQuote™ generates a structured project brief —
                 location, industry, load profile, preferred scope, and budget range. Merlin routes
                 those briefs to matched EPC partners. You respond with your specs, pricing, and
                 timeline — directly inside the platform.
@@ -171,8 +171,8 @@ export default function TwoSidedSection() {
             style={{ fontFamily: "'Nunito Sans', sans-serif" }}
           >
             Merlin is free for buyers — always. EPC and vendor partners pay a subscription for
-            access to the lead pipeline and ProQuote tooling. The model only works if the buyer side
-            is genuinely useful and unbiased, so we keep TrueQuote™ completely independent of which
+            access to the lead pipeline and ProStack tooling. The model only works if the buyer side
+            is genuinely useful and unbiased, so we keep StackQuote™ completely independent of which
             vendors are in the network.
           </p>
         </div>

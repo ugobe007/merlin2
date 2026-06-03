@@ -95,10 +95,10 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   // ✅ MERLIN MEMORY: Read cross-step data from Memory first, fall back to state
   const data = useMerlinData(state);
 
-  // ── TrueQuote Compliance: Defer snapshot until in-flight pricing settles ──
+  // ── StackQuote Compliance: Defer snapshot until in-flight pricing settles ──
   // If the user changed add-ons in Step 4 and navigated before the debounce
   // fired, recalculateWithAddOns starts runPricingSafe (async). We must NOT
-  // snapshot until TrueQuote verification completes — otherwise tier financials
+  // snapshot until StackQuote verification completes — otherwise tier financials
   // are built from a stale prior quote that excludes the new add-ons.
   const pricingStatus = state?.pricingStatus ?? "idle";
   const [readyToFreeze, setReadyToFreeze] = useState(() => pricingStatus !== "pending");
@@ -246,7 +246,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
   const hasRunRef = useRef(false);
 
   useEffect(() => {
-    // Wait for TrueQuote pricing to settle before snapshotting
+    // Wait for StackQuote pricing to settle before snapshotting
     if (!readyToFreeze || !snapshotRef.current.frozen) return;
     // Run exactly ONCE
     if (hasRunRef.current) return;
@@ -603,7 +603,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      {/* TrueQuote Financial Modal — full ROI, 10yr cashflow, sensitivity */}
+      {/* StackQuote Financial Modal — full ROI, 10yr cashflow, sensitivity */}
       {(() => {
         const modalTier = tiers.find((t) => t.tierKey === (selectedTier || "perfectFit"));
         const mq = modalTier?.quote;
@@ -630,18 +630,18 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         );
       })()}
 
-      {/* ✅ TrueQuote Hero Badge — large, gold, unmissable */}
+      {/* ✅ StackQuote Hero Badge — large, gold, unmissable */}
       <button
         type="button"
         onClick={() => setShowTrueQuoteModal(true)}
         className="group w-full flex items-center gap-4 p-4 rounded-xl border-2 border-amber-500/30 bg-amber-500/[0.04] hover:border-amber-400/50 hover:bg-amber-500/[0.08] transition-all duration-300 cursor-pointer"
-        aria-label="Open TrueQuote financial summary"
+        aria-label="Open StackQuote financial summary"
       >
         {/* Gold Shield Image */}
         <div className="shrink-0 relative">
           <img
             src={badgeGoldIcon}
-            alt="TrueQuote Verified"
+            alt="StackQuote Verified"
             className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
           />
         </div>
@@ -649,7 +649,7 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
         {/* Badge Text */}
         <div className="flex-1 text-left">
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-xl font-bold text-amber-400 tracking-tight">TrueQuote™</span>
+            <span className="text-xl font-bold text-amber-400 tracking-tight">StackQuote™</span>
             <span className="text-xs font-semibold text-amber-500/70 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
               Verified
             </span>
@@ -823,10 +823,10 @@ export default function Step5MagicFitV7({ state, actions }: Props) {
                   </div>
                 )}
 
-                {/* TrueQuote verified label */}
+                {/* StackQuote verified label */}
                 <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mb-2">
                   <Shield className="w-3 h-3 text-violet-400" />
-                  <span className="text-violet-300 font-semibold">TrueQuote™</span>
+                  <span className="text-violet-300 font-semibold">StackQuote™</span>
                   <span>verified</span>
                 </div>
 

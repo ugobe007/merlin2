@@ -13,7 +13,7 @@
  *
  * Created: February 18, 2026
  * Redesigned: February 18, 2026 — Two-panel layout
- * Part of TrueQuote™ Solar Sizing Assistant
+ * Part of StackQuote™ Solar Sizing Assistant
  */
 
 import React, { useState, useMemo, useCallback } from "react";

@@ -3,10 +3,10 @@
  * ======================
  * Shows a "sneak peek" of potential savings in Step 1 after business lookup.
  *
- * ⚠️ IMPORTANT: This is NOT TrueQuote™ verified data!
+ * ⚠️ IMPORTANT: This is NOT StackQuote™ verified data!
  * - Based on industry averages and heuristics
  * - Clearly labeled as "ESTIMATE" in UI
- * - Real TrueQuote™ numbers are calculated in Steps 4-6
+ * - Real StackQuote™ numbers are calculated in Steps 4-6
  *
  * Created: January 14, 2026
  */
@@ -23,7 +23,7 @@ import type { SavingsPreviewEstimate } from "../types";
  * Industry average energy profiles for ESTIMATE calculations
  * These are NOT SSOT - they're rough averages for preview purposes
  *
- * Source: Industry benchmarks, NOT TrueQuote verified
+ * Source: Industry benchmarks, NOT StackQuote verified
  */
 const INDUSTRY_AVERAGES: Record<
   string,
@@ -174,7 +174,7 @@ const DEFAULT_AVERAGES = {
  * Calculate ESTIMATED savings preview
  *
  * ⚠️ WARNING: This is for UI preview ONLY!
- * Real calculations use TrueQuote™ in Steps 4-6
+ * Real calculations use StackQuote™ in Steps 4-6
  */
 // eslint-disable-next-line react-refresh/only-export-components
 export function calculateSavingsPreview(
@@ -228,7 +228,7 @@ export function calculateSavingsPreview(
     estimatedROI,
     paybackYears,
     isEstimate: true,
-    disclaimer: `Preliminary estimate based on typical ${industrySlug.replace(/_/g, " ")} energy profiles. Your personalized TrueQuote™ with verified savings will be calculated in Step 5.`,
+    disclaimer: `Preliminary estimate based on typical ${industrySlug.replace(/_/g, " ")} energy profiles. Your personalized StackQuote™ with verified savings will be calculated in Step 5.`,
     generatedAt: Date.now(),
   };
 }
@@ -369,7 +369,7 @@ export function SavingsPreviewPanel({
         <div className="flex items-center gap-2 text-xs text-amber-200/70">
           <Info className="w-3 h-3 text-amber-400 flex-shrink-0" />
           <span>
-            *Estimate based on typical {industryName.toLowerCase()} profiles. TrueQuote™ verified in
+            *Estimate based on typical {industryName.toLowerCase()} profiles. StackQuote™ verified in
             Step 5.
           </span>
         </div>

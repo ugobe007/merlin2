@@ -280,7 +280,7 @@ export type ConfidenceLevel = "high" | "medium" | "low" | "fallback";
 /**
  * A single kW contributor — one "slice" of the load breakdown.
  *
- * TrueQuote requires every kW to be explainable.
+ * StackQuote requires every kW to be explainable.
  */
 export type LoadContributor = {
   /** Canonical key (must be one of ContributorKeys from contract.ts) */
@@ -295,7 +295,7 @@ export type LoadContributor = {
   /** Share of total peak (0-1) */
   share: number;
 
-  /** Source citation for TrueQuote (e.g., "ASHRAE 90.1", "Energy Star") */
+  /** Source citation for StackQuote (e.g., "ASHRAE 90.1", "Energy Star") */
   source?: string;
 };
 
@@ -323,7 +323,7 @@ export type ProvenanceConflict = {
 };
 
 /**
- * An invariant check result — TrueQuote sanity validation.
+ * An invariant check result — StackQuote sanity validation.
  */
 export type EnvelopeInvariant = {
   /** What was checked */
@@ -362,7 +362,7 @@ export type LoadProfileEnvelope = {
   /** Annual energy consumption in kWh */
   energyKWhPerYear: number;
 
-  // --- Explainability (TrueQuote) ---
+  // --- Explainability (StackQuote) ---
 
   /** kW breakdown by contributor */
   contributors: LoadContributor[];
@@ -409,7 +409,7 @@ export type LoadProfileEnvelope = {
   /** Template key used for mapping */
   templateKey: string;
 
-  // --- TrueQuote invariants ---
+  // --- StackQuote invariants ---
 
   /** Invariant check results */
   invariants: EnvelopeInvariant[];
@@ -426,7 +426,7 @@ export type LoadProfileEnvelope = {
   conflicts: ProvenanceConflict[];
 
   /**
-   * TrueQuote™ policy events — persistence-ready telemetry.
+   * StackQuote™ policy events — persistence-ready telemetry.
    *
    * Every "thing that happened" during the pipeline is classified:
    *   SSOT_INPUT_MISSING, SEMANTIC_CONFLICT, NAN_SANITIZED,
@@ -543,7 +543,7 @@ export function computeConfidence(
 /**
  * Run invariant checks on a load profile envelope.
  *
- * These are the TrueQuote sanity checks that catch silent drift.
+ * These are the StackQuote sanity checks that catch silent drift.
  */
 export function checkEnvelopeInvariants(
   envelope: Omit<LoadProfileEnvelope, "invariants" | "invariantsAllPassed" | "createdAt">

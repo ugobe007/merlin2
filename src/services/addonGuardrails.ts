@@ -3,7 +3,7 @@
  * ADDON GUARDRAILS — Single Source of Truth for sizing sanity checks,
  * equipment requirements, and economic validation for Solar, EV, and Generator.
  *
- * TrueQuote™ compliance: every number here is traceable to a published standard.
+ * StackQuote™ compliance: every number here is traceable to a published standard.
  * These functions are called by:
  *   - pricingServiceV45.ts (EV infrastructure cost)
  *   - step4Logic.ts (audit notes, warnings)
@@ -23,7 +23,7 @@
  *      DCFC (50 kW) requires 480V 3-phase service. Many commercial buildings
  *      have single-phase 208V only — adding 3-phase is $15K–$35K incremental.
  *      HPC (250 kW) requires a dedicated ~350A 480V feed; transformer very likely.
- *      These costs are NOT in the charger unit price and MUST appear in TrueQuote.
+ *      These costs are NOT in the charger unit price and MUST appear in StackQuote.
  *
  *   3. Generator sizing must account for motor starting surge.
  *      HVAC compressors, pumps, and refrigeration units draw 6–8× running current
@@ -81,7 +81,7 @@ export interface SolarValueAnalysis {
   itcAmount: number;           // grossCostDollars × itcRate
   netCostAfterITC: number;     // grossCostDollars × (1 − itcRate)
 
-  // Audit note for TrueQuote
+  // Audit note for StackQuote
   auditNote: string;
 }
 
@@ -451,7 +451,7 @@ export interface GeneratorEquipmentChecklist {
   fuelStorageGallons: number;  // For diesel: hours × rated load × 0.068 gal/kWh (EPA Tier 4)
   fuelStorageHours: number;    // Runtime this tank provides at full load
 
-  // Equipment list (MUST all appear in TrueQuote)
+  // Equipment list (MUST all appear in StackQuote)
   requiredEquipment: Array<{
     item: string;
     cost: number;        // 0 if unknown/site-dependent
@@ -611,7 +611,7 @@ export function computeGeneratorSizingGuardrail(params: {
 
 /**
  * Run all guardrails for a given addon configuration and return a combined
- * list of warnings that should be surfaced in the UI and included in TrueQuote.
+ * list of warnings that should be surfaced in the UI and included in StackQuote.
  *
  * Called by step4Logic.ts buildOneTier() to populate tier.notes.
  */

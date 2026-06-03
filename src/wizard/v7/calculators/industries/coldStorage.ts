@@ -45,7 +45,7 @@ export const COLD_STORAGE_LOAD_V1_SSOT: CalculatorContract = {
     });
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
-    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // ── StackQuote kW contributor breakdown ─────────────────────────
     // Cold storage: refrigeration-dominant (60-70%), plus HVAC, lighting, material handling
     const refrigerationPct = hasFrozen ? 0.7 : 0.6;
     const hvacPct = 0.05; // Minimal — refrigeration handles most climate

@@ -3,12 +3,12 @@
  * ============================
  * Version 1.0 - January 2026
  * 
- * "Merlin Energy powered by TrueQuote™"
+ * "Merlin Energy powered by StackQuote™"
  * 
  * Strategy:
  * - Unified slate blue foundation across all steps
  * - Purple accents for Merlin guidance (Steps 1-4)
- * - Amber/orange accents for TrueQuote results (Steps 5-6)
+ * - Amber/orange accents for StackQuote results (Steps 5-6)
  * - Same foundation, different accent = cohesive but distinct
  */
 
@@ -49,7 +49,7 @@ export const colors = {
     glow: 'rgba(139, 92, 246, 0.25)',
   },
 
-  // TrueQuote Accent (Steps 5-6: The Results)
+  // StackQuote Accent (Steps 5-6: The Results)
   truequote: {
     primary: '#f59e0b',      // amber-500
     secondary: '#f97316',    // orange-500
@@ -176,7 +176,7 @@ export const components = {
       },
     },
     
-    // TrueQuote Primary (Steps 5-6)
+    // StackQuote Primary (Steps 5-6)
     truequotePrimary: {
       background: colors.truequote.gradient,
       color: colors.text.primary,
@@ -331,7 +331,7 @@ export const stepConfigs = {
     badgeVariant: 'merlin',
   },
   
-  // Steps 5-6: TrueQuote Results
+  // Steps 5-6: StackQuote Results
   truequoteSteps: {
     primaryColor: colors.truequote,
     buttonVariant: 'truequotePrimary',
@@ -386,16 +386,16 @@ export const animations = {
  * - Conversational, helpful tone
  * - "I'm helping you build your quote"
  * 
- * STEPS 5-6 (TrueQuote Results):
+ * STEPS 5-6 (StackQuote Results):
  * - Use colors.truequote for primary CTAs
  * - Use stepConfigs.truequoteSteps for consistent theming
- * - TrueQuote badge prominent with amber border
+ * - StackQuote badge prominent with amber border
  * - Professional, verified tone
  * - "Here's your verified, transparent quote"
  * 
  * PURPLE vs AMBER:
  * - Purple = Input/Choices (you're building)
- * - Amber = Output/Results (TrueQuote verified)
+ * - Amber = Output/Results (StackQuote verified)
  * - But keep purple for interactive elements in Step 5-6 (tier selection)
  * 
  * CONSISTENCY:

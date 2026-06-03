@@ -34,7 +34,7 @@ import {
   type SiteScoreResult,
 } from "@/services/calculators/siteScoreCalculator";
 
-// TrueQuote™ Sizing Engine (Jan 21, 2026 - Phase 5)
+// StackQuote™ Sizing Engine (Jan 21, 2026 - Phase 5)
 import { computeTrueQuoteSizing, type TrueQuoteSizing } from "@/services/truequote";
 import { calculateModelConfidence } from "./types";
 
@@ -1014,7 +1014,7 @@ export default function WizardV6() {
                       intelligence,
                       // Site Score™ (Jan 18, 2026 - Merlin IP)
                       siteScore,
-                      // Progressive Model (Jan 21, 2026 - TrueQuote™ Accuracy)
+                      // Progressive Model (Jan 21, 2026 - StackQuote™ Accuracy)
                       progressiveModel: (() => {
                         // Calculate model confidence using the SSOT function
                         const industry = state.industry || state.detectedIndustry;
@@ -1068,7 +1068,7 @@ export default function WizardV6() {
                                   >
                                 )[state.generatorCapacityBand]
                               : undefined,
-                          // Phase 4: Numeric confidence from TrueQuote™ SSOT
+                          // Phase 4: Numeric confidence from StackQuote™ SSOT
                           modelConfidenceScore: modelConf.score,
                           modelCompleteness: modelConf.completeness,
                           lastLearningMessage: modelConf.lastLearningMessage,

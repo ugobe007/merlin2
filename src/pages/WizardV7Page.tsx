@@ -3,7 +3,7 @@
  *
  * - SSOT: useWizardV7() orchestrates all state + transitions
  * - Steps are dumb: they render state + emit intents
- * - Shell provides: Merlin Rail + TrueQuote badge + Navigation
+ * - Shell provides: Merlin Rail + StackQuote badge + Navigation
  *
  * ✅ FEB 1, 2026: Navigation now uses wizardStepGates.ts (SSOT)
  * Each step gates on ONLY its own completion criteria.
@@ -419,7 +419,7 @@ function WizardV7Page() {
         electricityRate: 0.15,
       });
     } else if (mode === "bill-upload") {
-      // Navigate to ProQuote Configuration with document upload enabled
+      // Navigate to ProStack Configuration with document upload enabled
       window.location.href = "/quote-builder?advanced=true&mode=upload";
     }
   };
@@ -427,7 +427,7 @@ function WizardV7Page() {
   const handleQuickQuoteGenerate = async (params: QuickQuoteParams) => {
     setShowQuickQuoteModal(false);
 
-    // Navigate to ProQuote Configuration Page (AdvancedQuoteBuilder)
+    // Navigate to ProStack Configuration Page (AdvancedQuoteBuilder)
     // Store specs in URL params for AdvancedQuoteBuilder to read
     const proQuoteParams = new URLSearchParams({
       advanced: "true",
@@ -439,7 +439,7 @@ function WizardV7Page() {
       electricityRate: String(params.electricityRate || 0.15),
     });
 
-    // Redirect to AdvancedQuoteBuilder (ProQuote Configuration)
+    // Redirect to AdvancedQuoteBuilder (ProStack Configuration)
     window.location.href = `/quote-builder?${proQuoteParams.toString()}`;
   };
 
@@ -468,7 +468,7 @@ function WizardV7Page() {
     }
   }, [hasCheckedSavedProgress, autoSave.hasSavedProgress]);
 
-  // TrueQuote verified status - true once we have results
+  // StackQuote verified status - true once we have results
   const isVerified = state.step === "results" && !state.isBusy;
 
   // ============================================================================
@@ -600,7 +600,7 @@ function WizardV7Page() {
     // Generate cross-slot insights from Memory
     const insights = generateMerlinInsights(merlinData, state.step);
 
-    // Results: verified TrueQuote with financial summary
+    // Results: verified StackQuote with financial summary
     if (state.step === "results" && step6Advisor) {
       const {
         pricingStatus,
@@ -615,7 +615,7 @@ function WizardV7Page() {
       const bullets: string[] = [];
 
       if (pricingStatus === "pending") {
-        bullets.push("Calculating your TrueQuote™...");
+        bullets.push("Calculating your StackQuote™...");
       } else if (pricingStatus === "timed_out") {
         bullets.push("Pricing timed out — load profile available.");
         bullets.push("Use Retry button to try again.");
@@ -641,7 +641,7 @@ function WizardV7Page() {
 
       const badges: Array<{ label: string; tone: "green" | "amber" | "violet" | "blue" }> = [];
       if (pricingStatus === "ok" && pricingComplete) {
-        badges.push({ label: "TrueQuote™ • Verified", tone: "green" });
+        badges.push({ label: "StackQuote™ • Verified", tone: "green" });
       } else if (pricingStatus === "pending") {
         badges.push({ label: "calculating...", tone: "blue" });
       } else if (pricingStatus === "timed_out") {
@@ -656,7 +656,7 @@ function WizardV7Page() {
         <>
           <V7AdvisorPanel
             title="Merlin Advisor"
-            subtitle="Your TrueQuote™ Results"
+            subtitle="Your StackQuote™ Results"
             badges={badges}
             bullets={bullets}
             progressPct={pricingComplete ? 100 : pricingStatus === "pending" ? 50 : 25}

@@ -111,6 +111,28 @@ export const EQUIPMENT_KEYWORDS: Record<string, string[]> = {
     "fortress power",
     "alphaess",
     "tecloman",
+    // --- Sodium-Ion (Na-ion) Chemistry & Vendors (added 2026-05-29) ---
+    "sodium-ion",
+    "sodium ion",
+    "na-ion",
+    "naion",
+    "sodium battery",
+    "hina energy",
+    "hina battery",
+    "svolt energy",
+    "svolt",
+    "altris",
+    "altris ab",
+    "prussian blue cathode",
+    "hard carbon anode",
+    "layered oxide cathode",
+    "faradion",
+    "tiamat energy",
+    "natron energy",
+    "catl sodium",
+    "byd sodium",
+    "catl hina",
+    "contemporary amperex sodium",
   ],
   solar: [
     "solar",
@@ -384,6 +406,17 @@ export const PRICE_PATTERNS = {
   bess_mwh: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per|a)\s*M[Ww]h/gi,
   // BESS: levelized cost of storage / LCOS at $XXX/MWh or $/kWh
   lcos: /(?:lcos|levelized\s+cost\s+of\s+(?:storage|energy|electricity))\s*(?:of|at|:)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:to\s+\$?\s*\d+(?:,\d{3})*(?:\.\d{1,2})?)?\s*(?:\/|per|a)?\s*[Mk][Ww]h/gi,
+  // Na-ion specific: "sodium-ion pack at $XXX/kWh", "Na-ion cell price of $XX/kWh"
+  na_ion_kwh:
+    /(?:sodium[-\s]?ion|na[-\s]?ion)\s+(?:cell|pack|battery|system|bess)?s?\s*(?:price|cost|pricing)?\s*(?:of|at|to|is|reached)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+  // Cell/pack level pricing: "cell cost $XXX/kWh", "pack price of $XXX", "cell cost reached $XXX"
+  cell_pack_kwh:
+    /(?:cell|pack)\s+(?:cost|price|pricing)s?\s+(?:of|at|to|reached|fell|dropped|is|are|was)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+  // "quoted/priced/listed at $XXX/kWh"
+  quoted_kwh:
+    /(?:quoted|priced|listed|announced|contracted)\s+at\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+  // Bare "$XXX/kWh" without preceding context (catches abbreviated news headlines)
+  bare_kwh: /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*[-\/]\s*k[Ww]h\b/gi,
   // Project cost + capacity: "$50 million 200 MWh" → derive $/kWh = 50M/200000 = $250
   project_mwh:
     /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:million|billion|M|B)\s+(?:[\w\s,]+)?\s*(\d+(?:\.\d{1,2})?)\s*[Mm][Ww]h/gi,
@@ -397,6 +430,9 @@ export const PRICE_PATTERNS = {
   // Solar: $X/W DC from auction / PPA results
   solar_ppa:
     /(?:ppa|auction|bid|contract)\s+(?:price|rate|at)\s+\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:\/|per)\s*[Ww](?:att)?/gi,
+  // Solar capex: "capex of $X.XX/W" or "capex at $XXX/kW"
+  solar_capex:
+    /capex\s+(?:of|at|reached|fell\s+to)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*(?:[Ww](?:att)?|kW(?!h))/gi,
   // Inverter: $XXX/kW
   inverter_kw:
     /(?:inverter|pcs)\s+(?:cost|price|pricing)s?\s+(?:at|of|to|reached)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*kW(?!h)/gi,
@@ -765,7 +801,11 @@ export function extractPrices(text: string, equipment: string[]): ExtractedPrice
     detectedEquipment.includes("bess") ||
     textLower.includes("battery") ||
     textLower.includes("energy storage") ||
-    textLower.includes("bess")
+    textLower.includes("bess") ||
+    textLower.includes("sodium-ion") ||
+    textLower.includes("sodium ion") ||
+    textLower.includes("na-ion") ||
+    textLower.includes("naion")
   ) {
     const bessPatterns = [
       PRICE_PATTERNS.bess_kwh,
@@ -773,6 +813,10 @@ export function extractPrices(text: string, equipment: string[]): ExtractedPrice
       PRICE_PATTERNS.bess_kw,
       PRICE_PATTERNS.bess_mwh, // ← NEW: $/MWh → converted to $/kWh ÷ 1000
       PRICE_PATTERNS.lcos, // ← NEW: LCOS figures from analyst reports
+      PRICE_PATTERNS.na_ion_kwh, // ← Na-ion specific pricing
+      PRICE_PATTERNS.cell_pack_kwh, // ← Cell/pack level quotes
+      PRICE_PATTERNS.quoted_kwh, // ← "quoted/priced at $XXX/kWh"
+      PRICE_PATTERNS.bare_kwh, // ← Abbreviated "$XXX/kWh" headlines
       /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*kwh/gi,
       /(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*dollars?\s*(?:per|\/|a)\s*kwh/gi,
       /(?:cost|price|priced|pricing|priced\s+at)\s*(?:at|of|is|are|to)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*kwh/gi,
@@ -781,6 +825,16 @@ export function extractPrices(text: string, equipment: string[]): ExtractedPrice
       /bess.*?(?:cost|price|pricing)s?\s*(?:at|of|to|is|are|fell|dropped|reached)\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
       /costs?\s+(?:fell|dropped|declined|decreased|reduced|dropped\s+to)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|a)\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
       /at\s+\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/|per)\s*kwh\s*installed/gi,
+      // Na-ion specific: "sodium-ion cells at $XXX/kWh", "Na-ion pack price of $XX"
+      /(?:sodium[-\s]?ion|na[-\s]?ion)\s+(?:cell|pack|battery|system|bess)?s?\s*(?:price|cost|pricing|at|of)?s?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+      // "cell cost of $XXX/kWh" (common in procurement articles)
+      /cell\s+(?:cost|price|pricing)s?\s+(?:at|of|to|reached|fell|dropped)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+      // "pack price: $XXX/kWh" or "pack pricing at $XXX"
+      /pack\s+(?:price|cost|pricing)s?\s*(?::|at|of|to|reached)?\s*\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+      // "quoted at $XXX/kWh" or "priced at $XXX per kWh"
+      /(?:quoted|priced|listed|announced)\s+at\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:per|\/|a)?\s*k(?:ilo)?[Ww](?:att)?[Hh](?:our)?/gi,
+      // "$XXX kWh system" or "$XXX/kWh system" (without preceding keyword)
+      /\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*[-\/]\s*k[Ww]h\b/gi,
     ];
     for (const pattern of bessPatterns) {
       pattern.lastIndex = 0;
@@ -854,7 +908,8 @@ export function extractPrices(text: string, equipment: string[]): ExtractedPrice
       PRICE_PATTERNS.solar_watt,
       PRICE_PATTERNS.solar_module,
       PRICE_PATTERNS.solar_kw,
-      PRICE_PATTERNS.solar_ppa, // ← NEW: auction/PPA bid prices
+      PRICE_PATTERNS.solar_ppa, // ← auction/PPA bid prices
+      PRICE_PATTERNS.solar_capex, // ← capex per W/kW citations
       /\$\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*[Ww](?:att)?/gi,
       /(\d+(?:\.\d{1,2})?)\s*dollars?\s*(?:per|\/|a)\s*[Ww](?:att)?/gi,
       /(?:cost|price|priced|pricing|priced\s+at)\s*(?:at|of|is|are|to)?\s*\$?\s*(\d+(?:\.\d{1,2})?)\s*(?:per|\/|a)\s*[Ww](?:att)?/gi,

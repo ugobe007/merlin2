@@ -1,9 +1,9 @@
 /**
- * TrueQuote Engine Mapping Configuration
+ * StackQuote Engine Mapping Configuration
  * ======================================
  * SINGLE SOURCE OF TRUTH for all mappings between:
- * - Database field names → TrueQuote Engine field names
- * - Database subtype values → TrueQuote Engine subtypes
+ * - Database field names → StackQuote Engine field names
+ * - Database subtype values → StackQuote Engine subtypes
  *
  * This configuration defines valid subtypes and field mappings.
  * Part of the Porsche 911 Architecture - SSOT for wizard mappings.
@@ -12,7 +12,7 @@
 // INDUSTRY_CONFIGS import removed - using static VALID_SUBTYPES instead
 
 // ─────────────────────────────────────────────────────────────────────────────
-// VALID SUBTYPES (Extracted from TrueQuote Engine)
+// VALID SUBTYPES (Extracted from StackQuote Engine)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -22,7 +22,7 @@
 
 /**
  * Valid subtypes per industry
- * This is the SINGLE SOURCE OF TRUTH for valid TrueQuote subtypes
+ * This is the SINGLE SOURCE OF TRUTH for valid StackQuote subtypes
  */
 export const VALID_SUBTYPES: Record<string, string[]> = {
   "data-center": ["tier_1", "tier_2", "tier_3", "tier_4", "hyperscale"],
@@ -58,9 +58,9 @@ export const VALID_SUBTYPES: Record<string, string[]> = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Maps database subtype values to TrueQuote Engine subtypes
+ * Maps database subtype values to StackQuote Engine subtypes
  * Key: Industry slug
- * Value: Object mapping database values → TrueQuote Engine values
+ * Value: Object mapping database values → StackQuote Engine values
  */
 export const SUBTYPE_MAPPINGS: Record<string, Record<string, string>> = {
   "data-center": {
@@ -342,7 +342,7 @@ export const SUBTYPE_MAPPINGS: Record<string, Record<string, string>> = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Maps database field names to TrueQuote Engine field names
+ * Maps database field names to StackQuote Engine field names
  * This handles variations in naming conventions
  */
 export const FIELD_NAME_MAPPINGS: Record<string, Record<string, string>> = {
@@ -452,7 +452,7 @@ export const DEFAULT_SUBTYPES: Record<string, string> = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Map database subtype value to TrueQuote Engine subtype
+ * Map database subtype value to StackQuote Engine subtype
  */
 export function mapSubtype(industry: string, dbValue: string | undefined | null): string {
   if (!dbValue) {
@@ -469,7 +469,7 @@ export function mapSubtype(industry: string, dbValue: string | undefined | null)
 }
 
 /**
- * Map database field name to TrueQuote Engine field name
+ * Map database field name to StackQuote Engine field name
  */
 export function mapFieldName(industry: string, dbFieldName: string): string {
   // Check industry-specific mappings first

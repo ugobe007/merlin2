@@ -15,7 +15,7 @@
  */
 
 // ============================================
-// SIZING OVERRIDES (TrueQuote™ Manual Adjustments)
+// SIZING OVERRIDES (StackQuote™ Manual Adjustments)
 // ============================================
 /**
  * User overrides for Merlin's recommended sizing.
@@ -158,7 +158,7 @@ export interface WizardState {
     estimatedCost: number;
   };
 
-  // TrueQuote™ Sizing Overrides (Jan 21, 2026)
+  // StackQuote™ Sizing Overrides (Jan 21, 2026)
   // User adjustments to Merlin's recommended system sizing
   sizingOverrides?: SizingOverrides;
 }

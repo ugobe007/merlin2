@@ -52,6 +52,7 @@ const BuildRFPPage = lazy(() => import("./pages/BuildRFPPage"));
 const UploadQuotePage = lazy(() => import("./pages/UploadQuotePage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage"));
+const OutboundCampaignPage = lazy(() => import("./pages/OutboundCampaignPage"));
 import { trackPageView } from "./services/analyticsService";
 import { syncApprovedVendorProducts } from "./services/vendorPricingIntegrationService";
 
@@ -240,7 +241,7 @@ function App() {
     );
   }
 
-  // Wizard at /wizard and /home — TrueQuote builder
+  // Wizard at /wizard and /home — StackQuote builder
   if (pathname === "/wizard" || pathname === "/home" || pathname === "/landing") {
     return (
       <Suspense fallback={<PageLoader />}>
@@ -368,7 +369,7 @@ function App() {
     );
   }
 
-  // Access via /meta or /meta-calculations - TrueQuote Meta Calculations Dashboard
+  // Access via /meta or /meta-calculations - StackQuote Meta Calculations Dashboard
   if (pathname === "/meta" || pathname === "/meta-calculations" || pathname === "/ssot") {
     return (
       <Suspense fallback={<PageLoader />}>
@@ -620,7 +621,7 @@ function App() {
     );
   }
 
-  // Access via /upload-quote — Smart Upload™ (upload utility bills → pre-fill ProQuote)
+  // Access via /upload-quote — Smart Upload™ (upload utility bills → pre-fill ProStack)
   if (pathname === "/upload-quote") {
     return (
       <Suspense fallback={<PageLoader />}>
@@ -629,7 +630,16 @@ function App() {
     );
   }
 
-  // Access via /build-rfp — RFP Builder (prefilled from TrueQuote wizard)
+  // Outbound Campaign — /campaign or /outbound
+  if (pathname === "/campaign" || pathname === "/outbound") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <OutboundCampaignPage />
+      </Suspense>
+    );
+  }
+
+  // Access via /build-rfp — RFP Builder (prefilled from StackQuote wizard)
   if (pathname === "/build-rfp") {
     return (
       <Suspense fallback={<PageLoader />}>
@@ -638,7 +648,7 @@ function App() {
     );
   }
 
-  // Access via /quote-builder - ProQuote Configuration Page (AdvancedQuoteBuilder)
+  // Access via /quote-builder - ProStack Configuration Page (AdvancedQuoteBuilder)
   if (
     pathname === "/quote-builder" ||
     pathname === "/proquote" ||

@@ -66,7 +66,7 @@ export const casinoConfig: VerticalConfig = {
   howItWorks: [
     { title: 'Tell Us About Your Property', description: 'Enter gaming floor size, machine count, and monthly bill. Takes 60 seconds.' },
     { title: 'We Model Your 24/7 Load', description: 'Merlin calculates your slot machine, HVAC, and lighting loads to find peak reduction opportunities.' },
-    { title: 'Get a Bankable Proposal', description: 'Full financial model with demand charge savings, DR revenue, and TrueQuote™ verified pricing.' },
+    { title: 'Get a Bankable Proposal', description: 'Full financial model with demand charge savings, DR revenue, and StackQuote™ verified pricing.' },
     { title: 'Ensure Zero Downtime', description: 'Battery backup prevents revenue loss from power events. Most casino systems pay back in 4 years.' },
   ],
   leadSourceTag: 'casino_vertical',

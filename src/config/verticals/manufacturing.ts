@@ -97,7 +97,7 @@ export const manufacturingConfig: VerticalConfig = {
   howItWorks: [
     { title: 'Describe Your Facility', description: 'Enter square footage, shift schedule, and equipment profile. Takes about 60 seconds.' },
     { title: 'Merlin Sizes Your System', description: 'Our AI analyzes load profiles using IEEE 446 industrial standards and ASHRAE benchmarks.' },
-    { title: 'Get Your Custom Quote', description: 'Receive a TrueQuote™ proposal with demand charge savings, ROI timeline, and equipment specs.' },
+    { title: 'Get Your Custom Quote', description: 'Receive a StackQuote™ proposal with demand charge savings, ROI timeline, and equipment specs.' },
     { title: 'Deploy & Save', description: 'Connect with industrial energy integrators. Start saving on demand charges from day one.' },
   ],
 

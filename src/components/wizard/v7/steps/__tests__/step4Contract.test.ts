@@ -63,7 +63,7 @@ function specResolveBadge(
       ? Object.values(contributors).filter((v) => typeof v === "number" && v > 0).length
       : 0;
     if (nonZeroCount >= 3) {
-      return { tier: "truequote", label: "✓ TrueQuote™ Complete" };
+      return { tier: "truequote", label: "✓ StackQuote™ Complete" };
     }
   }
   return { tier: "estimate", label: "📊 Estimate — Partial validation" };
@@ -120,14 +120,14 @@ describe("Tier A — Step 4 Display Contract", () => {
   // Badge determinism
   // ──────────────────────────────────────────────────────────────────
 
-  describe("Badge: TrueQuote™ Complete", () => {
-    it("shows TrueQuote when pricing ok + industry template + v1 validation with ≥3 contributors", () => {
+  describe("Badge: StackQuote™ Complete", () => {
+    it("shows StackQuote when pricing ok + industry template + v1 validation with ≥3 contributors", () => {
       const badge = specResolveBadge("ok", "industry", FULL_TRUEQUOTE_QUOTE);
       expect(badge.tier).toBe("truequote");
-      expect(badge.label).toContain("TrueQuote");
+      expect(badge.label).toContain("StackQuote");
     });
 
-    it("requires at least 3 non-zero contributors for TrueQuote", () => {
+    it("requires at least 3 non-zero contributors for StackQuote", () => {
       const thinQuote = {
         ...FULL_TRUEQUOTE_QUOTE,
         trueQuoteValidation: {
@@ -198,7 +198,7 @@ describe("Tier A — Step 4 Display Contract", () => {
   // Essential display values
   // ──────────────────────────────────────────────────────────────────
 
-  describe("Essential display values (non-null for full TrueQuote)", () => {
+  describe("Essential display values (non-null for full StackQuote)", () => {
     const q = FULL_TRUEQUOTE_QUOTE;
 
     it("annualSavingsUSD is present and positive", () => {
@@ -423,7 +423,7 @@ describe("Tier B — Step 4 No Business Logic Drift", () => {
   // Structural assertions
   // ──────────────────────────────────────────────────────────────────
 
-  it("uses resolveBadge() for TrueQuote badge (deterministic helper)", () => {
+  it("uses resolveBadge() for StackQuote badge (deterministic helper)", () => {
     expect(step4Source).toContain("resolveBadge(");
   });
 

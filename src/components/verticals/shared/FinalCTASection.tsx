@@ -1,7 +1,7 @@
 /**
  * SHARED FINAL CTA SECTION
  * =========================
- * Bottom-of-page CTA banner with TrueQuote™ messaging.
+ * Bottom-of-page CTA banner with StackQuote™ messaging.
  * 
  * Created: Feb 7, 2026 — Phase 2 Vertical Unification
  */
@@ -25,14 +25,14 @@ export function FinalCTASection({ config, onGetQuote }: FinalCTASectionProps) {
           Ready to Start Saving?
         </h2>
         <p className={`text-xl text-${theme.accent}-200/70 mb-8`}>
-          Get a free, no-obligation TrueQuote™ in under 5 minutes
+          Get a free, no-obligation StackQuote™ in under 5 minutes
         </p>
         <button
           onClick={onGetQuote}
           className={`inline-flex items-center gap-3 bg-gradient-to-r ${theme.ctaGradient} text-white px-12 py-5 rounded-full font-bold text-xl shadow-xl hover:shadow-2xl hover:shadow-${theme.accent}-500/40 transition-all hover:scale-105 border border-${theme.accent}-400/30`}
         >
           <Sparkles className="w-6 h-6" />
-          Get My TrueQuote™
+          Get My StackQuote™
           <ArrowRight className="w-6 h-6" />
         </button>
         <p className="mt-4 text-sm text-slate-400">

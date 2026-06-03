@@ -50,7 +50,7 @@ export const APARTMENT_LOAD_V1_SSOT: CalculatorContract = {
     );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
-    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // ── StackQuote kW contributor breakdown ─────────────────────────
     // Apartments: per-unit HVAC, lighting, plug loads, common areas, elevators
     const hvacPct = 0.4;
     const lightingPct = 0.15;

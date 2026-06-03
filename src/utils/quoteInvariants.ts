@@ -1,6 +1,6 @@
 // src/utils/quoteInvariants.ts
 /**
- * TrueQuote Invariant Checks (DEV-only, non-blocking)
+ * StackQuote Invariant Checks (DEV-only, non-blocking)
  * ===================================================
  * 
  * Purpose:

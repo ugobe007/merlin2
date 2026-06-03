@@ -44,7 +44,7 @@ export const GOVERNMENT_LOAD_V1_SSOT: CalculatorContract = {
     );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
-    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // ── StackQuote kW contributor breakdown ─────────────────────────
     // Government: similar to office but higher security/IT loads
     const hvacPct = 0.35;
     const lightingPct = 0.15;

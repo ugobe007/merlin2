@@ -198,7 +198,7 @@ export function buildSalesHeader(ctx: DocContext): DocBlock {
                 new Paragraph({
                   children: [
                     new TextRun({
-                      text: "✦ TrueQuote™ Verified",
+                      text: "✦ StackQuote™ Verified",
                       bold: true,
                       size: 20,
                       color: "FBBF24",
@@ -3205,7 +3205,7 @@ export function buildTrueQuoteVerification(ctx: DocContext): DocBlock {
     new Paragraph({
       children: [
         new TextRun({
-          text: "TrueQuote™ Verification",
+          text: "StackQuote™ Verification",
           bold: true,
           size: 30,
           color: "FFFFFF",
@@ -3218,7 +3218,7 @@ export function buildTrueQuoteVerification(ctx: DocContext): DocBlock {
     new Paragraph({
       children: [
         new TextRun({
-          text: "✨ TrueQuote™ Verified",
+          text: "✨ StackQuote™ Verified",
           bold: true,
           size: 20,
           color: "D97706",

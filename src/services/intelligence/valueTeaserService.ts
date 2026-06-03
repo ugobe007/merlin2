@@ -1,6 +1,6 @@
 // Value Teaser Service (SSOT for peer benchmarking)
 // Created: January 18, 2026
-// Purpose: Calculate value ranges for industry+location with TrueQuote™ sources
+// Purpose: Calculate value ranges for industry+location with StackQuote™ sources
 // Database-driven: Queries peer_benchmarks table for real project data
 
 import { supabase } from "@/services/supabaseClient";

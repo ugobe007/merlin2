@@ -286,11 +286,11 @@ const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
           </div>
         </div>
 
-        {/* TrueQuote™ Section - NEW */}
+        {/* StackQuote™ Section - NEW */}
         <div className="mb-16">
           <div className="flex items-center gap-3 mb-8">
             <Shield className="w-8 h-8 text-amber-600" />
-            <h2 className="text-3xl font-bold text-gray-800">Introducing TrueQuote™</h2>
+            <h2 className="text-3xl font-bold text-gray-800">Introducing StackQuote™</h2>
             <button
               onClick={() => setShowTrueQuoteModal(true)}
               className="hover:scale-105 transition-transform"
@@ -312,7 +312,7 @@ const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
                 onClick={() => setShowTrueQuoteModal(true)}
                 className="mt-4 text-amber-600 hover:text-amber-700 font-semibold flex items-center gap-2 mx-auto"
               >
-                Learn more about TrueQuote™ →
+                Learn more about StackQuote™ →
               </button>
             </div>
 
@@ -524,7 +524,7 @@ const AboutMerlin: React.FC<AboutMerlinProps> = ({ onStartWizard }) => {
         </div>
       </div>
 
-      {/* TrueQuote™ Marketing Modal */}
+      {/* StackQuote™ Marketing Modal */}
       <TrueQuoteModal
         isOpen={showTrueQuoteModal}
         onClose={() => setShowTrueQuoteModal(false)}

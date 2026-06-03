@@ -204,9 +204,9 @@ export default function Step4OptionsV7({ state, actions }: Props) {
   const industryLabel = (industryMeta.label as string) || "Commercial";
   const isPricingPending = pricingStatus === "pending";
 
-  // ── Power risk analysis — TrueQuote™ sourced ──
+  // ── Power risk analysis — StackQuote™ sourced ──
   // getCriticalLoadWithSource() traces critical load % back to IEEE 446, NEC,
-  // and LADWP — the same authoritative sources shown in the TrueQuote audit.
+  // and LADWP — the same authoritative sources shown in the StackQuote audit.
   const criticalLoadInfo = getCriticalLoadWithSource(data.industry || "default");
   const criticalLoadPct = criticalLoadInfo.percentage;
   const criticalLoadKW = peakKW > 0 ? Math.max(0, Math.round(peakKW * criticalLoadPct)) : 0;
@@ -381,7 +381,7 @@ export default function Step4OptionsV7({ state, actions }: Props) {
         capacityMW={peakKW > 0 ? (peakKW / 1000) * 0.4 : 1}
       />
 
-      {/* ── ProQuote™ upsell — Merlin as salesman ── */}
+      {/* ── ProStack™ upsell — Merlin as salesman ── */}
       <button
         type="button"
         onClick={() => setShowProQuoteModal(true)}
@@ -394,7 +394,7 @@ export default function Step4OptionsV7({ state, actions }: Props) {
               Need full control?
             </span>
             <span className="text-sm text-slate-500 ml-1.5">
-              Open in ProQuote™ for advanced configuration
+              Open in ProStack™ for advanced configuration
             </span>
           </div>
         </div>
@@ -403,11 +403,11 @@ export default function Step4OptionsV7({ state, actions }: Props) {
         </span>
       </button>
 
-      {/* ProQuote™ explainer modal */}
+      {/* ProStack™ explainer modal */}
       <ProQuoteHowItWorksModal
         isOpen={showProQuoteModal}
         onClose={() => setShowProQuoteModal(false)}
-        onOpenProQuote={() => {
+        onOpenProStack={() => {
           setShowProQuoteModal(false);
           window.location.href = "/quote-builder";
         }}

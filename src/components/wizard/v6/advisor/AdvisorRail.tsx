@@ -34,7 +34,7 @@ interface WeatherRiskModalProps {
 function WeatherRiskModal({ isOpen, onClose, siteScore, weatherProfile, state }: WeatherRiskModalProps) {
   if (!isOpen) return null;
 
-  // Extract REAL data from SiteScore™ SSOT (TrueQuote compliant)
+  // Extract REAL data from SiteScore™ SSOT (StackQuote compliant)
   const gridReliability = siteScore?.riskResilience?.breakdown?.gridReliability ?? 5; // 0-8 scale
   const climateExposure = siteScore?.riskResilience?.breakdown?.climateExposure ?? 4; // 0-7 scale
   const businessCriticality = siteScore?.riskResilience?.breakdown?.businessCriticality ?? 3; // 0-5 scale
@@ -93,7 +93,7 @@ function WeatherRiskModal({ isOpen, onClose, siteScore, weatherProfile, state }:
           </div>
         </div>
 
-        {/* Risk Factor Bars - TrueQuote™ Source Attribution */}
+        {/* Risk Factor Bars - StackQuote™ Source Attribution */}
         <div className="space-y-4 mb-6">
           {riskFactors.map((factor, idx) => (
             <div key={idx}>
@@ -130,7 +130,7 @@ function WeatherRiskModal({ isOpen, onClose, siteScore, weatherProfile, state }:
           </div>
         </div>
 
-        {/* TrueQuote™ Source Attribution */}
+        {/* StackQuote™ Source Attribution */}
         <div className="mt-4 pt-3 border-t border-slate-700/50">
           <div className="text-[9px] text-slate-500 flex items-center gap-1">
             <span>📊</span>
@@ -170,7 +170,7 @@ interface AdvisorRailProps {
     // Site Score™ (Jan 18, 2026 - Merlin IP)
     siteScore?: SiteScoreResult | null;
 
-    // Progressive Model (Jan 21, 2026 - TrueQuote™ Accuracy)
+    // Progressive Model (Jan 21, 2026 - StackQuote™ Accuracy)
     // Phase 4: Enhanced with ModelConfidence
     progressiveModel?: {
       serviceSize?: string;
@@ -194,7 +194,7 @@ interface AdvisorRailProps {
   onNavigate?: (step: number) => void;
 }
 
-const _STEP_LABELS = ["Location", "Industry", "Details", "Options", "TrueQuote™", "Results"];
+const _STEP_LABELS = ["Location", "Industry", "Details", "Options", "StackQuote™", "Results"];
 
 function safeNum(n?: number) {
   return typeof n === "number" && !Number.isNaN(n) ? n : null;
@@ -484,7 +484,7 @@ export function AdvisorRail({
                 <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
                   <div className="text-[10px] text-amber-200 font-semibold mb-2">💡 WHAT I'LL DO</div>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    I'll analyze your facility's energy profile, calculate savings with TrueQuote™ precision, and recommend the right system size for your business.
+                    I'll analyze your facility's energy profile, calculate savings with StackQuote™ precision, and recommend the right system size for your business.
                   </p>
                 </div>
               </div>
@@ -776,7 +776,7 @@ export function AdvisorRail({
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-cyan-400" />
-                  <h3 className="text-sm font-bold text-white">TrueQuote™ Engine</h3>
+                  <h3 className="text-sm font-bold text-white">StackQuote™ Engine</h3>
                 </div>
                 <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
@@ -786,7 +786,7 @@ export function AdvisorRail({
               <div className="space-y-3">
                 <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    Our TrueQuote™ engine is calculating your personalized quote using real-time market data, 
+                    Our StackQuote™ engine is calculating your personalized quote using real-time market data, 
                     utility rates, and industry benchmarks.
                   </p>
                 </div>
@@ -911,7 +911,7 @@ export function AdvisorRail({
         </div>
       )}
 
-      {/* WEATHER RISK MODAL (Jan 20, 2026 - TrueQuote™ Compliant) */}
+      {/* WEATHER RISK MODAL (Jan 20, 2026 - StackQuote™ Compliant) */}
       <WeatherRiskModal 
         isOpen={showWeatherRiskModal} 
         onClose={() => setShowWeatherRiskModal(false)}

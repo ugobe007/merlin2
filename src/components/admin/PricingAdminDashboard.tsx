@@ -4,7 +4,7 @@
  *
  * MIGRATED: December 28, 2025
  * - Reads from pricing_configurations table (Supabase)
- * - Displays TrueQuote™ attribution
+ * - Displays StackQuote™ attribution
  * - Supports inline editing with audit trail
  * - Clears pricing caches on save
  *
@@ -402,10 +402,10 @@ export const PricingAdminDashboard: React.FC<PricingAdminProps> = ({ isOpen, onC
           </div>
 
           <div className="flex items-center gap-4">
-            {/* TrueQuote Badge */}
+            {/* StackQuote Badge */}
             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
               <Shield className="w-4 h-4 text-emerald-400" />
-              <span className="text-emerald-400 text-sm font-medium">TrueQuote™</span>
+              <span className="text-emerald-400 text-sm font-medium">StackQuote™</span>
             </div>
 
             {/* DB Status */}

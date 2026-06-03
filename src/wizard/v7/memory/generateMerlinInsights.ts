@@ -373,7 +373,7 @@ function getSubtitle(data: MerlinData, step: WizardStep): string {
     case "magicfit":
       return "MagicFit™ Recommendations";
     case "results":
-      return "Your TrueQuote™ Results";
+      return "Your StackQuote™ Results";
     default:
       return "Merlin is analyzing";
   }
@@ -411,7 +411,7 @@ function getBadges(data: MerlinData, step: WizardStep): Array<{ label: string; t
       return [{ label: "3 options ready", tone: "emerald" }];
     case "results": {
       if (data.quote?.pricingComplete) {
-        return [{ label: "TrueQuote™ Verified", tone: "green" }];
+        return [{ label: "StackQuote™ Verified", tone: "green" }];
       }
       return [{ label: "calculating", tone: "amber" }];
     }

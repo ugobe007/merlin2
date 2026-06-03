@@ -1,5 +1,5 @@
 /**
- * SystemSizingModal - TrueQuote™ Sizing Adjustment Modal
+ * SystemSizingModal - StackQuote™ Sizing Adjustment Modal
  * =========================================================
  * Modern modal for adjusting BESS sizing with proper UX.
  *

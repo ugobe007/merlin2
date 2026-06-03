@@ -9,7 +9,7 @@
  * - Size-based pricing tiers (different prices for different system sizes)
  * - 5 pricing levels: low, low_plus, mid, mid_plus, high
  * - Dual unit support: kW for most systems, MWh for very large systems
- * - Source tracking and confidence levels for TrueQuote compliance
+ * - Source tracking and confidence levels for StackQuote compliance
  *
  * Usage:
  * ```typescript

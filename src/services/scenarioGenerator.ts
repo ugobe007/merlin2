@@ -14,7 +14,7 @@
 
 import { calculateQuote, type QuoteResult } from "./unifiedQuoteCalculator";
 // ⚠️ NOTE: calculateArbitrageSavings was removed from constants.ts (SSOT violation)
-// This file is legacy/experimental and may need refactoring to use TrueQuote results
+// This file is legacy/experimental and may need refactoring to use StackQuote results
 import {
   getIndustryBESSRatio,
   getIndustryLoadProfile,
@@ -133,7 +133,7 @@ export async function generateScenarios(
 
   // ⚠️ LEGACY: Calculate arbitrage potential (simplified, non-SSOT)
   // This is a placeholder for legacy scenario generation.
-  // For WizardV6, use TrueQuote results instead.
+  // For WizardV6, use StackQuote results instead.
   const rateSpread = input.electricityRate * 0.3; // Assume 30% spread between peak/off-peak
   const annualSavings = input.dailyKWh * rateSpread * 365;
   const arbitrageResult = {

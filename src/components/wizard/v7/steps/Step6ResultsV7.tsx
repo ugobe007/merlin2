@@ -105,11 +105,11 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
     [pricingStatus, state.templateMode, quote]
   );
 
-  // TrueQuote™ Financial Projection modal state
+  // StackQuote™ Financial Projection modal state
   const [showFinancialModal, setShowFinancialModal] = useState(false);
-  // TrueQuote™ explainer modal state
+  // StackQuote™ explainer modal state
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
-  // ProQuote™ upsell modal state
+  // ProStack™ upsell modal state
   const [showProQuoteModal, setShowProQuoteModal] = useState(false);
 
   // ============================================================================
@@ -212,18 +212,18 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
         type="button"
         onClick={() => setShowFinancialModal(true)}
         className="group w-full flex items-center gap-4 p-4 rounded-xl border-2 border-amber-500/30 bg-amber-500/[0.04] hover:border-amber-400/50 hover:bg-amber-500/[0.08] transition-all duration-300 cursor-pointer"
-        aria-label="Open TrueQuote financial summary"
+        aria-label="Open StackQuote financial summary"
       >
         <div className="shrink-0">
           <img
             src={badgeGoldIcon}
-            alt="TrueQuote Verified"
+            alt="StackQuote Verified"
             className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
           />
         </div>
         <div className="flex-1 text-left">
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-xl font-bold text-amber-400 tracking-tight">TrueQuote™</span>
+            <span className="text-xl font-bold text-amber-400 tracking-tight">StackQuote™</span>
             <span className="text-xs font-semibold text-amber-500/70 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
               Verified
             </span>
@@ -276,7 +276,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
           <div className="font-semibold text-blue-300 text-sm">Estimate Mode</div>
           <p className="text-blue-200/70 text-xs mt-1.5">
             Using a general facility model. Numbers are directionally correct but won't carry
-            TrueQuote™ attribution.
+            StackQuote™ attribution.
           </p>
           {actions.retryTemplate && (
             <button
@@ -609,7 +609,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
               </div>
               <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/20">
                 <Shield className="w-3 h-3 text-amber-400" />
-                <span className="text-amber-400 font-bold text-[10px]">TrueQuote™</span>
+                <span className="text-amber-400 font-bold text-[10px]">StackQuote™</span>
               </div>
             </div>
 
@@ -1109,14 +1109,14 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
       <div className="rounded-xl border-2 border-white/[0.08] bg-white/[0.03] p-4 sm:p-6 hover:border-white/[0.12] transition-all">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
           <div className="shrink-0 hidden sm:block">
-            <img src={badgeProQuoteIcon} alt="ProQuote" className="w-14 h-14 object-contain" />
+            <img src={badgeProQuoteIcon} alt="ProStack" className="w-14 h-14 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-base font-bold text-slate-100 tracking-tight">
               Want to go deeper?
             </div>
             <div className="text-sm text-slate-400 mt-1 leading-relaxed">
-              ProQuote™ gives you full engineering control — custom equipment, fuel cells, financial
+              ProStack™ gives you full engineering control — custom equipment, fuel cells, financial
               modeling, and bank-ready exports.
             </div>
           </div>
@@ -1126,7 +1126,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
             className="flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl border-2 border-blue-400/30 bg-blue-500/[0.08] hover:border-violet-400/50 hover:bg-violet-500/[0.12] transition-all w-full sm:w-auto sm:shrink-0 group"
           >
             <Sparkles className="w-4 h-4 text-violet-300" />
-            <span className="text-sm font-bold text-blue-200 tracking-wide">Open ProQuote™</span>
+            <span className="text-sm font-bold text-blue-200 tracking-wide">Open ProStack™</span>
           </button>
         </div>
       </div>
@@ -1161,7 +1161,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
       </div>
 
       {/* ================================================================
-          EXPORT / DOWNLOAD — TrueQuote™ branded exports
+          EXPORT / DOWNLOAD — StackQuote™ branded exports
           Available whenever we have at least a load profile (Layer A)
       ================================================================ */}
       {quote && quote.peakLoadKW != null && (
@@ -1172,7 +1172,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
       <ProQuoteHowItWorksModal
         isOpen={showProQuoteModal}
         onClose={() => setShowProQuoteModal(false)}
-        onOpenProQuote={() => {
+        onOpenProStack={() => {
           setShowProQuoteModal(false);
           window.location.href = "/quote-builder";
         }}

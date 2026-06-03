@@ -118,7 +118,7 @@ describe("V7 Flow: Calculator Execution", () => {
     expect(result.peakLoadKW).toBeLessThanOrEqual(1200);
   });
 
-  it("shopping_center: TrueQuote envelope is v1 with ≥3 contributors", () => {
+  it("shopping_center: StackQuote envelope is v1 with ≥3 contributors", () => {
     const calc = CALCULATORS_BY_ID["shopping_center_load_v1"];
     const result = calc.compute({ squareFootage: 100000 });
     expect(result.validation?.version).toBe("v1");
@@ -144,7 +144,7 @@ describe("V7 Flow: Calculator Execution", () => {
     expect(resultEV.peakLoadKW).toBeGreaterThan(resultSqFt.peakLoadKW);
   });
 
-  it("microgrid: TrueQuote envelope is v1 with ≥3 contributors", () => {
+  it("microgrid: StackQuote envelope is v1 with ≥3 contributors", () => {
     const calc = CALCULATORS_BY_ID["microgrid_load_v1"];
     const result = calc.compute({ squareFootage: 50000 });
     expect(result.validation?.version).toBe("v1");

@@ -1,8 +1,8 @@
 /**
  * ProQuoteFinancialModal.tsx
  *
- * Supabase-style financial summary modal for ProQuote™.
- * Mirrors TrueQuoteFinancialModal but tailored for the ProQuote context:
+ * Supabase-style financial summary modal for ProStack™.
+ * Mirrors TrueQuoteFinancialModal but tailored for the ProStack context:
  * shows detailed equipment breakdown, bank-ready metrics, sensitivity analysis.
  *
  * @version 1.0.0 (Feb 2026)
@@ -133,7 +133,7 @@ export default function ProQuoteFinancialModal({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white">
-                ProQuote™ <span className="text-amber-400">Financial Summary</span>
+                ProStack™ <span className="text-amber-400">Financial Summary</span>
               </h2>
               <p className="text-sm text-slate-500">
                 {systemLabel || "BESS Project"} · Bank-ready metrics
@@ -301,7 +301,7 @@ export default function ProQuoteFinancialModal({
               <div>
                 <span className="text-sm font-semibold text-white">Bank-Ready Financial Model</span>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  ProQuote financials include 3-statement modeling, DSCR coverage, MACRS depreciation,
+                  ProStack financials include 3-statement modeling, DSCR coverage, MACRS depreciation,
                   and IRA 2022 compliant tax credit calculations. Export to Word or Excel for
                   financing applications and investor presentations.
                 </p>
@@ -315,7 +315,7 @@ export default function ProQuoteFinancialModal({
           className="px-6 py-4 flex items-center justify-between flex-shrink-0"
           style={{ borderTop: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}
         >
-          <span className="text-xs text-slate-600">TrueQuote™ verified · NREL ATB 2024 · IRA 2022</span>
+          <span className="text-xs text-slate-600">StackQuote™ verified · NREL ATB 2024 · IRA 2022</span>
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-md text-sm font-medium text-slate-400 hover:text-white transition-colors"

@@ -44,7 +44,7 @@ export type ContributorKeys =
   | 'other';
 
 /**
- * TrueQuote validation envelope
+ * StackQuote validation envelope
  * 
  * Namespaced container for validation-specific fields.
  * Keeps calculator contract "product clean" while enabling harness validation.
@@ -79,7 +79,7 @@ export type CalcValidation = {
  *
  * MINIMUM: QuoteEngine/Freeze layer can rely on baseLoadKW + peakLoadKW
  * OPTIONAL: energyKWhPerDay, assumptions, warnings for audit trail
- * VALIDATION: TrueQuote validation envelope (harness-only, namespaced)
+ * VALIDATION: StackQuote validation envelope (harness-only, namespaced)
  * RAW: Escape hatch for industry-specific outputs (PUE, redundancy, etc.)
  */
 export type CalcRunResult = {
@@ -98,7 +98,7 @@ export type CalcRunResult = {
   /** Warnings about input quality or missing data */
   warnings?: string[];
 
-  /** TrueQuote validation envelope (optional, harness-only) */
+  /** StackQuote validation envelope (optional, harness-only) */
   validation?: CalcValidation;
 
   /** Raw industry-specific outputs (PUE, redundancy, etc.) */

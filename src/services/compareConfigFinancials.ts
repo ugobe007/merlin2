@@ -27,7 +27,7 @@ import type { FinancialInputs, FinancialResult } from "@/types/compareConfig";
  * Wraps the SSOT calculator to provide Compare & Configure specific output.
  *
  * @param inputs - Equipment and location parameters
- * @returns Financial summary with TrueQuote™ source tracking
+ * @returns Financial summary with StackQuote™ source tracking
  */
 export async function calculateFinancials(inputs: FinancialInputs): Promise<FinancialResult> {
   const {

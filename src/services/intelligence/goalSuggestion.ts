@@ -1,7 +1,7 @@
 // Goal Suggestion Service (SSOT for goal auto-suggestion)
 // Created: January 18, 2026
 // Purpose: Auto-suggest 2-3 goals based on ZIP, industry, and climate
-// TrueQuote™ Compliance: All suggestions include source attribution
+// StackQuote™ Compliance: All suggestions include source attribution
 
 import { supabase } from "@/services/supabaseClient";
 import type {

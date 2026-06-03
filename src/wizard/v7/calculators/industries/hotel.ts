@@ -144,7 +144,7 @@ export const HOTEL_LOAD_V1_SSOT: CalculatorContract = {
     const peakHours = 8;
     const energyKWhPerDay = Math.round(baseLoadKW * 24 + (peakLoadKW - baseLoadKW) * peakHours);
 
-    // 4b. Build validation envelope (TrueQuote v1)
+    // 4b. Build validation envelope (StackQuote v1)
     const validation: CalcValidation = {
       version: "v1",
       dutyCycle,

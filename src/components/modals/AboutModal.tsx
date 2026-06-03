@@ -1,6 +1,6 @@
 /**
  * About Merlin Modal
- * Popup version of the About page — TrueQuote™ era
+ * Popup version of the About page — StackQuote™ era
  */
 
 import React from 'react';
@@ -68,20 +68,20 @@ const AboutModal: React.FC<AboutModalProps> = ({ show, onClose, onStartWizard })
               <h2 className="font-bold mb-2" style={{ color: "#fbbf24" }}>The Merlin Answer</h2>
               <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
                 Merlin generates investment-grade BESS quotes in under five minutes — with full source 
-                attribution for every line item. Our TrueQuote™ engine traces each cost, sizing ratio, 
+                attribution for every line item. Our StackQuote™ engine traces each cost, sizing ratio, 
                 and financial assumption back to authoritative benchmarks.
               </p>
             </div>
           </div>
 
-          {/* TrueQuote Highlight */}
+          {/* StackQuote Highlight */}
           <div className="rounded-xl p-6" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg" style={{ background: "rgba(251,191,36,0.15)" }}>
                 <Shield className="w-5 h-5" style={{ color: "#fbbf24" }} />
               </div>
               <div>
-                <h2 className="font-bold text-white">TrueQuote™</h2>
+                <h2 className="font-bold text-white">StackQuote™</h2>
                 <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>Every number backed by an authoritative source</p>
               </div>
             </div>
@@ -123,7 +123,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ show, onClose, onStartWizard })
                   "Bank-ready 3-statement project finance model",
                 ]},
                 { icon: Shield, color: "#fbbf24", title: "Trust & Compliance", items: [
-                  "Full TrueQuote™ audit trail on every quote",
+                  "Full StackQuote™ audit trail on every quote",
                   "IRA 2022 ITC with prevailing wage + bonus adders",
                   "NREL ATB 2024 & BNEF market benchmarks",
                   "21 industry-specific load profiles",
@@ -174,7 +174,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ show, onClose, onStartWizard })
           <div className="rounded-xl p-8 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
             <h3 className="text-2xl font-bold text-white mb-2">See it for yourself</h3>
             <p style={{ color: "rgba(255,255,255,0.45)" }} className="mb-6 max-w-xl mx-auto text-sm">
-              Answer a few questions about your facility and get a TrueQuote™-verified BESS proposal 
+              Answer a few questions about your facility and get a StackQuote™-verified BESS proposal 
               in under five minutes. No signup, no cost, full source attribution.
             </p>
             <button

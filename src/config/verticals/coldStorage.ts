@@ -66,7 +66,7 @@ export const coldStorageConfig: VerticalConfig = {
   howItWorks: [
     { title: 'Describe Your Facility', description: 'Enter your refrigerated square footage, temperature zones, and monthly bill. 60 seconds.' },
     { title: 'We Model Your Compressor Load', description: 'Merlin analyzes your refrigeration cycles and demand spikes using DOE energy benchmarks.' },
-    { title: 'Get a Bankable Proposal', description: 'Full financial model: payback, NPV, IRR, and TrueQuote™ verified equipment pricing.' },
+    { title: 'Get a Bankable Proposal', description: 'Full financial model: payback, NPV, IRR, and StackQuote™ verified equipment pricing.' },
     { title: 'Protect Inventory and Save', description: 'Battery backup prevents costly spoilage. Demand savings pay back in 3-5 years.' },
   ],
   leadSourceTag: 'cold_storage_vertical',

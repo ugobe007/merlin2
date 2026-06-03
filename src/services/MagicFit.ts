@@ -1,16 +1,16 @@
 /**
  * MAGIC FIT - SYSTEM OPTIMIZER
- * Sub/Sub Contractor to TrueQuote Engine
+ * Sub/Sub Contractor to StackQuote Engine
  *
  * Responsibilities:
- * 1. Receive base calculation from TrueQuote
+ * 1. Receive base calculation from StackQuote
  * 2. Generate 3 optimized options (Starter, Perfect Fit, Beast Mode)
- * 3. Submit proposal back to TrueQuote for authentication
+ * 3. Submit proposal back to StackQuote for authentication
  *
  * IMPORTANT: Magic Fit CANNOT present results directly to user.
- * All results must be authenticated by TrueQuote first.
+ * All results must be authenticated by StackQuote first.
  *
- * Part of TrueQuote Engine (Porsche 911 Architecture)
+ * Part of StackQuote Engine (Porsche 911 Architecture)
  *
  * VERSION 1.1.1 - January 2026
  * - Added UPS Mode logic for when user opts out of solar AND generator
@@ -132,10 +132,10 @@ function getGenerationScenario(prefs: UserPreferences): keyof typeof BESS_UPSIZE
 /**
  * Generate Magic Fit proposal with 3 optimized options
  *
- * @param baseCalc - Base calculation from TrueQuote
+ * @param baseCalc - Base calculation from StackQuote
  * @param goals - User's energy goals
  * @param userPrefs - User's Step 4 selections (solar, generator, EV)
- * @returns MagicFitProposal to be authenticated by TrueQuote
+ * @returns MagicFitProposal to be authenticated by StackQuote
  */
 export function generateMagicFitProposal(
   baseCalc: TrueQuoteBaseCalculation,

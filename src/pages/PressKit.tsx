@@ -54,9 +54,9 @@ function CopyBtn({ id, text, label = "Copy" }: { id: string; text: string; label
 
 // ─── Content data ─────────────────────────────────────────────────────────────
 
-const ABOUT_BLURB_SHORT = `Merlin Energy is an AI-powered BESS and solar quote builder for commercial facilities. Every quote is TrueQuote™ verified — backed by NREL ATB 2024, EIA utility rates, and IRA 2022 tax credit calculations. Generate bankable energy storage proposals in under 90 seconds. Free to start.`;
+const ABOUT_BLURB_SHORT = `Merlin Energy is an AI-powered BESS and solar quote builder for commercial facilities. Every quote is StackQuote™ verified — backed by NREL ATB 2024, EIA utility rates, and IRA 2022 tax credit calculations. Generate bankable energy storage proposals in under 90 seconds. Free to start.`;
 
-const ABOUT_BLURB_LONG = `Merlin Energy is an AI-powered battery energy storage system (BESS) and solar quote builder trusted by commercial energy professionals. Every quote is TrueQuote™ verified — backed by NREL ATB 2024, EIA utility rates, and IRA 2022 Investment Tax Credit calculations. Generate full IRR, NPV, Monte Carlo P10/P50/P90, and bank-ready financial proposals in under 90 seconds. Supports 15 commercial industries including hotels, hospitals, data centers, car washes, warehouses, EV charging stations, and more. No consultants. No spreadsheets. Free forever tier available.`;
+const ABOUT_BLURB_LONG = `Merlin Energy is an AI-powered battery energy storage system (BESS) and solar quote builder trusted by commercial energy professionals. Every quote is StackQuote™ verified — backed by NREL ATB 2024, EIA utility rates, and IRA 2022 Investment Tax Credit calculations. Generate full IRR, NPV, Monte Carlo P10/P50/P90, and bank-ready financial proposals in under 90 seconds. Supports 15 commercial industries including hotels, hospitals, data centers, car washes, warehouses, EV charging stations, and more. No consultants. No spreadsheets. Free forever tier available.`;
 
 const TAGLINE = `BESS quotes in 90 seconds. Every number traced to NREL, EIA & IRA data. Free.`;
 
@@ -131,14 +131,14 @@ Every commercial energy project I've seen has the same problem: the quote is a b
 
 So I built Merlin.
 
-✅ TrueQuote™ — every number traces to a published source (NREL ATB 2024, IRA 2022, IEEE 446-1995)
+✅ StackQuote™ — every number traces to a published source (NREL ATB 2024, IRA 2022, IEEE 446-1995)
 ✅ 15 commercial verticals — hotel, hospital, data center, car wash, warehouse, EV charging...
 ✅ Full IRR, NPV, Monte Carlo P10/P50/P90 — in 90 seconds
 ✅ Free to start
 
 Try it: https://merlinenergy.net
 
-#BESS #EnergyStorage #CleanEnergy #SolarPlusStorage #IRA2022 #EnergyTransition #TrueQuote #BatteryStorage`,
+#BESS #EnergyStorage #CleanEnergy #SolarPlusStorage #IRA2022 #EnergyTransition #StackQuote #BatteryStorage`,
   },
   {
     id: "li-2",
@@ -204,7 +204,7 @@ We built the hospital BESS calculator at https://merlinenergy.net/hospital
   },
   {
     id: "li-5",
-    label: "🔬 TrueQuote™ Explainer",
+    label: "🔬 StackQuote™ Explainer",
     text: `Why do BESS proposals fail due diligence? Five reasons I see over and over:
 
 1. No source citations — "we used industry norms"
@@ -213,16 +213,16 @@ We built the hospital BESS calculator at https://merlinenergy.net/hospital
 4. No degradation modeling (LFP loses ~1.5%/yr; NMC ~2%/yr over 25 years = 30% capacity loss)
 5. No Monte Carlo — P50 projections with no downside case for lenders
 
-TrueQuote™ is our answer to all five:
+StackQuote™ is our answer to all five:
 → Every assumption cites its source
 → Location-specific PVWatts solar data
 → Dynamic ITC (6–70% per IRA 2022)
 → Chemistry-specific degradation curves
 → P10/P50/P90 Monte Carlo output
 
-Get your TrueQuote™: https://merlinenergy.net
+Get your StackQuote™: https://merlinenergy.net
 
-#TrueQuote #BESS #EnergyStorage #ProjectFinance #CleanEnergy #DueDiligence #Sustainability #IRA2022`,
+#StackQuote #BESS #EnergyStorage #ProjectFinance #CleanEnergy #DueDiligence #Sustainability #IRA2022`,
   },
 ];
 
@@ -232,7 +232,7 @@ const TWEETS = [
     label: "🚀 Launch",
     text: `Just shipped: BESS quotes in 90 seconds, every number traced to NREL/IEEE/IRA data.
 
-TrueQuote™ = no more black-box proposals. Free.
+StackQuote™ = no more black-box proposals. Free.
 
 👉 https://merlinenergy.net
 
@@ -307,7 +307,7 @@ SAM (NREL): complex, no commercial focus
 Custom consultant: $5K–$50K/quote
 Excel spreadsheet: 40 hours of your life
 
-Merlin: $0. 90 seconds. TrueQuote™ verified.
+Merlin: $0. 90 seconds. StackQuote™ verified.
 
 https://merlinenergy.net
 
@@ -402,7 +402,7 @@ A 300-bed hospital modeled:
 → ITC (energy community bonus): 40%
 → Payback: 4.1 years
 
-TrueQuote™ sourced to NEC 517 + IEEE 446.
+StackQuote™ sourced to NEC 517 + IEEE 446.
 
 https://merlinenergy.net/wizard
 
@@ -543,7 +543,7 @@ const PH_LISTING = {
   description: `Merlin is an instant BESS (battery energy storage) financial analysis tool for commercial facilities.
 
 🔋 What makes it different:
-• TrueQuote™ — every number traces to a published source (NREL ATB 2024, IRA 2022, IEEE 446-1995)
+• StackQuote™ — every number traces to a published source (NREL ATB 2024, IRA 2022, IEEE 446-1995)
 • 15 commercial industries with ASHRAE/CBECS power profiles
 • Dynamic ITC calculator: 6–70% based on IRA 2022 prevailing wage, energy community, and domestic content rules
 • Full IRR, NPV, discounted payback, Monte Carlo P10/P50/P90
@@ -552,7 +552,7 @@ const PH_LISTING = {
 • Export PDF, Word, Excel — bank-ready 3-statement model
 
 ⚡ Why I built it:
-Every BESS quote I received was a black box — opaque assumptions, hardcoded spreadsheets, $5–50K consultant fees. TrueQuote™ means you can see exactly where every number comes from.
+Every BESS quote I received was a black box — opaque assumptions, hardcoded spreadsheets, $5–50K consultant fees. StackQuote™ means you can see exactly where every number comes from.
 
 Free forever tier. 90 seconds. No consultants.`,
   topics: "#energy #bess #climate #fintech #saas #sustainability #solar",

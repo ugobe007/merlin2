@@ -148,7 +148,7 @@ export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
     const scaledControls = controlsKW;
     const scaledCharging = evChargingKW;
     const scaledFood = foodServiceKW;
-    // Ensure "other" is always non-zero for TrueQuote contributor requirements
+    // Ensure "other" is always non-zero for StackQuote contributor requirements
     // If the sum of known contributors exceeds peakLoadKW, clamp and redistribute
     const knownContributorsSum =
       scaledPumps + scaledLighting + scaledHvac + scaledCooling +
@@ -250,7 +250,7 @@ export const GAS_STATION_LOAD_V1_SSOT: CalculatorContract = {
  */
 
 // ========== 9 NEW DEDICATED ADAPTERS (Feb 14, 2026) ==========
-// Replacing generic_ssot_v1 fallback with proper field bridges + TrueQuote envelopes
+// Replacing generic_ssot_v1 fallback with proper field bridges + StackQuote envelopes
 
 /**
  * AIRPORT SSOT ADAPTER

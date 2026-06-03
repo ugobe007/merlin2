@@ -8,7 +8,7 @@
  * DOCTRINE:
  * - All field mapping logic lives HERE, not in Step4 or export utils
  * - Safe defaults for missing values (never throws on partial quotes)
- * - TrueQuote™ fields populated when available
+ * - StackQuote™ fields populated when available
  */
 
 import type { QuoteExportData } from "@/utils/quoteExportUtils";
@@ -107,7 +107,7 @@ export function buildV7ExportData(state: WizardV7State): QuoteExportData {
     // ─── Financial ────────────────────────────────────────────────
     systemCost: quote.grossCost ?? quote.capexUSD ?? 0,
 
-    // ─── V7 TrueQuote™ Extensions ─────────────────────────────────
+    // ─── V7 StackQuote™ Extensions ─────────────────────────────────
 
     // Load Profile (Layer A)
     loadProfile:
@@ -131,7 +131,7 @@ export function buildV7ExportData(state: WizardV7State): QuoteExportData {
           }
         : undefined,
 
-    // TrueQuote™ Confidence
+    // StackQuote™ Confidence
     trueQuoteConfidence: quote.confidence
       ? {
           overall: quote.confidence.overall,
@@ -143,7 +143,7 @@ export function buildV7ExportData(state: WizardV7State): QuoteExportData {
         }
       : undefined,
 
-    // TrueQuote™ Validation (kW contributors)
+    // StackQuote™ Validation (kW contributors)
     trueQuoteValidation: quote.trueQuoteValidation
       ? {
           version: quote.trueQuoteValidation.version,

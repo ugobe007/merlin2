@@ -1,0 +1,41 @@
+Subject: Novitium Energy — ProStack™ vendor network · commercial solar + BESS briefs
+
+---
+
+Hi team,
+
+I came across Novitium Energy through your recent project work — 200+ commercial
+solar installations, $100M+ in project value, clients across nonprofits, hotels,
+shopping centers, and industrial. That's exactly the profile we're building the
+ProStack™ vendor network around.
+
+Here's what we're doing and why it's relevant to you:
+
+Merlin Energy built StackQuote™ — an AI-enabled stack analysis engine that
+facility operators (CFOs, project managers, energy directors) use to model
+commercial solar, BESS, EV charging, and backup generation together before they
+ever talk to an EPC. Every output includes system sizing, ITC stacking, 25-yr NPV,
+and source-attributed pricing backed by NREL ATB 2024 and IRA 2022.
+
+When an operator completes a StackQuote™, they generate a structured project brief.
+ProStack™ is how EPCs like Novitium receive and respond to those briefs — with
+cleaner assumptions, pre-qualified project parameters, and no blank-page proposals.
+
+What this means for your team:
+  · Inbound briefs from qualified commercial operators — facilities already engaged,
+    already modeled, already cost-aware
+  · Standardized project data: load profile, site location, system targets,
+    financial parameters, utility rate context
+  · Less proposal friction — you're responding to structured specs, not cold RFPs
+
+We're selectively onboarding commercial solar EPCs in key markets. New Jersey /
+Mid-Atlantic is a market we're actively seeding with operator leads right now.
+
+Would you be open to a 20-minute call to see what a ProStack™ brief looks like
+and whether there's a fit for Novitium's pipeline?
+
+→ https://merlin2.fly.dev
+
+— Alex
+Merlin Energy · Energy Stacking™
+hello@merlin.energy | merlin2.fly.dev

@@ -43,7 +43,7 @@ export default function AudienceStrip() {
                 Facility Owners &amp; Operators
               </span>
               <span className="text-[12px] text-slate-500">
-                Free TrueQuote™ · No account · ~90 seconds
+                Free StackQuote™ · No account · ~90 seconds
               </span>
             </div>
             <ArrowRight
@@ -77,7 +77,7 @@ export default function AudienceStrip() {
                 EPCs, Developers &amp; Integrators
               </span>
               <span className="text-[12px] text-slate-500">
-                Embed TrueQuote™ on your site · Free API key · No credit card
+                Embed StackQuote™ on your site · Free API key · No credit card
               </span>
             </div>
             <ArrowRight

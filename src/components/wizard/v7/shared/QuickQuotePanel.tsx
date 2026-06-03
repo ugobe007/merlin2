@@ -4,7 +4,7 @@
  * PATH 1 - WIZARD (Recommended): Guided questionnaire for users who need sizing recommendations
  * PATH 2 - PROQUOTE: Direct spec input OR upload RFQ/RFP for engineers with existing specs
  *
- * All powered by TrueQuote™ (source-verified calculations)
+ * All powered by StackQuote™ (source-verified calculations)
  *
  * Design: Horizontal 2-card layout, compact, clear value propositions
  */
@@ -34,14 +34,14 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
             <h1 className="text-5xl font-bold text-white">Merlin</h1>
           </div>
 
-          {/* TrueQuote Badge */}
+          {/* StackQuote Badge */}
           <div className="flex items-center justify-center gap-2 mb-4">
             <img
               src={badgeGoldIcon}
-              alt="TrueQuote Verified"
+              alt="StackQuote Verified"
               className="w-10 h-10 object-contain"
             />
-            <span className="text-sm font-semibold text-amber-400">Powered by TrueQuote™</span>
+            <span className="text-sm font-semibold text-amber-400">Powered by StackQuote™</span>
           </div>
 
           <p className="text-2xl text-slate-200 font-medium mb-2">
@@ -86,7 +86,7 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
             </div>
           </button>
 
-          {/* Option 2: ProQuote */}
+          {/* Option 2: ProStack */}
           <button
             onClick={() => onStartExpress("custom")}
             className="group w-full bg-slate-800/40 hover:bg-slate-800/60 border border-slate-700/50 hover:border-blue-500/50 rounded-lg p-5 text-left transition-all"
@@ -98,10 +98,10 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
                     <Upload className="w-4 h-4 text-blue-400" />
                   </div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold text-white">ProQuote™</h3>
+                    <h3 className="text-lg font-semibold text-white">ProStack™</h3>
                     <img
                       src={badgeProQuoteIcon}
-                      alt="ProQuote"
+                      alt="ProStack"
                       className="w-5 h-5 object-contain"
                     />
                   </div>
