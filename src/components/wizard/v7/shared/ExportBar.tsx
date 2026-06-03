@@ -154,7 +154,7 @@ export default function ExportBar({
   }, [leadCaptured, pendingFormat, showLeadGate, exporting, handleExport]);
 
   const hasPricing = state.quote?.pricingComplete;
-  const isTrueQuote =
+  const isStackQuote =
     hasPricing &&
     state.templateMode !== "fallback" &&
     state.quote?.confidence?.industry !== "fallback";
@@ -198,7 +198,7 @@ export default function ExportBar({
               gap: 10,
             }}
           >
-            {isTrueQuote ? (
+            {isStackQuote ? (
               <>
                 <TrueQuoteBadgeCanonical showTooltip={false} onClick={onTrueQuoteClick} />
                 <span>kW breakdown, confidence score &amp; methodology included</span>

@@ -9,8 +9,8 @@ const MAX_BODY_CHARS_PER_CARD = 420;
 const MAX_TITLE_CHARS = 70;
 
 const DEFAULT_ESTIMATE_DISCLAIMER =
-  "⚠️ Estimate only — not TrueQuote Verified. This preview uses benchmarks and public averages. " +
-  "Your TrueQuote Verified results are calculated in Step 5 after you answer facility details.";
+  "⚠️ Estimate only — not StackQuote Verified. This preview uses benchmarks and public averages. " +
+  "Your StackQuote Verified results are calculated in Step 5 after you answer facility details.";
 
 function normalizeCard(card: AdvisorCard): AdvisorCard {
   return {
@@ -78,7 +78,7 @@ export function enforceAdvisorBudget(input: AdvisorPayload): { payload: AdvisorP
   // 4) Minimal sanity checks
   if (!payload.headline) {
     warnings.push("Advisor budget: empty headline. Forcing fallback.");
-    payload.headline = payload.mode === "verified" ? "✅ TrueQuote Verified" : "🔎 Estimate Preview";
+    payload.headline = payload.mode === "verified" ? "✅ StackQuote Verified" : "🔎 Estimate Preview";
   }
   if (!payload.key) {
     warnings.push("Advisor budget: missing key. Forcing fallback key.");

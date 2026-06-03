@@ -15,7 +15,7 @@ const VendorBuildQuoteTab: React.FC = () => {
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30">
               <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               <span className="text-[11px] font-bold text-emerald-400 tracking-wider uppercase">
-                ProQuote™ for Vendors
+                ProStack™ for Vendors
               </span>
             </div>
             <div className="px-2.5 py-1 rounded-full bg-blue-400/15 border border-blue-400/25">
@@ -38,7 +38,7 @@ const VendorBuildQuoteTab: React.FC = () => {
               className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold transition-colors no-underline"
             >
               <Calculator className="w-5 h-5" />
-              Open ProQuote™ Builder
+              Open ProStack™ Builder
             </a>
             <a
               href="/wizard"
@@ -77,7 +77,7 @@ const VendorBuildQuoteTab: React.FC = () => {
           </div>
           <h3 className="font-bold text-white mb-2">Branded Exports</h3>
           <p className="text-sm text-slate-400">
-            Export Word, Excel, and PDF proposals with TrueQuote™ source attribution — your client
+            Export Word, Excel, and PDF proposals with StackQuote™ source attribution — your client
             sees the rigor.
           </p>
         </div>
@@ -106,7 +106,7 @@ const VendorBuildQuoteTab: React.FC = () => {
             {
               step: "4",
               title: "Export Proposal",
-              desc: "Bank-ready PDF/Word with TrueQuote™ attribution",
+              desc: "Bank-ready PDF/Word with StackQuote™ attribution",
             },
           ].map((item) => (
             <div key={item.step} className="text-center">

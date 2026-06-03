@@ -66,7 +66,7 @@ export const gasStationConfig: VerticalConfig = {
   howItWorks: [
     { title: 'Tell Us About Your Station', description: 'Enter your dispenser count, C-store size, and location. Takes 60 seconds.' },
     { title: 'We Model Your Demand Spikes', description: 'Merlin analyzes canopy lighting, HVAC, and dispenser loads to find your peak demand window.' },
-    { title: 'Get Your Storage Quote', description: 'Receive a full proposal with payback, ITC credit, and TrueQuote™ verified pricing.' },
+    { title: 'Get Your Storage Quote', description: 'Receive a full proposal with payback, ITC credit, and StackQuote™ verified pricing.' },
     { title: 'Stay Open and Save', description: 'Battery backup keeps every pump running during outages. Most systems pay back in 3-4 years.' },
   ],
   leadSourceTag: 'gas_station_vertical',

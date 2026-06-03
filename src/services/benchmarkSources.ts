@@ -1274,7 +1274,7 @@ export function getGeneratorReserveMarginWithSource(): {
 }
 
 /**
- * Generate complete sizing audit trail for TrueQuote™
+ * Generate complete sizing audit trail for StackQuote™
  */
 export interface SizingAuditTrail {
   bessPower_kW: number;

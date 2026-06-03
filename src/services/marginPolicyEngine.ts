@@ -29,7 +29,7 @@
  * └─────────────────────────────────────────────────────────────────────┘
  *
  * KEY PRINCIPLE:
- * - TrueQuote computes "base cost" (SSOT market truth)
+ * - StackQuote computes "base cost" (SSOT market truth)
  * - MarginPolicy applies "sell price policy" (commercialization)
  * - If we mix them, drift detection becomes impossible
  *
@@ -603,7 +603,7 @@ export interface MarginQuoteResult {
 // ============================================================================
 
 export interface MarginPolicyInput {
-  // Line items from TrueQuote base pricing
+  // Line items from StackQuote base pricing
   lineItems: Array<{
     sku: string;
     category: ProductClass;
@@ -738,7 +738,7 @@ export function applyMarginToLineItem(
   // ═══════════════════════════════════════════════════════════════════════════
   // LAYER 0: Market price (SSOT input)
   // ═══════════════════════════════════════════════════════════════════════════
-  const marketCost = item.baseCost; // Input is market cost from TrueQuote
+  const marketCost = item.baseCost; // Input is market cost from StackQuote
   const marketUnitCost = item.quantity > 0 ? marketCost / item.quantity : item.unitCost;
 
   // Get price guard for this product class

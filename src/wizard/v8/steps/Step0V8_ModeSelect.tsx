@@ -69,7 +69,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
               className="text-[11px] font-semibold tracking-widest uppercase"
               style={{ color: "#3ECF8E" }}
             >
-              TrueQuote™ Platform
+              StackQuote™ Platform
             </span>
           </div>
           <h1
@@ -176,7 +176,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
                     }}
                   >
                     <Shield className="w-2.5 h-2.5" />
-                    TrueQuote™
+                    StackQuote™
                   </span>
                 </div>
               </div>
@@ -188,7 +188,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
               <ul className="space-y-1.5 mb-5">
                 {[
                   "5-step AI-guided process",
-                  "TrueQuote™ verified pricing",
+                  "StackQuote™ verified pricing",
                   "Instant ROI + savings",
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-xs text-slate-300">
@@ -212,7 +212,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
             </div>
           </button>
 
-          {/* ProQuote™ */}
+          {/* ProStack™ */}
           <button
             onClick={() => onSelectMode("proquote")}
             onMouseEnter={() => setHovered("proquote")}
@@ -248,7 +248,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
               </div>
 
               <div className="mb-2">
-                <h3 className="text-lg font-bold text-white mb-1.5">ProQuote™</h3>
+                <h3 className="text-lg font-bold text-white mb-1.5">ProStack™</h3>
                 <div className="flex flex-wrap gap-1.5">
                   <span
                     className="text-[10px] font-semibold px-2 py-0.5 rounded-md"
@@ -344,7 +344,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
                 </span>
               </div>
               <p className="text-xs text-slate-500">
-                Import an existing quote for TrueQuote™ review and enhancement
+                Import an existing quote for StackQuote™ review and enhancement
               </p>
             </div>
             <ArrowRight className="w-4 h-4 text-slate-500 flex-shrink-0 transition-transform duration-300 group-hover:translate-x-1" />

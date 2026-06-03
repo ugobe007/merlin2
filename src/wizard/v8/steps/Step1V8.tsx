@@ -1019,7 +1019,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                 </button>
               </div>
 
-              {/* TrueQuote™ badge */}
+              {/* StackQuote™ badge */}
               <div
                 style={{
                   flexShrink: 0,
@@ -1051,7 +1051,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                     letterSpacing: "0.01em",
                   }}
                 >
-                  TrueQuote™
+                  StackQuote™
                 </span>
                 <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>Verified</span>
               </div>

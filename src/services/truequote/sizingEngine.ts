@@ -1,5 +1,5 @@
 /**
- * TrueQuote™ Sizing Engine
+ * StackQuote™ Sizing Engine
  * ========================
  * Computes recommended BESS sizing based on progressive model inputs.
  *
@@ -213,7 +213,7 @@ function calculateDuration(
 // ============================================================================
 
 /**
- * Compute TrueQuote sizing from progressive model inputs
+ * Compute StackQuote sizing from progressive model inputs
  *
  * This is the SSOT for all system sizing recommendations.
  * Returns power/energy bands that tighten as confidence increases.

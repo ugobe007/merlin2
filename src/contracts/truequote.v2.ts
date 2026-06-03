@@ -801,7 +801,7 @@ export interface MarginClampEvent {
  * This is how Merlin makes money while keeping quotes realistic.
  */
 export interface QuoteMarginPolicyV2 {
-  /** Total base cost from TrueQuote SSOT */
+  /** Total base cost from StackQuote SSOT */
   baseCostTotal: number;
   
   /** Total sell price (base + margin) */

@@ -43,7 +43,7 @@
 /**
  * Describes HOW an industry slug was resolved.
  * Emitted by resolveIndustryContext() for every resolution.
- * Log this alongside TrueQuote traces for full debuggability.
+ * Log this alongside StackQuote traces for full debuggability.
  *
  * The `reason` field answers "why did this slug resolve this way?"
  *   - 'exact'    → slug matched canonicalSlug directly

@@ -53,7 +53,7 @@ export const AGRICULTURE_LOAD_V1_SSOT: CalculatorContract = {
     );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
-    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // ── StackQuote kW contributor breakdown ─────────────────────────
     // Agriculture: irrigation (40-60%), processing, dairy, storage, buildings
     const irrigationPct = peakLoadKW > 0 ? Math.min(0.6, irrigationKW / peakLoadKW) : 0.4;
     const processingPct = hasProcessing ? 0.15 : 0.05;

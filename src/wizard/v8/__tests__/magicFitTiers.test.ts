@@ -11,7 +11,7 @@
  * 2. Tier scaling follows expected ratios (STARTER < RECOMMENDED < COMPLETE)
  * 3. Margin policy is applied to all tiers (sellPriceTotal > baseCostTotal)
  * 4. SSOT compliance (all calcs via calculateQuote)
- * 5. TrueQuote metadata present in all tiers
+ * 5. StackQuote metadata present in all tiers
  * 6. Physical constraints respected (solar ≤ solarPhysicalCapKW)
  * 7. Solar feasibility gate enforced (grade < B- → 0 solar)
  * 8. Goal guidance properly weights sizing (save_most is default)

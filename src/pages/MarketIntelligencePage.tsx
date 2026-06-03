@@ -602,7 +602,7 @@ export default function MarketIntelligencePage() {
                 <div className="flex items-start gap-3">
                   <Info className="w-5 h-5 text-[#68BFFA] flex-shrink-0 mt-0.5" />
                   <div className="text-sm">
-                    <p className="text-[#68BFFA] font-medium">TrueQuote™ Market Context</p>
+                    <p className="text-[#68BFFA] font-medium">StackQuote™ Market Context</p>
                     <p className="text-slate-400 mt-1">
                       BESS pricing is currently <strong>$100–125/kWh</strong> for 4-hour systems (Dec 2025 vendor quotes).
                       Solar is at <strong>$0.65–0.85/W</strong> scale-dependent. All prices are weighted by source
@@ -745,7 +745,7 @@ export default function MarketIntelligencePage() {
           <p>
             Data sourced from NREL ATB 2024, BNEF, EIA, vendor quotes, and 140+ market sources.
             <br />
-            Merlin TrueQuote™ — Every number traceable to an authoritative source.
+            Merlin StackQuote™ — Every number traceable to an authoritative source.
           </p>
         </div>
       </div>

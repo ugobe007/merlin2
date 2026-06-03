@@ -22,7 +22,7 @@
  * - estimateSolarCapacity(footprintSqFt, roofUtil, canopy) → kW
  *
  * Created: February 18, 2026
- * Part of TrueQuote™ Solar Sizing Assistant
+ * Part of StackQuote™ Solar Sizing Assistant
  */
 
 // ============================================================================

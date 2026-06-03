@@ -1,7 +1,7 @@
 /**
- * ProQuote Configuration Page
+ * ProStack Configuration Page
  *
- * Standalone page wrapper for AdvancedQuoteBuilder (ProQuote Configuration)
+ * Standalone page wrapper for AdvancedQuoteBuilder (ProStack Configuration)
  * Handles URL parameter parsing and state management
  */
 

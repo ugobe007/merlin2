@@ -83,7 +83,7 @@ const SystemHealthDashboard: React.FC = () => {
       'Database Schemas': <Database className="w-4 h-4" />,
       'SSOT Compliance': <Shield className="w-4 h-4" />,
       'Workflow Links': <Link className="w-4 h-4" />,
-      'TrueQuote Compliance': <Shield className="w-4 h-4" />,
+      'StackQuote Compliance': <Shield className="w-4 h-4" />,
       'Calculation Logic': <Calculator className="w-4 h-4" />,
       'Template Formats': <FileText className="w-4 h-4" />,
       'Wizard Functionality': <Zap className="w-4 h-4" />,

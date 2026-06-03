@@ -8,7 +8,7 @@
 
 import React, { useState } from "react";
 
-const WIZARD_SRC = "/merlin-wizard-new.png";
+const WIZARD_SRC = "/merlin-wizard.png";
 
 const QUOTE_EXAMPLES = [
   { key: "datacenter", label: "Data Center", industry: "Enterprise Data Center", location: "Ashburn, VA", system: "5 MW / 20 MWh BESS", savings: "$1.3M", payback: "1.7 yrs", roi: "473%", itc: "$940K", netCost: "$2.2M", npv: "$11.4M" },
@@ -38,8 +38,8 @@ export default function TwitterBanner() {
       {/* Download assets row */}
       <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
         {[
-          { label: "⬇ Wizard Icon — 512×512 (app icon)", href: "/merlin-wizard-new.png", filename: "merlin-icon-512.png" },
-          { label: "⬇ Wizard Full — 1024×1024 (profile pic)", href: "/merlin-wizard-full.png", filename: "merlin-wizard-1024.png" },
+          { label: "⬇ Wizard Icon — 512×512 (app icon)", href: "/merlin-wizard.png", filename: "merlin-icon-512.png" },
+          { label: "⬇ Wizard Full — 1024×1024 (profile pic)", href: "/merlin-wizard.png", filename: "merlin-wizard-1024.png" },
         ].map(btn => (
           <a
             key={btn.href}
@@ -204,7 +204,7 @@ export default function TwitterBanner() {
             marginBottom: 28,
           }}>
             Bankable energy quotes for any project —
-            <span style={{ color: "#3ECF8E", fontWeight: 600 }}> TrueQuote™ verified</span>.
+            <span style={{ color: "#3ECF8E", fontWeight: 600 }}> StackQuote™ verified</span>.
             <br />
             From site to investor-ready proposal in 90 seconds.
           </div>
@@ -280,7 +280,7 @@ export default function TwitterBanner() {
               <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                 <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#3ECF8E", boxShadow: "0 0 8px rgba(62,207,142,0.9)" }} />
                 <span style={{ fontSize: 11, color: "#3ECF8E", fontWeight: 700, letterSpacing: "0.10em", textTransform: "uppercase" }}>
-                  TrueQuote™ Result
+                  StackQuote™ Result
                 </span>
               </div>
               <span style={{ fontSize: 10, color: "rgba(255,255,255,0.22)", letterSpacing: "0.03em" }}>

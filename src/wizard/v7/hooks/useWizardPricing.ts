@@ -11,7 +11,7 @@
  * - Merge load profile + financial metrics into QuoteOutput
  * - Handle pricing failures gracefully (never block navigation)
  * - Retry pricing from Results page
- * - Retry template loading for TrueQuote™ upgrade
+ * - Retry template loading for StackQuote™ upgrade
  * - Exponential backoff retry logic with timeout
  *
  * Architecture (Feb 2026):

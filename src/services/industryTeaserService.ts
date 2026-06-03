@@ -10,7 +10,7 @@ export type IndustryTeaserProfile = {
 
 const TEASER_FALLBACK_PROFILES: Record<string, IndustryTeaserProfile> = {
   // Solar values = realistic ROOFTOP-ONLY estimates based on building footprint constraints
-  // TrueQuote™: Max roof kW = footprint × usable% × 15 W/sqft / 1000
+  // StackQuote™: Max roof kW = footprint × usable% × 15 W/sqft / 1000
   // See solarCalculator.ts INDUSTRY_SOLAR_CONFIG for full derivations
   hotel: { avgPeakKW: 350, peakShavingPct: 0.25, solarFitPct: 0.30, typicalBESSKW: 150, typicalSolarKW: 105, durationHrs: 4, dataSource: "ASHRAE 90.1, NREL Rooftop PV" },
   "car-wash": { avgPeakKW: 200, peakShavingPct: 0.35, solarFitPct: 0.40, typicalBESSKW: 113, typicalSolarKW: 40, durationHrs: 4, dataSource: "ICA 2024, NREL Rooftop PV" },

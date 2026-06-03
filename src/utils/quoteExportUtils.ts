@@ -90,7 +90,7 @@ export interface QuoteExportData {
   // Options
   showAiNote?: boolean;
 
-  // ─── V7 TrueQuote™ Extensions ────────────────────────────────────
+  // ─── V7 StackQuote™ Extensions ────────────────────────────────────
   // Load Profile (Layer A)
   loadProfile?: {
     baseLoadKW: number;
@@ -107,7 +107,7 @@ export interface QuoteExportData {
     demandChargeSavings?: number;
   };
 
-  // TrueQuote™ Confidence
+  // StackQuote™ Confidence
   trueQuoteConfidence?: {
     overall: "high" | "medium" | "low";
     location: string;
@@ -117,7 +117,7 @@ export interface QuoteExportData {
     defaultsUsed: number;
   };
 
-  // TrueQuote™ Validation (kW contributors breakdown)
+  // StackQuote™ Validation (kW contributors breakdown)
   trueQuoteValidation?: {
     version: "v1";
     dutyCycle?: number;
@@ -280,7 +280,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
   const C = {
     emerald: "1B8F5A", // Merlin section-heading green (matches DOCX template)
     emeraldLight: "3ECF8E", // Merlin brand accent — bright emerald
-    emeraldBg: "EDFDF5", // Light emerald panel bg (TrueQuote strip)
+    emeraldBg: "EDFDF5", // Light emerald panel bg (StackQuote strip)
     navy: "1E293B", // Primary text / dark panel (slate-800)
     dark: "2D3748", // Secondary text
     body: "4A5568", // Body text
@@ -296,7 +296,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
     panelDarkAlt: "334155", // Tailwind slate-700 — subtle contrast
     lightGrey: "F1F5F9", // Light grey metadata sub-panel
     lightGreyDark: "E2E8F0", // Slightly darker grey
-    gold: "FFD700", // Gold accent for TrueQuote badge
+    gold: "FFD700", // Gold accent for StackQuote badge
   };
 
   // ── Helper: decode base64 string to Uint8Array for ImageRun ──────
@@ -438,7 +438,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
   const spacer = (pts = 200) =>
     new Paragraph({ children: [new TextRun({ text: "" })], spacing: { after: pts } });
 
-  // ── TrueQuote confidence text ────────────────────────────────────
+  // ── StackQuote confidence text ────────────────────────────────────
   const confidenceText =
     data.trueQuoteConfidence?.overall === "high"
       ? "HIGH — Industry-specific model with verified inputs"
@@ -456,10 +456,10 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
   // BUILD DOCUMENT
   // ════════════════════════════════════════════════════════════════════
   const doc = new Document({
-    creator: "Merlin Energy Solutions — TrueQuote™",
+    creator: "Merlin Energy Solutions — StackQuote™",
     title: `${data.useCase} BESS Proposal — ${data.quoteNumber}`,
     description:
-      "Professional Battery Energy Storage System proposal with TrueQuote™ verified pricing",
+      "Professional Battery Energy Storage System proposal with StackQuote™ verified pricing",
     styles: {
       default: {
         document: { run: { font: "Calibri", size: 22, color: C.navy } },
@@ -497,7 +497,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                 alignment: AlignmentType.CENTER,
                 children: [
                   new TextRun({
-                    text: "Merlin Energy Solutions  •  TrueQuote™ Verified  •  Page ",
+                    text: "Merlin Energy Solutions  •  StackQuote™ Verified  •  Page ",
                     size: 16,
                     color: C.muted,
                   }),
@@ -573,7 +573,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             },
             spacing: { after: 140 },
           }),
-          // TrueQuote badge row: icon + text (own clean line)
+          // StackQuote badge row: icon + text (own clean line)
           new Paragraph({
             shading: { type: ShadingType.SOLID, color: C.panelDark },
             spacing: { after: 40 },
@@ -585,7 +585,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                 type: "png",
               }),
               new TextRun({ text: "  ", size: 10 }),
-              new TextRun({ text: "TrueQuote™ Verified", size: 20, bold: true, color: C.gold }),
+              new TextRun({ text: "StackQuote™ Verified", size: 20, bold: true, color: C.gold }),
               new TextRun({
                 text: "  —  Every estimate backed by published sources",
                 size: 18,
@@ -774,12 +774,12 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             spacing: { after: 0 },
           }),
 
-          // ── TrueQuote™ verification strip ────────────────────────
+          // ── StackQuote™ verification strip ────────────────────────
           new Paragraph({
             shading: { type: ShadingType.SOLID, color: C.emeraldBg },
             children: [
               new TextRun({ text: "  ✓  ", size: 24, bold: true, color: C.emerald }),
-              new TextRun({ text: "TrueQuote™ Verified", size: 22, bold: true, color: C.emerald }),
+              new TextRun({ text: "StackQuote™ Verified", size: 22, bold: true, color: C.emerald }),
               new TextRun({
                 text: "  —  Every number in this proposal is traceable to an authoritative source (NREL, EIA, IEEE, IRA 2022). ",
                 size: 20,
@@ -949,7 +949,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           // ═══════════════════════════════════════════════════════════
           sectionHeading("03", "Load Profile & Sizing"),
 
-          // kW contributors from TrueQuote validation
+          // kW contributors from StackQuote validation
           ...(data.trueQuoteValidation?.kWContributors &&
           Object.keys(data.trueQuoteValidation.kWContributors).length > 0
             ? (() => {
@@ -963,7 +963,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                   bodyParagraph(
                     "Your facility's power demand was analyzed using industry-specific load modeling. Each contributor below has been independently sized using authoritative standards."
                   ),
-                  subHeading("Load Breakdown — TrueQuote™ Verified"),
+                  subHeading("Load Breakdown — StackQuote™ Verified"),
                   makeTable(
                     ["Load Component", "Peak Demand (kW)", "Share of Total"],
                     contributorEntries.map(([key, kw]) => {
@@ -1277,10 +1277,10 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
           // ═══════════════════════════════════════════════════════════
           // 6. TRUEQUOTE™ METHODOLOGY
           // ═══════════════════════════════════════════════════════════
-          sectionHeading("06", "TrueQuote™ Methodology"),
+          sectionHeading("06", "StackQuote™ Methodology"),
           bodyParagraph(
             "Every number in this proposal is traceable to an authoritative, published source. " +
-              "TrueQuote™ is Merlin's proprietary methodology that eliminates black-box estimates and provides " +
+              "StackQuote™ is Merlin's proprietary methodology that eliminates black-box estimates and provides " +
               "full transparency into how your quote was generated."
           ),
           spacer(100),
@@ -1315,7 +1315,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                 kvRow(
                   "Industry Model",
                   data.trueQuoteConfidence.industry === "v1"
-                    ? "Industry-Specific Calculator (TrueQuote™ v1)"
+                    ? "Industry-Specific Calculator (StackQuote™ v1)"
                     : "General Facility Estimate"
                 ),
                 kvRow("Profile Completeness", `${data.trueQuoteConfidence.profileCompleteness}%`),
@@ -1490,7 +1490,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             children: [
               new TextRun({
                 text:
-                  "DISCLAIMER: This proposal has been prepared by Merlin Energy Solutions using TrueQuote™ methodology. " +
+                  "DISCLAIMER: This proposal has been prepared by Merlin Energy Solutions using StackQuote™ methodology. " +
                   "While every effort has been made to ensure accuracy using authoritative data sources, this document is for informational " +
                   "and planning purposes only. Final system design, pricing, and performance guarantees are subject to detailed engineering " +
                   "assessment and executed contract terms. Consult with a qualified tax professional regarding ITC eligibility.",
@@ -1537,7 +1537,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
             children: [
               new TextRun({ text: "Want more detail?  ", size: 22, color: "94A3B8" }),
               new TextRun({
-                text: "Consider ProQuote™",
+                text: "Consider ProStack™",
                 size: 22,
                 bold: true,
                 color: C.emeraldLight,
@@ -1567,7 +1567,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
                 color: "94A3B8",
               }),
               new TextRun({
-                text: "Upgrade to ProQuote™",
+                text: "Upgrade to ProStack™",
                 size: 18,
                 bold: true,
                 color: C.emeraldLight,
@@ -1600,7 +1600,7 @@ export async function exportQuoteAsWord(data: QuoteExportData): Promise<void> {
 /**
  * Export quote as professional PDF proposal — matches Word template structure exactly.
  * Same 7 sections as exportQuoteAsWord: Executive Summary, System Specs, Load Profile,
- * Financial Analysis, Implementation, TrueQuote™ Methodology, Next Steps.
+ * Financial Analysis, Implementation, StackQuote™ Methodology, Next Steps.
  * Light / print-safe colour scheme (white bg, slate text, emerald accents).
  */
 export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
@@ -1699,7 +1699,7 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
     .ms-cell .ml { font-size: 8pt; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
     .ms-cell .mv { font-size: 9.5pt; color: #1E293B; font-weight: 600; }
 
-    /* ── TrueQuote strip ── */
+    /* ── StackQuote strip ── */
     .tqs { background: #EDFDF5; border-left: 3px solid #1B8F5A; padding: 9px 14px; margin: 14px 0; font-size: 9pt; color: #1E293B; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .tqs strong { color: #1B8F5A; }
 
@@ -1763,7 +1763,7 @@ export async function exportQuoteAsPDF(data: QuoteExportData): Promise<void> {
   <div class="ph-left">
     <h1>BATTERY ENERGY STORAGE<br>SYSTEM PROPOSAL</h1>
     <div class="sub">Professional Energy Storage Solution</div>
-    <div class="tq">TrueQuote™ Verified &bull; Source-Backed Pricing</div>
+    <div class="tq">StackQuote™ Verified &bull; Source-Backed Pricing</div>
   </div>
   <div class="ph-right">
     <div class="bn">MERLIN</div>
@@ -1783,9 +1783,9 @@ ${watermarkText ? `<div class="wm">${watermarkText}</div>` : ""}
   <div class="ms-cell"><div class="ml">Grid</div><div class="mv">${data.gridConnection || "On-Grid"}</div></div>
 </div>
 
-<!-- ══ TrueQuote strip ══ -->
+<!-- ══ StackQuote strip ══ -->
 <div class="tqs">
-  <strong>✓ TrueQuote™ Verified</strong> — Every number in this proposal is traceable to an authoritative source (NREL, EIA, IEEE, IRA 2022). No black-box estimates.
+  <strong>✓ StackQuote™ Verified</strong> — Every number in this proposal is traceable to an authoritative source (NREL, EIA, IEEE, IRA 2022). No black-box estimates.
   ${data.trueQuoteConfidence ? `<span style="color:#64748b;font-size:8.5pt;"> &nbsp;|&nbsp; Confidence: <strong>${confidenceText}</strong></span>` : ""}
 </div>
 
@@ -1902,7 +1902,7 @@ ${
   contributorEntries.length > 0
     ? `
 ${bodyP("Your facility's power demand was analyzed using industry-specific load modeling. Each contributor below has been independently sized using authoritative standards.")}
-${subH("Load Breakdown — TrueQuote™ Verified")}
+${subH("Load Breakdown — StackQuote™ Verified")}
 ${tableHtml(
   ["Load Component", "Peak Demand (kW)", "Share of Total"],
   contributorEntries
@@ -2150,8 +2150,8 @@ ${subH("Standards & Certifications")}
 </ul>
 
 <!-- ══ 06. TRUEQUOTE™ METHODOLOGY ══ -->
-${sectionH("06", "TrueQuote™ Methodology")}
-${bodyP("Every number in this proposal is traceable to an authoritative, published source. TrueQuote™ is Merlin's proprietary methodology that eliminates black-box estimates and provides full transparency into how your quote was generated.")}
+${sectionH("06", "StackQuote™ Methodology")}
+${bodyP("Every number in this proposal is traceable to an authoritative, published source. StackQuote™ is Merlin's proprietary methodology that eliminates black-box estimates and provides full transparency into how your quote was generated.")}
 ${subH("Data Sources")}
 <ul class="bul">
   <li><strong>NREL ATB 2024:</strong> National Renewable Energy Laboratory Annual Technology Baseline — Battery and solar cost benchmarks</li>
@@ -2175,7 +2175,7 @@ ${tableHtml(
     [
       "Industry Model",
       data.trueQuoteConfidence.industry === "v1"
-        ? "Industry-Specific (TrueQuote™ v1)"
+        ? "Industry-Specific (StackQuote™ v1)"
         : "General Facility Estimate",
     ],
     [
@@ -2218,7 +2218,7 @@ ${tableHtml(
 <div class="pf">
   <p>• All equipment pricing reflects current market conditions (NREL ATB 2024, IRA 2022) as of ${data.quoteDate}.</p>
   <p>• Quote #${data.quoteNumber} &nbsp;|&nbsp; <strong>merlinenergy.net</strong> &bull; sales@merlinenergy.net</p>
-  <div class="disc">This proposal was generated by Merlin Energy Solutions using TrueQuote™ methodology. All numbers are sourced from NREL, EIA, IEEE, and other authoritative industry standards. Final pricing may vary based on site assessment, permitting, and interconnection requirements. &copy; ${new Date().getFullYear()} Merlin Energy Solutions.</div>
+  <div class="disc">This proposal was generated by Merlin Energy Solutions using StackQuote™ methodology. All numbers are sourced from NREL, EIA, IEEE, and other authoritative industry standards. Final pricing may vary based on site assessment, permitting, and interconnection requirements. &copy; ${new Date().getFullYear()} Merlin Energy Solutions.</div>
 </div>
 
 </body>
@@ -2242,7 +2242,7 @@ ${tableHtml(
  * Export quote as Excel workbook (.xlsx) — Multi-sheet professional workbook
  * Sheet 1: Executive Summary (project info + financials)
  * Sheet 2: System Specifications (BESS + electrical)
- * Sheet 3: Load Profile & TrueQuote™ (kW contributors)
+ * Sheet 3: Load Profile & StackQuote™ (kW contributors)
  * Sheet 4: Financial Projections (5-year cash flow)
  */
 export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
@@ -2368,7 +2368,7 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
     ["Sales Inquiries", "sales@merlinenergy.net"],
     ["Quote Valid Until", new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()],
     [],
-    ["Generated by", "Merlin Energy Solutions — TrueQuote™"],
+    ["Generated by", "Merlin Energy Solutions — StackQuote™"],
     [
       "Disclaimer",
       "Pricing based on NREL ATB 2024 / IRA 2022. Subject to site assessment and final engineering.",
@@ -2419,7 +2419,7 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
   ws2["!cols"] = [{ wch: 24 }, { wch: 18 }, { wch: 10 }];
   XLSX.utils.book_append_sheet(wb, ws2, "System Specs");
 
-  // ── Sheet 3: Load Profile & TrueQuote™ ──────────────────────────
+  // ── Sheet 3: Load Profile & StackQuote™ ──────────────────────────
   const loadRows: (string | number)[][] = [["LOAD PROFILE & TRUEQUOTE™ ANALYSIS"], []];
 
   if (data.loadProfile) {
@@ -2433,7 +2433,7 @@ export async function exportQuoteAsExcel(data: QuoteExportData): Promise<void> {
 
   if (data.trueQuoteValidation?.kWContributors) {
     loadRows.push(
-      ["LOAD BREAKDOWN (TrueQuote™ Verified)"],
+      ["LOAD BREAKDOWN (StackQuote™ Verified)"],
       [],
       ["Component", "Load (kW)", "Share (%)"]
     );

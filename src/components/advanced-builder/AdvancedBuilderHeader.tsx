@@ -47,7 +47,7 @@ export function AdvancedBuilderHeader({
             </div>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-100 via-blue-100 to-cyan-100 bg-clip-text text-transparent drop-shadow-2xl">
-                ProQuote™
+                ProStack™
               </h1>
               <p className="text-purple-200 text-xs drop-shadow-lg font-medium">
                 Professional-grade BESS configuration

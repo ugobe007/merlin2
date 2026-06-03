@@ -17,7 +17,7 @@
  * - Demand response: Revenue from grid services
  * - Backup power: Value of avoided outage costs
  * 
- * DATA SOURCES (TrueQuote™ compliant):
+ * DATA SOURCES (StackQuote™ compliant):
  * - NREL Load Profile Library (DOE OpenEI)
  * - EIA Typical Load Shapes by Sector
  * - Utility TOU rate schedules
@@ -136,7 +136,7 @@ export interface HourlyAnalysisResult {
     rate: number;
     savings: number;
   }>;
-  /** TrueQuote™ attribution */
+  /** StackQuote™ attribution */
   audit: {
     methodology: string;
     loadProfile: string;

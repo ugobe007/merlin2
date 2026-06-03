@@ -425,7 +425,7 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
                         )}
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded" style={{ background: 'rgba(242,193,79,0.08)', border: '1px solid rgba(242,193,79,0.2)', color: '#f2c14f' }}>
                           <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="#f2c14f" strokeWidth="1"/><path d="M3 5.2L4.5 6.5L7 3.8" stroke="#f2c14f" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          TrueQuote™
+                          StackQuote™
                         </span>
                       </div>
                     </div>
@@ -733,7 +733,7 @@ const QuoteTemplates: React.FC<QuoteTemplatesProps> = ({ onClose, onSelectTempla
             </button>
             <span className="text-xs hidden sm:inline-flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="rgba(242,193,79,0.5)" strokeWidth="1"/><path d="M4 6.2L5.4 7.5L8 4.5" stroke="rgba(242,193,79,0.5)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              All quotes include TrueQuote™ source verification
+              All quotes include StackQuote™ source verification
             </span>
           </div>
           {activeTab === "browse" && selectedTemplate && (

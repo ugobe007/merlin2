@@ -1,11 +1,11 @@
 /**
  * PROPOSAL VALIDATOR
- * Authenticates Magic Fit proposals for TrueQuote
+ * Authenticates Magic Fit proposals for StackQuote
  * 
- * TrueQuote MUST validate all Magic Fit proposals before they can be
+ * StackQuote MUST validate all Magic Fit proposals before they can be
  * presented to users. This ensures financial accuracy and system integrity.
  * 
- * Part of TrueQuote Engine (Porsche 911 Architecture)
+ * Part of StackQuote Engine (Porsche 911 Architecture)
  */
 
 import type {

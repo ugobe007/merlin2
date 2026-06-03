@@ -152,7 +152,7 @@ export default function DailyDealCard() {
               className="text-xs text-slate-600"
               style={{ fontFamily: "'DM Sans', sans-serif" }}
             >
-              TrueQuote™ powered
+              StackQuote™ powered
             </span>
           </div>
 
@@ -247,7 +247,7 @@ export default function DailyDealCard() {
               className="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-[#060D1F] text-sm font-semibold transition-colors"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
-              Run your TrueQuote™
+              Run your StackQuote™
               <ChevronRight size={15} />
             </a>
           </div>

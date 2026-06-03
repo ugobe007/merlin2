@@ -350,7 +350,7 @@ export default function MetaCalculationsPage() {
                 <Database className="w-8 h-8" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">TrueQuote™ Meta Calculations</h1>
+                <h1 className="text-2xl font-bold">StackQuote™ Meta Calculations</h1>
                 <p className="text-[#68BFFA]/70">Single Source of Truth Dashboard</p>
               </div>
             </div>
@@ -643,7 +643,7 @@ export default function MetaCalculationsPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-4 text-center text-sm text-gray-500">
         <Shield className="w-4 h-4 inline mr-2" />
-        TrueQuote™ Meta Calculations • SSOT v2.0 • Porsche 911 Architecture
+        StackQuote™ Meta Calculations • SSOT v2.0 • Porsche 911 Architecture
       </div>
 
       {/* Login Modal */}

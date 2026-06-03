@@ -11,12 +11,12 @@
  * 1. Step 1: Valid ZIP always enables continue
  * 2. Step 2: Selecting an industry always leads somewhere (template or fallback)
  * 3. Step 3: Renders with either industry template or generic fallback (never blank)
- * 4. Step 4: TrueQuote™ badge only when templateMode=industry AND confidence.industry=v1
+ * 4. Step 4: StackQuote™ badge only when templateMode=industry AND confidence.industry=v1
  *
  * DOCTRINE:
  * - Every path through the wizard must lead forward
  * - The user must NEVER hit a dead-end
- * - TrueQuote™ claims are NEVER overstated
+ * - StackQuote™ claims are NEVER overstated
  *
  * RUN: npx vitest run src/wizard/v7/gates/__tests__/wizardNoDeadEnds.test.ts
  */
@@ -214,21 +214,21 @@ describe("Contract 3: Step 3 — Always renders, never blank", () => {
 });
 
 // ============================================================================
-// CONTRACT 4: Step 4 — TrueQuote™ badge only when earned
+// CONTRACT 4: Step 4 — StackQuote™ badge only when earned
 // ============================================================================
-describe("Contract 4: Step 4 — TrueQuote™ honesty", () => {
+describe("Contract 4: Step 4 — StackQuote™ honesty", () => {
   /**
    * These tests verify the BADGE DISPLAY RULES, not the UI components directly.
    * The rules are:
    *
    *   BADGE                          | CONDITIONS
    *   ─────────────────────────────  │ ─────────────────────────────────
-   *   "✓ TrueQuote™ Complete"       │ pricingComplete=true AND templateMode=industry
+   *   "✓ StackQuote™ Complete"       │ pricingComplete=true AND templateMode=industry
    *   "📊 Estimate Mode"            │ pricingComplete=true AND templateMode=fallback
    *   "⏳ Generating..."            │ pricingComplete=false (still running)
    *
    * Additional enforcement:
-   *   confidence.industry !== "v1"   → NEVER show TrueQuote™ Complete
+   *   confidence.industry !== "v1"   → NEVER show StackQuote™ Complete
    *   templateMode === "fallback"    → ALWAYS show Estimate badge
    */
 
@@ -251,7 +251,7 @@ describe("Contract 4: Step 4 — TrueQuote™ honesty", () => {
     return "generating";
   }
 
-  it("shows TrueQuote™ when pricing complete + industry template + v1 confidence", () => {
+  it("shows StackQuote™ when pricing complete + industry template + v1 confidence", () => {
     expect(
       selectBadge({
         pricingComplete: true,
@@ -292,7 +292,7 @@ describe("Contract 4: Step 4 — TrueQuote™ honesty", () => {
     ).toBe("generating");
   });
 
-  it("NEVER shows TrueQuote™ when templateMode is fallback, regardless of other fields", () => {
+  it("NEVER shows StackQuote™ when templateMode is fallback, regardless of other fields", () => {
     const cases = [
       { pricingComplete: true, confidenceIndustry: "v1" as const },
       { pricingComplete: true, confidenceIndustry: "fallback" as const },
@@ -305,7 +305,7 @@ describe("Contract 4: Step 4 — TrueQuote™ honesty", () => {
     }
   });
 
-  it("NEVER shows TrueQuote™ when confidence.industry is fallback", () => {
+  it("NEVER shows StackQuote™ when confidence.industry is fallback", () => {
     const badge = selectBadge({
       pricingComplete: true,
       templateMode: "industry",

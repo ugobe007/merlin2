@@ -4,7 +4,7 @@
  * Lead-capture landing page for C&I customers interested in
  * energy resilience, islanding, and microgrid solutions.
  *
- * Goal: qualify the project, capture contact, hand off to a TrueQuote professional.
+ * Goal: qualify the project, capture contact, hand off to a StackQuote professional.
  * Route: /microgrid
  */
 
@@ -54,7 +54,7 @@ const FAQ = [
   },
   {
     q: "How much does a microgrid cost?",
-    a: "C&I microgrids typically range from $500K to $50M+ depending on load size, storage duration, and whether generation is included. A TrueQuote professional will scope your project accurately — most quotes are in the $1M–$5M range for mid-size commercial.",
+    a: "C&I microgrids typically range from $500K to $50M+ depending on load size, storage duration, and whether generation is included. A StackQuote professional will scope your project accurately — most quotes are in the $1M–$5M range for mid-size commercial.",
   },
   {
     q: "How long does it take to install?",
@@ -224,7 +224,7 @@ export default function MicrogridPage() {
               ],
               [
                 "3",
-                "A TrueQuote professional calls you",
+                "A StackQuote professional calls you",
                 "20-minute call to walk through the numbers and answer questions",
               ],
               [
@@ -283,7 +283,7 @@ export default function MicrogridPage() {
                 You're on the list
               </h3>
               <p className="text-slate-400 text-[14px]">
-                A TrueQuote professional will reach out within 1 business day to schedule your free
+                A StackQuote professional will reach out within 1 business day to schedule your free
                 consultation.
               </p>
             </div>

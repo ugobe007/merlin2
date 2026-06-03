@@ -1,5 +1,5 @@
 /**
- * @fileoverview runContractQuote — TrueQuote™ Layer A contract execution
+ * @fileoverview runContractQuote — StackQuote™ Layer A contract execution
  *
  * Extracted from useWizardCore.ts (Op13 - Feb 2026)
  */
@@ -60,14 +60,14 @@ export interface ContractQuoteResult {
 /**
  * Run contract quote (Layer A: load profile calculation)
  *
- * This is the entry point for the TrueQuote™ contract execution pipeline:
+ * This is the entry point for the StackQuote™ contract execution pipeline:
  * 1. Resolve industry context (canonical slug, calculator ID, template key)
  * 2. Load template and calculator
  * 3. Validate template ↔ calculator alignment
  * 4. Map answers → calculator inputs
  * 5. Run calculator to get load profile
  * 6. Build pricing freeze snapshot
- * 7. Return quote with TrueQuote™ validation envelope
+ * 7. Return quote with StackQuote™ validation envelope
  */
 export function runContractQuote(params: {
   industry: string;
@@ -148,10 +148,10 @@ export function runContractQuote(params: {
     };
 
     // ============================================================
-    // LOAD PROFILE CONSISTENCY CHECK (TrueQuote validation)
+    // LOAD PROFILE CONSISTENCY CHECK (StackQuote validation)
     // ============================================================
     if (import.meta.env.DEV) {
-      console.group(`[TrueQuote] Load Profile Consistency: ${tpl.industry}`);
+      console.group(`[StackQuote] Load Profile Consistency: ${tpl.industry}`);
       devLog("Template:", {
         industry: tpl.industry,
         version: tpl.version,
@@ -233,7 +233,7 @@ export function runContractQuote(params: {
       ],
       pricingComplete: false, // Will be set true after Layer B
 
-      // TrueQuote™ validation envelope — persisted for export/audit
+      // StackQuote™ validation envelope — persisted for export/audit
       trueQuoteValidation: computed.validation
         ? {
             version: computed.validation.version,
@@ -273,7 +273,7 @@ export function runContractQuote(params: {
     }
 
     // ============================================================
-    // QUOTE SANITY CHECKS (TrueQuote validation)
+    // QUOTE SANITY CHECKS (StackQuote validation)
     // ============================================================
     if (import.meta.env.DEV) {
       const quoteSanityWarnings: string[] = [];
@@ -298,7 +298,7 @@ export function runContractQuote(params: {
       }
 
       if (quoteSanityWarnings.length > 0) {
-        console.group("[TrueQuote] Quote Sanity Warnings");
+        console.group("[StackQuote] Quote Sanity Warnings");
         quoteSanityWarnings.forEach((w) => devWarn(w));
         devLog("Sizing Hints:", sizingHints);
         devLog("Inputs Used:", inputsUsed);

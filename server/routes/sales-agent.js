@@ -60,9 +60,9 @@ function getGoogleMapsKey() {
   return process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
 }
 const APP_BASE_URL = process.env.APP_BASE_URL || 'https://merlinenergy.net';
-const FROM_EMAIL = 'TrueQuote by Merlin <hello@merlin.energy>';
+const FROM_EMAIL = 'StackQuote by Merlin <hello@merlin.energy>';
 const REPLY_EMAIL = 'sales@merlinenergy.net';
-const BOOKING_MAILTO = `mailto:sales@merlinenergy.net?subject=${encodeURIComponent('Let\u2019s schedule a call — TrueQuote by Merlin')}&body=${encodeURIComponent('Hi,\n\nI\u2019d love to walk through my energy savings analysis. Please let me know a few times that work for a 20-minute call.\n\nThanks,')}`;
+const BOOKING_MAILTO = `mailto:sales@merlinenergy.net?subject=${encodeURIComponent('Let\u2019s schedule a call — StackQuote by Merlin')}&body=${encodeURIComponent('Hi,\n\nI\u2019d love to walk through my energy savings analysis. Please let me know a few times that work for a 20-minute call.\n\nThanks,')}`;
 
 // ── Vertical → Google Places search config ───────────────────────────────────
 const VERTICAL_CONFIG = {
@@ -113,27 +113,69 @@ const VERTICAL_CONFIG = {
 const PROMO_OUTREACH_INTEL = {
   car_wash: {
     driver: 'compressors, dryers, pumps, and conveyor motors spike during rush periods',
-    context: 'Tunnel car washes often draw 400–800 kW in short bursts.',
-    painPoint: 'That peak can set the demand-charge portion of the bill for the month.',
-    subject: '{{name}} — demand-charge model for your car wash',
+    context: 'Tunnel car washes often draw 400–800 kW in short bursts — and that single peak can set your demand charge for the entire billing month.',
+    painPoint: 'Most operators are paying a premium for 15 minutes of load. A storage layer eliminates that exposure.',
+    subject: '{{name}} — your Energy Stack analysis is ready',
   },
   ev_charging: {
-    driver: 'fast chargers add directly to peak demand unless storage buffers the site load',
-    context: 'Ten 150 kW DC fast chargers can look like a small factory to the utility.',
-    painPoint: 'That demand spike can drive both utility charges and transformer-upgrade pressure.',
-    subject: '{{name}} — BESS model for charging demand',
+    driver: 'fast chargers add peak demand the moment a vehicle plugs in — storage buffers that spike before it hits the meter',
+    context: 'Ten 150 kW fast chargers look like a small factory to the utility. Without storage, every session is a demand event.',
+    painPoint: 'The right storage layer can cut demand charges 40–60% and remove transformer-upgrade pressure as you scale.',
+    subject: '{{name}} — Energy Stack model for your charging network',
   },
   truck_stop: {
-    driver: 'refrigeration, pumps, HVAC, lighting, restaurant loads, and charging can stack on one meter',
-    context: 'Travel centers are becoming energy hubs, not just fuel stops.',
-    painPoint: 'Peak demand can climb before the site has a clear storage or solar plan.',
-    subject: '{{name}} — energy model for your travel center',
+    driver: 'fuel pumps, refrigeration, restaurant, HVAC, lighting, and EV charging all land on one meter',
+    context: 'Travel centers are becoming full energy hubs — and the stacked load profile creates significant demand exposure.',
+    painPoint: 'Operators who build a storage layer now are locking in rates before utility interconnection rules tighten.',
+    subject: '{{name}} — Energy Stack analysis for your travel center',
   },
   hotel: {
-    driver: 'HVAC, laundry, pool heating, and kitchen loads peak during high-occupancy periods',
-    context: 'Hotels have dual exposure: demand charges and evening time-of-use pricing.',
-    painPoint: 'A few peak operating windows can set a large share of the monthly bill.',
-    subject: '{{name}} — hotel energy model for review',
+    driver: 'HVAC, laundry, kitchen, and pool loads peak simultaneously during high-occupancy periods',
+    context: 'Hotels sit in the top tier of commercial demand-charge exposure — and carry dual exposure to both peak demand and evening TOU rates.',
+    painPoint: 'A coordinated Energy Stack — storage + solar + demand response — can address both in a single capital project.',
+    subject: '{{name}} — your Energy Stack quote is ready',
+  },
+  manufacturing: {
+    driver: 'production line startup, HVAC, compressors, and process equipment create predictable demand spikes',
+    context: 'Manufacturing facilities at this scale typically carry $200K–$1.5M/yr in combined demand-charge and utility exposure.',
+    painPoint: 'An Energy Stack modeled to your shift schedule can cut that exposure without touching production.',
+    subject: '{{name}} — Energy Stack analysis for your facility',
+  },
+  data_center: {
+    driver: 'UPS systems, cooling, and compute load run 24/7 with no margin for interruption',
+    context: 'Data centers face $1M+ annual utility exposure — and resilience requirements that most storage configurations can satisfy simultaneously.',
+    painPoint: 'A co-located BESS layer cuts costs and replaces legacy UPS infrastructure in a single asset.',
+    subject: '{{name}} — power resilience + Energy Stack model',
+  },
+  logistics: {
+    driver: 'dock equipment, refrigeration, lighting, and EV fleet charging create overlapping demand windows',
+    context: 'Warehouse and distribution centers are among the strongest candidates for solar + demand-charge storage.',
+    painPoint: 'EV fleet electrification will double your peak exposure within 3 years. The stack needs to be in place first.',
+    subject: '{{name}} — Energy Stack model for your distribution center',
+  },
+  healthcare: {
+    driver: 'medical equipment, HVAC, lighting, and backup requirements create both cost and resilience exposure',
+    context: 'Medical facilities have a dual mandate: reduce operating cost and guarantee backup power.',
+    painPoint: 'A BESS-led Energy Stack addresses both in a single capital project — and often qualifies for accelerated ITC.',
+    subject: '{{name}} — energy resilience + savings stack',
+  },
+  casino: {
+    driver: '24/7 lighting, HVAC, kitchen, entertainment systems, and hotel rooms create one of the highest sustained demand profiles in commercial real estate',
+    context: 'Casino resort properties typically carry $300K–$800K/yr in addressable demand-charge exposure.',
+    painPoint: 'A co-located Energy Stack can cut that exposure while providing the backup resilience your operations require.',
+    subject: '{{name}} — Energy Stack analysis for your property',
+  },
+  airport: {
+    driver: 'terminal HVAC, baggage systems, gate power, and ground support electrification stack on a single utility connection',
+    context: 'Airports are among the best candidates for large-scale solar + storage: wide roof area, predictable load, and resilience requirements.',
+    painPoint: 'Federal infrastructure incentives and ITC stacking make the economics stronger than most operators realize.',
+    subject: '{{name}} — airport Energy Stack analysis',
+  },
+  energy_project: {
+    driver: 'project-scale energy infrastructure benefits from optimized stack design before interconnection is filed',
+    context: 'We identified your project in recent coverage and built a first-pass Energy Stack model.',
+    painPoint: 'ITC stacking, BESS sizing, and 25-yr NPV can shift materially depending on stack configuration.',
+    subject: '{{name}} — Energy Stack model for your project',
   },
 };
 
@@ -274,7 +316,7 @@ function buildPromotionalOutreachBody({ vertical, quoteData }) {
   return [
     `Because ${intel.driver}, storage sizing is worth checking before the next utility bill cycle.`,
     `${intel.context} ${intel.painPoint}`,
-    `I ran a first-pass TrueQuote™ for your ${cfg.label.toLowerCase()} facility. ${proofLine}`,
+    `I ran a first-pass StackQuote™ for your ${cfg.label.toLowerCase()} facility. ${proofLine}`,
     'If the numbers are directionally useful, review the quote. If they are off, reply with a utility bill and I will tighten the assumptions.',
   ].join('<br><br>');
 }
@@ -304,15 +346,15 @@ function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody
       </tr>
     </table>
     ${(hi.solarKW || hi.bessKW) ? `<p style="color:#475569;font-size:12px;margin:0 0 8px;">
-      System: ${[hi.solarKW ? `${hi.solarKW} solar` : null, hi.bessKW ? `${hi.bessKW} BESS` : null, hi.bessVendor ? `${hi.bessVendor} ${hi.bessModel || ''}`.trim() : null].filter(Boolean).join(' · ')}
-      ${hi.netInvestment ? `· ${hi.netInvestment} net investment after incentives` : ''}
+      Stack: ${[hi.solarKW ? `${hi.solarKW} solar` : null, hi.bessKW ? `${hi.bessKW} BESS` : null, hi.bessVendor ? `${hi.bessVendor} ${hi.bessModel || ''}`.trim() : null].filter(Boolean).join(' · ')}
+      ${hi.netInvestment ? `· ${hi.netInvestment} net after incentives` : ''}
     </p>` : ''}
     ${hi.p50Payback ? `<p style="color:#475569;font-size:11px;margin:0 0 20px;background:#f8fafc;border-radius:6px;padding:8px 12px;border-left:3px solid #eab308;">
       📊 Monte Carlo P50 · ${hi.p50Payback}-yr payback · ${hi.p50IRR}% 5-yr IRR · ${hi.p50Savings}/yr
       ${hi.confidence ? ` · <strong>${hi.confidence.tier}</strong> (${hi.confidence.score}/100)` : ''}
     </p>` : ''}
   ` : `<p style="color:#cbd5e1;font-size:14px;margin:0 0 20px;line-height:1.5;">
-    Estimated annual savings · Payback period · Solar + BESS sizing · 25-yr NPV
+    Annual savings · Payback period · Solar + BESS stack sizing · 25-yr NPV
   </p>`;
 
   return `
@@ -326,8 +368,8 @@ function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody
   <div style="max-width:600px;margin:0 auto;padding:32px 24px;">
     <div style="border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:20px;margin-bottom:28px;">
       <span style="font-size:18px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">
-        TrueQuote™
-        <span style="font-size:12px;color:#64748b;font-weight:400;margin-left:6px;">by Merlin Energy</span>
+        Merlin Energy
+        <span style="font-size:12px;color:#64748b;font-weight:400;margin-left:6px;">Energy Stacking™</span>
       </span>
     </div>
     <p style="color:#94a3b8;font-size:15px;line-height:1.6;margin:0 0 16px;">
@@ -336,31 +378,35 @@ function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody
     <p style="color:#94a3b8;font-size:15px;line-height:1.6;margin:0 0 16px;">
       ${body}
     </p>
-    <p style="color:#94a3b8;font-size:15px;line-height:1.6;margin:0 0 28px;">
-      I built a <strong style="color:#ffffff;">first-pass energy savings analysis</strong> for your
-      ${location} facility using live utility rates, NREL solar data, and DOE-aligned battery
-      sizing logic.
+    <p style="color:#94a3b8;font-size:15px;line-height:1.6;margin:0 0 16px;">
+      I built a first-pass <strong style="color:#ffffff;">Energy Stack</strong> for your ${location} facility —
+      a coordinated model of solar, battery storage, demand response, and available incentives
+      sized to your actual load profile.
+    </p>
+    <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 28px;padding:14px 18px;background:rgba(255,255,255,0.03);border-left:3px solid rgba(234,179,8,0.4);border-radius:0 6px 6px 0;">
+      The goal isn't technology adoption — it's <strong style="color:#e2e8f0;">optimization.</strong>
+      The right stack pays for itself. The wrong one just adds complexity. This model shows you the difference.
     </p>
     <div style="background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.25);border-radius:12px;padding:24px;margin-bottom:28px;">
       <p style="color:#EAB308;font-size:13px;font-weight:700;margin:0 0 16px;text-transform:uppercase;letter-spacing:0.08em;">
-        Your Pre-Built TrueQuote™ — ${location}
+        Your Energy Stack Quote — ${location}
       </p>
       ${statsStrip}
       <a href="${quoteUrl}"
          style="display:inline-block;background:#EAB308;color:#000;font-size:15px;font-weight:700;
                 padding:12px 28px;border-radius:8px;text-decoration:none;letter-spacing:-0.2px;">
-        View Full Quote →
+        View Full Stack Analysis →
       </a>
     </div>
     <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin:0 0 8px;">
-      Want me to tighten the assumptions?
+      Want to walk through the stack assumptions together?
     </p>
     <a href="${BOOKING_MAILTO}"
        style="color:#38bdf8;font-size:14px;text-decoration:none;font-weight:600;">
-      Click here to learn more →
+      Schedule a 20-minute call →
     </a>
-    <p style="color:#475569;font-size:12px;margin:6px 0 0;">Reply with a utility bill or reach us at <a href="mailto:sales@merlinenergy.net" style="color:#38bdf8;text-decoration:none;">sales@merlinenergy.net</a></p>
-    <p style="color:#94a3b8;font-size:14px;line-height:1.5;margin:24px 0 0;">— Alex<br><span style="color:#64748b;font-size:12px;">Merlin Energy</span></p>
+    <p style="color:#475569;font-size:12px;margin:6px 0 0;">Or reply with a utility bill and I'll tighten the model. <a href="mailto:sales@merlinenergy.net" style="color:#38bdf8;text-decoration:none;">sales@merlinenergy.net</a></p>
+    <p style="color:#94a3b8;font-size:14px;line-height:1.5;margin:24px 0 0;">— Alex<br><span style="color:#64748b;font-size:12px;">Merlin Energy · Energy Stacking™</span></p>
     ${hi?.installer ? `
     <div style="margin-top:28px;padding:14px 18px;background:rgba(59,130,246,0.06);border-left:3px solid #3b82f6;border-radius:6px;">
       <p style="margin:0;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Installation Partner</p>
@@ -374,14 +420,136 @@ function buildEmailHtml({ businessName, vertical, quoteUrl, location, customBody
         Merlin Energy · Las Vegas, NV
       </p>
       <p style="color:#1e293b;font-size:11px;margin:6px 0 0;">
-        This analysis was generated automatically using publicly available facility data.
-        Numbers are estimates based on industry benchmarks and should be verified by a licensed engineer.
+        This analysis was generated using publicly available facility data, live utility rates, and NREL solar irradiance.
+        Numbers are estimates and should be verified by a licensed engineer before capital commitment.
       </p>
     </div>
   </div>
 </body>
 </html>`;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SMART EMAIL TARGETING
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Tier 1 — generic department aliases, ordered by expected response rate
+ * for energy / facilities proposals.
+ */
+const TIER1_ALIASES = [
+  'sales',
+  'info',
+  'businessdevelopment',
+  'projects',
+  'facilities',
+  'operations',
+  'engineering',
+  'sustainability',
+  'energy',
+  'procurement',
+];
+
+/**
+ * Build a ranked list of email addresses to try for a given domain.
+ *
+ * Priority:
+ *   1. Known contacts (firstName, lastName, title — if provided)
+ *   2. Tier-1 department aliases
+ *
+ * Returns an array like:
+ *   [
+ *     { email: 'facilities@acme.com', tier: 1, label: 'Facilities Dept' },
+ *     { email: 'bob.smith@acme.com',  tier: 0, label: 'Bob Smith (Director of Operations)' },
+ *     ...
+ *   ]
+ *
+ * @param {string} domain   e.g. "acme.com"
+ * @param {Array}  contacts Array of { firstName, lastName, title } known contacts (optional)
+ * @param {number} maxTier1 How many Tier-1 aliases to include (default 4)
+ */
+function buildEmailTargets(domain, contacts = [], maxTier1 = 4) {
+  if (!domain) return [];
+  const d = domain.toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  const targets = [];
+
+  // Named contacts — all common format variations
+  for (const c of contacts) {
+    if (!c.firstName || !c.lastName) continue;
+    const fn = c.firstName.toLowerCase().replace(/[^a-z]/g, '');
+    const ln = c.lastName.toLowerCase().replace(/[^a-z]/g, '');
+    const fi = fn[0];
+    const formats = [
+      `${fn}.${ln}`,
+      `${fi}${ln}`,
+      `${fi}.${ln}`,
+      `${fn}_${ln}`,
+      `${fn}`,
+    ];
+    for (const fmt of formats) {
+      targets.push({
+        email: `${fmt}@${d}`,
+        tier: 0,
+        label: `${c.firstName} ${c.lastName}${c.title ? ` (${c.title})` : ''}`,
+        firstName: c.firstName,
+        lastName: c.lastName,
+      });
+    }
+  }
+
+  // Tier-1 department aliases
+  for (const alias of TIER1_ALIASES.slice(0, maxTier1)) {
+    targets.push({
+      email: `${alias}@${d}`,
+      tier: 1,
+      label: `${alias}@ alias`,
+    });
+  }
+
+  return targets;
+}
+
+/**
+ * Given a company domain and optional known contacts, return the best
+ * flat list of email addresses to include as "To" recipients.
+ *
+ * For a cold outreach blast we recommend:
+ *   - 0 known contacts → top 4 Tier-1 aliases
+ *   - 1+ known contacts → all name variants for known contacts + top 2 aliases
+ *
+ * @param {string} domain
+ * @param {Array}  contacts
+ * @returns {string[]}  de-duped email list
+ */
+function resolveOutreachEmails(domain, contacts = [], contactEmail = null) {
+  // No domain at all — fall back to the explicit contact_email if provided
+  if (!domain) return contactEmail ? [contactEmail] : [];
+  const hasContacts = contacts.length > 0;
+  const tier1Count  = hasContacts ? 2 : 4;
+  const targets     = buildEmailTargets(domain, contacts, tier1Count);
+
+  // Named contacts: use only the top 2 format variants per person
+  const seen = new Set();
+  const result = [];
+  const namedByPerson = {};
+
+  for (const t of targets) {
+    if (t.tier === 0) {
+      const key = `${t.firstName}_${t.lastName}`;
+      namedByPerson[key] = (namedByPerson[key] || 0) + 1;
+      if (namedByPerson[key] > 2) continue; // only top 2 formats per person
+    }
+    if (!seen.has(t.email)) {
+      seen.add(t.email);
+      result.push(t.email);
+    }
+  }
+
+  return result;
+}
+
+// ─── Export helpers for use in route handlers ────────────────────────────────
+// (used by /discover, /email/:leadId, and /news-projects)
 
 async function sendIntroEmail({ recipients, businessName, vertical, quoteUrl, location, customSubject, customBody, quoteData }) {
   const subject = customSubject || buildOutreachSubject(businessName, vertical);
@@ -578,6 +746,32 @@ router.get('/shared-quote/:token', async (req, res) => {
 });
 
 /**
+ * GET /api/sales-agent/email-targets/:leadId
+ * Resolve and return the tiered email targets for a lead without sending anything.
+ * Used by the UI to preview who will receive the outreach.
+ */
+router.get('/email-targets/:leadId', async (req, res) => {
+  const { leadId } = req.params;
+  const { data: lead, error } = await getSupabase()
+    .from('smb_leads').select('id, name, website, contacts').eq('id', leadId).single();
+
+  if (error || !lead) return res.status(404).json({ error: 'Lead not found' });
+
+  if (!lead.website) return res.json({ ok: true, domain: null, targets: [], note: 'No website on file' });
+
+  let domain, contacts = [];
+  try {
+    domain = new URL(lead.website).hostname.replace(/^www\./, '');
+    if (lead.contacts) contacts = typeof lead.contacts === 'string' ? JSON.parse(lead.contacts) : lead.contacts;
+  } catch (_) {}
+
+  const targets = buildEmailTargets(domain, contacts, 4);
+  const resolved = resolveOutreachEmails(domain, contacts, lead.contact_email);
+
+  res.json({ ok: true, domain, targets, resolved });
+});
+
+/**
  * POST /api/sales-agent/quote/:leadId
  * Regenerate quote for a specific lead
  */
@@ -629,16 +823,24 @@ router.post('/email/:leadId', async (req, res) => {
   if (error || !lead) return res.status(404).json({ error: 'Lead not found' });
   if (!lead.quote_url) return res.status(400).json({ error: 'No quote URL — run /quote/:leadId first' });
 
-  // Derive default recipients from website domain
+  // Derive default recipients using smart tiered targeting
   let toList = recipients;
   if (!toList || toList.length === 0) {
     if (lead.website) {
       try {
         const domain = new URL(lead.website).hostname.replace(/^www\./, '');
-        toList = [`sales@${domain}`, `operations@${domain}`, `cfo@${domain}`];
+        // Parse any named contacts stored on the lead (JSON array: [{firstName,lastName,title}])
+        let contacts = [];
+        if (lead.contacts) {
+          try { contacts = typeof lead.contacts === 'string' ? JSON.parse(lead.contacts) : lead.contacts; } catch (_) {}
+        }
+        toList = resolveOutreachEmails(domain, contacts, lead.contact_email);
       } catch (_) {
-        toList = [];
+        toList = lead.contact_email ? [lead.contact_email] : [];
       }
+    }
+    if ((!toList || toList.length === 0) && lead.contact_email) {
+      toList = [lead.contact_email];
     }
     if ((!toList || toList.length === 0) && !previewOnly) {
       return res.status(400).json({ error: 'No recipients. Provide recipients array or ensure lead has a website.' });
@@ -719,6 +921,311 @@ router.get('/leads', async (req, res) => {
   }, { total: 0, byVertical: {} });
 
   res.json({ ok: true, stats, leads: data });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NEWS PROJECT SCRAPER — find active energy projects from Google News RSS
+// POST /api/sales-agent/news-projects
+// ═══════════════════════════════════════════════════════════════════════════
+
+const NEWS_PROJECT_FEEDS = [
+  // Construction / Expansion signals
+  { url: 'https://news.google.com/rss/search?q=manufacturing+facility+expansion+construction+energy&hl=en-US&gl=US&ceid=US:en', industry: 'manufacturing', label: 'Manufacturing' },
+  { url: 'https://news.google.com/rss/search?q=data+center+construction+opening+power&hl=en-US&gl=US&ceid=US:en', industry: 'data_center', label: 'Data Center' },
+  { url: 'https://news.google.com/rss/search?q=warehouse+distribution+center+opening+new&hl=en-US&gl=US&ceid=US:en', industry: 'logistics', label: 'Warehouse / Logistics' },
+  { url: 'https://news.google.com/rss/search?q=hotel+resort+construction+opening+2025+2026&hl=en-US&gl=US&ceid=US:en', industry: 'hotel', label: 'Hotel / Hospitality' },
+  { url: 'https://news.google.com/rss/search?q=hospital+medical+center+expansion+construction&hl=en-US&gl=US&ceid=US:en', industry: 'healthcare', label: 'Healthcare' },
+  { url: 'https://news.google.com/rss/search?q=car+wash+tunnel+opening+new+construction&hl=en-US&gl=US&ceid=US:en', industry: 'car_wash', label: 'Car Wash' },
+  { url: 'https://news.google.com/rss/search?q=EV+charging+hub+depot+fleet+electrification&hl=en-US&gl=US&ceid=US:en', industry: 'ev_charging', label: 'EV Charging' },
+  { url: 'https://news.google.com/rss/search?q=solar+battery+storage+BESS+commercial+project&hl=en-US&gl=US&ceid=US:en', industry: 'energy_project', label: 'Energy Project (BESS/Solar)' },
+  { url: 'https://news.google.com/rss/search?q=casino+resort+expansion+construction+Nevada&hl=en-US&gl=US&ceid=US:en', industry: 'casino', label: 'Casino / Resort' },
+  { url: 'https://news.google.com/rss/search?q=airport+terminal+expansion+construction&hl=en-US&gl=US&ceid=US:en', industry: 'airport', label: 'Airport' },
+];
+
+// Map news industry slug → sales-agent vertical config key
+const NEWS_INDUSTRY_TO_VERTICAL = {
+  manufacturing: 'hotel',   // closest peakLoad proxy; override below
+  data_center:   'ev_charging',
+  logistics:     'truck_stop',
+  hotel:         'hotel',
+  healthcare:    'hotel',
+  car_wash:      'car_wash',
+  ev_charging:   'ev_charging',
+  energy_project:'truck_stop',
+  casino:        'hotel',
+  airport:       'ev_charging',
+};
+
+// Peak load overrides for news-discovered industries (kW)
+const NEWS_INDUSTRY_PEAK_KW = {
+  manufacturing:  1200,
+  data_center:    2000,
+  logistics:       600,
+  hotel:           500,
+  healthcare:      900,
+  car_wash:        450,
+  ev_charging:     600,
+  energy_project:  800,
+  casino:          700,
+  airport:        1000,
+};
+
+const NEWS_INDUSTRY_EMAIL_HOOKS = {
+  manufacturing:  { subject: '{{name}} — Energy Stack analysis for your new facility', body: 'Manufacturing facilities at this scale typically carry $200K–$1.5M/yr in demand-charge and utility exposure. We built a coordinated Energy Stack model sized to your site.' },
+  data_center:    { subject: '{{name}} — power resilience + Energy Stack model', body: 'Data centers face $1M+ annual utility exposure — and resilience requirements. A co-located BESS layer addresses both. We ran the numbers for your facility.' },
+  logistics:      { subject: '{{name}} — Energy Stack model for your distribution center', body: 'Warehouse and distribution centers are strong candidates for solar + demand-charge storage — especially with EV fleet electrification on the horizon. We pre-built your stack.' },
+  hotel:          { subject: '{{name}} — your Energy Stack quote is ready', body: 'Hotels rank in the top tier of commercial solar + BESS ROI candidates. HVAC, laundry, and kitchen loads create compounding peak-shaving opportunity.' },
+  healthcare:     { subject: '{{name}} — energy resilience + savings stack', body: 'Medical facilities have a dual mandate: reduce operating cost and guarantee backup power. An Energy Stack addresses both in a single capital project.' },
+  car_wash:       { subject: '{{name}} — your Energy Stack analysis is ready', body: 'Tunnel car washes draw 400–800 kW in short bursts — and that peak sets the demand charge for the entire month. We modeled your location.' },
+  ev_charging:    { subject: '{{name}} — Energy Stack model for your charging network', body: 'Fast charger demand spikes are the #1 cost driver for EV operators. A storage buffer in the stack can cut demand charges 40–60%. We ran your numbers.' },
+  energy_project: { subject: '{{name}} — Energy Stack model for your project', body: 'We identified your project in recent coverage and built a first-pass Energy Stack analysis — system sizing, ITC stacking, and 25-yr NPV included.' },
+  casino:         { subject: '{{name}} — Energy Stack analysis for your property', body: 'Casino resort facilities run 24/7 with significant sustained peak exposure. A coordinated Energy Stack typically yields $300K–$800K/yr in addressable savings.' },
+  airport:        { subject: '{{name}} — airport Energy Stack analysis', body: 'Airports are ideal for large-scale solar + storage stacking: wide roof area, predictable demand profile, and federal resilience incentives that stack with ITC.' },
+};
+
+/**
+ * Parse Google News RSS feed and extract articles.
+ * Server-side: no CORS proxy needed.
+ */
+async function parseNewsFeed(url) {
+  try {
+    const { default: fetch } = await import('node-fetch').catch(() => ({ default: globalThis.fetch }));
+    const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Merlin Energy news scanner)' }, signal: AbortSignal.timeout(8000) });
+    if (!resp.ok) return [];
+    const xml = await resp.text();
+
+    const items = [];
+    const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+    let match;
+    while ((match = itemRegex.exec(xml)) !== null) {
+      const block = match[1];
+      const title       = (block.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || block.match(/<title>(.*?)<\/title>/))?.[1] || '';
+      const link        = (block.match(/<link>(.*?)<\/link>/) || [])[1] || '';
+      const description = (block.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/) || block.match(/<description>(.*?)<\/description>/))?.[1] || '';
+      const pubDate     = (block.match(/<pubDate>(.*?)<\/pubDate>/))?.[1] || '';
+      const source      = (block.match(/<source[^>]*>(.*?)<\/source>/))?.[1] || '';
+      if (title) items.push({ title, link, description: description.replace(/<[^>]+>/g, '').trim().slice(0, 400), pubDate, source });
+    }
+    return items.slice(0, 20);
+  } catch (err) {
+    console.warn(`[NewsProjects] Feed parse error: ${err.message}`);
+    return [];
+  }
+}
+
+/**
+ * Extract company name, location (city, state), and project specs from an article.
+ * Uses OpenAI if available; falls back to heuristic regex.
+ */
+async function extractProjectDetails(title, description, industry) {
+  const text = `${title}\n${description}`;
+
+  // Try OpenAI extraction
+  const OPENAI_KEY = process.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+  if (OPENAI_KEY) {
+    try {
+      const { default: fetch } = await import('node-fetch').catch(() => ({ default: globalThis.fetch }));
+      const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_KEY}` },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          temperature: 0,
+          max_tokens: 300,
+          messages: [
+            { role: 'system', content: 'Extract structured data from an energy/business news article. Return ONLY valid JSON with keys: companyName (string), city (string or null), state (string 2-letter or null), projectSizeMW (number or null), projectSizeKWh (number or null), contactDomain (string or null, company website domain), confidence (0-100). If you cannot determine a field, use null.' },
+            { role: 'user', content: `Industry: ${industry}\n\nText:\n${text}` },
+          ],
+        }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        const raw = data.choices?.[0]?.message?.content?.trim() || '';
+        const jsonMatch = raw.match(/\{[\s\S]+\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (parsed.companyName && parsed.confidence > 40) return parsed;
+        }
+      }
+    } catch (_) {}
+  }
+
+  // Heuristic fallback
+  const stateAbbr = text.match(/\b([A-Z]{2})\b/g)?.find(s =>
+    ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'].includes(s)
+  ) || null;
+  const cityMatch = text.match(/(?:in|at|near|of)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?),\s+[A-Z]{2}/)?.[1] || null;
+  const mwMatch   = text.match(/(\d+(?:\.\d+)?)\s*MW/i)?.[1];
+  const mwhMatch  = text.match(/(\d+(?:\.\d+)?)\s*MWh/i)?.[1];
+
+  // First quoted or capitalized entity heuristic
+  const firstEntity = title.match(/^([A-Z][A-Za-z0-9\s&,.''-]+?)(?:\s+(?:to|will|plans|announces|opens|breaks|begins|expands|launches))/)?.[1]?.trim()
+    || title.split(/\s+[-–—]\s+/)[0]?.trim()
+    || null;
+
+  return {
+    companyName: firstEntity,
+    city: cityMatch,
+    state: stateAbbr,
+    projectSizeMW: mwMatch ? parseFloat(mwMatch) : null,
+    projectSizeKWh: mwhMatch ? parseFloat(mwhMatch) * 1000 : null,
+    contactDomain: null,
+    confidence: firstEntity && stateAbbr ? 55 : 30,
+  };
+}
+
+/**
+ * Build a deduplication key from company + title
+ */
+function newsLeadKey(companyName, title) {
+  return `${(companyName || '').toLowerCase().replace(/\W+/g, '-')}-${title.toLowerCase().replace(/\W+/g, '-').slice(0, 40)}`;
+}
+
+/**
+ * POST /api/sales-agent/news-projects
+ * Scrape Google News RSS → extract energy project specs → auto-quote → optionally email.
+ *
+ * Body: {
+ *   industries: ['manufacturing','data_center','hotel',...] // optional; default all
+ *   autoQuote: true,
+ *   autoEmail: false,
+ *   minConfidence: 40,   // skip extracted records below this threshold (0-100)
+ * }
+ */
+router.post('/news-projects', async (req, res) => {
+  const {
+    industries = null,    // null = all
+    autoQuote  = true,
+    autoEmail  = false,
+    minConfidence = 40,
+  } = req.body || {};
+
+  const feeds = industries
+    ? NEWS_PROJECT_FEEDS.filter(f => industries.includes(f.industry))
+    : NEWS_PROJECT_FEEDS;
+
+  const results = { discovered: 0, quoted: 0, emailed: 0, skipped: 0, errors: [], leads: [] };
+  const seenKeys = new Set();
+
+  for (const feed of feeds) {
+    console.log(`[NewsProjects] Fetching ${feed.label} feed…`);
+    const articles = await parseNewsFeed(feed.url);
+    console.log(`[NewsProjects] ${articles.length} articles for ${feed.label}`);
+
+    for (const article of articles) {
+      try {
+        const extracted = await extractProjectDetails(article.title, article.description, feed.industry);
+
+        if (!extracted?.companyName || extracted.confidence < minConfidence) {
+          results.skipped++;
+          continue;
+        }
+
+        // Dedup
+        const key = newsLeadKey(extracted.companyName, article.title);
+        if (seenKeys.has(key)) { results.skipped++; continue; }
+        seenKeys.add(key);
+
+        const location = [extracted.city, extracted.state].filter(Boolean).join(', ') || 'United States';
+        const vertical = NEWS_INDUSTRY_TO_VERTICAL[feed.industry] || 'hotel';
+        const peakKW   = NEWS_INDUSTRY_PEAK_KW[feed.industry] || 500;
+        const hooks    = NEWS_INDUSTRY_EMAIL_HOOKS[feed.industry] || NEWS_INDUSTRY_EMAIL_HOOKS.hotel;
+
+        // Upsert into smb_leads as a news-sourced lead
+        const { data: leadRow, error: leadErr } = await getSupabase()
+          .from('smb_leads')
+          .upsert({
+            name: extracted.companyName,
+            address: location,
+            vertical,
+            industry: feed.industry,
+            source: 'news_scraper',
+            status: 'discovered',
+            notes: `From: ${article.title}\n${article.link}\n\nExtracted: conf=${extracted.confidence}, sizeMW=${extracted.projectSizeMW}, sizeKWh=${extracted.projectSizeKWh}`,
+            website: extracted.contactDomain ? `https://${extracted.contactDomain}` : null,
+          }, { onConflict: 'name,address', ignoreDuplicates: false })
+          .select('id,name,status')
+          .single();
+
+        if (leadErr || !leadRow) {
+          results.errors.push(`DB upsert failed for ${extracted.companyName}: ${leadErr?.message}`);
+          continue;
+        }
+
+        results.discovered++;
+        const leadResult = {
+          id: leadRow.id,
+          name: extracted.companyName,
+          industry: feed.industry,
+          location,
+          confidence: extracted.confidence,
+          articleTitle: article.title,
+          articleUrl: article.link,
+          source: article.source,
+          status: 'discovered',
+        };
+
+        // Auto-quote
+        if (autoQuote) {
+          const quoteData = await generateQuote(
+            vertical === 'hotel' ? feed.industry : vertical,
+            location,
+            peakKW,
+            extracted.projectSizeMW ? { manualBessKW: Math.round(extracted.projectSizeMW * 200) } : {}
+          );
+
+          if (quoteData) {
+            const quoteUrl = await storeSharedQuote(leadRow.id, quoteData, extracted.companyName, feed.industry);
+            if (quoteUrl) {
+              await getSupabase().from('smb_leads')
+                .update({ quote_url: quoteUrl, quote_data: quoteData, status: 'quoted' })
+                .eq('id', leadRow.id);
+              leadResult.quoteUrl = quoteUrl;
+              leadResult.highlights = extractQuoteHighlights(quoteData);
+              leadResult.status = 'quoted';
+              results.quoted++;
+            }
+
+            // Email pipeline (human review gate)
+            if (autoEmail && leadResult.quoteUrl && extracted.contactDomain) {
+              const toList = resolveOutreachEmails(extracted.contactDomain, []);
+              const emailResult = await sendIntroEmail({
+                recipients: toList,
+                businessName: extracted.companyName,
+                vertical,
+                quoteUrl: leadResult.quoteUrl,
+                location,
+                customSubject: hooks.subject.replace('{{name}}', extracted.companyName),
+                customBody: hooks.body,
+                quoteData,
+              });
+              if (emailResult.success) {
+                await getSupabase().from('smb_leads')
+                  .update({ email_sent_at: new Date().toISOString(), status: 'emailed', contact_email: toList.join(', ') })
+                  .eq('id', leadRow.id);
+                leadResult.status = 'emailed';
+                leadResult.emailedTo = toList;
+                results.emailed++;
+              }
+            } else if (autoEmail && !extracted.contactDomain) {
+              results.errors.push(`${extracted.companyName}: no domain extracted — email skipped`);
+            }
+          }
+        }
+
+        results.leads.push(leadResult);
+
+      } catch (err) {
+        console.error(`[NewsProjects] Error on article "${article.title}":`, err.message);
+        results.errors.push(err.message);
+      }
+
+      await new Promise(r => setTimeout(r, 150));
+    }
+  }
+
+  res.json({ ok: true, ...results });
 });
 
 export default router;

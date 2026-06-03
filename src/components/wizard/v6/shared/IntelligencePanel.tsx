@@ -7,7 +7,7 @@
  * - Weather Impact (climate → ROI translation)
  * - Industry Hint (business name inference)
  *
- * ✅ TrueQuote™ Integrated: Uses official TrueQuoteBadge + SourceAttributionTooltip
+ * ✅ StackQuote™ Integrated: Uses official TrueQuoteBadge + SourceAttributionTooltip
  *
  * Created: January 18, 2026
  */

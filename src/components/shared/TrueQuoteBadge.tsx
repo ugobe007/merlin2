@@ -1,7 +1,7 @@
 /**
  * TrueQuoteBadge.tsx - PROFESSIONAL REDESIGN
  * 
- * The official Merlin TrueQuote™ badge and branding components.
+ * The official Merlin StackQuote™ badge and branding components.
  * Premium design with gold shield, purple gradients, and glass morphism.
  * 
  * @version 2.0.0 - Professional Redesign
@@ -32,7 +32,7 @@ export interface TrueQuoteBadgeProps {
 }
 
 export interface TrueQuoteSealProps {
-  /** Whether the quote meets TrueQuote™ standards */
+  /** Whether the quote meets StackQuote™ standards */
   certified?: boolean;
   /** Certification date */
   certifiedAt?: string;
@@ -106,7 +106,7 @@ export const TrueQuoteBadge: React.FC<TrueQuoteBadgeProps> = ({
         `}
       >
         <Shield className="w-3.5 h-3.5 text-amber-500" />
-        <span className="text-xs font-semibold text-amber-600">TrueQuote™</span>
+        <span className="text-xs font-semibold text-amber-600">StackQuote™</span>
       </button>
     );
   }
@@ -143,7 +143,7 @@ export const TrueQuoteBadge: React.FC<TrueQuoteBadgeProps> = ({
         
         {/* Text */}
         <div className="relative flex items-baseline">
-          <span className={`${config.text} font-bold text-amber-500`}>TrueQuote</span>
+          <span className={`${config.text} font-bold text-amber-500`}>StackQuote</span>
           <span className={`${config.tm} font-bold text-amber-400 ml-0.5`}>™</span>
         </div>
       </button>
@@ -195,7 +195,7 @@ export const TrueQuoteBadge: React.FC<TrueQuoteBadgeProps> = ({
         {/* Text with gradient */}
         <div className="relative flex items-baseline">
           <span className={`${config.text} font-bold bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 bg-clip-text text-transparent`}>
-            TrueQuote
+            StackQuote
           </span>
           <span className={`${config.tm} font-bold text-amber-400 ml-0.5`}>™</span>
         </div>
@@ -255,7 +255,7 @@ export const TrueQuoteBadge: React.FC<TrueQuoteBadgeProps> = ({
         {/* Title */}
         <div className="relative flex items-baseline mb-1">
           <span className="text-2xl font-bold bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300 bg-clip-text text-transparent">
-            TrueQuote
+            StackQuote
           </span>
           <span className="text-sm font-bold text-amber-400 ml-1">™</span>
         </div>
@@ -305,7 +305,7 @@ export const TrueQuoteBadge: React.FC<TrueQuoteBadgeProps> = ({
             )}
           </div>
           <div className="flex items-baseline">
-            <span className="text-base font-bold text-amber-500">TrueQuote</span>
+            <span className="text-base font-bold text-amber-500">StackQuote</span>
             <span className="text-xs font-bold text-amber-400 ml-0.5">™</span>
           </div>
         </div>
@@ -359,7 +359,7 @@ export const TrueQuoteBadge: React.FC<TrueQuoteBadgeProps> = ({
       
       {/* Text */}
       <div className="relative flex items-baseline">
-        <span className={`${config.text} font-bold text-amber-700`}>TrueQuote</span>
+        <span className={`${config.text} font-bold text-amber-700`}>StackQuote</span>
         <span className={`${config.tm} font-bold text-amber-500 ml-0.5`}>™</span>
       </div>
       
@@ -433,7 +433,7 @@ export const TrueQuoteSeal: React.FC<TrueQuoteSealProps> = ({
 export const TrueQuoteInline: React.FC<{ className?: string }> = ({ className = '' }) => (
   <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/10 ${className}`}>
     <Shield className="w-3 h-3 text-amber-500" />
-    <span className="text-xs font-semibold text-amber-600">TrueQuote™</span>
+    <span className="text-xs font-semibold text-amber-600">StackQuote™</span>
   </span>
 );
 

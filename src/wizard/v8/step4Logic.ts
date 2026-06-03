@@ -882,7 +882,7 @@ function buildOneTier(
   const itcAmount = v45Costs.federalITC; // 30% of full §48 basis: solar+labor, BESS, site engineering, contingency, installation labor
   const netCost = v45Costs.netInvestment + panelUpgradeCost; // totalProjectCost − itcAmount + panel upgrade (not ITC eligible)
 
-  // ── Addon guardrails: sizing checks + audit notes for TrueQuote ────────
+  // ── Addon guardrails: sizing checks + audit notes for StackQuote ────────
   // validateAddonConfig runs all three guardrails (solar NREL, EV NEC/SAE, generator IEEE 446)
   // and returns per-technology audit notes + any warnings for the quote.
   // evInfrastructureCost is already included in v45Costs (pricingServiceV45 v4.5.1) —

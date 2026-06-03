@@ -12,7 +12,7 @@
  *   - Header, Hero, Calculator, HowItWorks, SocialProof, FinalCTA, Footer
  *   - Lead capture modal (Supabase)
  *   - Wizard V7 modal overlay
- *   - TrueQuote modal
+ *   - StackQuote modal
  *   - Page title + meta description
  * 
  * Created: Feb 7, 2026 — Phase 2 Vertical Unification
@@ -85,7 +85,7 @@ export function VerticalLandingPage({
   // ─── Action handlers ────────────────────────────────────────────────
   const handleGetQuote = useCallback(() => setShowWizard(true), []);
   const handleTalkToExpert = useCallback(() => setShowLeadForm(true), []);
-  const handleShowTrueQuote = useCallback(() => setShowTrueQuoteModal(true), []);
+  const handleShowStackQuote = useCallback(() => setShowTrueQuoteModal(true), []);
 
   return (
     <div className={`min-h-screen ${config.theme.pageBg}`}>
@@ -97,7 +97,7 @@ export function VerticalLandingPage({
         config={config}
         calculatorInputs={calculatorInputs}
         onGetQuote={handleGetQuote}
-        onShowTrueQuote={handleShowTrueQuote}
+        onShowStackQuote={handleShowStackQuote}
       />
 
       {/* ─── CALCULATOR ────────────────────────────────────── */}
@@ -105,7 +105,7 @@ export function VerticalLandingPage({
         config={config}
         onBuildQuote={handleGetQuote}
         onTalkToExpert={handleTalkToExpert}
-        onShowTrueQuote={handleShowTrueQuote}
+        onShowStackQuote={handleShowStackQuote}
         onInputsChange={handleInputsChange}
         initialState={initialState}
       />

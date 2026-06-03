@@ -25,7 +25,7 @@ import type { ParsedDocument } from "@/services/documentParserService";
 /**
  * LandingView Component
  *
- * The main landing page for ProQuote showing:
+ * The main landing page for ProStack showing:
  * - Premium header with navigation
  * - BESS market pricing intelligence strip
  * - System Configuration hero panel with Merlin
@@ -95,14 +95,14 @@ export const LandingView: React.FC<LandingViewProps> = ({
             <div className="flex items-center gap-4">
               <img
                 src={badgeIcon}
-                alt="ProQuote Badge"
+                alt="ProStack Badge"
                 className="w-12 h-12 object-contain"
                 style={{
                   filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.4))",
                 }}
               />
               <div>
-                <h1 className="text-2xl font-bold text-white">ProQuote</h1>
+                <h1 className="text-2xl font-bold text-white">ProStack</h1>
                 <p className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>
                   Professional-grade BESS configuration
                 </p>
@@ -616,7 +616,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 alt="Merlin"
                 className="w-20 h-20 mx-auto mb-4 drop-shadow-2xl"
               />
-              <h2 className="text-2xl font-bold text-white mb-1">Welcome to ProQuote</h2>
+              <h2 className="text-2xl font-bold text-white mb-1">Welcome to ProStack</h2>
               <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
                 Professional-grade BESS configuration tools
               </p>

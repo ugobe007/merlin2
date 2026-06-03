@@ -111,13 +111,13 @@ function getAdvisorContent(
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
             Choose your path: Get a {hi("free AI-powered quote")} in 3 minutes, or access{" "}
-            {hi("ProQuote™")} for full engineering control over your energy system.
+            {hi("ProStack™")} for full engineering control over your energy system.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
             {[
               "Guided Wizard is always free",
-              "ProQuote™ for complex projects",
-              "All quotes include TrueQuote™ sources",
+              "ProStack™ for complex projects",
+              "All quotes include StackQuote™ sources",
             ].map(bullet)}
           </div>
         </div>
@@ -221,7 +221,7 @@ function getAdvisorContent(
                     { icon: "⚡", label: "Utility Rate", hint: "$/kWh" },
                     { icon: "☀️", label: "Solar Irradiance", hint: "grade + h/day" },
                     { icon: "📊", label: "Demand Charge", hint: "$/kW" },
-                    { icon: "🎯", label: "TrueQuote™", hint: "~90 sec" },
+                    { icon: "🎯", label: "StackQuote™", hint: "~90 sec" },
                   ] as const
                 ).map(({ icon, label, hint }) => (
                   <div
@@ -433,7 +433,7 @@ function getAdvisorContent(
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {/* Greeting */}
           <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.35 }}>
-            {bizName ? <>{hi(bizName)} — your TrueQuote™ is ready.</> : "Your TrueQuote™ is ready."}
+            {bizName ? <>{hi(bizName)} — your StackQuote™ is ready.</> : "Your StackQuote™ is ready."}
           </div>
 
           {/* ROI snapshot card */}
@@ -488,7 +488,7 @@ function getAdvisorContent(
 
           <div style={{ fontSize: 12.5, color: T.secondary, lineHeight: 1.6 }}>
             Your energy stack is configured and sized for your facility. Review the financial
-            details and {hi("download your TrueQuote™")} to share with your team.
+            details and {hi("download your StackQuote™")} to share with your team.
           </div>
         </div>
       );
@@ -520,7 +520,7 @@ const NEXT_HINTS: Partial<Record<number, string>> = {
   1: "Select your industry",
   3: "Solar, generator & EV options",
   4: "MagicFit sizes your system",
-  5: "Review your TrueQuote™",
+  5: "Review your StackQuote™",
 };
 
 // ── Spinner fallback ──────────────────────────────────────────────────────────
@@ -697,8 +697,8 @@ export default function WizardV8Page() {
         canGoNext={resolveCanGoNext(step, state)}
         isNextLoading={(step === 4 || step === 5) && state.tiersStatus === "fetching"}
         onBack={actions.goBack}
-        onSwitchToProQuote={() => {
-          // Serialize wizard state to sessionStorage so ProQuote can hydrate from it
+        onSwitchToProStack={() => {
+          // Serialize wizard state to sessionStorage so ProStack can hydrate from it
           try {
             sessionStorage.setItem(
               "merlin_wizard_handoff",

@@ -1,7 +1,7 @@
 // Intelligence Layer Types
 // Created: January 18, 2026
 // Purpose: Type definitions for adaptive UX intelligence services
-// SSOT Compliance: All types include TrueQuote™ source attribution
+// SSOT Compliance: All types include StackQuote™ source attribution
 
 // ============================================================================
 // GOAL SUGGESTION TYPES
@@ -12,7 +12,7 @@ export interface GoalSuggestion {
   goalName: string; // Human-readable: "Energy Cost Reduction"
   confidence: number; // 0.00 to 1.00
   rationale: string; // Why this goal? (shown to user)
-  source: string; // TrueQuote™ source attribution
+  source: string; // StackQuote™ source attribution
 }
 
 export interface GoalSuggestionInput {
@@ -51,7 +51,7 @@ export interface WeatherImpact {
   unit: string; // '%', 'hours', '$'
   impactDescription: string; // "Extreme heat increases demand charges by ~18–25%"
   whyItMatters: string; // Micro-line: "Higher peak demand during heatwaves drives utility charges"
-  source: string; // TrueQuote™ source attribution
+  source: string; // StackQuote™ source attribution
 }
 
 export interface WeatherImpactInput {
@@ -73,7 +73,7 @@ export interface ValueTeaserMetric {
   displayText: string; // Pre-formatted: "15–30% demand charge reduction"
   confidence: "high" | "medium" | "low";
   sampleSize: number; // Number of projects in benchmark (credibility indicator)
-  source: string; // TrueQuote™ source attribution
+  source: string; // StackQuote™ source attribution
 }
 
 export interface ValueTeaserInput {

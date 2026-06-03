@@ -1,7 +1,7 @@
 /**
  * Wizard State Validator
  *
- * Validates WizardState before calling TrueQuote engine
+ * Validates WizardState before calling StackQuote engine
  * Ensures all required fields exist and data contracts are satisfied
  *
  * This is the "non-negotiable contract" between UI and Engine
@@ -29,7 +29,7 @@ export interface ValidationWarning {
 }
 
 /**
- * Validate WizardState before Step 5 (MagicFit/TrueQuote)
+ * Validate WizardState before Step 5 (MagicFit/StackQuote)
  *
  * Required fields:
  * - zipCode (Step 1)
@@ -41,7 +41,7 @@ export interface ValidationWarning {
  * - useCaseData.estimatedAnnualKwh (if pre-calculated)
  * - useCaseData.peakDemandKw (if pre-calculated)
  */
-export function validateWizardStateForTrueQuote(state: WizardState): ValidationResult {
+export function validateWizardStateForStackQuote(state: WizardState): ValidationResult {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
@@ -96,7 +96,7 @@ export function validateWizardStateForTrueQuote(state: WizardState): ValidationR
   }
 
   // ============================================================================
-  // STEP 3: Use Case Data (CRITICAL - This is what TrueQuote reads)
+  // STEP 3: Use Case Data (CRITICAL - This is what StackQuote reads)
   // ============================================================================
   if (!state.useCaseData) {
     errors.push({
@@ -106,7 +106,7 @@ export function validateWizardStateForTrueQuote(state: WizardState): ValidationR
       step: 3,
     });
   } else {
-    // CRITICAL: TrueQuote reads from useCaseData.inputs
+    // CRITICAL: StackQuote reads from useCaseData.inputs
     if (!state.useCaseData.inputs || typeof state.useCaseData.inputs !== "object") {
       errors.push({
         field: "useCaseData.inputs",
@@ -136,15 +136,15 @@ export function validateWizardStateForTrueQuote(state: WizardState): ValidationR
       warnings.push(...industryValidation.warnings);
     }
 
-    // Note: estimatedAnnualKwh and peakDemandKw are now computed by TrueQuote, not stored in useCaseData
+    // Note: estimatedAnnualKwh and peakDemandKw are now computed by StackQuote, not stored in useCaseData
     // They will exist in state.calculations after Step 5 runs
   }
 
   // ============================================================================
-  // STEP 4: Preferences (Optional for TrueQuote, but recommended)
+  // STEP 4: Preferences (Optional for StackQuote, but recommended)
   // ============================================================================
   // selectedOptions, customSolarKw, etc. are optional
-  // TrueQuote will use defaults if not provided
+  // StackQuote will use defaults if not provided
 
   return {
     valid: errors.length === 0,
@@ -212,11 +212,11 @@ function validateIndustrySpecificInputs(
 }
 
 /**
- * Assert WizardState is valid before calling TrueQuote
+ * Assert WizardState is valid before calling StackQuote
  * Throws error if validation fails (for use in development)
  */
-export function assertWizardStateForTrueQuote(state: WizardState): void {
-  const validation = validateWizardStateForTrueQuote(state);
+export function assertWizardStateForStackQuote(state: WizardState): void {
+  const validation = validateWizardStateForStackQuote(state);
 
   if (!validation.valid) {
     const errorMessages = validation.errors
@@ -225,7 +225,7 @@ export function assertWizardStateForTrueQuote(state: WizardState): void {
 
     throw new Error(
       `WizardState validation failed:\n${errorMessages}\n\n` +
-        `This means the UI state is not ready for TrueQuote engine.\n` +
+        `This means the UI state is not ready for StackQuote engine.\n` +
         `Fix: Ensure all required fields are set before Step 5.`
     );
   }
@@ -278,7 +278,7 @@ export function assertNoDerivedFieldsInStep3(
       `Step 3 contract: useCaseData should ONLY contain raw inputs (useCaseData.inputs).\n` +
       `Derived values (${foundDerivedFields.join(", ")}) belong in state.calculations (Step 5 SSOT).\n` +
       `\n` +
-      `Fix: Remove derived fields from Step 3. TrueQuote is SSOT for all calculations.`;
+      `Fix: Remove derived fields from Step 3. StackQuote is SSOT for all calculations.`;
 
     if (process.env.NODE_ENV === "development") {
       console.error(errorMessage);
@@ -354,7 +354,7 @@ export function assertEngineOutputPopulatesCalculations({
       `Expected path: ${missingFields.map((f) => `calculations.${f.path}`).join(", ")}\n` +
       `\n` +
       `This is an ENGINE/OUTPUT contract issue, not a UI issue.\n` +
-      `Step 5 must populate state.calculations.base with base values immediately after TrueQuote result.\n` +
+      `Step 5 must populate state.calculations.base with base values immediately after StackQuote result.\n` +
       `\n` +
       `Fix: Ensure Step 5 stores base calculation values in state.calculations.base immediately.`;
 
@@ -381,7 +381,7 @@ export function logWizardStateSchema(state: WizardState): void {
   console.group("📋 Step 5 Preflight: WizardState Schema Validation");
 
   // Step name
-  console.log("📍 Step:", "Step 5 (MagicFit/TrueQuote)");
+  console.log("📍 Step:", "Step 5 (MagicFit/StackQuote)");
 
   // State version (if available from buffer)
   // Note: State version is in buffer metadata, not in state itself
@@ -416,8 +416,8 @@ export function logWizardStateSchema(state: WizardState): void {
     city: state.city || "MISSING",
   });
 
-  // UseCaseData details (what TrueQuote reads)
-  console.log("📊 UseCaseData (TrueQuote Inputs):", {
+  // UseCaseData details (what StackQuote reads)
+  console.log("📊 UseCaseData (StackQuote Inputs):", {
     hasUseCaseData: !!state.useCaseData,
     hasInputs: !!state.useCaseData?.inputs,
     inputKeys: state.useCaseData?.inputs ? Object.keys(state.useCaseData.inputs) : [],
@@ -430,7 +430,7 @@ export function logWizardStateSchema(state: WizardState): void {
     ),
   });
 
-  // Request snapshot keys (what will be sent to TrueQuote)
+  // Request snapshot keys (what will be sent to StackQuote)
   // This answers: "Will mapping function send correct structure?"
   const requestSnapshot = {
     "facility.industry": state.industry || "MISSING",
@@ -462,7 +462,7 @@ export function logWizardStateSchema(state: WizardState): void {
   console.groupEnd();
 }
 
-export default validateWizardStateForTrueQuote;
+export default validateWizardStateForStackQuote;
 
 // ============================================================================
 // INVARIANT C: MagicFit vs SSOT Separation
@@ -505,7 +505,7 @@ export function assertMagicFitSSOTSeparation(state: WizardState): void {
  * @returns true if MagicFit should be shown (as estimate), false if calculations exist (use SSOT)
  */
 export function shouldShowMagicFitEstimate(state: WizardState): boolean {
-  // If TrueQuote has run, hide MagicFit or show as "Original estimate" only
+  // If StackQuote has run, hide MagicFit or show as "Original estimate" only
   if (state.calculations !== null) {
     return false; // Use SSOT calculations instead
   }

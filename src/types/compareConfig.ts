@@ -163,7 +163,7 @@ export interface FinancialResult {
   roi25Year: number;
   npv25Year: number;
 
-  // Source tracking (TrueQuote™)
+  // Source tracking (StackQuote™)
   sources: {
     batteryCost: string;
     solarCost: string;

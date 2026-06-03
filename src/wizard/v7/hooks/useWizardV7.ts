@@ -387,7 +387,7 @@ export type QuoteOutput = {
   // Confidence scoring (Recovery Strategy Pillar 3)
   confidence?: QuoteConfidence;
 
-  // TrueQuote™ validation envelope (kW contributors, duty cycle, assumptions)
+  // StackQuote™ validation envelope (kW contributors, duty cycle, assumptions)
   // Populated from CalcValidation in Layer A — used by export templates
   trueQuoteValidation?: {
     version: "v1";

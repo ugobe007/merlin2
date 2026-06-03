@@ -53,7 +53,7 @@ export interface TemplateSections {
   financialAnalysis: boolean;
   /** Demand charge / savings analysis */
   savingsAnalysis: boolean;
-  /** TrueQuote™ source attribution */
+  /** StackQuote™ source attribution */
   trueQuoteSources: boolean;
   /** Sensitivity / Monte Carlo section (Advanced only) */
   advancedAnalysis: boolean;
@@ -78,7 +78,7 @@ export interface TemplateLayout {
   dateStamp: boolean;
   /** Include Merlin watermark */
   merlinWatermark: boolean;
-  /** Include TrueQuote™ badge */
+  /** Include StackQuote™ badge */
   trueQuoteBadge: boolean;
 }
 

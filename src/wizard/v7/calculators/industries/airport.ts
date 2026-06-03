@@ -52,7 +52,7 @@ export const AIRPORT_LOAD_V1_SSOT: CalculatorContract = {
     );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
-    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // ── StackQuote kW contributor breakdown ─────────────────────────
     // Airport loads: terminal HVAC, lighting, jet bridges, baggage, ground transport
     const terminalHvacPct = 0.35;
     const terminalLightingPct = 0.15;

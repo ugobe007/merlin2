@@ -2,7 +2,7 @@
  * About View
  * ==========
  * 
- * About page for Merlin BESS platform — TrueQuote™ era
+ * About page for Merlin BESS platform — StackQuote™ era
  */
 
 import React from 'react';
@@ -90,14 +90,14 @@ const AboutView: React.FC<AboutViewProps> = ({ onBack, onJoinNow, onStartWizard 
             <h2 className="text-xl font-bold mb-3" style={{ color: "#fbbf24" }}>The Merlin Answer</h2>
             <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
               Merlin generates investment-grade BESS quotes in under five minutes — with full source 
-              attribution for every line item. Our TrueQuote™ engine traces each cost, sizing ratio, 
+              attribution for every line item. Our StackQuote™ engine traces each cost, sizing ratio, 
               and financial assumption back to NREL, IEEE, IRA 2022, and other authoritative benchmarks. 
               No black boxes. No guesswork.
             </p>
           </div>
         </div>
 
-        {/* TrueQuote Section */}
+        {/* StackQuote Section */}
         <div
           className="rounded-2xl p-8"
           style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
@@ -107,12 +107,12 @@ const AboutView: React.FC<AboutViewProps> = ({ onBack, onJoinNow, onStartWizard 
               <Shield className="w-6 h-6" style={{ color: "#fbbf24" }} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">TrueQuote™</h2>
+              <h2 className="text-2xl font-bold text-white">StackQuote™</h2>
               <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>Every number backed by an authoritative source</p>
             </div>
           </div>
           <p className="leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.6)" }}>
-            TrueQuote™ is Merlin's core differentiator. When you see a cost on your quote, you can click 
+            StackQuote™ is Merlin's core differentiator. When you see a cost on your quote, you can click 
             through to the benchmark source — the specific NREL dataset, the IEEE standard, or the IRA 
             provision — that justifies it. Sizing ratios, degradation curves, utility rates, and tax credits 
             are all citation-backed, so you can hand the quote to your CFO, your lender, or your board 
@@ -170,7 +170,7 @@ const AboutView: React.FC<AboutViewProps> = ({ onBack, onJoinNow, onStartWizard 
               { icon: Shield, color: "#fbbf24", title: "Trust & Compliance", items: [
                 "IRA 2022 ITC calculator with prevailing wage + bonus adders",
                 "NREL ATB 2024 & BNEF market data benchmarks",
-                "Full audit trail on every quote (TrueQuote™)",
+                "Full audit trail on every quote (StackQuote™)",
                 "Bank-ready 3-statement project finance model",
               ]},
             ].map((section) => (
@@ -230,7 +230,7 @@ const AboutView: React.FC<AboutViewProps> = ({ onBack, onJoinNow, onStartWizard 
         >
           <h3 className="text-2xl font-bold text-white mb-2">See it for yourself</h3>
           <p className="text-sm mb-6 max-w-xl mx-auto" style={{ color: "rgba(255,255,255,0.45)" }}>
-            Answer a few questions about your facility and get a TrueQuote™-verified BESS proposal 
+            Answer a few questions about your facility and get a StackQuote™-verified BESS proposal 
             in under five minutes. No signup, no cost, full source attribution.
           </p>
           <div className="flex items-center justify-center gap-4">

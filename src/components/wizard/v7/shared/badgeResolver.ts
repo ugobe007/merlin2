@@ -35,7 +35,7 @@ export function resolveBadge(
     return { tier: "estimate", label: "Estimate — General facility model" };
   }
 
-  // Gate 3: TrueQuote validation present and meaningful
+  // Gate 3: StackQuote validation present and meaningful
   const tqv = quote.trueQuoteValidation as Record<string, unknown> | undefined;
   if (tqv?.version === "v1") {
     const contributors = tqv.kWContributors as Record<string, number> | undefined;
@@ -43,7 +43,7 @@ export function resolveBadge(
       ? Object.values(contributors).filter((v) => typeof v === "number" && v > 0).length
       : 0;
     if (nonZeroCount >= 3) {
-      return { tier: "truequote", label: "✓ TrueQuote™ Complete" };
+      return { tier: "truequote", label: "✓ StackQuote™ Complete" };
     }
   }
 

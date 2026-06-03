@@ -77,7 +77,7 @@ export const getRegionalTOUSchedule = (_region: string) => {
  * ⚠️ DEPRECATED: calculateArbitrageSavings
  *
  * This function was removed because it violates SSOT by computing annualSavings
- * using arithmetic instead of reading from TrueQuote results.
+ * using arithmetic instead of reading from StackQuote results.
  *
  * If you need annualSavings, read from:
  * - state.calculations.selected.annualSavings (after Step 5)
@@ -85,6 +85,6 @@ export const getRegionalTOUSchedule = (_region: string) => {
  *
  * This function has been moved to /legacy/ for reference only.
  *
- * @deprecated Use TrueQuote results instead. See Step5MagicFit.tsx for the authoritative path.
+ * @deprecated Use StackQuote results instead. See Step5MagicFit.tsx for the authoritative path.
  */
 // export const calculateArbitrageSavings = ... // REMOVED - SSOT violation

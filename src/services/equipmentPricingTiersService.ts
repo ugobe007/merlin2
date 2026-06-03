@@ -2,7 +2,7 @@
  * Equipment Pricing Tiers Service
  *
  * ✅ SSOT for ALL equipment pricing across Merlin
- * ✅ Integrates with TrueQuote™ for source attribution
+ * ✅ Integrates with StackQuote™ for source attribution
  * ✅ Market data sync from collected_market_prices
  * ✅ Connected to equipmentCalculations.ts (main SSOT)
  *
@@ -943,7 +943,7 @@ function generateMethodologyText(tier: EquipmentPricingTier): string {
 }
 
 /**
- * Get pricing summary for TrueQuote™ display
+ * Get pricing summary for StackQuote™ display
  */
 export function formatPriceForDisplay(price: number, unit: PriceUnit): string {
   const formatted = new Intl.NumberFormat("en-US", {

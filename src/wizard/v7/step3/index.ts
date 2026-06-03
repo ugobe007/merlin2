@@ -55,7 +55,7 @@ export type {
   ArchitectureBundle,
 } from "./loadProfile";
 
-// TrueQuote™ Policy Taxonomy (Move 5)
+// StackQuote™ Policy Taxonomy (Move 5)
 export {
   PolicyCode,
   summarizePolicyEvents,

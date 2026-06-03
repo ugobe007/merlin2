@@ -7,7 +7,7 @@
  * - Main: Professional slate background with purple highlights
  * - Purple used ONLY for accents, badges, active states
  * - Card-based layout with depth and visual hierarchy
- * - SSOT/TrueQuote compliant
+ * - SSOT/StackQuote compliant
  */
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -89,7 +89,7 @@ export function Step1AdvisorLed({ state, updateState, onNext: _onNext, onGoToSte
     console.log("✅ RUNNING Step1AdvisorLed.tsx (DEV MARKER) —", new Date().toISOString());
   }
   
-  // TrueQuote modal state
+  // StackQuote modal state
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
 
   // Facility refine toggle state (unused after Jan 20 refactor, kept for future use)
@@ -414,7 +414,7 @@ export function Step1AdvisorLed({ state, updateState, onNext: _onNext, onGoToSte
       <div className="max-w-[1000px] mx-auto">
         {/* Welcome & Introduction */}
         <div className="mb-4">
-          {/* TrueQuote Badge - Clickable */}
+          {/* StackQuote Badge - Clickable */}
           <div onClick={() => setShowTrueQuoteModal(true)} className="inline-block mb-2 cursor-pointer">
             <TrueQuoteBadgeCanonical showTooltip={false} />
           </div>
@@ -432,14 +432,14 @@ export function Step1AdvisorLed({ state, updateState, onNext: _onNext, onGoToSte
             Enter your location to load local rates and estimate your savings.
           </p>
 
-          {/* TrueQuote Explanation Card - REMOVED, now in modal */}
+          {/* StackQuote Explanation Card - REMOVED, now in modal */}
           <div className="bg-gradient-to-br from-violet-500/10 to-indigo-500/5 border border-violet-500/20 rounded-xl p-6 mb-8 hidden">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-2xl shadow-lg shadow-violet-500/20 flex-shrink-0">
                 ✨
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold text-white mb-2">What is TrueQuote™?</h3>
+                <h3 className="text-lg font-bold text-white mb-2">What is StackQuote™?</h3>
                 <p className="text-slate-300 text-sm leading-relaxed mb-3">
                   Every number in your quote is traceable to authoritative sources (NREL, EIA, IEEE
                   standards). No black-box estimates.
@@ -489,7 +489,7 @@ export function Step1AdvisorLed({ state, updateState, onNext: _onNext, onGoToSte
                 <div className="w-10 h-10 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-violet-300 text-sm font-bold mx-auto mb-2">
                   3
                 </div>
-                <div className="text-white text-sm font-semibold mb-1">TrueQuote™</div>
+                <div className="text-white text-sm font-semibold mb-1">StackQuote™</div>
                 <div className="text-slate-500 text-xs">Source-backed pricing</div>
               </div>
             </div>
@@ -934,7 +934,7 @@ export function Step1AdvisorLed({ state, updateState, onNext: _onNext, onGoToSte
         {/* Continue Button - REMOVED: Use bottom nav instead to avoid duplicate CTAs */}
       </div>
 
-      {/* TrueQuote Modal */}
+      {/* StackQuote Modal */}
       {showTrueQuoteModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
@@ -951,7 +951,7 @@ export function Step1AdvisorLed({ state, updateState, onNext: _onNext, onGoToSte
                   ✨
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black text-white">What is TrueQuote™?</h2>
+                  <h2 className="text-2xl font-black text-white">What is StackQuote™?</h2>
                   <p className="text-sm text-violet-300">
                     Every number is traceable to authoritative sources
                   </p>
@@ -1012,7 +1012,7 @@ export function Step1AdvisorLed({ state, updateState, onNext: _onNext, onGoToSte
                   <div className="w-12 h-12 rounded-full bg-violet-500/15 border-2 border-violet-500/30 flex items-center justify-center text-violet-300 font-bold text-lg mx-auto mb-3">
                     3
                   </div>
-                  <div className="text-sm font-semibold text-white mb-1">TrueQuote™</div>
+                  <div className="text-sm font-semibold text-white mb-1">StackQuote™</div>
                   <div className="text-xs text-slate-400">Source-backed pricing</div>
                 </div>
               </div>

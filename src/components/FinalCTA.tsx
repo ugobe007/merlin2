@@ -52,14 +52,14 @@ export default function FinalCTA() {
                 className="btn-glow px-8 py-4 rounded-xl text-base font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-all duration-200 text-center"
                 style={{ fontFamily: "'Outfit', sans-serif" }}
               >
-                Start a TrueQuote →
+                Start a StackQuote →
               </a>
               <a
                 href="/vendor"
                 className="px-8 py-4 rounded-xl text-base font-semibold text-slate-300 border border-white/15 hover:border-white/30 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] transition-all duration-200 text-center"
                 style={{ fontFamily: "'Outfit', sans-serif" }}
               >
-                Start a ProQuote →
+                Start a ProStack →
               </a>
             </div>
           </div>

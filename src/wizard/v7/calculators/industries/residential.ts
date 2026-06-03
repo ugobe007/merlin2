@@ -39,7 +39,7 @@ export const RESIDENTIAL_LOAD_V1_SSOT: CalculatorContract = {
     );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
-    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // ── StackQuote kW contributor breakdown ─────────────────────────
     // Residential: HVAC (45-50%), plug loads, lighting, EV, pool
     const hvacPct = 0.45;
     const lightingPct = 0.1;

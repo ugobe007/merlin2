@@ -2,7 +2,7 @@
  * CONFIGURATION ORCHESTRATOR - PROQUOTE FINAL SECTIONS
  *
  * Contains bottom sections of custom config view:
- * - ProQuote Badge + Financial Summary panel
+ * - ProStack Badge + Financial Summary panel
  * - System Summary (MW/MWh, cost, application)
  * - Action buttons (back, generate quote)
  * - Configuration guidelines help section
@@ -79,7 +79,7 @@ export default function ConfigurationOrchestrator({
 }: ConfigurationOrchestratorProps) {
   return (
     <>
-      {/* ProQuote™ Badge + Financial Summary */}
+      {/* ProStack™ Badge + Financial Summary */}
       <div
         className="rounded-xl p-6"
         style={{
@@ -91,12 +91,12 @@ export default function ConfigurationOrchestrator({
         <div className="flex items-center gap-3 mb-5">
           <img
             src={badgeIcon}
-            alt="ProQuote"
+            alt="ProStack"
             className="w-10 h-10 object-contain"
             style={{ filter: "drop-shadow(0 2px 6px rgba(59,130,246,0.35))" }}
           />
           <div>
-            <span className="text-base font-bold text-white tracking-tight">ProQuote™</span>
+            <span className="text-base font-bold text-white tracking-tight">ProStack™</span>
             <span
               className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 rounded"
               style={{

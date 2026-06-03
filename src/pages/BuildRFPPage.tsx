@@ -584,7 +584,7 @@ export default function BuildRFPPage() {
             No quote context found
           </h1>
           <p style={{ fontSize: 13, color: TEXT_MUTED, lineHeight: 1.7, marginBottom: 24 }}>
-            This page is reached from the Merlin TrueQuote wizard. Run the wizard and click{" "}
+            This page is reached from the Merlin StackQuote wizard. Run the wizard and click{" "}
             <strong style={{ color: TEXT_PRIMARY }}>Build RFP</strong> from your quote results.
           </p>
           <GhostButton onClick={() => (window.location.href = "/wizard")}>
@@ -732,7 +732,7 @@ export default function BuildRFPPage() {
               marginBottom: 12,
             }}
           >
-            Quote Summary — Prefilled from TrueQuote
+            Quote Summary — Prefilled from StackQuote
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 28px" }}>
             {cityState && (
@@ -1011,7 +1011,7 @@ export default function BuildRFPPage() {
             >
               <Cpu size={13} color={ACCENT} style={{ flexShrink: 0, marginTop: 1 }} />
               <p style={{ fontSize: 11, color: TEXT_MUTED, lineHeight: 1.65 }}>
-                Merlin pre-fills all spec fields from your TrueQuote. No re-entry, no upload.
+                Merlin pre-fills all spec fields from your StackQuote. No re-entry, no upload.
               </p>
             </div>
           </div>

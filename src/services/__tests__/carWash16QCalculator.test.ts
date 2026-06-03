@@ -323,9 +323,9 @@ describe('Car Wash 16Q Calculator', () => {
   });
   
   // =============================================================================
-  // TEST SCENARIO 6: TrueQuote™ Source Attribution
+  // TEST SCENARIO 6: StackQuote™ Source Attribution
   // =============================================================================
-  describe('TrueQuote™ Source Attribution', () => {
+  describe('StackQuote™ Source Attribution', () => {
     const input: CarWash16QInput = {
       carWashType: 'automatic_inbay',
       bayTunnelCount: '1',

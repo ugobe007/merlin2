@@ -162,7 +162,7 @@ const getAdvisorMessage = (
 
     case 5: // Results
       return {
-        text: `🎊 Your custom proposal is ready! This is a TrueQuote™ with every number traceable to authoritative sources.`,
+        text: `🎊 Your custom proposal is ready! This is a StackQuote™ with every number traceable to authoritative sources.`,
         tip: `You're in the top ${100 - estimate.confidence}% of facilities I've analyzed!`,
         celebration: true,
       };

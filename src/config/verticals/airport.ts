@@ -70,13 +70,13 @@ export const airportConfig: VerticalConfig = {
   howItWorks: [
     { title: 'Describe Your Airport', description: 'Enter passenger volume, gate count, and monthly utility bill. Takes 60 seconds.' },
     { title: 'We Model Terminal Energy Demand', description: 'Merlin uses FAA and DOE aviation benchmarks to calculate your HVAC, jet bridge, and lighting loads.' },
-    { title: 'Get a Bankable Proposal', description: 'Full financial model with IRR, NPV, and TrueQuote™ verified pricing from NREL ATB 2024.' },
+    { title: 'Get a Bankable Proposal', description: 'Full financial model with IRR, NPV, and StackQuote™ verified pricing from NREL ATB 2024.' },
     { title: 'Ensure Grid Resilience', description: 'Battery storage ensures 100% uptime for critical systems. Most airport projects qualify for 40-50% ITC.' },
   ],
   leadSourceTag: 'airport_vertical',
   leadFormCTA: 'Get Your Free Airport Energy Analysis',
   pageTitle: 'Airport Battery Storage | Mission-Critical Power & 25-40% Energy Savings',
-  metaDescription: 'Battery energy storage for airports and aviation facilities. FAA-compliant backup power, cut demand charges 25-40%, and reduce grid dependency with TrueQuote™ verified pricing.',
+  metaDescription: 'Battery energy storage for airports and aviation facilities. FAA-compliant backup power, cut demand charges 25-40%, and reduce grid dependency with StackQuote™ verified pricing.',
 };
 
 registerVertical(airportConfig);

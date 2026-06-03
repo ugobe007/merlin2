@@ -74,7 +74,7 @@ export default function ValueSection() {
                 trained on energy physics, utility tariff structures, BMS control logic, or the
                 demand profiles that separate a 450 kW car wash from a 2 MW data center. They
                 generate plausible-sounding text. They don't do the engineering. So we built{" "}
-                <span className="text-yellow-400 font-semibold">TrueQuote</span> — an AI-enabled
+                <span className="text-yellow-400 font-semibold">StackQuote</span> — an AI-enabled
                 orchestration engine designed specifically for the complexity of commercial and
                 industrial energy projects. It models BESS, solar, wind, backup generation, and EV
                 infrastructure together — configured to the specific load profile of each industry,
@@ -112,7 +112,7 @@ export default function ValueSection() {
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/15">
                   <img
                     src={SHIELD_GOLD}
-                    alt="TrueQuote"
+                    alt="StackQuote"
                     className="w-8 h-8 object-contain flex-shrink-0"
                   />
                   <div>
@@ -120,7 +120,7 @@ export default function ValueSection() {
                       className="text-sm font-bold text-yellow-400"
                       style={{ fontFamily: "'Nunito', sans-serif" }}
                     >
-                      TrueQuote™
+                      StackQuote™
                     </div>
                     <div className="text-[11px] text-slate-500 leading-snug">
                       EPC-ready energy project models for facility operators
@@ -130,7 +130,7 @@ export default function ValueSection() {
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-500/5 border border-blue-500/15">
                   <img
                     src={SHIELD_BLUE}
-                    alt="ProQuote"
+                    alt="ProStack"
                     className="w-8 h-8 object-contain flex-shrink-0"
                   />
                   <div>
@@ -138,7 +138,7 @@ export default function ValueSection() {
                       className="text-sm font-bold text-blue-400"
                       style={{ fontFamily: "'Nunito', sans-serif" }}
                     >
-                      ProQuote™
+                      ProStack™
                     </div>
                     <div className="text-[11px] text-slate-500 leading-snug">
                       Precision response tools for EPC vendors &amp; integrators
@@ -154,7 +154,7 @@ export default function ValueSection() {
                 className="text-[9px] text-sky-400/50 uppercase tracking-widest font-semibold"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
-                What TrueQuote sizes
+                What StackQuote sizes
               </p>
               {[
                 { label: "BESS", note: "Battery energy storage — the core" },

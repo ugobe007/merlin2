@@ -68,13 +68,13 @@ export const officeConfig: VerticalConfig = {
   howItWorks: [
     { title: 'Tell Us About Your Building', description: 'Enter square footage, floors, and occupancy. Takes 60 seconds.' },
     { title: 'We Analyze Your Demand Curve', description: 'Merlin models your HVAC, elevator, and lighting loads using ASHRAE 90.1 benchmarks.' },
-    { title: 'Get a Bankable Quote', description: 'Receive a detailed proposal with NPV, IRR, and TrueQuote™ verified pricing from NREL ATB 2024.' },
+    { title: 'Get a Bankable Quote', description: 'Receive a detailed proposal with NPV, IRR, and StackQuote™ verified pricing from NREL ATB 2024.' },
     { title: 'Lower Your Operating Costs', description: 'Attract tenants, hit ESG targets, and cut your NOI impact from energy. Most projects fund themselves.' },
   ],
   leadSourceTag: 'office_vertical',
   leadFormCTA: 'Get Your Free Office Building Energy Analysis',
   pageTitle: 'Office Building Battery Storage | Reduce Energy Costs 25-40%',
-  metaDescription: 'Battery storage for office buildings and commercial real estate. Cut demand charges, improve ESG ratings, and reduce energy costs 25-40%. Free TrueQuote™.',
+  metaDescription: 'Battery storage for office buildings and commercial real estate. Cut demand charges, improve ESG ratings, and reduce energy costs 25-40%. Free StackQuote™.',
 };
 
 registerVertical(officeConfig);

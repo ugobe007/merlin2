@@ -1,5 +1,5 @@
 /**
- * CustomConfig - Configuration sections for ProQuote custom mode
+ * CustomConfig - Configuration sections for ProStack custom mode
  */
 
 export { SystemConfigSection } from "./SystemConfigSection";

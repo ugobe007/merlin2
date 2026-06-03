@@ -816,7 +816,7 @@ export function Step4V8({ state, actions }: Props) {
               Ready to confirm your stack?
             </div>
             <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.55 }}>
-              Once confirmed, Merlin generates your full TrueQuote™ — including financing options,
+              Once confirmed, Merlin generates your full StackQuote™ — including financing options,
               incentives, and matched installer recommendations.
             </div>
           </div>

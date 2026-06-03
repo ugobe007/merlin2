@@ -1,6 +1,6 @@
 /**
  * Merlin Memory — barrel export
- * + TrueQuote™ Validator (Feb 11, 2026)
+ * + StackQuote™ Validator (Feb 11, 2026)
  */
 export {
   merlinMemory,
@@ -37,7 +37,7 @@ export {
 export { useMerlinData, getProQuoteSeed } from "./useMerlinData";
 export type { MerlinData } from "./useMerlinData";
 
-// ── TrueQuote™ Validator Types (NO runtime exports to avoid circular TDZ) ──
+// ── StackQuote™ Validator Types (NO runtime exports to avoid circular TDZ) ──
 export type {
   TrueQuoteReport,
   TrueQuoteViolation,

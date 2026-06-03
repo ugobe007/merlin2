@@ -710,13 +710,13 @@ export function buildQuoteResultFromState(
     },
     metadata: {
       calculatedAt: new Date(),
-      pricingSource: "TrueQuote (Step 4 cached)",
+      pricingSource: "StackQuote (Step 4 cached)",
       systemCategory:
         bessKW / 1000 >= 1 ? "utility" : bessKW / 1000 >= 0.05 ? "commercial" : "residential",
     },
     benchmarkAudit: {
       version: "2.0",
-      methodology: "TrueQuote SSOT (cached from Step 4 pricing pipeline)",
+      methodology: "StackQuote SSOT (cached from Step 4 pricing pipeline)",
       sources: [],
       assumptions: {
         discountRate: 0.08,

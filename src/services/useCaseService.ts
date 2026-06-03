@@ -346,7 +346,7 @@ export class UseCaseService {
         duty_cycle_hint: "industry-dependent",
         notes: [
           "Baseline/peak are heuristic until answers are provided.",
-          "Final sizing should come from industry calculator + TrueQuote (Step 5).",
+          "Final sizing should come from industry calculator + StackQuote (Step 5).",
         ],
       };
 

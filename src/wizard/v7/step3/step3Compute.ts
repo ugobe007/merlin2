@@ -487,7 +487,7 @@ function buildContributors(
   peakKW: number
 ): LoadContributor[] {
   if (!validation?.kWContributors) {
-    // No TrueQuote envelope — return single opaque contributor
+    // No StackQuote envelope — return single opaque contributor
     return [
       {
         key: "other",

@@ -389,7 +389,7 @@ export interface QuoteTier {
   installationLaborCost?: number;
   /** Total project cost = equipment quote + installation labor — true ROI/NPV investment basis */
   totalProjectCost?: number;
-  // TrueQuote™ audit trail
+  // StackQuote™ audit trail
   notes: string[];
   /**
    * ROI Guardrail — set when payback exceeded the tier target and the system
@@ -1109,7 +1109,7 @@ export const UX_POLICY = {
     continueLabel: "This is my quote →",
   },
   step6: {
-    headline: "Your TrueQuote™",
+    headline: "Your StackQuote™",
     subheadline: "Every number is traceable to an authoritative source.",
     maxCopyBlocks: 1,
     revealTrigger: "immediate",

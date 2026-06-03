@@ -2,7 +2,7 @@
    Unified "Your industry. Your numbers." section.
    Top: horizontal estimate bar (full-width, synced to active industry tab).
    Bottom: industry tabs + card panel.
-   Estimate calls POST /api/quote — same engine as TrueQuote.               */
+   Estimate calls POST /api/quote — same engine as StackQuote.               */
 
 import { useState, useEffect, useRef } from "react";
 import { ChevronRight, CheckCircle2, AlertCircle, RotateCcw } from "lucide-react";
@@ -434,7 +434,7 @@ export default function IndustriesSection() {
                     className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold bg-yellow-500 hover:bg-yellow-400 text-black transition-all duration-200 hover:scale-[1.01] shadow-lg shadow-yellow-500/20 whitespace-nowrap"
                     style={{ fontFamily: "'Outfit', sans-serif" }}
                   >
-                    Build full TrueQuote™ <ChevronRight className="w-4 h-4" />
+                    Build full StackQuote™ <ChevronRight className="w-4 h-4" />
                   </a>
                   <p className="text-[9px] text-slate-700 text-center font-mono">
                     Rough estimate only

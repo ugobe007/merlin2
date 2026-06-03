@@ -278,7 +278,7 @@ describe("Covenant: canonicalizeSlug Migration Tracking", () => {
   });
 
   it("canonicalizeSlug is NOT used in hooks/ or services/truequote/", () => {
-    // The hook layer and TrueQuote service should use resolveIndustryContext
+    // The hook layer and StackQuote service should use resolveIndustryContext
     const hookMatches = grepSrc(
       /canonicalizeSlug/,
       path.join(SRC, "wizard/v7/hooks")

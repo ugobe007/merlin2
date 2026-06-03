@@ -14,7 +14,7 @@ export function computeEstimatedPowerMetrics(state: WizardState): EstimatedPower
   const inputs = (state.useCaseData?.inputs || {}) as Record<string, unknown>;
   const industry = state.industry || state.detectedIndustry || "";
 
-  // Default: Use TrueQuote values if available (post-Step 5)
+  // Default: Use StackQuote values if available (post-Step 5)
   if (state.calculations?.base?.peakDemandKW && state.calculations.base.peakDemandKW > 0) {
     return {
       peakDemandKW: state.calculations.base.peakDemandKW,
@@ -46,7 +46,7 @@ export function computeEstimatedPowerMetrics(state: WizardState): EstimatedPower
   // ========================================================================
   // PROGRESSIVE MODEL ENHANCEMENT (Jan 21, 2026)
   // Use micro-prompt answers to refine grid capacity if not directly provided
-  // This enables TrueQuote™ to become a real financial model
+  // This enables StackQuote™ to become a real financial model
   // ========================================================================
   const SERVICE_SIZE_CAPACITY: Record<string, number> = {
     "200A-single": 48, // 48 kW (200A × 240V single-phase)

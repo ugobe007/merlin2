@@ -99,7 +99,7 @@ const PLANS = [
     features: [
       "5 quote exports per month",
       "BESS sizing & configuration",
-      "TrueQuote™ verified calculations",
+      "StackQuote™ verified calculations",
       "MagicFit tier comparison",
       "PDF export (Merlin branded)",
       "3 saved projects",
@@ -124,7 +124,7 @@ const PLANS = [
       "15 quotes per month",
       "BESS sizing & configuration",
       "ROI & simple payback analysis",
-      "TrueQuote™ verified calculations",
+      "StackQuote™ verified calculations",
       "PDF export (Merlin branded)",
       "10 saved projects",
       "Equipment comparison tool",
@@ -151,7 +151,7 @@ const PLANS = [
     features: [
       "100 quotes per month",
       "NPV, IRR & DCF analysis",
-      "TrueQuote™ source attribution",
+      "StackQuote™ source attribution",
       "AI-powered recommendations",
       "Export to Word, Excel, PDF",
       "50 saved projects",
@@ -638,7 +638,7 @@ export default function PricingPage() {
           {/* Comparison note */}
           <div className="text-center mt-8">
             <p className="text-sm text-white/30">
-              All plans include NREL ATB 2024 benchmarks · IRA 2022 ITC calculations · TrueQuote™
+              All plans include NREL ATB 2024 benchmarks · IRA 2022 ITC calculations · StackQuote™
               audit trails · 7-day trial, then plans from $14.99/mo
             </p>
           </div>
@@ -666,7 +666,7 @@ export default function PricingPage() {
                   configurations, and bid management across{" "}
                   <span className="text-cyan-400 font-semibold">every equipment category</span> —
                   batteries, solar, wind, generators, EV chargers, and more. Test configurations in
-                  ProQuote™ with TrueQuote™ verification.
+                  ProStack™ with StackQuote™ verification.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <a
@@ -752,7 +752,7 @@ export default function PricingPage() {
               Normally, vendors spend weeks collecting pricing sheets, product specs, and
               configuration data from dozens of 3rd-party suppliers. Merlin automates{" "}
               <span className="text-white/70 font-medium">all of it</span> — then lets you validate
-              every configuration with ProQuote™ and the TrueQuote™ stamp of approval.
+              every configuration with ProStack™ and the StackQuote™ stamp of approval.
             </p>
             <div className="grid md:grid-cols-3 gap-5">
               <div className="flex items-start gap-3">
@@ -772,9 +772,9 @@ export default function PricingPage() {
                   <Award className="w-4 h-4 text-emerald-400" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-white text-sm">TrueQuote™ Verified</h4>
+                  <h4 className="font-semibold text-white text-sm">StackQuote™ Verified</h4>
                   <p className="text-xs text-white/40 mt-0.5">
-                    Test your product configurations in ProQuote™. Every number traced to NREL,
+                    Test your product configurations in ProStack™. Every number traced to NREL,
                     IEEE, and IRA sources.
                   </p>
                 </div>
@@ -844,7 +844,7 @@ export default function PricingPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    ProQuote™ quote building
+                    ProStack™ quote building
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
@@ -870,7 +870,7 @@ export default function PricingPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    TrueQuote™ verified configurations
+                    StackQuote™ verified configurations
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />

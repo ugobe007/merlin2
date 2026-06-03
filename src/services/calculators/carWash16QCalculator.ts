@@ -9,7 +9,7 @@
  * 2. Equipment inventory (pumps, blowers, etc.)
  * 3. Concurrency factor (simultaneous operation)
  * 4. Duty cycle (throughput + wash duration)
- * 5. BESS sizing (IEEE 4538388 ratio + TrueQuote™)
+ * 5. BESS sizing (IEEE 4538388 ratio + StackQuote™)
  */
 
 import { BESS_POWER_RATIOS } from '@/components/wizard/v6/constants';
@@ -60,7 +60,7 @@ export interface CarWash16QResult {
   // Confidence + audit
   confidence: number;       // 0.0-1.0 (how confident in sizing)
   methodology: string;      // Human-readable explanation
-  auditTrail: Source[];     // TrueQuote™ sources
+  auditTrail: Source[];     // StackQuote™ sources
   
   // Load profile
   loadProfile: {

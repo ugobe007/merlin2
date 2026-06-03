@@ -179,7 +179,7 @@ function getAdvisorContent(
             Your {companyName} quote is ready.
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            All calculations are {hi("TrueQuote™ verified")} — backed by real equipment pricing,
+            All calculations are {hi("StackQuote™ verified")} — backed by real equipment pricing,
             labor costs, and 25 years of utility rate forecasting.
           </div>
           <div

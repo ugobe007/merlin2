@@ -54,7 +54,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc pl-5 space-y-1">
               <li>
                 <strong>Quote request data</strong> — facility type, peak demand (kW), monthly
-                utility spend, ZIP code, and solar status that you enter into our TrueQuote™ wizard.
+                utility spend, ZIP code, and solar status that you enter into our StackQuote™ wizard.
               </li>
               <li>
                 <strong>Contact information</strong> — name, email address, phone number, and
@@ -147,7 +147,7 @@ export default function PrivacyPolicyPage() {
               MCP server.
             </li>
             <li>
-              <strong>Anthropic / OpenAI</strong> — AI providers whose models power our TrueQuote™
+              <strong>Anthropic / OpenAI</strong> — AI providers whose models power our StackQuote™
               analysis. We send only anonymized facility parameters, never personally identifiable
               information, to these APIs.
             </li>

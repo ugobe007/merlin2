@@ -2,7 +2,7 @@
  * FINANCIAL CALCULATOR
  * Calculates ROI, payback, NPV, and all financial metrics
  * 
- * Part of TrueQuote Engine (Porsche 911 Architecture)
+ * Part of StackQuote Engine (Porsche 911 Architecture)
  */
 
 export interface FinancialCalculationInput {

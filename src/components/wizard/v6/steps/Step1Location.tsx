@@ -12,7 +12,7 @@
  * NEW January 14, 2026: Added SavingsPreviewPanel for business lookup
  * - Shows estimated savings (NOT SSOT!) when business is found
  * - Clearly labeled as ESTIMATE
- * - Real TrueQuote™ numbers come in Steps 4-6
+ * - Real StackQuote™ numbers come in Steps 4-6
  *
  * SSOT: Imports location data from @/services/data
  * NOTE: MerlinAdvisor is now rendered at WizardV6 level (unified advisor)
@@ -679,7 +679,7 @@ export function Step1Location({
                 <span>
                   *Estimate based on typical{" "}
                   {INDUSTRY_NAMES[businessLookup.industrySlug || ""] || "industry"} profiles.
-                  TrueQuote™ verified in Step 5.
+                  StackQuote™ verified in Step 5.
                 </span>
               </div>
             </div>

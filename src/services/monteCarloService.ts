@@ -30,7 +30,7 @@
  * - Value at Risk (VaR) for downside scenarios
  * - Probability of achieving hurdle rate
  * 
- * SOURCES (TrueQuote™):
+ * SOURCES (StackQuote™):
  * - NREL ATB uncertainty ranges
  * - EIA electricity price forecast uncertainty
  * - BNEF equipment cost projections
@@ -107,7 +107,7 @@ export interface MonteCarloResult {
     npv: { bucket: number; count: number }[];
     irr: { bucket: number; count: number }[];
   };
-  /** TrueQuote™ audit trail */
+  /** StackQuote™ audit trail */
   audit: {
     methodology: string;
     iterations: number;

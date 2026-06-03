@@ -99,7 +99,7 @@ export const dataCenterConfig: VerticalConfig = {
   howItWorks: [
     { title: 'Describe Your Data Center', description: 'Enter IT load, PUE, and redundancy requirements. Takes about 60 seconds.' },
     { title: 'Merlin Designs Your System', description: 'Our AI sizes BESS for UPS backup + peak shaving using NREL/IEEE standards for Tier III/IV compliance.' },
-    { title: 'Get Your Custom Quote', description: 'Receive a TrueQuote™ proposal with ROI projections, equipment specs, and traceable cost sources.' },
+    { title: 'Get Your Custom Quote', description: 'Receive a StackQuote™ proposal with ROI projections, equipment specs, and traceable cost sources.' },
     { title: 'Deploy & Save', description: 'Connect with certified integrators. Start cutting demand charges while gaining bulletproof backup power.' },
   ],
 

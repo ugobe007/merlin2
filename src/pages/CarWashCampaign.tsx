@@ -789,7 +789,7 @@ export default function CarWashCampaign({ config = EL_CAR_WASH_CONFIG }: CarWash
               <div className="bg-gray-900/80 border-t-2 border-gray-700 px-8 py-6">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="text-sm text-gray-400">
-                    <span className="text-emerald-400 font-semibold">TrueQuote™</span> verified
+                    <span className="text-emerald-400 font-semibold">StackQuote™</span> verified
                     pricing • 25-year warranty • Valid 90 days
                   </div>
                   <div className="flex gap-3">

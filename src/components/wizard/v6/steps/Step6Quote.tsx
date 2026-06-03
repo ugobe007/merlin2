@@ -2,7 +2,7 @@
  * STEP 6: Quote Review (Wizard V6)
  * ================================
  * Updated to support nested calculations:
- *   calculations.base    -> SSOT base values from TrueQuote (never overwritten)
+ *   calculations.base    -> SSOT base values from StackQuote (never overwritten)
  *   calculations.selected-> Tier-specific chosen system + financials
  */
 
@@ -189,7 +189,7 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
           </div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-2">
             <Sparkles className="w-7 h-7 text-purple-300" />
-            Your TrueQuote™ Summary
+            Your StackQuote™ Summary
           </h1>
           <div className="flex items-center gap-2 text-slate-400 mt-2">
             <MapPin className="w-4 h-4" />
@@ -493,7 +493,7 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
                 <Battery className="w-4 h-4 text-purple-300" />
                 BESS Size
                 {trueQuoteSizing && (
-                  <span className="text-xs text-slate-400" title="TrueQuote™ Confidence-Aware Sizing">
+                  <span className="text-xs text-slate-400" title="StackQuote™ Confidence-Aware Sizing">
                     (±{Math.round(((trueQuoteSizing.recommended.powerKW.max - trueQuoteSizing.recommended.powerKW.min) / trueQuoteSizing.recommended.powerKW.best) * 100)}%)
                   </span>
                 )}
@@ -611,7 +611,7 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Shield className="w-5 h-5 text-purple-400" />
-              TrueQuote™ Sizing Methodology
+              StackQuote™ Sizing Methodology
             </h3>
             <div className="flex items-center gap-2">
               <span className="px-3 py-1 text-xs font-medium text-purple-300 bg-purple-500/20 rounded-full">
@@ -735,7 +735,7 @@ export function Step6Quote({ state, trueQuoteSizing }: Props) {
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-purple-400" />
-            TrueQuote™ Insights
+            StackQuote™ Insights
           </h3>
           <span className="px-3 py-1 text-xs font-medium text-purple-300 bg-purple-500/20 rounded-full">
             Every number is benchmark-backed

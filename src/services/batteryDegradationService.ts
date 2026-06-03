@@ -15,7 +15,7 @@
  * 2. Cycle Aging - Capacity loss per charge/discharge cycle
  * 3. Temperature Effects - Accelerated aging at high temperatures
  * 
- * DATA SOURCES (TrueQuote™ compliant):
+ * DATA SOURCES (StackQuote™ compliant):
  * - NREL ATB 2024: 2.5%/year typical degradation
  * - PNNL Battery Degradation Study (2023)
  * - DOE/Sandia Energy Storage Handbook
@@ -74,7 +74,7 @@ export interface DegradationResult {
     averageRoundTripEfficiency: number;
     levelizedDegradationCost: number; // $/MWh additional cost due to degradation
   };
-  /** TrueQuote™ attribution */
+  /** StackQuote™ attribution */
   audit: {
     chemistry: BatteryChemistry;
     model: string;

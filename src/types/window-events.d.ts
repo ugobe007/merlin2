@@ -10,12 +10,12 @@ import type { TrueQuoteModalMode, TrueQuoteProofPayload } from "@/components/sha
 
 declare global {
   interface WindowEventMap {
-    /** Opens the TrueQuote modal with optional mode and payload */
+    /** Opens the StackQuote modal with optional mode and payload */
     "truequote:open": CustomEvent<{
       mode?: TrueQuoteModalMode;
       payload?: TrueQuoteProofPayload;
     }>;
-    /** Closes the TrueQuote modal */
+    /** Closes the StackQuote modal */
     "truequote:close": Event;
   }
 }

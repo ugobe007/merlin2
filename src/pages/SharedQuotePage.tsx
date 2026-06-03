@@ -82,7 +82,7 @@ export default function SharedQuotePage() {
       <main className="flex min-h-screen items-center justify-center bg-[#060D1F] text-white">
         <div className="text-center">
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-yellow-400 border-t-transparent" />
-          <p className="text-sm text-slate-400">Loading TrueQuote…</p>
+          <p className="text-sm text-slate-400">Loading StackQuote…</p>
         </div>
       </main>
     );
@@ -93,7 +93,7 @@ export default function SharedQuotePage() {
       <main className="flex min-h-screen items-center justify-center bg-[#060D1F] px-6 text-white">
         <section className="max-w-md rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center shadow-2xl">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-yellow-300">
-            TrueQuote
+            StackQuote
           </p>
           <h1 className="text-2xl font-bold">Quote link unavailable</h1>
           <p className="mt-3 text-sm leading-6 text-slate-400">
@@ -123,7 +123,7 @@ export default function SharedQuotePage() {
       <section className="mx-auto max-w-5xl">
         <div className="mb-8 rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-6 shadow-2xl md:p-10">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-yellow-300">
-            TrueQuote by Merlin Energy
+            StackQuote by Merlin Energy
           </p>
           <div className="mt-5 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
@@ -136,7 +136,7 @@ export default function SharedQuotePage() {
               </p>
             </div>
             <a
-              href="mailto:sales@merlinenergy.net?subject=TrueQuote%20review"
+              href="mailto:sales@merlinenergy.net?subject=StackQuote%20review"
               className="rounded-xl border border-yellow-400/40 bg-yellow-400/15 px-5 py-3 text-center text-sm font-bold text-yellow-200 hover:bg-yellow-400/25"
             >
               Tighten Assumptions

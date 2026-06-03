@@ -135,7 +135,7 @@ export function buildV8ExportData(state: WizardState): QuoteExportData {
       ),
     },
 
-    // TrueQuote™ Validation
+    // StackQuote™ Validation
     trueQuoteValidation: {
       version: "v1",
       dutyCycle: 0.55,

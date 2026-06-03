@@ -643,7 +643,7 @@ function validateNormalizedShape(inputs: NormalizedLoadInputs, context: string) 
 // TIER E: TRUEQUOTE™ POLICY TAXONOMY (Move 5)
 // ============================================================================
 
-describe("Tier E — TrueQuote™ Policy Taxonomy", () => {
+describe("Tier E — StackQuote™ Policy Taxonomy", () => {
   it("every envelope has policyEvents array", () => {
     const envelope = step3Compute({ industry: "hotel", answers: { numRooms: 200 } });
     expect(Array.isArray(envelope.policyEvents)).toBe(true);

@@ -67,7 +67,7 @@ export const INDOOR_FARM_LOAD_V1_SSOT: CalculatorContract = {
     );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
-    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // ── StackQuote kW contributor breakdown ─────────────────────────
     // Indoor farm: LED lighting (50-65%), HVAC/dehumidification (20-30%), irrigation, controls
     const lightingPct = 0.55;
     const hvacDehumidPct = 0.25;

@@ -1,7 +1,7 @@
 // Weather Impact Service (SSOT for weather risk → ROI translation)
 // Created: January 18, 2026
 // Purpose: Convert passive weather risk to actionable metric with peer comparison
-// TrueQuote™ Compliance: Database-driven coefficients with source attribution
+// StackQuote™ Compliance: Database-driven coefficients with source attribution
 
 import { supabase } from "@/services/supabaseClient";
 import type {

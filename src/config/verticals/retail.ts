@@ -66,13 +66,13 @@ export const retailConfig: VerticalConfig = {
   howItWorks: [
     { title: 'Tell Us About Your Store', description: 'Enter your square footage, operating hours, and location. Takes 60 seconds.' },
     { title: 'Merlin Analyzes Your Demand Profile', description: 'Our AI models your lighting, HVAC, and refrigeration loads using ASHRAE and NREL benchmarks.' },
-    { title: 'Get Your Custom BESS Quote', description: 'Receive a detailed proposal with ROI, equipment specs, and TrueQuote™ verified cost sources.' },
+    { title: 'Get Your Custom BESS Quote', description: 'Receive a detailed proposal with ROI, equipment specs, and StackQuote™ verified cost sources.' },
     { title: 'Start Saving on Day One', description: 'Connect with certified installers. Most systems qualify for $0-down financing.' },
   ],
   leadSourceTag: 'retail_vertical',
   leadFormCTA: 'Get Your Free Retail Energy Analysis',
   pageTitle: 'Retail Battery Storage | Cut Energy Costs 30-45%',
-  metaDescription: 'Battery energy storage for retail stores. Slash demand charges, reduce energy bills 30-45%, and stay open during outages. Free TrueQuote™ in 60 seconds.',
+  metaDescription: 'Battery energy storage for retail stores. Slash demand charges, reduce energy bills 30-45%, and stay open during outages. Free StackQuote™ in 60 seconds.',
 };
 
 registerVertical(retailConfig);

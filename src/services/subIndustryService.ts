@@ -302,7 +302,7 @@ export interface IndustryContext {
 
 /**
  * Build complete industry context from wizard state
- * Used by TrueQuote to apply sub-industry multipliers
+ * Used by StackQuote to apply sub-industry multipliers
  */
 export async function buildIndustryContext(
   industrySlug: string,

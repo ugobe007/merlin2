@@ -9,7 +9,7 @@
  * 2. Amenity loads (pool, restaurant, spa, fitness, EV charging)
  * 3. HVAC system type and efficiency
  * 4. Occupancy factor (seasonality)
- * 5. BESS sizing (IEEE 4538388 ratio + TrueQuote™)
+ * 5. BESS sizing (IEEE 4538388 ratio + StackQuote™)
  */
 
 import { BESS_POWER_RATIOS } from '@/components/wizard/v6/constants';

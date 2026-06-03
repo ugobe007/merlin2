@@ -63,7 +63,7 @@ const PARTNER_CONFIGS: Record<string, PartnerConfig> = {
     calLink: "mailto:bob@merlinenergy.net?subject=CapEX Power x Merlin — Partnership & Investment",
     partnershipHeadline: "The Merlin + CapEX Power stack",
     partnershipBody:
-      "CapEX Power's EPCs and developers need accurate BESS load studies before they can specify switchgear, transformers, and grid-tie packages. Today that study takes weeks and a consultant. Merlin produces a bankable TrueQuote™ in 90 seconds — feeding directly into CapEX Power's quote pipeline with the right kW, kWh, and peak demand numbers.",
+      "CapEX Power's EPCs and developers need accurate BESS load studies before they can specify switchgear, transformers, and grid-tie packages. Today that study takes weeks and a consultant. Merlin produces a bankable StackQuote™ in 90 seconds — feeding directly into CapEX Power's quote pipeline with the right kW, kWh, and peak demand numbers.",
     partnerBullets: [
       "EPCs get a bankable load study before procurement — zero consultant lag",
       "Data center, industrial, and C&I verticals: all modeled with ASHRAE/CBECS benchmarks",
@@ -88,7 +88,7 @@ const PARTNER_CONFIGS: Record<string, PartnerConfig> = {
     calLink: "mailto:bob@merlinenergy.net?subject=Discover Energy Systems x Merlin — Partnership",
     partnershipHeadline: "The Merlin + Discover Energy Systems stack",
     partnershipBody:
-      "Discover's CI and dealer network installs the batteries. The bottleneck today is the front-end: sizing the system, modeling the savings, and getting the customer to say yes. Merlin closes that gap — a 90-second TrueQuote™ that produces bankable load profiles, financial models, and proposal PDFs, all branded for your dealers. More quotes out the door means more Discover batteries in the field.",
+      "Discover's CI and dealer network installs the batteries. The bottleneck today is the front-end: sizing the system, modeling the savings, and getting the customer to say yes. Merlin closes that gap — a 90-second StackQuote™ that produces bankable load profiles, financial models, and proposal PDFs, all branded for your dealers. More quotes out the door means more Discover batteries in the field.",
     partnerBullets: [
       "Every CI and dealer in Discover's network can quote BESS in 90 seconds — no engineering needed",
       "Load profiles built on ASHRAE/CBECS + equipment-level data (car wash, hotel, C&I, EV charging)",
@@ -127,7 +127,7 @@ const WHY_PARTNER = [
   },
   {
     icon: <Shield className="w-6 h-6" />,
-    title: "TrueQuote™ Accuracy",
+    title: "StackQuote™ Accuracy",
     body: "Every load estimate traces to ASHRAE/CBECS benchmarks, NREL PVWatts, and real utility tariffs — not gut feel.",
   },
   {
@@ -177,7 +177,7 @@ const HOW_IT_WORKS = [
   {
     step: "02",
     title: "Merlin models the load",
-    body: "ASHRAE profiles + equipment kW × duty cycle × schedule = TrueQuote™ peak kW",
+    body: "ASHRAE profiles + equipment kW × duty cycle × schedule = StackQuote™ peak kW",
   },
   {
     step: "03",
@@ -319,7 +319,7 @@ export default function PartnerDemo() {
                 </div>
                 <p className="text-white/65 text-sm leading-relaxed">
                   Merlin Energy is an AI-powered BESS quoting platform that turns a 90-second
-                  customer conversation into a bankable proposal. Our TrueQuote™ engine models load
+                  customer conversation into a bankable proposal. Our StackQuote™ engine models load
                   profiles for 15 commercial verticals using ASHRAE/CBECS benchmarks, live utility
                   rates, and IRA 2022 incentive data — producing full NPV, IRR, and payback analysis
                   with no engineering team required.
@@ -328,7 +328,7 @@ export default function PartnerDemo() {
                   {[
                     "15 verticals",
                     "90-sec quote",
-                    "TrueQuote™",
+                    "StackQuote™",
                     "IRA 2022 ITC",
                     "White-label API",
                   ].map((t) => (

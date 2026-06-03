@@ -1,5 +1,5 @@
 /**
- * TrueQuote™ Load Curve Generator
+ * StackQuote™ Load Curve Generator
  * ================================
  * Generates 24-point load curves for visualization.
  * Shows baseline demand vs demand with BESS intervention.

@@ -1,7 +1,7 @@
 /**
  * TrueQuoteVerifyBadge.tsx - MERLIN REDESIGN
  * 
- * A magical verification badge that opens the TrueQuote Verification modal.
+ * A magical verification badge that opens the StackQuote Verification modal.
  * Fully integrated with Merlin's dark theme and magical aesthetic.
  * 
  * Design System:
@@ -173,7 +173,7 @@ export const TrueQuoteVerifyBadge: React.FC<TrueQuoteVerifyBadgeProps> = ({
           ) : (
             <AlertTriangle className="w-4 h-4" />
           )}
-          <span className="text-xs font-semibold">TrueQuote™</span>
+          <span className="text-xs font-semibold">StackQuote™</span>
         </button>
         
         {isModalOpen && worksheetData && (
@@ -215,7 +215,7 @@ export const TrueQuoteVerifyBadge: React.FC<TrueQuoteVerifyBadgeProps> = ({
           
           {/* Text */}
           <div className="relative flex items-baseline gap-1">
-            <span className="text-sm font-bold text-white">TrueQuote</span>
+            <span className="text-sm font-bold text-white">StackQuote</span>
             <span className="text-amber-400 text-xs font-bold">™</span>
           </div>
           
@@ -302,7 +302,7 @@ export const TrueQuoteVerifyBadge: React.FC<TrueQuoteVerifyBadgeProps> = ({
               <div>
                 <div className="flex items-baseline gap-1">
                   <span className="text-xl font-bold bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-transparent">
-                    TrueQuote
+                    StackQuote
                   </span>
                   <span className="text-amber-400 text-sm font-bold">™</span>
                   <span className="text-purple-300 text-lg font-semibold ml-1">Verify</span>
@@ -461,7 +461,7 @@ const TrueQuoteModal: React.FC<TrueQuoteModalProps> = ({ worksheetData, onClose 
             {/* Title & Info */}
             <div className="flex-1">
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-3xl font-bold text-white">TrueQuote</span>
+                <span className="text-3xl font-bold text-white">StackQuote</span>
                 <span className="text-amber-400 text-xl font-bold">™</span>
                 <span className="text-2xl font-semibold text-purple-200 ml-2">Verify</span>
               </div>

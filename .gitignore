@@ -13,12 +13,14 @@ node_modules
 # Build outputs
 dist
 dist-ssr
+.turbo/
 *.local
 
 # Environment variables
 .env
 .env.local
 .env.*.local
+.vercel/
 
 # Backup directories
 .backups
@@ -41,9 +43,22 @@ test-results/
 coverage/
 *.webm
 puppeteer-results.txt
+test-artifacts/
 
 # Generated agent reports
 agents/_reports/
+_reports/
+
+# Local service metadata
+supabase/.temp/
+
+# Generated reports and command output
+eslint-report.json
+eslint.report.json
+eslint.*.txt
+truequote-validation-report.json
+truequote-validation-summary.json
+migration_output.txt
 
 # TypeScript build info
 tsconfig.tsbuildinfo
@@ -55,6 +70,15 @@ html/
 number
 useCaseSlug
 customQuestions
+/0
+/100
+/1000
+/4.5
+/5.5
+/=
+/generation
+/merlin2@0.0.0
+/tsc
 
 # Backup files
 *.backup

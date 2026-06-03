@@ -533,7 +533,7 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
       selectedPowerLevel:
         tier === "starter" ? "starter" : tier === "perfectFit" ? "perfect_fit" : "beast_mode",
       calculations: {
-        // Base calculations (SSOT - immutable, from TrueQuote baseCalculation)
+        // Base calculations (SSOT - immutable, from StackQuote baseCalculation)
         base: {
           annualConsumptionKWh: base.load.annualConsumptionKWh,
           peakDemandKW: base.load.peakDemandKW,
@@ -588,7 +588,7 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
           <Loader2 className="relative w-16 h-16 text-purple-400 animate-spin" />
         </div>
         <p className="text-white text-xl font-medium mt-6">Calculating your perfect system...</p>
-        <p className="text-slate-400 text-sm mt-2">TrueQuote Engine is analyzing your facility</p>
+        <p className="text-slate-400 text-sm mt-2">StackQuote Engine is analyzing your facility</p>
       </div>
     );
   }
@@ -940,7 +940,7 @@ export function Step5MagicFit({ state, updateState, goToStep }: Props) {
         </div>
       </div>
 
-      {/* TrueQuote Badge */}
+      {/* StackQuote Badge */}
       <div className="flex justify-center">
         <TrueQuoteVerifyBadge
           quoteId={quoteResult.quoteId}

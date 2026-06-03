@@ -6,7 +6,7 @@
  * Uses the same constants as TrueQuoteEngineV2 for consistency.
  * 
  * NOTE: These are ESTIMATES for UI preview only.
- * Final values come from Step 5 MagicFit via TrueQuote.
+ * Final values come from Step 5 MagicFit via StackQuote.
  */
 
 import { TRUEQUOTE_CONSTANTS, DEFAULTS } from './data/constants';
@@ -51,7 +51,7 @@ export function calculateSolarPreview(
   const electricityRate = 0.12; // Will be refined in Step 5 with actual utility rate
   const co2PerKwh = 0.0004; // tons CO2 per kWh
   
-  // Size calculation (same formula used in TrueQuote)
+  // Size calculation (same formula used in StackQuote)
   const targetKwh = annualUsageKwh * coveragePercent;
   const capacityFactor = sunHoursPerDay / 24 * degradationFactor;
   const sizeKw = Math.round(targetKwh / (capacityFactor * 8760) / 5) * 5; // Round to nearest 5kW

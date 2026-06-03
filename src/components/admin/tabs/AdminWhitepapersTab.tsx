@@ -28,7 +28,7 @@ const WHITEPAPERS: Whitepaper[] = [
     published: "April 2026",
     industries: ["Hotel", "Data Center", "Hospital", "EV Charging"],
     description:
-      "How demand charges silently consume 30–50% of your electric bill — and what four industries are doing about it with battery energy storage. Includes live TrueQuote™ financials benchmarked against NREL ATB 2024 data.",
+      "How demand charges silently consume 30–50% of your electric bill — and what four industries are doing about it with battery energy storage. Includes live StackQuote™ financials benchmarked against NREL ATB 2024 data.",
     url: "/whitepaper.html",
     pdfReady: true,
     linkedInReady: true,
@@ -149,7 +149,7 @@ export default function AdminWhitepapersTab() {
             Whitepapers
           </h2>
           <p className="text-white/50 text-sm mt-1">
-            Industry whitepapers powered by live TrueQuote™ data — ready for LinkedIn and direct
+            Industry whitepapers powered by live StackQuote™ data — ready for LinkedIn and direct
             share.
           </p>
         </div>
@@ -170,7 +170,7 @@ export default function AdminWhitepapersTab() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-                    Merlin TrueQuote™ Whitepaper
+                    Merlin StackQuote™ Whitepaper
                   </span>
                   <span className="text-xs text-white/30">· {wp.published}</span>
                 </div>

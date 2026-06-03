@@ -144,7 +144,7 @@ router.post("/auth/token", async (req: Request, res: Response) => {
 
 /**
  * POST /v1/quotes
- * Generate a TrueQuote™ analysis
+ * Generate a StackQuote™ analysis
  */
 router.post(
   "/quotes",
@@ -168,7 +168,7 @@ router.post(
       return;
     }
 
-    // Generate quote via TrueQuote™ engine
+    // Generate quote via StackQuote™ engine
     // In production, this calls the actual unifiedQuoteCalculator service
     // via internal API to maintain the SSOT architecture (POLICY-001)
     const quoteId = crypto.randomUUID();
@@ -239,7 +239,7 @@ router.post(
       _meta: {
         partnerId: req.apiKey?.partnerId,
         tier: req.apiKey?.tier,
-        policy: "POLICY-001: Calculation routing through TrueQuote™ engine",
+        policy: "POLICY-001: Calculation routing through StackQuote™ engine",
       },
     };
 

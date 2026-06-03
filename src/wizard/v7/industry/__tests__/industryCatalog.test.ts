@@ -392,7 +392,7 @@ describe("Industry Catalog — Blocker Question Integrity", () => {
 //   8a. Every alias produces byte-identical context (except trace metadata)
 //   8b. Schema resolved through alias === schema resolved through canonical
 //   8c. Calculator.compute() returns valid, non-NaN output for defaults
-//   8d. TrueQuote envelope (if present) is structurally valid
+//   8d. StackQuote envelope (if present) is structurally valid
 //   8e. Cross-resource dependency chain is consistent (schema ↔ template ↔ calc)
 //   8f. Hyphen-form aliases (the nuclear bomb case) are proven identical
 //
@@ -487,7 +487,7 @@ describe("Industry Catalog — Quote Pipeline Smoke Tests", () => {
         }
       });
 
-      // --- 8d: TrueQuote envelope validity (if present) ---
+      // --- 8d: StackQuote envelope validity (if present) ---
       it("if validation envelope is present, it is structurally valid", () => {
         const ctx = resolveIndustryContext(slug);
         const calc = CALCULATORS_BY_ID[ctx.calculatorId];

@@ -561,7 +561,7 @@ export default function ProQuoteRunningCalculator({
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-[9px] font-medium" style={{ color: "rgba(255,255,255,0.25)" }}>
-              Powered by TrueQuote™ Engine • {fm?.dataSource === "database" ? "DB" : "Fallback"} •{" "}
+              Powered by StackQuote™ Engine • {fm?.dataSource === "database" ? "DB" : "Fallback"} •{" "}
               {fm?.formulaVersion ?? "—"}
             </span>
           </div>

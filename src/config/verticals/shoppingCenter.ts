@@ -66,7 +66,7 @@ export const shoppingCenterConfig: VerticalConfig = {
   howItWorks: [
     { title: 'Tell Us About Your Property', description: 'Enter GLA, tenant count, and anchor store info. Takes 60 seconds.' },
     { title: 'We Model Your Common Area Load', description: 'Merlin maps your HVAC, lighting, and escalator loads to find peak demand reduction opportunities.' },
-    { title: 'Get a Landlord-Ready Proposal', description: 'Full financial model with CAM savings breakdown, ITC credit, and TrueQuote™ verified pricing.' },
+    { title: 'Get a Landlord-Ready Proposal', description: 'Full financial model with CAM savings breakdown, ITC credit, and StackQuote™ verified pricing.' },
     { title: 'Reduce CAM, Attract Tenants', description: 'Lower common area costs improve tenant retention and NOI. Most projects pay back in 4 years.' },
   ],
   leadSourceTag: 'shopping_center_vertical',

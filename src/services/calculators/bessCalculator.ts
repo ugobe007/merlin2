@@ -2,7 +2,7 @@
  * BESS CALCULATOR
  * Calculates Battery Energy Storage System sizing and costs
  *
- * Part of TrueQuote Engine (Porsche 911 Architecture)
+ * Part of StackQuote Engine (Porsche 911 Architecture)
  */
 
 import type { Industry, BatteryChemistry } from "../contracts";

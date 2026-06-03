@@ -115,7 +115,7 @@ export interface WidgetQuoteResponse {
       irr: number;
     };
 
-    // TrueQuote validation
+    // StackQuote validation
     truequote: {
       sources: string[];
       methodology: string;

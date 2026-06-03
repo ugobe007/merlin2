@@ -162,7 +162,7 @@ export default function WidgetDemo() {
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500">Powered by Merlin TrueQuote™</p>
+                    <p className="text-xs text-gray-500">Powered by Merlin StackQuote™</p>
                   </div>
                 </div>
               </div>
@@ -414,7 +414,7 @@ export default function WidgetDemo() {
                             <div className="mt-5 pt-4 border-t border-gray-700/50 flex items-center gap-3">
                               <div className="w-2.5 h-2.5 rounded-full bg-[#3ecf8e] animate-pulse shadow-lg shadow-[#3ecf8e]/50"></div>
                               <span className="text-sm text-gray-400 font-medium">
-                                TrueQuote™ Verified
+                                StackQuote™ Verified
                               </span>
                             </div>
                           </div>
@@ -450,7 +450,7 @@ export default function WidgetDemo() {
                     </div>
                   </div>
 
-                  {/* Slide 3: TrueQuote™ Differentiator */}
+                  {/* Slide 3: StackQuote™ Differentiator */}
                   <div
                     className={`absolute inset-0 transition-opacity duration-1000 ${
                       currentSlide === 2 ? "opacity-100" : "opacity-0"
@@ -460,7 +460,7 @@ export default function WidgetDemo() {
                       <div className="mb-8">
                         <img
                           src={trueQuoteBadge}
-                          alt="TrueQuote Verified"
+                          alt="StackQuote Verified"
                           className="w-24 h-24 mx-auto mb-8"
                         />
                         <div className="text-4xl font-bold text-white mb-6 leading-tight">
@@ -604,7 +604,7 @@ export default function WidgetDemo() {
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-300">
                   <Check className="w-5 h-5 text-[#3ecf8e] flex-shrink-0" />
-                  <span>TrueQuote™ attribution</span>
+                  <span>StackQuote™ attribution</span>
                 </li>
                 <li className="flex items-start gap-2 text-sm text-gray-300">
                   <Check className="w-5 h-5 text-[#3ecf8e] flex-shrink-0" />

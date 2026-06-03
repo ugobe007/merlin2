@@ -12,7 +12,7 @@ import { Zap, ArrowRight, Battery, Check, Users, Gift } from "lucide-react";
 
 const FEATURES = [
   "BESS quotes in 90 seconds — free",
-  "TrueQuote™: every number cites NREL, IRA 2022, IEEE",
+  "StackQuote™: every number cites NREL, IRA 2022, IEEE",
   "15 commercial industries with real power profiles",
   "Dynamic ITC calculator (6–70% per IRA 2022)",
   "Full IRR, NPV, Monte Carlo P10/P50/P90",
@@ -105,7 +105,7 @@ export default function ReferralPage() {
 
           <p className="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
             Merlin is an instant BESS financial analysis tool for commercial facilities. Every quote
-            is <span className="text-white font-semibold">TrueQuote™ verified</span> — every number
+            is <span className="text-white font-semibold">StackQuote™ verified</span> — every number
             traces to a published source. No consultants. No spreadsheets.{" "}
             <span className="text-[#3ECF8E]">Free.</span>
           </p>

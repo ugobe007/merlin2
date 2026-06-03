@@ -6,9 +6,9 @@
  * 
  * ⚠️ CRITICAL RULES:
  * 1. This is NOT SSOT - estimates only!
- * 2. NEVER use words "TrueQuote", "Verified", or show TrueQuote badge
+ * 2. NEVER use words "StackQuote", "Verified", or show StackQuote badge
  * 3. Results stored in state.teaserPreview (separate from state.calculations)
- * 4. Always show disclaimer: "Estimate only — not TrueQuote Verified"
+ * 4. Always show disclaimer: "Estimate only — not StackQuote Verified"
  * 5. Use ranges, not exact numbers ("5-6 years" not "5.2 years")
  * 
  * 🔒 6 INVARIANTS (DO NOT BREAK):
@@ -356,7 +356,7 @@ export function calculateTeaserPreview(input: TeaserInput): TeaserPreview {
   }
   
   // Standard disclaimer
-  const disclaimer = "Estimate only — not TrueQuote Verified. This sneak peek uses benchmarks and public averages. Your TrueQuote Verified results are calculated in Step 5 after you answer facility details.";
+  const disclaimer = "Estimate only — not StackQuote Verified. This sneak peek uses benchmarks and public averages. Your StackQuote Verified results are calculated in Step 5 after you answer facility details.";
   
   // Compute hash to prevent recompute churn
   const teaserHash = computeTeaserHash(input);

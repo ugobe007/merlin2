@@ -3,7 +3,7 @@
  * =====================
  *
  * CRITICAL: This test traces values through the entire wizard flow to
- * ensure TrueQuote SSOT compliance. Any failure here means broken quotes.
+ * ensure StackQuote SSOT compliance. Any failure here means broken quotes.
  *
  * Test Strategy:
  * 1. Simulate user inputs at each step

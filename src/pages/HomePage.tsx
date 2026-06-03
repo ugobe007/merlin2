@@ -74,7 +74,7 @@ const HOW_IT_WORKS = [
   },
   {
     step: "02",
-    title: "Get a TrueQuote™ in seconds",
+    title: "Get a StackQuote™ in seconds",
     desc: "Our engine runs NREL ATB 2024 benchmarks, IRA 2022 ITC, and real utility rates for your zip code.",
     color: "text-violet-400",
     border: "border-violet-400/20",
@@ -161,7 +161,7 @@ export default function HomePage() {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#3ECF8E]" />
           </span>
           <span className="text-[#3ECF8E] text-xs font-semibold tracking-wider uppercase relative z-10">
-            TrueQuote™ — Every number is sourced
+            StackQuote™ — Every number is sourced
           </span>
         </div>
 
@@ -214,7 +214,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── TrueQuote™ Data Sources Marquee ──────────────────────── */}
+      {/* ── StackQuote™ Data Sources Marquee ──────────────────────── */}
       <div
         className="border-y border-white/[0.05] overflow-hidden"
         style={{ background: "rgba(255,255,255,0.01)" }}
@@ -306,7 +306,7 @@ export default function HomePage() {
             {[
               {
                 icon: <Shield className="w-5 h-5 text-[#3ECF8E]" />,
-                title: "TrueQuote™ Verified",
+                title: "StackQuote™ Verified",
                 desc: "Every number traces to an authoritative source (NREL, IEEE, IRA 2022)",
               },
               {

@@ -12,7 +12,7 @@
  *   3. SSOT hardcoded fallback (DEFAULTS.Solar / DEFAULTS.BESS constants)
  *
  * Used by:
- *   - TrueQuoteEngineV2.ts  (v7 wizard / ProQuote)
+ *   - TrueQuoteEngineV2.ts  (v7 wizard / ProStack)
  *   - solarCalculator.ts    (underlying calculator)
  *   - bessCalculator.ts     (underlying calculator)
  *   - CompleteTrueQuoteEngine.ts (car wash engine)
@@ -53,11 +53,11 @@ export interface VendorPricing {
   inverterSpec: InverterSpec | null;
   /** True when vendor DB pricing is active (vs. hardcoded fallback) */
   isVendorPricing: boolean;
-  /** Human-readable pricing source for TrueQuote attestation */
+  /** Human-readable pricing source for StackQuote attestation */
   solarSource: string;
-  /** Human-readable pricing source for TrueQuote attestation */
+  /** Human-readable pricing source for StackQuote attestation */
   bessSource: string;
-  /** Human-readable pricing source for TrueQuote attestation */
+  /** Human-readable pricing source for StackQuote attestation */
   inverterSource: string;
   /** Vendor $/kW for diesel generators (undefined = use SSOT $800/kW constant) */
   generatorPricePerKwDiesel?: number;

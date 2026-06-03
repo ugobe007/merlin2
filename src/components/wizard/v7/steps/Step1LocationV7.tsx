@@ -246,7 +246,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
 
       {/* Hero Section */}
       <div style={{ position: "relative", zIndex: 1 }}>
-        {/* TrueQuote badge — clickable */}
+        {/* StackQuote badge — clickable */}
         <div style={{ marginBottom: 18, position: "relative", zIndex: 2 }}>
           <TrueQuoteBadgeCanonical onClick={() => setShowTrueQuoteModal(true)} showTooltip={true} />
         </div>
@@ -946,7 +946,7 @@ const Step1LocationV7 = React.memo(function Step1LocationV7({
         }}
       />
 
-      {/* TrueQuote™ explainer modal */}
+      {/* StackQuote™ explainer modal */}
       <TrueQuoteModal isOpen={showTrueQuoteModal} onClose={() => setShowTrueQuoteModal(false)} />
     </div>
   );

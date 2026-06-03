@@ -9,22 +9,22 @@ const items = [
   {
     icon: BarChart3,
     title: "Price projects with real structure",
-    body: "TrueQuote uses NREL data, DOE frameworks, and Sandia-aligned logic to build project costs from the ground up — not estimates, not averages. Every number has a source.",
+    body: "StackQuote uses NREL data, DOE frameworks, and Sandia-aligned logic to build project costs from the ground up — not estimates, not averages. Every number has a source.",
   },
   {
     icon: Calculator,
     title: "Model savings without spreadsheet drag",
-    body: "Stop building custom Excel models for every project. TrueQuote runs the financial logic automatically — utility rates, demand charges, incentives, depreciation — and delivers a clean output in minutes.",
+    body: "Stop building custom Excel models for every project. StackQuote runs the financial logic automatically — utility rates, demand charges, incentives, depreciation — and delivers a clean output in minutes.",
   },
   {
     icon: GitCompare,
     title: "Compare paths before you commit",
-    body: "Solar only? Solar + storage? EV charging? TrueQuote lets you model multiple project configurations side by side so you can compare ROI, payback, and risk before spending a dollar.",
+    body: "Solar only? Solar + storage? EV charging? StackQuote lets you model multiple project configurations side by side so you can compare ROI, payback, and risk before spending a dollar.",
   },
   {
     icon: FileText,
     title: "Build strategy, profiles, and RFP-ready assets",
-    body: "Save your quote as a strategy profile. Share it with your team. Export it as an RFP-ready document. TrueQuote turns a quote into a buildable plan — not just a number.",
+    body: "Save your quote as a strategy profile. Share it with your team. Export it as an RFP-ready document. StackQuote turns a quote into a buildable plan — not just a number.",
   },
 ];
 
@@ -70,7 +70,7 @@ export default function PlatformSection() {
               className="text-slate-400 text-base leading-relaxed mb-8"
               style={{ fontFamily: "'DM Sans', sans-serif" }}
             >
-              TrueQuote is not a calculator. It is not just quoting. It is not engineering software.
+              StackQuote is not a calculator. It is not just quoting. It is not engineering software.
               It is a decision, quoting, and planning platform — built to move energy projects from
               idea to action.
             </p>

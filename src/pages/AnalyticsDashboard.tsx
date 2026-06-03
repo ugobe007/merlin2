@@ -984,12 +984,12 @@ export default function AnalyticsDashboard() {
                       color: "#a78bfa",
                     },
                     {
-                      label: "ProQuote handoff success",
+                      label: "ProStack handoff success",
                       value: s.wizardEvents.proquoteHandoffSuccess,
                       color: "#34d399",
                     },
                     {
-                      label: "ProQuote handoff failed",
+                      label: "ProStack handoff failed",
                       value: s.wizardEvents.proquoteHandoffFailed,
                       color: "#ef4444",
                     },

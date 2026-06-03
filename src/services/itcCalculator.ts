@@ -29,7 +29,7 @@
  * - IRS Notice 2023-38 (Domestic Content)
  * - Treasury Guidance 2024
  * 
- * TrueQuote™ COMPLIANCE:
+ * StackQuote™ COMPLIANCE:
  * - All rates traceable to specific IRS guidance
  * - Calculation methodology documented
  * - Confidence levels based on project specifics
@@ -98,7 +98,7 @@ export interface ITCCalculationResult {
     effectiveDate?: string;
   };
   
-  // TrueQuote™ Attribution
+  // StackQuote™ Attribution
   audit: {
     methodology: string;
     sources: Array<{
@@ -883,7 +883,7 @@ export function getMaxITCRate(projectType: ITCProjectInput['projectType']): numb
 }
 
 /**
- * Get ITC documentation for TrueQuote™ display
+ * Get ITC documentation for StackQuote™ display
  */
 export function getITCDocumentation(): {
   methodology: string;

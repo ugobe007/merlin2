@@ -2,7 +2,7 @@
  * AboutMerlinModal.tsx
  *
  * Supabase-style dark modal — clean, typographic, minimal.
- * Platform overview, TrueQuote™ explanation, capabilities.
+ * Platform overview, StackQuote™ explanation, capabilities.
  *
  * @version 5.0.0 — Supabase redesign (Feb 2026)
  */
@@ -78,7 +78,7 @@ export const AboutMerlinModal: React.FC<AboutMerlinModalProps> = ({
             { value: "21", label: "Industries" },
             { value: "NREL", label: "ATB 2024" },
             { value: "6–70%", label: "Dynamic ITC" },
-            { value: "TrueQuote™", label: "Source-Verified" },
+            { value: "StackQuote™", label: "Source-Verified" },
           ].map((stat, i) => (
             <div
               key={i}
@@ -126,7 +126,7 @@ export const AboutMerlinModal: React.FC<AboutMerlinModalProps> = ({
             </div>
           </div>
 
-          {/* TrueQuote */}
+          {/* StackQuote */}
           <div
             className="rounded-lg p-4 mb-5"
             style={{
@@ -139,7 +139,7 @@ export const AboutMerlinModal: React.FC<AboutMerlinModalProps> = ({
                 <Shield className="w-4 h-4 text-emerald-400" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-white">TrueQuote™</h3>
+                <h3 className="text-sm font-semibold text-white">StackQuote™</h3>
                 <p className="text-[11px] text-slate-600">
                   Every number backed by an authoritative source
                 </p>
@@ -191,7 +191,7 @@ export const AboutMerlinModal: React.FC<AboutMerlinModalProps> = ({
                 {
                   n: "1",
                   title: "Choose your product",
-                  desc: "TrueQuote for operators, ProQuote for engineers & EPCs",
+                  desc: "StackQuote for operators, ProStack for engineers & EPCs",
                 },
                 {
                   n: "2",
@@ -314,7 +314,7 @@ export const AboutMerlinModal: React.FC<AboutMerlinModalProps> = ({
           }}
         >
           <span className="text-xs text-slate-600">
-            TrueQuote™ verified · No signup · Under 5 minutes
+            StackQuote™ verified · No signup · Under 5 minutes
           </span>
           <div className="flex items-center gap-3">
             <button

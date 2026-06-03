@@ -70,7 +70,7 @@ export default function HeroSection({
               className="text-sm font-medium tracking-widest uppercase mb-4"
               style={{ color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em" }}
             >
-              Why TrueQuote
+              Why StackQuote
             </p>
             <h2
               className="text-3xl md:text-4xl font-bold mb-4"

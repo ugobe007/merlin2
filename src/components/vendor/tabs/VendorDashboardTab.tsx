@@ -70,7 +70,7 @@ const VendorDashboardTab: React.FC<VendorDashboardTabProps> = ({
                 className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-xl font-bold transition-colors no-underline shadow-lg shadow-emerald-500/20"
               >
                 <Calculator className="w-5 h-5" />
-                Open ProQuote™ Builder
+                Open ProStack™ Builder
               </a>
               <a
                 href="/wizard"

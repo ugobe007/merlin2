@@ -2,9 +2,9 @@
  * WIZARD V8 — STEP 5: QUOTE RESULTS (COMPLETE V7 PARITY)
  *
  * Full V7 feature parity:
- * - TrueQuote™ gold badge (clickable) → opens financial modal
+ * - StackQuote™ gold badge (clickable) → opens financial modal
  * - PDF/Word/Excel export buttons with lead capture gate
- * - ProQuote™ upsell banner
+ * - ProStack™ upsell banner
  * - Detailed equipment & financial breakdown
  * - Hero savings display
  * - System specs stats bar
@@ -461,7 +461,7 @@ export default function Step5V8({ state, actions }: Props) {
         reason: "missing_selected_tier",
         step: state.step,
       });
-      setExportError("ProQuote handoff failed — no selected tier available.");
+      setExportError("ProStack handoff failed — no selected tier available.");
       return;
     }
 
@@ -473,14 +473,14 @@ export default function Step5V8({ state, actions }: Props) {
         reason: handoff.errors?.join(";") || "unknown",
         step: state.step,
       });
-      setExportError(handoff.errors?.join(" ") || "ProQuote handoff failed.");
+      setExportError(handoff.errors?.join(" ") || "ProStack handoff failed.");
       return;
     }
 
     // Canonical Phase 4 handoff payload
     sessionStorage.setItem("merlin_wizard_handoff_v1", JSON.stringify(handoff.export));
 
-    // Backward-compatible config consumed by existing ProQuote hook
+    // Backward-compatible config consumed by existing ProStack hook
     sessionStorage.setItem(
       "advancedBuilderConfig",
       JSON.stringify({
@@ -746,7 +746,7 @@ export default function Step5V8({ state, actions }: Props) {
               <span
                 style={{ fontSize: 14, fontWeight: 800, color: "#F5F0E8", letterSpacing: "0.01em" }}
               >
-                TrueQuote™
+                StackQuote™
               </span>
               <span
                 style={{
@@ -1242,7 +1242,7 @@ export default function Step5V8({ state, actions }: Props) {
             </div>
           </div>
 
-          {/* Step 4 — ProQuote */}
+          {/* Step 4 — ProStack */}
           <div
             style={{
               background: "rgba(155,109,255,0.06)",
@@ -1277,7 +1277,7 @@ export default function Step5V8({ state, actions }: Props) {
                 Get your full engineering package
               </p>
               <p className="text-xs text-slate-400 leading-relaxed">
-                ProQuote™ adds custom equipment sizing, DCF/IRR modeling, and bank-ready
+                ProStack™ adds custom equipment sizing, DCF/IRR modeling, and bank-ready
                 documentation.
               </p>
               <button
@@ -1296,7 +1296,7 @@ export default function Step5V8({ state, actions }: Props) {
                   gap: 4,
                 }}
               >
-                Upgrade to ProQuote™ <span style={{ fontSize: 13 }}>→</span>
+                Upgrade to ProStack™ <span style={{ fontSize: 13 }}>→</span>
               </button>
             </div>
           </div>
@@ -1681,7 +1681,7 @@ export default function Step5V8({ state, actions }: Props) {
             </div>
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/20">
               <Shield className="w-3 h-3 text-amber-400" />
-              <span className="text-amber-400 font-bold text-[10px]">TrueQuote™</span>
+              <span className="text-amber-400 font-bold text-[10px]">StackQuote™</span>
             </div>
           </div>
 
@@ -2712,14 +2712,14 @@ export default function Step5V8({ state, actions }: Props) {
       <div className="rounded-xl border-2 border-white/[0.08] bg-white/[0.03] p-4 sm:p-6 hover:border-white/[0.12] transition-all">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
           <div className="shrink-0 hidden sm:block">
-            <img src={badgeProQuoteIcon} alt="ProQuote" className="w-14 h-14 object-contain" />
+            <img src={badgeProQuoteIcon} alt="ProStack" className="w-14 h-14 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-base font-bold text-slate-100 tracking-tight">
               Want to go deeper?
             </div>
             <div className="text-sm text-slate-400 mt-1 leading-relaxed">
-              ProQuote™ gives you full engineering control — custom equipment, fuel cells, financial
+              ProStack™ gives you full engineering control — custom equipment, fuel cells, financial
               modeling, and bank-ready exports.
             </div>
           </div>
@@ -2729,7 +2729,7 @@ export default function Step5V8({ state, actions }: Props) {
             className="flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl border-2 border-[#3ECF8E]/30 bg-[#3ECF8E]/[0.06] hover:border-[#3ECF8E]/50 hover:bg-[#3ECF8E]/[0.12] transition-all w-full sm:w-auto sm:shrink-0 group"
           >
             <Sparkles className="w-4 h-4 text-[#3ECF8E]" />
-            <span className="text-sm font-bold text-[#3ECF8E] tracking-wide">Open ProQuote™</span>
+            <span className="text-sm font-bold text-[#3ECF8E] tracking-wide">Open ProStack™</span>
           </button>
         </div>
       </div>
@@ -2769,7 +2769,7 @@ export default function Step5V8({ state, actions }: Props) {
               textDecoration: "underline",
             }}
           >
-            TrueQuote™ Verified
+            StackQuote™ Verified
           </button>{" "}
           above for all data sources.
         </p>
@@ -2845,16 +2845,16 @@ export default function Step5V8({ state, actions }: Props) {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-3 mb-4">
-                <img src={badgeProQuoteIcon} alt="ProQuote" className="w-12 h-12" />
+                <img src={badgeProQuoteIcon} alt="ProStack" className="w-12 h-12" />
                 <div>
-                  <h3 className="text-xl font-bold text-[#3ECF8E]">ProQuote™</h3>
+                  <h3 className="text-xl font-bold text-[#3ECF8E]">ProStack™</h3>
                   <p className="text-sm text-slate-400">Full engineering control</p>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <p className="text-sm text-slate-300">
-                  ProQuote gives you access to advanced features:
+                  ProStack gives you access to advanced features:
                 </p>
                 <ul className="space-y-2">
                   {[
@@ -2881,7 +2881,7 @@ export default function Step5V8({ state, actions }: Props) {
                   }}
                   className="flex-1 py-2.5 rounded-lg bg-[#3ECF8E] text-slate-900 font-bold hover:bg-[#2aad70] transition-colors"
                 >
-                  Open ProQuote™
+                  Open ProStack™
                 </button>
                 <button
                   onClick={() => setShowProQuoteModal(false)}
@@ -2937,7 +2937,7 @@ export default function Step5V8({ state, actions }: Props) {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-amber-400 uppercase tracking-widest">
-                    TrueQuote™ Verified
+                    StackQuote™ Verified
                   </p>
                   <h3 className="text-base font-bold text-white">Pricing Data Sources</h3>
                 </div>

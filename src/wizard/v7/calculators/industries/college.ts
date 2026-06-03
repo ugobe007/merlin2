@@ -42,7 +42,7 @@ export const COLLEGE_LOAD_V1_SSOT: CalculatorContract = {
     );
     const peakLoadKW = Math.round(result.powerMW * 1000);
 
-    // ── TrueQuote kW contributor breakdown ─────────────────────────
+    // ── StackQuote kW contributor breakdown ─────────────────────────
     // College: classrooms, labs, housing, dining, athletics, IT
     const hvacPct = 0.3;
     const lightingPct = 0.15;

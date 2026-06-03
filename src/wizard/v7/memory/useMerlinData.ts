@@ -25,7 +25,7 @@
  *   data.quote            // from Memory quote or reducer quote
  *   data.addOns           // from Memory addOns or reducer step4AddOns
  *   data.isMemoryBacked   // true if Memory has the data (not falling back)
- *   data.report           // latest TrueQuote™ validation report
+ *   data.report           // latest StackQuote™ validation report
  *
  * Created: Feb 11, 2026
  */
@@ -160,7 +160,7 @@ export interface MerlinData {
   // ── Meta ─────────────────────────────────────────────────────────────────
   isMemoryBacked: boolean; // true = Memory has data (not falling back)
   filledSlots: string[]; // which Memory slots are populated
-  report: TrueQuoteReport | null; // latest TrueQuote™ validation
+  report: TrueQuoteReport | null; // latest StackQuote™ validation
   checksum: string | null; // memory state hash
 }
 
@@ -434,8 +434,8 @@ export function useMerlinData(state?: any): MerlinData {
 // ============================================================================
 
 /**
- * Get initial values for ProQuote/AdvancedQuoteBuilder from Merlin Memory.
- * Call this when opening ProQuote to pre-fill fields from the wizard session.
+ * Get initial values for ProStack/AdvancedQuoteBuilder from Merlin Memory.
+ * Call this when opening ProStack to pre-fill fields from the wizard session.
  *
  * Returns null if no Memory data exists (cold start).
  *
