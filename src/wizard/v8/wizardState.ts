@@ -1007,6 +1007,13 @@ export interface WizardActions {
   ) => void;
   setBusinessAddress: (address: string) => void;
   confirmBusiness: () => void;
+  hydrateHeroIntake: (input: {
+    zip: string;
+    industry: IndustrySlug;
+    businessTypeLabel?: string;
+    businessName?: string;
+    address?: string;
+  }) => void;
   // Step 2
   setIndustry: (slug: IndustrySlug) => void;
   // Step 3

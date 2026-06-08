@@ -1,17 +1,19 @@
 /* Merlin Energy — Agent-first homepage hero */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   Building2,
   CheckCircle2,
   DatabaseZap,
+  MapPin,
   Hotel,
   Plane,
   Sparkles,
   X,
   Zap,
 } from "lucide-react";
+import type { IndustrySlug } from "@/wizard/v8/wizardState";
 
 const _MERLIN_ICON = "/merlin-icon.png";
 
@@ -140,6 +142,7 @@ const _telemetryRows: UseCase[] = [
 const proofItems = ["Free & Instant", "No Utility Login Required", "CFO-Ready Report"];
 
 const HERO_HEADLINE_ROTATION_MS = 5200;
+const HERO_INTAKE_STORAGE_KEY = "merlin_hero_intake_v1";
 
 const heroHeadlines = [
   {
@@ -162,6 +165,22 @@ const heroHeadlines = [
     lead: "Build on Merlin's",
     accent: "Commercial Energy API Stack.",
   },
+];
+
+const heroBusinessTypes: Array<{ label: string; slug: IndustrySlug }> = [
+  { label: "Car wash", slug: "car_wash" },
+  { label: "Hotel / hospitality", slug: "hotel" },
+  { label: "Retail / shopping center", slug: "retail" },
+  { label: "Restaurant", slug: "restaurant" },
+  { label: "Warehouse / logistics", slug: "warehouse" },
+  { label: "Manufacturing", slug: "manufacturing" },
+  { label: "Office building", slug: "office" },
+  { label: "Healthcare", slug: "hospital" },
+  { label: "Data center", slug: "data_center" },
+  { label: "EV charging", slug: "ev_charging" },
+  { label: "Gas station / truck stop", slug: "gas_station" },
+  { label: "College / campus", slug: "college" },
+  { label: "Other commercial facility", slug: "other" },
 ];
 
 function _UseCaseModal({ useCase, onClose }: { useCase: UseCase; onClose: () => void }) {
@@ -1125,8 +1144,211 @@ function AgentTelemetryPanel({
   );
 }
 
+function HeroIntakeCard() {
+  const [zip, setZip] = useState("");
+  const [businessType, setBusinessType] = useState<IndustrySlug | "">("");
+  const [businessName, setBusinessName] = useState("");
+  const [address, setAddress] = useState("");
+  const [hasZipStarted, setHasZipStarted] = useState(false);
+  const [error, setError] = useState("");
+
+  const normalizedZip = zip.replace(/\D/g, "").slice(0, 5);
+  const selectedTypeLabel =
+    heroBusinessTypes.find((type) => type.slug === businessType)?.label ?? "commercial facility";
+  const canContinue = normalizedZip.length === 5 && businessType;
+
+  const beginDetails = () => {
+    if (normalizedZip.length !== 5) {
+      setError("Enter a 5-digit facility ZIP code to begin stacking.");
+      return;
+    }
+
+    setError("");
+    setHasZipStarted(true);
+  };
+
+  const launchWizard = () => {
+    if (!canContinue) {
+      setError("Add your ZIP code and business type so Merlin can open the right Step 3 profile.");
+      return;
+    }
+
+    const draft = {
+      source: "hero-stacking-cta",
+      zip: normalizedZip,
+      industry: businessType,
+      businessTypeLabel: selectedTypeLabel,
+      businessName: businessName.trim(),
+      address: address.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      window.sessionStorage.setItem(HERO_INTAKE_STORAGE_KEY, JSON.stringify(draft));
+    } catch {
+      // If storage is blocked, the query string still carries the essential routing context.
+    }
+
+    const query = new URLSearchParams({
+      source: "hero-stacking-cta",
+      zip: normalizedZip,
+      industry: businessType,
+    });
+
+    window.location.href = `/wizard?${query.toString()}`;
+  };
+
+  return (
+    <div className="relative mx-auto w-full max-w-[520px] lg:ml-auto">
+      <div className="absolute -inset-1 rounded-[2rem] bg-[linear-gradient(135deg,rgba(62,207,142,0.75),rgba(63,232,255,0.32),rgba(168,85,247,0.55))] opacity-75 blur-xl" />
+      <div className="relative overflow-hidden rounded-[2rem] border border-emerald-300/25 bg-[#07111f]/95 p-5 shadow-[0_34px_120px_rgba(0,0,0,0.58)] backdrop-blur-xl sm:p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(62,207,142,0.22),transparent_30%),radial-gradient(circle_at_88%_8%,rgba(168,85,247,0.18),transparent_34%)]" />
+        <div className="relative">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-300">
+            <Zap size={13} fill="currentColor" /> Energy Stack Intake
+          </div>
+
+          <h2
+            className="text-2xl font-black tracking-[-0.04em] text-white sm:text-3xl"
+            style={{ fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif" }}
+          >
+            Enter your ZIP code to begin stacking.
+          </h2>
+          <p className="mt-3 max-w-md text-sm leading-6 text-slate-400">
+            Merlin uses your location and facility type to open the right energy profile — no long
+            onboarding form.
+          </p>
+
+          <div className="mt-6 grid gap-3">
+            <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+              Facility ZIP Code
+            </label>
+            <div className="flex gap-2 rounded-2xl border border-white/10 bg-white/[0.06] p-2 shadow-inner shadow-black/20 transition focus-within:border-emerald-300/60 focus-within:ring-4 focus-within:ring-emerald-300/10">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-emerald-300/10 text-emerald-300">
+                <MapPin size={18} />
+              </div>
+              <input
+                value={zip}
+                onChange={(event) => {
+                  setZip(event.target.value.replace(/\D/g, "").slice(0, 5));
+                  setError("");
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    if (hasZipStarted) {
+                      launchWizard();
+                    } else {
+                      beginDetails();
+                    }
+                  }
+                }}
+                inputMode="numeric"
+                maxLength={5}
+                placeholder="89101"
+                className="min-w-0 flex-1 bg-transparent text-xl font-black tracking-[0.18em] text-white outline-none placeholder:text-slate-600"
+              />
+              {!hasZipStarted && (
+                <button
+                  type="button"
+                  onClick={beginDetails}
+                  className="rounded-xl bg-emerald-300 px-4 text-sm font-black text-[#04110c] transition hover:-translate-y-0.5 hover:bg-emerald-200"
+                >
+                  Begin
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div
+            className={`grid transition-all duration-300 ${
+              hasZipStarted ? "mt-5 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="grid gap-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div className="grid gap-2">
+                  <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                    Business type
+                  </label>
+                  <select
+                    value={businessType}
+                    onChange={(event) => {
+                      setBusinessType(event.target.value as IndustrySlug);
+                      setError("");
+                    }}
+                    className="h-12 rounded-xl border border-white/10 bg-[#0d1230] px-3 text-sm font-bold text-white outline-none focus:border-emerald-300/60 focus:ring-4 focus:ring-emerald-300/10"
+                  >
+                    <option value="">Select facility type</option>
+                    {heroBusinessTypes.map((type) => (
+                      <option key={type.slug} value={type.slug}>
+                        {type.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                      Business name{" "}
+                      <span className="font-medium normal-case tracking-normal">optional</span>
+                    </label>
+                    <input
+                      value={businessName}
+                      onChange={(event) => setBusinessName(event.target.value)}
+                      placeholder="Acme Hotel"
+                      className="h-12 rounded-xl border border-white/10 bg-[#0d1230] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-emerald-300/60 focus:ring-4 focus:ring-emerald-300/10"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                      Address{" "}
+                      <span className="font-medium normal-case tracking-normal">optional</span>
+                    </label>
+                    <input
+                      value={address}
+                      onChange={(event) => setAddress(event.target.value)}
+                      placeholder="Street address"
+                      className="h-12 rounded-xl border border-white/10 bg-[#0d1230] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-emerald-300/60 focus:ring-4 focus:ring-emerald-300/10"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {error && (
+            <div className="mt-4 rounded-xl border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={hasZipStarted ? launchWizard : beginDetails}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-200/60 bg-[linear-gradient(135deg,#3ECF8E,#3FE8FF)] px-5 py-4 text-base font-black text-[#04110c] shadow-[0_18px_52px_rgba(62,207,142,0.34)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_70px_rgba(62,207,142,0.45)]"
+          >
+            {hasZipStarted ? "Continue to Step 3" : "Begin Stacking"} <ArrowRight size={18} />
+          </button>
+
+          <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+            {["ZIP first", "Type next", "Step 3 ready"].map((item) => (
+              <div
+                key={item}
+                className="rounded-xl border border-white/8 bg-white/[0.04] px-2 py-3 text-[11px] font-bold text-slate-400"
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HeroSection() {
-  const [zipCode, setZipCode] = useState("");
   const [activeHeadlineIndex, setActiveHeadlineIndex] = useState(0);
 
   const activeHeadline = heroHeadlines[activeHeadlineIndex];
@@ -1138,48 +1360,6 @@ export default function HeroSection() {
 
     return () => window.clearInterval(rotationTimer);
   }, []);
-
-  const modelPreview = useMemo(() => {
-    const zip = zipCode.replace(/\D/g, "").slice(0, 5);
-    if (zip.length < 5) {
-      return {
-        zip,
-        gridRiskShift: "Baseline → Select ZIP to localize",
-        peakReductionPct: "16–24%",
-        stackCandidate: "Solar + BESS + Utility",
-        backupHours: "2–4 hr",
-        decisionPriority: "Baseline stack profile",
-      };
-    }
-
-    const seed = Number.parseInt(zip, 10) % 100;
-    const peakLow = 14 + (seed % 6);
-    const peakHigh = peakLow + 8;
-    const backupLow = 2 + (seed % 3);
-    const backupHigh = backupLow + 2;
-    const stackCandidates = [
-      "Solar + BESS + Utility",
-      "BESS + Utility + Generator",
-      "Solar + BESS + Generator",
-    ] as const;
-
-    return {
-      zip,
-      gridRiskShift: seed > 55 ? "High → Moderate" : "Moderate → Managed",
-      peakReductionPct: `${peakLow}–${peakHigh}%`,
-      stackCandidate: stackCandidates[seed % stackCandidates.length],
-      backupHours: `${backupLow}–${backupHigh} hr`,
-      decisionPriority: seed > 55 ? "Resilience-first" : "Cost-optimized hybrid",
-    };
-  }, [zipCode]);
-
-  useEffect(() => {
-    window.dispatchEvent(
-      new CustomEvent("merlin:hero-model-preview", {
-        detail: modelPreview,
-      })
-    );
-  }, [modelPreview]);
 
   return (
     <section
@@ -1206,7 +1386,7 @@ export default function HeroSection() {
             }}
           >
             <span key={activeHeadline.lead} className="merlin-hero-headline-fade inline-block">
-              {activeHeadline.lead}
+              {activeHeadline.lead}{" "}
             </span>
             <br />
             <span
@@ -1234,38 +1414,6 @@ export default function HeroSection() {
             decision-ready infrastructure strategy.
           </p>
 
-          <form
-            className="mt-9 flex max-w-xl flex-col gap-3 sm:flex-row"
-            onSubmit={(event) => {
-              event.preventDefault();
-              window.location.href = "/wizard";
-            }}
-          >
-            <label className="sr-only" htmlFor="hero-zip">
-              Facility ZIP Code
-            </label>
-            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-white/12 bg-white/[0.07] px-4 py-3.5 text-slate-400 shadow-inner shadow-black/20 transition focus-within:border-blue-500/70 focus-within:ring-4 focus-within:ring-blue-500/10">
-              <Building2 size={16} className="shrink-0 text-slate-500" />
-              <input
-                id="hero-zip"
-                type="text"
-                inputMode="numeric"
-                maxLength={5}
-                pattern="[0-9]{5}"
-                value={zipCode}
-                onChange={(event) => setZipCode(event.target.value.replace(/\D/g, "").slice(0, 5))}
-                placeholder="Enter your facility's ZIP Code"
-                className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 outline-none"
-              />
-            </div>
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-400/70 bg-transparent px-5 py-3.5 text-sm font-semibold text-blue-300 transition hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-200"
-            >
-              Activate Agent <ArrowRight size={16} />
-            </button>
-          </form>
-
           <div className="mt-7 flex flex-wrap gap-x-7 gap-y-3">
             {proofItems.map((item) => (
               <div key={item} className="flex items-center gap-2 text-sm text-slate-400">
@@ -1276,7 +1424,7 @@ export default function HeroSection() {
           </div>
         </div>
 
-        <AgentTelemetryPanel modelPreview={modelPreview} />
+        <HeroIntakeCard />
       </div>
 
       <style>{`

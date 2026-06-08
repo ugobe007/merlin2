@@ -43,6 +43,43 @@ const Step3_5V8 = lazy(loadStep35V8);
 const Step4V8 = lazy(loadStep4V8);
 const Step5V8 = lazy(() => import("./steps/Step5V8"));
 
+const HERO_INTAKE_STORAGE_KEY = "merlin_hero_intake_v1";
+
+const VALID_INDUSTRY_SLUGS = new Set<IndustrySlug>([
+  "hotel",
+  "car_wash",
+  "ev_charging",
+  "office",
+  "retail",
+  "restaurant",
+  "warehouse",
+  "manufacturing",
+  "data_center",
+  "hospital",
+  "healthcare",
+  "gas_station",
+  "truck_stop",
+  "apartment",
+  "cold_storage",
+  "college",
+  "government",
+  "airport",
+  "casino",
+  "microgrid",
+  "residential",
+  "agricultural",
+  "shopping_center",
+  "indoor_farm",
+  "fitness_center",
+  "gym",
+  "other",
+]);
+
+function toIndustrySlug(value: string | null | undefined): IndustrySlug | null {
+  if (!value) return null;
+  return VALID_INDUSTRY_SLUGS.has(value as IndustrySlug) ? (value as IndustrySlug) : null;
+}
+
 // Step labels — index 0 = step 0 (Mode Select), index 1 = step 1 (Location), etc.
 // Note: Step 3.5 (Add-ons) is inserted between Profile and MagicFit
 const STEP_LABELS = [
@@ -433,7 +470,11 @@ function getAdvisorContent(
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {/* Greeting */}
           <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.35 }}>
-            {bizName ? <>{hi(bizName)} — your StackQuote™ is ready.</> : "Your StackQuote™ is ready."}
+            {bizName ? (
+              <>{hi(bizName)} — your StackQuote™ is ready.</>
+            ) : (
+              "Your StackQuote™ is ready."
+            )}
           </div>
 
           {/* ROI snapshot card */}
@@ -555,9 +596,40 @@ export default function WizardV8Page() {
   // Deep-link path: /wizard?step=3 → jump to that step directly (dev / share links).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const sourceParam = params.get("source");
     const industryParam = params.get("industry");
     const zipParam = params.get("zip");
     const stepParam = params.get("step");
+
+    if (sourceParam === "hero-stacking-cta") {
+      let heroDraft: {
+        zip?: string;
+        industry?: string;
+        businessTypeLabel?: string;
+        businessName?: string;
+        address?: string;
+      } = {};
+
+      try {
+        heroDraft = JSON.parse(sessionStorage.getItem(HERO_INTAKE_STORAGE_KEY) ?? "{}");
+        sessionStorage.removeItem(HERO_INTAKE_STORAGE_KEY);
+      } catch {
+        heroDraft = {};
+      }
+
+      const slug = toIndustrySlug(industryParam ?? heroDraft.industry) ?? "other";
+      const zip = zipParam ?? heroDraft.zip ?? "";
+
+      actions.hydrateHeroIntake({
+        zip,
+        industry: slug,
+        businessTypeLabel: heroDraft.businessTypeLabel,
+        businessName: heroDraft.businessName,
+        address: heroDraft.address,
+      });
+
+      return;
+    }
 
     if (industryParam || zipParam) {
       // ── Widget CTA seed ──────────────────────────────────────────────────
@@ -574,38 +646,7 @@ export default function WizardV8Page() {
       // Pre-populate industry → Step 2 will render with the card pre-selected.
       // Widget slugs match IndustrySlug exactly (hotel, car_wash, retail, etc.).
       if (industryParam) {
-        const VALID_SLUGS = new Set<IndustrySlug>([
-          "hotel",
-          "car_wash",
-          "ev_charging",
-          "office",
-          "retail",
-          "restaurant",
-          "warehouse",
-          "manufacturing",
-          "data_center",
-          "hospital",
-          "healthcare",
-          "gas_station",
-          "truck_stop",
-          "apartment",
-          "cold_storage",
-          "college",
-          "government",
-          "airport",
-          "casino",
-          "microgrid",
-          "residential",
-          "agricultural",
-          "shopping_center",
-          "indoor_farm",
-          "fitness_center",
-          "gym",
-          "other",
-        ]);
-        const slug = VALID_SLUGS.has(industryParam as IndustrySlug)
-          ? (industryParam as IndustrySlug)
-          : "other";
+        const slug = toIndustrySlug(industryParam) ?? "other";
         actions.setIndustry(slug);
       }
 
