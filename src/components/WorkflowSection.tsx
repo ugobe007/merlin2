@@ -94,10 +94,10 @@ function BriefExampleCard() {
       </div>
 
       <a
-        href="/wizard"
+        href="/news"
         className="mt-9 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm font-medium text-blue-500 transition hover:border-blue-400 hover:bg-blue-500/16 hover:text-blue-400"
       >
-        <Play size={15} fill="currentColor" /> Simulate Your Building Now
+        <Play size={15} fill="currentColor" /> Read the Brief
       </a>
       <a
         href="/workflow"

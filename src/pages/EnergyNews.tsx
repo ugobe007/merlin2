@@ -193,8 +193,7 @@ ${story.topics.length > 0 ? `#${story.topics.map((t) => t.replace(/\s+/g, "")).j
             </a>
           </div>
           <p style={{ fontSize: 16, color: DARK.textSecondary, margin: 0 }}>
-            Top 15 stories from {stats.totalToday} articles scraped today · Last updated{" "}
-            {formatTimeAgo(stats.lastScraped)}
+            SIGNAL-- sales pipeline development.
           </p>
         </div>
 
