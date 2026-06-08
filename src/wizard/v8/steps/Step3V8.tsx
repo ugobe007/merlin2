@@ -742,24 +742,25 @@ export function Step3V8({ state, actions }: Props) {
         {/* ── Use Smart Defaults skip banner ── */}
         <div
           style={{
-            marginBottom: 20,
-            padding: "14px 18px",
-            borderRadius: 14,
+            marginBottom: 24,
+            padding: "18px 20px",
+            borderRadius: 16,
             background:
-              "linear-gradient(135deg, rgba(155,109,255,0.10) 0%, rgba(79,138,255,0.06) 100%)",
-            border: "1px solid rgba(130,100,255,0.30)",
+              "linear-gradient(135deg, rgba(155,109,255,0.24) 0%, rgba(79,138,255,0.16) 48%, rgba(62,207,142,0.10) 100%)",
+            border: "1px solid rgba(167,139,250,0.52)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             gap: 12,
             flexWrap: "wrap",
+            boxShadow: "0 0 0 1px rgba(255,255,255,0.04) inset, 0 18px 48px rgba(17,24,39,0.34)",
           }}
         >
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#9b6dff", marginBottom: 3 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#c4b5fd", marginBottom: 5 }}>
               ✓ All {visibleQuestions.length} questions pre-filled with {displayName} benchmarks
             </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.4 }}>
+            <div style={{ fontSize: 13, color: "rgba(226,232,240,0.78)", lineHeight: 1.45 }}>
               Smart defaults applied — review and customize below, or skip straight to add-ons.
             </div>
           </div>
@@ -770,24 +771,24 @@ export function Step3V8({ state, actions }: Props) {
               display: "flex",
               alignItems: "center",
               gap: 8,
-              padding: "11px 20px",
-              borderRadius: 10,
-              background: "transparent",
-              color: "#9b6dff",
-              border: "1.5px solid rgba(130,100,255,0.45)",
+              padding: "12px 22px",
+              borderRadius: 12,
+              background: "linear-gradient(135deg, #a78bfa 0%, #7dd3fc 100%)",
+              color: "#08111f",
+              border: "1px solid rgba(255,255,255,0.18)",
               fontSize: 13,
-              fontWeight: 700,
+              fontWeight: 800,
               cursor: "pointer",
               whiteSpace: "nowrap",
               flexShrink: 0,
-              boxShadow: "none",
+              boxShadow: "0 10px 28px rgba(124,58,237,0.24)",
               letterSpacing: "0.01em",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = "0 0 0 2px rgba(139,92,246,0.30)";
+              e.currentTarget.style.boxShadow = "0 12px 34px rgba(124,58,237,0.34)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = "none";
+              e.currentTarget.style.boxShadow = "0 10px 28px rgba(124,58,237,0.24)";
             }}
           >
             Use Smart Defaults → Skip to Add-ons
