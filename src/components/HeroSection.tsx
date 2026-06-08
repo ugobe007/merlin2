@@ -1200,34 +1200,33 @@ function HeroIntakeCard() {
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-[440px] lg:ml-auto">
-      <div className="absolute -inset-5 rounded-[2.25rem] bg-[radial-gradient(circle_at_18%_20%,rgba(62,207,142,0.36),transparent_34%),radial-gradient(circle_at_92%_12%,rgba(168,85,247,0.32),transparent_30%),radial-gradient(circle_at_52%_95%,rgba(63,232,255,0.24),transparent_34%)] blur-2xl" />
-      <div className="relative overflow-hidden rounded-[1.65rem] border border-white/12 bg-[#070b14]/90 p-4 shadow-[0_26px_90px_rgba(0,0,0,0.58)] backdrop-blur-xl sm:p-5">
+    <div className="relative mx-auto w-full max-w-[410px] lg:ml-auto">
+      <div className="absolute -inset-3 rounded-[1.75rem] bg-[radial-gradient(circle_at_18%_20%,rgba(62,207,142,0.30),transparent_34%),radial-gradient(circle_at_92%_12%,rgba(168,85,247,0.24),transparent_30%),radial-gradient(circle_at_52%_95%,rgba(63,232,255,0.18),transparent_34%)] blur-xl" />
+      <div className="relative overflow-hidden rounded-[1.35rem] border border-white/12 bg-[#070b14]/90 p-3.5 shadow-[0_22px_74px_rgba(0,0,0,0.54)] backdrop-blur-xl sm:p-4">
         <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(62,207,142,0.16),rgba(10,18,36,0.28)_38%,rgba(168,85,247,0.16)),radial-gradient(circle_at_90%_8%,rgba(63,232,255,0.16),transparent_34%)]" />
         <div className="absolute left-0 top-0 h-px w-full bg-[linear-gradient(90deg,transparent,rgba(62,207,142,0.75),rgba(63,232,255,0.55),transparent)]" />
         <div className="relative">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.06] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.06] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <Zap size={13} fill="currentColor" /> Energy Stack Intake
           </div>
 
           <h2
-            className="max-w-[350px] text-[1.72rem] font-black leading-[1.03] tracking-[-0.045em] text-white sm:text-[2rem]"
+            className="max-w-[340px] text-[1.55rem] font-black leading-[1.04] tracking-[-0.045em] text-white sm:text-[1.82rem]"
             style={{ fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif" }}
           >
-            Start stacking with one ZIP.
+            Enter your ZIP code to begin stacking.
           </h2>
-          <p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">
-            Merlin opens the right Step 3 profile from your location and facility type — no long
-            form.
+          <p className="mt-2.5 max-w-sm text-[13px] leading-5 text-slate-400">
+            Merlin opens the right Step 3 profile from your location and facility type.
           </p>
 
-          <div className="mt-5 grid gap-2.5">
+          <div className="mt-4 grid gap-2">
             <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
               Facility ZIP Code
             </label>
-            <div className="flex gap-2 rounded-2xl border border-white/10 bg-black/25 p-2 shadow-inner shadow-black/30 transition focus-within:border-cyan-300/55 focus-within:ring-4 focus-within:ring-cyan-300/10">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[linear-gradient(135deg,rgba(62,207,142,0.18),rgba(63,232,255,0.12))] text-emerald-300">
-                <MapPin size={18} />
+            <div className="flex gap-2 rounded-xl border border-white/10 bg-black/25 p-1.5 shadow-inner shadow-black/30 transition focus-within:border-cyan-300/55 focus-within:ring-4 focus-within:ring-cyan-300/10">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[linear-gradient(135deg,rgba(62,207,142,0.18),rgba(63,232,255,0.12))] text-emerald-300">
+                <MapPin size={16} />
               </div>
               <input
                 value={zip}
@@ -1248,14 +1247,14 @@ function HeroIntakeCard() {
                 inputMode="numeric"
                 maxLength={5}
                 placeholder="89101"
-                className="min-w-0 flex-1 bg-transparent text-lg font-black tracking-[0.18em] text-white outline-none placeholder:text-slate-600"
+                className="min-w-0 flex-1 bg-transparent text-base font-black tracking-[0.18em] text-white outline-none placeholder:text-slate-600"
               />
             </div>
           </div>
 
           {hasZipStarted && (
-            <div className="mt-5 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/22 p-3.5">
+            <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="grid gap-3 rounded-xl border border-white/10 bg-black/22 p-3">
                 <div className="grid gap-2">
                   <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
                     Business type
@@ -1266,7 +1265,7 @@ function HeroIntakeCard() {
                       setBusinessType(event.target.value as IndustrySlug);
                       setError("");
                     }}
-                    className="h-11 rounded-xl border border-white/10 bg-[#0d1230] px-3 text-sm font-bold text-white outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/10"
+                    className="h-10 rounded-lg border border-white/10 bg-[#0d1230] px-3 text-sm font-bold text-white outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/10"
                   >
                     <option value="">Select facility type</option>
                     {heroBusinessTypes.map((type) => (
@@ -1287,7 +1286,7 @@ function HeroIntakeCard() {
                       value={businessName}
                       onChange={(event) => setBusinessName(event.target.value)}
                       placeholder="Acme Hotel"
-                      className="h-11 rounded-xl border border-white/10 bg-[#0d1230] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/10"
+                      className="h-10 rounded-lg border border-white/10 bg-[#0d1230] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/10"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -1299,7 +1298,7 @@ function HeroIntakeCard() {
                       value={address}
                       onChange={(event) => setAddress(event.target.value)}
                       placeholder="Street address"
-                      className="h-11 rounded-xl border border-white/10 bg-[#0d1230] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/10"
+                      className="h-10 rounded-lg border border-white/10 bg-[#0d1230] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/10"
                     />
                   </div>
                 </div>
@@ -1316,12 +1315,12 @@ function HeroIntakeCard() {
           <button
             type="button"
             onClick={hasZipStarted ? launchWizard : beginDetails}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-[linear-gradient(135deg,#3ECF8E_0%,#3FE8FF_52%,#A855F7_130%)] px-5 py-3.5 text-sm font-black text-[#04110c] shadow-[0_18px_48px_rgba(63,232,255,0.22)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_62px_rgba(62,207,142,0.34)]"
+            className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-[linear-gradient(135deg,#3ECF8E_0%,#3FE8FF_52%,#A855F7_130%)] px-4 py-3 text-sm font-black text-[#04110c] shadow-[0_14px_38px_rgba(63,232,255,0.20)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_48px_rgba(62,207,142,0.30)]"
           >
             {hasZipStarted ? "Continue to Step 3" : "Begin Stacking"} <ArrowRight size={18} />
           </button>
 
-          <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-white/8 bg-white/[0.035] px-3 py-2.5 text-[11px] font-bold text-slate-400">
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.035] px-3 py-2 text-[10px] font-bold text-slate-400">
             <span>ZIP → type → Step 3</span>
             <span className="text-emerald-300">No utility login</span>
           </div>
