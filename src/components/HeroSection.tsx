@@ -1201,12 +1201,11 @@ function HeroIntakeCard() {
 
   return (
     <div className="relative mx-auto w-full max-w-[410px] lg:ml-auto">
-      <div className="absolute -inset-3 rounded-[1.75rem] bg-[radial-gradient(circle_at_18%_20%,rgba(62,207,142,0.30),transparent_34%),radial-gradient(circle_at_92%_12%,rgba(168,85,247,0.24),transparent_30%),radial-gradient(circle_at_52%_95%,rgba(63,232,255,0.18),transparent_34%)] blur-xl" />
-      <div className="relative overflow-hidden rounded-[1.35rem] border border-white/12 bg-[#070b14]/90 p-3.5 shadow-[0_22px_74px_rgba(0,0,0,0.54)] backdrop-blur-xl sm:p-4">
-        <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(62,207,142,0.16),rgba(10,18,36,0.28)_38%,rgba(168,85,247,0.16)),radial-gradient(circle_at_90%_8%,rgba(63,232,255,0.16),transparent_34%)]" />
-        <div className="absolute left-0 top-0 h-px w-full bg-[linear-gradient(90deg,transparent,rgba(62,207,142,0.75),rgba(63,232,255,0.55),transparent)]" />
+      <div className="relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#080d16]/90 p-3.5 backdrop-blur-sm sm:p-4">
+        <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,rgba(62,207,142,0.72),rgba(63,232,255,0.58),rgba(168,85,247,0.52))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(62,207,142,0.08),transparent_36%,rgba(96,165,250,0.08))]" />
         <div className="relative">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.06] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-300/18 bg-emerald-300/[0.07] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-200">
             <Zap size={13} fill="currentColor" /> Energy Stack Intake
           </div>
 
@@ -1224,8 +1223,8 @@ function HeroIntakeCard() {
             <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
               Facility ZIP Code
             </label>
-            <div className="flex gap-2 rounded-xl border border-white/10 bg-black/25 p-1.5 shadow-inner shadow-black/30 transition focus-within:border-cyan-300/55 focus-within:ring-4 focus-within:ring-cyan-300/10">
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[linear-gradient(135deg,rgba(62,207,142,0.18),rgba(63,232,255,0.12))] text-emerald-300">
+            <div className="flex gap-2 rounded-xl border border-white/10 bg-white/[0.035] p-1.5 transition focus-within:border-cyan-300/55 focus-within:ring-2 focus-within:ring-cyan-300/10">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-emerald-300/12 bg-emerald-300/[0.08] text-emerald-300">
                 <MapPin size={16} />
               </div>
               <input
@@ -1254,7 +1253,7 @@ function HeroIntakeCard() {
 
           {hasZipStarted && (
             <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="grid gap-3 rounded-xl border border-white/10 bg-black/22 p-3">
+              <div className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-3">
                 <div className="grid gap-2">
                   <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
                     Business type
@@ -1265,7 +1264,7 @@ function HeroIntakeCard() {
                       setBusinessType(event.target.value as IndustrySlug);
                       setError("");
                     }}
-                    className="h-10 rounded-lg border border-white/10 bg-[#0d1230] px-3 text-sm font-bold text-white outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/10"
+                    className="h-10 rounded-lg border border-white/10 bg-[#0c1321] px-3 text-sm font-bold text-white outline-none focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/10"
                   >
                     <option value="">Select facility type</option>
                     {heroBusinessTypes.map((type) => (
@@ -1286,7 +1285,7 @@ function HeroIntakeCard() {
                       value={businessName}
                       onChange={(event) => setBusinessName(event.target.value)}
                       placeholder="Acme Hotel"
-                      className="h-10 rounded-lg border border-white/10 bg-[#0d1230] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/10"
+                      className="h-10 rounded-lg border border-white/10 bg-[#0c1321] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/10"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -1298,7 +1297,7 @@ function HeroIntakeCard() {
                       value={address}
                       onChange={(event) => setAddress(event.target.value)}
                       placeholder="Street address"
-                      className="h-10 rounded-lg border border-white/10 bg-[#0d1230] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/10"
+                      className="h-10 rounded-lg border border-white/10 bg-[#0c1321] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/10"
                     />
                   </div>
                 </div>
@@ -1315,12 +1314,12 @@ function HeroIntakeCard() {
           <button
             type="button"
             onClick={hasZipStarted ? launchWizard : beginDetails}
-            className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-[linear-gradient(135deg,#3ECF8E_0%,#3FE8FF_52%,#A855F7_130%)] px-4 py-3 text-sm font-black text-[#04110c] shadow-[0_14px_38px_rgba(63,232,255,0.20)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_48px_rgba(62,207,142,0.30)]"
+            className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-200/25 bg-[linear-gradient(135deg,#3ECF8E_0%,#7DD3FC_62%,#A78BFA_125%)] px-4 py-3 text-sm font-black text-[#04110c] transition hover:bg-[linear-gradient(135deg,#63E6A7_0%,#93C5FD_62%,#C4B5FD_125%)]"
           >
             {hasZipStarted ? "Continue to Step 3" : "Begin Stacking"} <ArrowRight size={18} />
           </button>
 
-          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.035] px-3 py-2 text-[10px] font-bold text-slate-400">
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.025] px-3 py-2 text-[10px] font-bold text-slate-400">
             <span>ZIP → type → Step 3</span>
             <span className="text-emerald-300">No utility login</span>
           </div>
