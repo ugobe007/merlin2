@@ -99,6 +99,12 @@ function BriefExampleCard() {
       >
         <Play size={15} fill="currentColor" /> Simulate Your Building Now
       </a>
+      <a
+        href="/workflow"
+        className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-400/35 bg-emerald-400/10 px-4 py-3 text-sm font-medium text-emerald-300 transition hover:border-emerald-300 hover:bg-emerald-400/16 hover:text-emerald-200"
+      >
+        View Merlin Energy OS
+      </a>
     </div>
   );
 }

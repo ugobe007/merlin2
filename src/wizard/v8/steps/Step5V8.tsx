@@ -55,6 +55,10 @@ import { getRecommendedInstallers, type RecommendedInstaller } from "@/services/
 import { panelCount } from "@/services/solarPanelSelectionService";
 import BessSpecSheet from "@/components/BessSpecSheet";
 import {
+  createWizardWorkflowProject,
+  type WizardWorkflowProjectResult,
+} from "../services/workflowProjectClient";
+import {
   getMatchedFinancingOptions,
   calcMonthlyPayment,
   type FinancingOption,
@@ -280,6 +284,19 @@ export default function Step5V8({ state, actions }: Props) {
   });
   const [leadForm, setLeadForm] = useState({ name: "", email: "", company: "" });
   const [leadSubmitting, setLeadSubmitting] = useState(false);
+  const [workflowProject, setWorkflowProject] = useState<WizardWorkflowProjectResult | null>(() => {
+    const stored = sessionStorage.getItem("merlin_workflow_project");
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored) as WizardWorkflowProjectResult;
+    } catch {
+      return null;
+    }
+  });
+  const [workflowProjectStatus, setWorkflowProjectStatus] = useState<
+    "idle" | "creating" | "ready" | "error"
+  >(() => (sessionStorage.getItem("merlin_workflow_project") ? "ready" : "idle"));
+  const [workflowProjectError, setWorkflowProjectError] = useState<string | null>(null);
 
   // ── SAVE QUOTE STATE ───────────────────────────────────────────────────
   const [isAuthenticated, setIsAuthenticated] = useState(() => isUserAuthenticated());
@@ -292,6 +309,8 @@ export default function Step5V8({ state, actions }: Props) {
   const handleLeadSubmit = useCallback(async () => {
     if (!leadForm.email || !leadForm.name) return;
     setLeadSubmitting(true);
+    setWorkflowProjectStatus("creating");
+    setWorkflowProjectError(null);
     try {
       await supabase.from("leads").insert([
         {
@@ -305,11 +324,22 @@ export default function Step5V8({ state, actions }: Props) {
     } catch {
       // Don't block UX on lead capture failure
     }
+
+    try {
+      const project = await createWizardWorkflowProject(state, leadForm);
+      setWorkflowProject(project);
+      setWorkflowProjectStatus("ready");
+      sessionStorage.setItem("merlin_workflow_project", JSON.stringify(project));
+    } catch (error) {
+      setWorkflowProjectStatus("error");
+      setWorkflowProjectError((error as Error).message || "Workflow project creation failed");
+    }
+
     setLeadCaptured(true);
     sessionStorage.setItem("merlin_lead_captured", "true");
     setShowLeadGate(false);
     setLeadSubmitting(false);
-  }, [leadForm, pendingFormat, state.industry]);
+  }, [leadForm, pendingFormat, state]);
 
   const handleSkipLead = useCallback(() => {
     setLeadCaptured(true);
@@ -799,6 +829,42 @@ export default function Step5V8({ state, actions }: Props) {
           </button>
         </div>
       </div>
+
+      {(workflowProjectStatus === "ready" ||
+        workflowProjectStatus === "creating" ||
+        workflowProjectStatus === "error") && (
+        <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/[0.06] px-4 py-3 text-sm text-slate-300">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-emerald-300" />
+              <span className="font-semibold text-white">Merlin Energy OS workflow</span>
+            </div>
+            {workflowProjectStatus === "creating" && (
+              <span className="text-xs font-semibold uppercase tracking-wide text-emerald-300">
+                Creating project…
+              </span>
+            )}
+            {workflowProjectStatus === "ready" && workflowProject && (
+              <span className="font-mono text-xs text-emerald-300">
+                Project {workflowProject.projectId.slice(0, 8)} · {workflowProject.storage}
+              </span>
+            )}
+            {workflowProjectStatus === "error" && (
+              <span className="text-xs font-semibold text-amber-300">Project creation pending</span>
+            )}
+          </div>
+          {workflowProjectStatus === "ready" && workflowProject?.workflowSummary && (
+            <div className="mt-2 text-xs text-slate-400">
+              Active stage: {workflowProject.workflowSummary.activeStage.replace(/-/g, " ")} ·{" "}
+              {workflowProject.workflowSummary.completedTasks}/
+              {workflowProject.workflowSummary.totalTasks} tasks complete
+            </div>
+          )}
+          {workflowProjectStatus === "error" && workflowProjectError && (
+            <div className="mt-2 text-xs text-amber-200/80">{workflowProjectError}</div>
+          )}
+        </div>
+      )}
 
       {/* ================================================================
           HERO SAVINGS — Big number, compelling

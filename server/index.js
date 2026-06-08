@@ -11,6 +11,7 @@ import quoteRouter from './routes/quote.js';
 import salesAgentRouter from './routes/sales-agent.js';
 import epcRouter from './routes/epc.js';
 import partnerApiRouter from './routes/partner-api.js';
+import wizardWorkflowRouter from './routes/wizard-workflow.js';
 
 // Load environment variables from server/.env
 const __filename = fileURLToPath(import.meta.url);
@@ -45,6 +46,7 @@ app.use('/api/quote', quoteRouter);
 app.use('/api/sales-agent', salesAgentRouter);
 app.use('/api/epc', epcRouter);
 app.use('/api/partner', partnerApiRouter);
+app.use('/api/wizard', wizardWorkflowRouter);
 app.use('/api', demoRouter);
 
 // Health check — used by smoke tests and uptime monitors
