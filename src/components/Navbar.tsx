@@ -38,6 +38,7 @@ export default function Navbar() {
     { label: "Grid Exposure", href: "/#grid-exposure" },
     { label: "How MERLIN Works", href: "/#workflow" },
     { label: "Energy Stacking", href: "/#energy-stacking" },
+    { label: "Energy OS", href: "/workflow" },
     { label: "Our Story", href: "/#our-story" },
     { label: "Pricing", href: "/pricing" },
   ];
