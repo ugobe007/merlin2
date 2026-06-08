@@ -1200,22 +1200,18 @@ function HeroIntakeCard() {
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-[410px] lg:ml-auto">
-      <div className="relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#080d16]/90 p-3.5 backdrop-blur-sm sm:p-4">
+    <div className="relative mx-auto w-full max-w-[500px] lg:ml-auto">
+      <div className="relative overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#0a0c18]/90 p-3.5 backdrop-blur-sm sm:p-4">
         <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,rgba(62,207,142,0.72),rgba(63,232,255,0.58),rgba(168,85,247,0.52))]" />
-        <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(62,207,142,0.08),transparent_36%,rgba(96,165,250,0.08))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(62,207,142,0.075),rgba(88,28,135,0.12)_48%,rgba(96,165,250,0.075))]" />
         <div className="relative">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-300/18 bg-emerald-300/[0.07] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-200">
-            <Zap size={13} fill="currentColor" /> Energy Stack Intake
-          </div>
-
           <h2
-            className="max-w-[340px] text-[1.55rem] font-black leading-[1.04] tracking-[-0.045em] text-white sm:text-[1.82rem]"
+            className="max-w-[430px] text-[1.55rem] font-black leading-[1.04] tracking-[-0.045em] text-white sm:text-[1.82rem]"
             style={{ fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif" }}
           >
             Enter your ZIP code to begin stacking.
           </h2>
-          <p className="mt-2.5 max-w-sm text-[13px] leading-5 text-slate-400">
+          <p className="mt-2.5 max-w-md text-[13px] leading-5 text-slate-400">
             Merlin opens the right Step 3 profile from your location and facility type.
           </p>
 
