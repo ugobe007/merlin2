@@ -1194,6 +1194,61 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     [state.intel?.googleSolarRoofSqFt, state.step3Answers?.roofArea]
   );
 
+  const hydrateHeroIntake = useCallback(
+    (input: {
+      zip: string;
+      industry: IndustrySlug;
+      businessTypeLabel?: string;
+      businessName?: string;
+      address?: string;
+    }) => {
+      const zip = input.zip.replace(/\D/g, "").slice(0, 5);
+      const businessName = input.businessName?.trim() ?? "";
+      const address = input.address?.trim() ?? "";
+
+      if (zip.length === 5) {
+        dispatch({ type: "SET_LOCATION_RAW", value: zip });
+        dispatch({
+          type: "SET_LOCATION",
+          location: {
+            zip,
+            city: "",
+            state: "",
+            formattedAddress: address || zip,
+          },
+        });
+
+        void resolveZip(zip, abortRef.current?.signal)
+          .then((locationData) => {
+            dispatch({
+              type: "SET_LOCATION",
+              location: {
+                ...locationData,
+                formattedAddress: address || locationData.formattedAddress,
+              },
+            });
+          })
+          .catch(() => {
+            // Keep the minimal ZIP location; utility/solar intel still loads fail-soft.
+          });
+
+        void loadLocationIntel(zip);
+      }
+
+      setIndustry(input.industry);
+
+      if (businessName || address) {
+        setBusiness(businessName || `${input.businessTypeLabel ?? "Commercial facility"} site`, {
+          address,
+          formattedAddress: address || undefined,
+        });
+      }
+
+      dispatch({ type: "GO_TO_STEP", step: 3 });
+    },
+    [loadLocationIntel, setBusiness, setIndustry]
+  );
+
   // ── Step 3 ────────────────────────────────────────────────────────────────
 
   const setAnswer = useCallback((key: string, value: unknown) => {
@@ -1488,6 +1543,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       setBusiness,
       setBusinessAddress,
       confirmBusiness,
+      hydrateHeroIntake,
       setIndustry,
       setAnswer,
       setAddonPreference,
@@ -1513,6 +1569,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       setBusiness,
       setBusinessAddress,
       confirmBusiness,
+      hydrateHeroIntake,
       setIndustry,
       setAnswer,
       setAddonPreference,
