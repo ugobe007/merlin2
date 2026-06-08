@@ -143,7 +143,7 @@ const proofItems = ["Free & Instant", "No Utility Login Required", "CFO-Ready Re
 
 const HERO_HEADLINE_ROTATION_MS = 5200;
 const HERO_INTAKE_STORAGE_KEY = "merlin_hero_intake_v1";
-const HERO_HEADLINE_TYPE_MS = 145;
+const HERO_HEADLINE_TYPE_MS = 190;
 
 const heroHeadlineAccents = [
   "Through Energy Stacking.",
@@ -1421,25 +1421,9 @@ export default function HeroSection() {
           animation: merlinHeroHeadlineFade 5.2s ease-in-out infinite;
         }
 
-        .merlin-hero-type-line::after {
-          content: "";
-          display: inline-block;
-          width: 0.08em;
-          height: 0.82em;
-          margin-left: 0.08em;
-          border-radius: 999px;
-          background: rgba(192, 132, 252, 0.85);
-          box-shadow: 0 0 18px rgba(63, 232, 255, 0.45);
-          transform: translateY(0.08em);
-        }
-
         @media (prefers-reduced-motion: reduce) {
           .merlin-hero-headline-fade {
             animation: none;
-          }
-
-          .merlin-hero-type-line::after {
-            display: none;
           }
 
           .merlin-agent-signal {
