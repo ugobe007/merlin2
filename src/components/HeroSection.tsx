@@ -139,6 +139,31 @@ const _telemetryRows: UseCase[] = [
 
 const proofItems = ["Free & Instant", "No Utility Login Required", "CFO-Ready Report"];
 
+const HERO_HEADLINE_ROTATION_MS = 5200;
+
+const heroHeadlines = [
+  {
+    lead: "Reduce Grid Dependence",
+    accent: "Through Energy Stacking.",
+  },
+  {
+    lead: "The Energy OS",
+    accent: "For Commercial Buildings.",
+  },
+  {
+    lead: "How Merlin Works:",
+    accent: "Energy Stacking in Minutes.",
+  },
+  {
+    lead: "Know What to Build",
+    accent: "Before You Call an EPC.",
+  },
+  {
+    lead: "Build on Merlin's",
+    accent: "Commercial Energy API Stack.",
+  },
+];
+
 function _UseCaseModal({ useCase, onClose }: { useCase: UseCase; onClose: () => void }) {
   const Icon = useCase.Icon;
 
@@ -1102,6 +1127,17 @@ function AgentTelemetryPanel({
 
 export default function HeroSection() {
   const [zipCode, setZipCode] = useState("");
+  const [activeHeadlineIndex, setActiveHeadlineIndex] = useState(0);
+
+  const activeHeadline = heroHeadlines[activeHeadlineIndex];
+
+  useEffect(() => {
+    const rotationTimer = window.setInterval(() => {
+      setActiveHeadlineIndex((currentIndex) => (currentIndex + 1) % heroHeadlines.length);
+    }, HERO_HEADLINE_ROTATION_MS);
+
+    return () => window.clearInterval(rotationTimer);
+  }, []);
 
   const modelPreview = useMemo(() => {
     const zip = zipCode.replace(/\D/g, "").slice(0, 5);
@@ -1169,10 +1205,13 @@ export default function HeroSection() {
               textShadow: "0 1px 0 rgba(255,255,255,0.08), 0 14px 36px rgba(2,6,23,0.42)",
             }}
           >
-            Reduce Grid Dependence
+            <span key={activeHeadline.lead} className="merlin-hero-headline-fade inline-block">
+              {activeHeadline.lead}
+            </span>
             <br />
             <span
-              className="text-transparent"
+              key={activeHeadline.accent}
+              className="merlin-hero-headline-fade text-transparent"
               style={{
                 backgroundImage:
                   "linear-gradient(90deg, #3FE8FF 0%, #22D3EE 35%, #A855F7 70%, #C084FC 100%)",
@@ -1182,7 +1221,7 @@ export default function HeroSection() {
                 textShadow: "0 10px 28px rgba(34,211,238,0.22)",
               }}
             >
-              Through Energy Stacking.
+              {activeHeadline.accent}
             </span>
           </h1>
 
@@ -1241,6 +1280,12 @@ export default function HeroSection() {
       </div>
 
       <style>{`
+        @keyframes merlinHeroHeadlineFade {
+          0%, 100% { opacity: 0.88; transform: translateY(0); }
+          8%, 86% { opacity: 1; transform: translateY(0); }
+          94% { opacity: 0.72; transform: translateY(-3px); }
+        }
+
         @keyframes merlinAgentSignal {
           0%, 100% { opacity: 0.34; transform: scale(0.96); }
           50% { opacity: 0.72; transform: scale(1.06); }
@@ -1250,7 +1295,15 @@ export default function HeroSection() {
           animation: merlinAgentSignal 4.8s ease-in-out infinite;
         }
 
+        .merlin-hero-headline-fade {
+          animation: merlinHeroHeadlineFade 5.2s ease-in-out infinite;
+        }
+
         @media (prefers-reduced-motion: reduce) {
+          .merlin-hero-headline-fade {
+            animation: none;
+          }
+
           .merlin-agent-signal {
             animation: none;
             opacity: 0.36;
