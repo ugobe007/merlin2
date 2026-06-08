@@ -1,5 +1,6 @@
 import express from 'express';
 import crypto from 'crypto';
+import { createClient } from '@supabase/supabase-js';
 
 const router = express.Router();
 
@@ -10,9 +11,161 @@ const RATE_LIMITS = {
 };
 
 const rateLimitStore = new Map();
+const projectStore = new Map();
+let _supabase = null;
+
+const WORKFLOW_STAGES = [
+  {
+    id: 'intake',
+    label: 'Customer intake',
+    owner: 'customer-success',
+    tasks: [
+      'Confirm facility identity and primary contact',
+      'Capture utility account, service address, and decision timeline',
+    ],
+  },
+  {
+    id: 'site-intelligence',
+    label: 'Site intelligence',
+    owner: 'merlin-agent',
+    tasks: [
+      'Resolve utility, rate class, climate zone, and solar resource',
+      'Flag grid, demand charge, roof/canopy, and backup-power risks',
+    ],
+  },
+  {
+    id: 'quote',
+    label: 'Preliminary quote',
+    owner: 'quote-engine',
+    tasks: [
+      'Size solar, storage, generator, and EV charging options',
+      'Generate budget range, savings estimate, confidence tier, and next-best action',
+    ],
+  },
+  {
+    id: 'documents',
+    label: 'Document collection',
+    owner: 'customer',
+    tasks: [
+      'Collect utility bills, interval data, site photos, and single-line diagram',
+      'Escalate missing documents before engineering review',
+    ],
+  },
+  {
+    id: 'engineering-review',
+    label: 'Engineering review',
+    owner: 'engineering',
+    tasks: [
+      'Validate constructability, interconnection path, and equipment fit',
+      'Prepare EPC/vendor, financing, and owner approval packet',
+    ],
+  },
+];
 
 function createToken(payload) {
   return Buffer.from(JSON.stringify(payload)).toString('base64url');
+}
+
+function getSupabase() {
+  if (_supabase) return _supabase;
+
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  if (!url || !key || url.includes('placeholder')) return null;
+
+  _supabase = createClient(url, key, { auth: { persistSession: false } });
+  return _supabase;
+}
+
+function toProjectRow(project) {
+  return {
+    id: project.projectId,
+    partner_id: project.partnerId || null,
+    status: project.status,
+    source: project.source,
+    industry: project.industry,
+    facility: project.facility,
+    contact: project.contact,
+    goals: project.goals,
+    quote_id: project.quoteId || null,
+    webhook_url: project.webhookUrl || null,
+    workflow: project.workflow,
+    workflow_summary: project.workflowSummary,
+  };
+}
+
+function fromProjectRow(row) {
+  return {
+    projectId: row.id,
+    status: row.status,
+    source: row.source,
+    partnerId: row.partner_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    facility: row.facility || {},
+    contact: row.contact || {},
+    industry: row.industry,
+    goals: row.goals || [],
+    quoteId: row.quote_id,
+    webhookUrl: row.webhook_url || null,
+    workflow: row.workflow || [],
+    workflowSummary: row.workflow_summary || {},
+  };
+}
+
+async function saveProject(project) {
+  projectStore.set(project.projectId, project);
+
+  const supabase = getSupabase();
+  if (!supabase) return { project, storage: 'memory' };
+
+  const { data, error } = await supabase
+    .from('merlin_projects')
+    .upsert(toProjectRow(project), { onConflict: 'id' })
+    .select('*')
+    .single();
+
+  if (error) {
+    console.warn('[partner-api] workflow persistence fallback', error.message);
+    return { project, storage: 'memory', warning: error.message };
+  }
+
+  const persisted = fromProjectRow(data);
+  projectStore.set(persisted.projectId, persisted);
+  return { project: persisted, storage: 'supabase' };
+}
+
+async function findProject(projectId) {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('merlin_projects')
+      .select('*')
+      .eq('id', projectId)
+      .maybeSingle();
+
+    if (!error && data) {
+      const project = fromProjectRow(data);
+      projectStore.set(project.projectId, project);
+      return project;
+    }
+  }
+
+  return projectStore.get(projectId) || null;
+}
+
+async function recordProjectEvent(project, eventType, payload = {}) {
+  const supabase = getSupabase();
+  if (!supabase) return;
+
+  const { error } = await supabase.from('merlin_project_events').insert({
+    project_id: project.projectId,
+    partner_id: project.partnerId || null,
+    event_type: eventType,
+    payload,
+  });
+
+  if (error) console.warn('[partner-api] workflow event persistence failed', error.message);
 }
 
 function readToken(token) {
@@ -89,6 +242,63 @@ function getLeadValue(industry) {
   return values[industry] || 100;
 }
 
+function normalizeIndustry(industry) {
+  return String(industry || '')
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, '-');
+}
+
+function createWorkflowState() {
+  return WORKFLOW_STAGES.map((stage, stageIndex) => ({
+    ...stage,
+    status: stageIndex === 0 ? 'active' : 'pending',
+    tasks: stage.tasks.map((title, taskIndex) => ({
+      id: `${stage.id}-${taskIndex + 1}`,
+      title,
+      status: 'open',
+    })),
+  }));
+}
+
+function refreshWorkflowStageStatuses(workflow) {
+  let activeAssigned = false;
+  let previousStagesDone = true;
+
+  for (const stage of workflow) {
+    const allDone = stage.tasks.every((candidate) => candidate.status === 'done');
+    const hasBlocked = stage.tasks.some((candidate) => candidate.status === 'blocked');
+
+    if (hasBlocked) {
+      stage.status = 'blocked';
+    } else if (allDone) {
+      stage.status = 'done';
+    } else if (!activeAssigned && previousStagesDone) {
+      stage.status = 'active';
+      activeAssigned = true;
+    } else {
+      stage.status = 'pending';
+    }
+
+    previousStagesDone = previousStagesDone && allDone;
+  }
+
+  return workflow;
+}
+
+function summarizeWorkflow(workflow) {
+  const tasks = workflow.flatMap((stage) => stage.tasks);
+  const completedTasks = tasks.filter((task) => task.status === 'done').length;
+  const activeStage = workflow.find((stage) => stage.status === 'active') || workflow[workflow.length - 1];
+
+  return {
+    activeStage: activeStage.id,
+    completedTasks,
+    totalTasks: tasks.length,
+    percentComplete: Math.round((completedTasks / tasks.length) * 100),
+  };
+}
+
 async function fireWebhook(url, event, payload) {
   const body = JSON.stringify({ event, payload, timestamp: new Date().toISOString() });
   const signature = crypto
@@ -105,6 +315,63 @@ async function fireWebhook(url, event, payload) {
     },
     body,
   });
+}
+
+export async function createWorkflowProject(input = {}, options = {}) {
+  const industry = normalizeIndustry(input.industry);
+  const errors = [];
+
+  if (!industry) errors.push('industry is required');
+  if (!input.facility?.name) errors.push('facility.name is required');
+  if (!input.facility?.zipCode || !/^\d{5}$/.test(String(input.facility.zipCode))) errors.push('facility.zipCode must be 5 digits');
+  if (!input.contact?.email) errors.push('contact.email is required');
+
+  if (errors.length) {
+    const error = new Error('Validation failed');
+    error.status = 400;
+    error.details = errors.map((message) => ({ message }));
+    throw error;
+  }
+
+  const now = new Date().toISOString();
+  const project = {
+    projectId: crypto.randomUUID(),
+    status: 'active',
+    source: input.source || 'partner-api',
+    partnerId: options.partnerId || null,
+    createdAt: now,
+    updatedAt: now,
+    facility: {
+      name: String(input.facility.name).trim(),
+      address: input.facility.address || null,
+      zipCode: String(input.facility.zipCode),
+      utilityAccount: input.facility.utilityAccount || null,
+    },
+    contact: {
+      name: input.contact.name || null,
+      email: String(input.contact.email).trim().toLowerCase(),
+      phone: input.contact.phone || null,
+    },
+    industry,
+    goals: Array.isArray(input.goals) ? input.goals.slice(0, 8) : [],
+    quoteId: input.quoteId || null,
+    webhookUrl: input.webhookUrl || null,
+    workflow: createWorkflowState(),
+  };
+
+  project.workflowSummary = summarizeWorkflow(project.workflow);
+  const { project: savedProject, storage, warning } = await saveProject(project);
+  await recordProjectEvent(savedProject, 'project.created', {
+    source: savedProject.source,
+    activeStage: savedProject.workflowSummary.activeStage,
+    storage,
+  });
+
+  if (savedProject.webhookUrl) {
+    fireWebhook(savedProject.webhookUrl, 'project.created', savedProject).catch((error) => console.error('[partner-api] webhook failed', error));
+  }
+
+  return { project: savedProject, storage, warning };
 }
 
 router.post('/auth/token', (req, res) => {
@@ -214,6 +481,94 @@ router.post('/v1/leads', authMiddleware, rateLimitMiddleware, (req, res) => {
     status: 'captured',
     estimatedContactTime: 'Within 24 business hours',
     leadValue: getLeadValue(lead.industry),
+  });
+});
+
+router.post('/v1/projects', authMiddleware, rateLimitMiddleware, async (req, res) => {
+  try {
+    const { project, storage, warning } = await createWorkflowProject(req.body || {}, {
+      partnerId: req.partner?.partnerId,
+    });
+    res.status(201).json({ ...project, storage, warning });
+  } catch (error) {
+    res.status(error.status || 500).json({
+      error: error.message || 'Project creation failed',
+      details: error.details,
+    });
+  }
+});
+
+router.get('/v1/projects/:projectId/workflow', authMiddleware, rateLimitMiddleware, async (req, res) => {
+  const project = await findProject(req.params.projectId);
+  if (!project) {
+    res.status(404).json({ error: 'Project not found' });
+    return;
+  }
+
+  res.json({
+    projectId: project.projectId,
+    status: project.status,
+    workflowSummary: project.workflowSummary,
+    workflow: project.workflow,
+  });
+});
+
+router.patch('/v1/projects/:projectId/tasks/:taskId', authMiddleware, rateLimitMiddleware, async (req, res) => {
+  const project = await findProject(req.params.projectId);
+  if (!project) {
+    res.status(404).json({ error: 'Project not found' });
+    return;
+  }
+
+  const nextStatus = req.body?.status;
+  if (!['open', 'blocked', 'done'].includes(nextStatus)) {
+    res.status(400).json({ error: 'status must be one of: open, blocked, done' });
+    return;
+  }
+
+  const task = project.workflow.flatMap((stage) => stage.tasks).find((candidate) => candidate.id === req.params.taskId);
+  if (!task) {
+    res.status(404).json({ error: 'Task not found' });
+    return;
+  }
+
+  const previousActiveStage = project.workflowSummary?.activeStage;
+  task.status = nextStatus;
+  task.updatedAt = new Date().toISOString();
+  task.updatedBy = req.partner?.partnerId || 'partner-api';
+
+  refreshWorkflowStageStatuses(project.workflow);
+
+  project.updatedAt = new Date().toISOString();
+  project.workflowSummary = summarizeWorkflow(project.workflow);
+  const { project: savedProject, storage, warning } = await saveProject(project);
+  await recordProjectEvent(savedProject, 'task.updated', {
+    taskId: task.id,
+    status: task.status,
+    activeStage: savedProject.workflowSummary.activeStage,
+    previousActiveStage,
+  });
+
+  const activeStageChanged = previousActiveStage !== savedProject.workflowSummary.activeStage;
+  if (savedProject.webhookUrl) {
+    fireWebhook(savedProject.webhookUrl, 'task.updated', {
+      projectId: savedProject.projectId,
+      task,
+      workflowSummary: savedProject.workflowSummary,
+    }).catch((error) => console.error('[partner-api] webhook failed', error));
+
+    if (activeStageChanged && savedProject.workflowSummary.activeStage === 'engineering-review') {
+      fireWebhook(savedProject.webhookUrl, 'project.ready_for_engineering', savedProject).catch((error) => console.error('[partner-api] webhook failed', error));
+    }
+  }
+
+  res.json({
+    projectId: savedProject.projectId,
+    task,
+    workflowSummary: savedProject.workflowSummary,
+    workflow: savedProject.workflow,
+    storage,
+    warning,
   });
 });
 

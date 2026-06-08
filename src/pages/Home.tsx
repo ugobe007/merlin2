@@ -104,6 +104,7 @@ export default function Home() {
               <ul className="space-y-3">
                 {[
                   { label: "How It Works", href: "#workflow" },
+                  { label: "Workflow OS", href: "/workflow" },
                   { label: "Energy Stacking", href: "#energy-stacking" },
                   { label: "Grid Exposure", href: "#grid-exposure" },
                   { label: "Our Story", href: "#our-story" },

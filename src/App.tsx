@@ -44,6 +44,7 @@ const WidgetDemo = lazy(() => import("./pages/WidgetDemo"));
 const WidgetDocs = lazy(() => import("./pages/WidgetDocs"));
 const PartnerDashboard = lazy(() => import("./pages/PartnerDashboard"));
 const PartnerDemo = lazy(() => import("./pages/PartnerDemo"));
+const WorkflowOSPage = lazy(() => import("./pages/WorkflowOSPage"));
 const EnergyNews = lazy(() => import("./pages/EnergyNews"));
 const ElCarWashLanding = lazy(() => import("./pages/ElCarWashLanding"));
 const MicrogridPage = lazy(() => import("./pages/MicrogridPage"));
@@ -383,6 +384,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <SupportFAQ standalone />
+      </Suspense>
+    );
+  }
+
+  // Access via /workflow - Merlin Energy OS workflow layer
+  if (pathname === "/workflow" || pathname === "/energy-os" || pathname === "/workflows") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <WorkflowOSPage />
       </Suspense>
     );
   }
