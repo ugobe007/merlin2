@@ -145,27 +145,10 @@ const HERO_HEADLINE_ROTATION_MS = 5200;
 const HERO_INTAKE_STORAGE_KEY = "merlin_hero_intake_v1";
 const HERO_HEADLINE_TYPE_MS = 145;
 
-const heroHeadlines = [
-  {
-    lead: "Reduce Grid Dependence",
-    accent: "Through Energy Stacking.",
-  },
-  {
-    lead: "The Energy OS",
-    accent: "For Commercial Buildings.",
-  },
-  {
-    lead: "How Merlin Works:",
-    accent: "Energy Stacking in Minutes.",
-  },
-  {
-    lead: "Know What to Build",
-    accent: "Before You Call an EPC.",
-  },
-  {
-    lead: "Build on Merlin's",
-    accent: "Commercial Energy API Stack.",
-  },
+const heroHeadlineAccents = [
+  "Through Energy Stacking.",
+  "With the Energy OS.",
+  "Before You Call an EPC.",
 ];
 
 const heroBusinessTypes: Array<{ label: string; slug: IndustrySlug }> = [
@@ -1316,7 +1299,7 @@ function HeroIntakeCard() {
           </button>
 
           <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.025] px-3 py-2 text-[10px] font-bold text-slate-400">
-            <span>ZIP → type → Step 3</span>
+            <span>ZIP → facility profile → StackQuote</span>
             <span className="text-emerald-300">No utility login</span>
           </div>
         </div>
@@ -1326,14 +1309,14 @@ function HeroIntakeCard() {
 }
 
 export default function HeroSection() {
-  const [activeHeadlineIndex, setActiveHeadlineIndex] = useState(0);
+  const [activeAccentIndex, setActiveAccentIndex] = useState(0);
   const [typedAccent, setTypedAccent] = useState("");
 
-  const activeHeadline = heroHeadlines[activeHeadlineIndex];
+  const activeAccent = heroHeadlineAccents[activeAccentIndex];
 
   useEffect(() => {
     const rotationTimer = window.setInterval(() => {
-      setActiveHeadlineIndex((currentIndex) => (currentIndex + 1) % heroHeadlines.length);
+      setActiveAccentIndex((currentIndex) => (currentIndex + 1) % heroHeadlineAccents.length);
     }, HERO_HEADLINE_ROTATION_MS);
 
     return () => window.clearInterval(rotationTimer);
@@ -1344,15 +1327,15 @@ export default function HeroSection() {
     let characterIndex = 0;
     const typeTimer = window.setInterval(() => {
       characterIndex += 1;
-      setTypedAccent(activeHeadline.accent.slice(0, characterIndex));
+      setTypedAccent(activeAccent.slice(0, characterIndex));
 
-      if (characterIndex >= activeHeadline.accent.length) {
+      if (characterIndex >= activeAccent.length) {
         window.clearInterval(typeTimer);
       }
     }, HERO_HEADLINE_TYPE_MS);
 
     return () => window.clearInterval(typeTimer);
-  }, [activeHeadline.accent]);
+  }, [activeAccent]);
 
   return (
     <section
@@ -1378,12 +1361,10 @@ export default function HeroSection() {
               textShadow: "0 1px 0 rgba(255,255,255,0.08), 0 14px 36px rgba(2,6,23,0.42)",
             }}
           >
-            <span key={activeHeadline.lead} className="merlin-hero-headline-fade inline-block">
-              {activeHeadline.lead}{" "}
-            </span>
+            <span className="inline-block">Reduce Grid Dependence </span>
             <br />
             <span
-              key={activeHeadline.accent}
+              key={activeAccent}
               className="merlin-hero-headline-fade merlin-hero-type-line text-transparent"
               style={{
                 backgroundImage:
@@ -1394,7 +1375,7 @@ export default function HeroSection() {
                 textShadow: "0 10px 28px rgba(34,211,238,0.22)",
               }}
             >
-              {typedAccent || activeHeadline.accent.slice(0, 1)}
+              {typedAccent || activeAccent.slice(0, 1)}
             </span>
           </h1>
 
