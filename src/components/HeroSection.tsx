@@ -143,7 +143,7 @@ const proofItems = ["Free & Instant", "No Utility Login Required", "CFO-Ready Re
 
 const HERO_HEADLINE_ROTATION_MS = 5200;
 const HERO_INTAKE_STORAGE_KEY = "merlin_hero_intake_v1";
-const HERO_HEADLINE_TYPE_MS = 58;
+const HERO_HEADLINE_TYPE_MS = 95;
 
 const heroHeadlines = [
   {
