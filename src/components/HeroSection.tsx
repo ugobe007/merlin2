@@ -143,6 +143,7 @@ const proofItems = ["Free & Instant", "No Utility Login Required", "CFO-Ready Re
 
 const HERO_HEADLINE_ROTATION_MS = 5200;
 const HERO_INTAKE_STORAGE_KEY = "merlin_hero_intake_v1";
+const HERO_HEADLINE_TYPE_MS = 28;
 
 const heroHeadlines = [
   {
@@ -1199,32 +1200,33 @@ function HeroIntakeCard() {
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-[520px] lg:ml-auto">
-      <div className="absolute -inset-1 rounded-[2rem] bg-[linear-gradient(135deg,rgba(62,207,142,0.75),rgba(63,232,255,0.32),rgba(168,85,247,0.55))] opacity-75 blur-xl" />
-      <div className="relative overflow-hidden rounded-[2rem] border border-emerald-300/25 bg-[#07111f]/95 p-5 shadow-[0_34px_120px_rgba(0,0,0,0.58)] backdrop-blur-xl sm:p-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(62,207,142,0.22),transparent_30%),radial-gradient(circle_at_88%_8%,rgba(168,85,247,0.18),transparent_34%)]" />
+    <div className="relative mx-auto w-full max-w-[440px] lg:ml-auto">
+      <div className="absolute -inset-5 rounded-[2.25rem] bg-[radial-gradient(circle_at_18%_20%,rgba(62,207,142,0.36),transparent_34%),radial-gradient(circle_at_92%_12%,rgba(168,85,247,0.32),transparent_30%),radial-gradient(circle_at_52%_95%,rgba(63,232,255,0.24),transparent_34%)] blur-2xl" />
+      <div className="relative overflow-hidden rounded-[1.65rem] border border-white/12 bg-[#070b14]/90 p-4 shadow-[0_26px_90px_rgba(0,0,0,0.58)] backdrop-blur-xl sm:p-5">
+        <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(62,207,142,0.16),rgba(10,18,36,0.28)_38%,rgba(168,85,247,0.16)),radial-gradient(circle_at_90%_8%,rgba(63,232,255,0.16),transparent_34%)]" />
+        <div className="absolute left-0 top-0 h-px w-full bg-[linear-gradient(90deg,transparent,rgba(62,207,142,0.75),rgba(63,232,255,0.55),transparent)]" />
         <div className="relative">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-300">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.06] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <Zap size={13} fill="currentColor" /> Energy Stack Intake
           </div>
 
           <h2
-            className="text-2xl font-black tracking-[-0.04em] text-white sm:text-3xl"
+            className="max-w-[350px] text-[1.72rem] font-black leading-[1.03] tracking-[-0.045em] text-white sm:text-[2rem]"
             style={{ fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif" }}
           >
-            Enter your ZIP code to begin stacking.
+            Start stacking with one ZIP.
           </h2>
-          <p className="mt-3 max-w-md text-sm leading-6 text-slate-400">
-            Merlin uses your location and facility type to open the right energy profile — no long
-            onboarding form.
+          <p className="mt-3 max-w-sm text-sm leading-6 text-slate-400">
+            Merlin opens the right Step 3 profile from your location and facility type — no long
+            form.
           </p>
 
-          <div className="mt-6 grid gap-3">
-            <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+          <div className="mt-5 grid gap-2.5">
+            <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
               Facility ZIP Code
             </label>
-            <div className="flex gap-2 rounded-2xl border border-white/10 bg-white/[0.06] p-2 shadow-inner shadow-black/20 transition focus-within:border-emerald-300/60 focus-within:ring-4 focus-within:ring-emerald-300/10">
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-emerald-300/10 text-emerald-300">
+            <div className="flex gap-2 rounded-2xl border border-white/10 bg-black/25 p-2 shadow-inner shadow-black/30 transition focus-within:border-cyan-300/55 focus-within:ring-4 focus-within:ring-cyan-300/10">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[linear-gradient(135deg,rgba(62,207,142,0.18),rgba(63,232,255,0.12))] text-emerald-300">
                 <MapPin size={18} />
               </div>
               <input
@@ -1246,29 +1248,16 @@ function HeroIntakeCard() {
                 inputMode="numeric"
                 maxLength={5}
                 placeholder="89101"
-                className="min-w-0 flex-1 bg-transparent text-xl font-black tracking-[0.18em] text-white outline-none placeholder:text-slate-600"
+                className="min-w-0 flex-1 bg-transparent text-lg font-black tracking-[0.18em] text-white outline-none placeholder:text-slate-600"
               />
-              {!hasZipStarted && (
-                <button
-                  type="button"
-                  onClick={beginDetails}
-                  className="rounded-xl bg-emerald-300 px-4 text-sm font-black text-[#04110c] transition hover:-translate-y-0.5 hover:bg-emerald-200"
-                >
-                  Begin
-                </button>
-              )}
             </div>
           </div>
 
-          <div
-            className={`grid transition-all duration-300 ${
-              hasZipStarted ? "mt-5 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-            }`}
-          >
-            <div className="overflow-hidden">
-              <div className="grid gap-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+          {hasZipStarted && (
+            <div className="mt-5 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/22 p-3.5">
                 <div className="grid gap-2">
-                  <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                  <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
                     Business type
                   </label>
                   <select
@@ -1277,7 +1266,7 @@ function HeroIntakeCard() {
                       setBusinessType(event.target.value as IndustrySlug);
                       setError("");
                     }}
-                    className="h-12 rounded-xl border border-white/10 bg-[#0d1230] px-3 text-sm font-bold text-white outline-none focus:border-emerald-300/60 focus:ring-4 focus:ring-emerald-300/10"
+                    className="h-11 rounded-xl border border-white/10 bg-[#0d1230] px-3 text-sm font-bold text-white outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/10"
                   >
                     <option value="">Select facility type</option>
                     {heroBusinessTypes.map((type) => (
@@ -1290,7 +1279,7 @@ function HeroIntakeCard() {
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="grid gap-2">
-                    <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                    <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
                       Business name{" "}
                       <span className="font-medium normal-case tracking-normal">optional</span>
                     </label>
@@ -1298,11 +1287,11 @@ function HeroIntakeCard() {
                       value={businessName}
                       onChange={(event) => setBusinessName(event.target.value)}
                       placeholder="Acme Hotel"
-                      className="h-12 rounded-xl border border-white/10 bg-[#0d1230] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-emerald-300/60 focus:ring-4 focus:ring-emerald-300/10"
+                      className="h-11 rounded-xl border border-white/10 bg-[#0d1230] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/10"
                     />
                   </div>
                   <div className="grid gap-2">
-                    <label className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                    <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
                       Address{" "}
                       <span className="font-medium normal-case tracking-normal">optional</span>
                     </label>
@@ -1310,13 +1299,13 @@ function HeroIntakeCard() {
                       value={address}
                       onChange={(event) => setAddress(event.target.value)}
                       placeholder="Street address"
-                      className="h-12 rounded-xl border border-white/10 bg-[#0d1230] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-emerald-300/60 focus:ring-4 focus:ring-emerald-300/10"
+                      className="h-11 rounded-xl border border-white/10 bg-[#0d1230] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/10"
                     />
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           {error && (
             <div className="mt-4 rounded-xl border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">
@@ -1327,20 +1316,14 @@ function HeroIntakeCard() {
           <button
             type="button"
             onClick={hasZipStarted ? launchWizard : beginDetails}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-emerald-200/60 bg-[linear-gradient(135deg,#3ECF8E,#3FE8FF)] px-5 py-4 text-base font-black text-[#04110c] shadow-[0_18px_52px_rgba(62,207,142,0.34)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_70px_rgba(62,207,142,0.45)]"
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-[linear-gradient(135deg,#3ECF8E_0%,#3FE8FF_52%,#A855F7_130%)] px-5 py-3.5 text-sm font-black text-[#04110c] shadow-[0_18px_48px_rgba(63,232,255,0.22)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_62px_rgba(62,207,142,0.34)]"
           >
             {hasZipStarted ? "Continue to Step 3" : "Begin Stacking"} <ArrowRight size={18} />
           </button>
 
-          <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-            {["ZIP first", "Type next", "Step 3 ready"].map((item) => (
-              <div
-                key={item}
-                className="rounded-xl border border-white/8 bg-white/[0.04] px-2 py-3 text-[11px] font-bold text-slate-400"
-              >
-                {item}
-              </div>
-            ))}
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-white/8 bg-white/[0.035] px-3 py-2.5 text-[11px] font-bold text-slate-400">
+            <span>ZIP → type → Step 3</span>
+            <span className="text-emerald-300">No utility login</span>
           </div>
         </div>
       </div>
@@ -1350,6 +1333,7 @@ function HeroIntakeCard() {
 
 export default function HeroSection() {
   const [activeHeadlineIndex, setActiveHeadlineIndex] = useState(0);
+  const [typedAccent, setTypedAccent] = useState("");
 
   const activeHeadline = heroHeadlines[activeHeadlineIndex];
 
@@ -1361,6 +1345,21 @@ export default function HeroSection() {
     return () => window.clearInterval(rotationTimer);
   }, []);
 
+  useEffect(() => {
+    setTypedAccent("");
+    let characterIndex = 0;
+    const typeTimer = window.setInterval(() => {
+      characterIndex += 1;
+      setTypedAccent(activeHeadline.accent.slice(0, characterIndex));
+
+      if (characterIndex >= activeHeadline.accent.length) {
+        window.clearInterval(typeTimer);
+      }
+    }, HERO_HEADLINE_TYPE_MS);
+
+    return () => window.clearInterval(typeTimer);
+  }, [activeHeadline.accent]);
+
   return (
     <section
       id="hero"
@@ -1370,14 +1369,14 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_62%,rgba(168,85,247,0.13),transparent_28%),radial-gradient(circle_at_74%_36%,rgba(99,102,241,0.10),transparent_32%)]" />
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#050608] to-transparent" />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-screen-2xl items-center gap-14 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:px-8 xl:px-12">
+      <div className="relative z-10 mx-auto grid w-full max-w-screen-2xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_0.74fr] lg:px-8 xl:px-12">
         <div className="max-w-3xl">
           <div className="mb-9 inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-purple-500/10 px-3 py-1.5 text-[12px] font-medium tracking-[0.12em] text-purple-400 shadow-[0_0_18px_rgba(168,85,247,0.18)]">
             <Sparkles size={13} className="text-purple-400" /> Independent B2B Energy Intelligence
           </div>
 
           <h1
-            className="text-5xl font-black leading-[0.96] tracking-[-0.045em] text-white antialiased sm:text-6xl lg:text-7xl"
+            className="max-w-[820px] text-5xl font-black leading-[0.96] tracking-[-0.045em] text-white antialiased sm:text-6xl lg:text-[4.35rem] xl:text-[4.85rem]"
             style={{
               fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif",
               WebkitFontSmoothing: "antialiased",
@@ -1391,7 +1390,7 @@ export default function HeroSection() {
             <br />
             <span
               key={activeHeadline.accent}
-              className="merlin-hero-headline-fade text-transparent"
+              className="merlin-hero-headline-fade merlin-hero-type-line text-transparent"
               style={{
                 backgroundImage:
                   "linear-gradient(90deg, #3FE8FF 0%, #22D3EE 35%, #A855F7 70%, #C084FC 100%)",
@@ -1401,7 +1400,7 @@ export default function HeroSection() {
                 textShadow: "0 10px 28px rgba(34,211,238,0.22)",
               }}
             >
-              {activeHeadline.accent}
+              {typedAccent || activeHeadline.accent.slice(0, 1)}
             </span>
           </h1>
 
@@ -1447,9 +1446,25 @@ export default function HeroSection() {
           animation: merlinHeroHeadlineFade 5.2s ease-in-out infinite;
         }
 
+        .merlin-hero-type-line::after {
+          content: "";
+          display: inline-block;
+          width: 0.08em;
+          height: 0.82em;
+          margin-left: 0.08em;
+          border-radius: 999px;
+          background: rgba(192, 132, 252, 0.85);
+          box-shadow: 0 0 18px rgba(63, 232, 255, 0.45);
+          transform: translateY(0.08em);
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .merlin-hero-headline-fade {
             animation: none;
+          }
+
+          .merlin-hero-type-line::after {
+            display: none;
           }
 
           .merlin-agent-signal {
