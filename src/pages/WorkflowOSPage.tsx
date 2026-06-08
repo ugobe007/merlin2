@@ -76,7 +76,7 @@ export default function WorkflowOSPage() {
               className="text-5xl font-black tracking-[-0.06em] text-white sm:text-7xl lg:text-8xl"
               style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
             >
-              The workflow layer behind every energy project.
+              The operating system for commercial energy projects.
             </h1>
             <p className="mt-7 max-w-3xl text-lg leading-8 text-slate-400 sm:text-xl">
               The wizard is only one front door. Merlin now has a durable workflow API for project
