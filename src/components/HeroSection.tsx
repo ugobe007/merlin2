@@ -141,7 +141,7 @@ const _telemetryRows: UseCase[] = [
 
 const proofItems = ["Free & Instant", "No Utility Login Required", "CFO-Ready Report"];
 
-const HERO_HEADLINE_ROTATION_MS = 5200;
+const HERO_HEADLINE_ROTATION_MS = 8200;
 const HERO_INTAKE_STORAGE_KEY = "merlin_hero_intake_v1";
 const HERO_HEADLINE_TYPE_MS = 190;
 
@@ -1418,7 +1418,7 @@ export default function HeroSection() {
         }
 
         .merlin-hero-headline-fade {
-          animation: merlinHeroHeadlineFade 5.2s ease-in-out infinite;
+          animation: merlinHeroHeadlineFade 8.2s ease-in-out infinite;
         }
 
         @media (prefers-reduced-motion: reduce) {
