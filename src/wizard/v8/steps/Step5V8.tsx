@@ -35,6 +35,7 @@ import {
   ChevronUp,
   Landmark,
   ExternalLink,
+  Home,
 } from "lucide-react";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import TrueQuoteFinancialModal from "@/components/wizard/v7/shared/TrueQuoteFinancialModal";
@@ -722,6 +723,17 @@ export default function Step5V8({ state, actions }: Props) {
           </div>
         </div>
         <div className="shrink-0 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href = "/";
+            }}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-700/80 bg-slate-900/70 px-4 py-3 text-xs font-bold text-slate-200 transition hover:border-cyan-300/50 hover:bg-slate-800/80 hover:text-white"
+            aria-label="Go home and start a new quote"
+          >
+            <Home className="h-4 w-4 text-cyan-300" />
+            Start Again
+          </button>
           <button
             onClick={() => setShowDataSourcesModal(true)}
             style={{
