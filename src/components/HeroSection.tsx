@@ -1202,8 +1202,8 @@ function HeroIntakeCard() {
             <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
               Facility ZIP Code
             </label>
-            <div className="flex gap-2 rounded-xl border border-white/10 bg-white/[0.035] p-1.5 transition focus-within:border-cyan-300/55 focus-within:ring-2 focus-within:ring-cyan-300/10">
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-emerald-300/12 bg-emerald-300/[0.08] text-emerald-300">
+            <div className="flex gap-2 rounded-xl border border-[#3FE8FF]/28 bg-white/[0.035] p-1.5 transition focus-within:border-[#A855F7]/70 focus-within:ring-2 focus-within:ring-[#A855F7]/12">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-[#3FE8FF]/25 bg-transparent text-[#3FE8FF]">
                 <MapPin size={16} />
               </div>
               <input
