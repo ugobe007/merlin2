@@ -90,6 +90,7 @@ export function Step1V8({ state, actions }: Step1Props) {
   const [previewBusiness, setPreviewBusiness] = useState<BusinessData | null>(null);
   const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
   const [isResolvingBusiness, setIsResolvingBusiness] = useState(false);
+  const [isConfirmingBusiness, setIsConfirmingBusiness] = useState(false);
   const [ipDetected, setIpDetected] = useState<{ city: string; state: string; zip: string } | null>(
     null
   );
@@ -468,23 +469,31 @@ export function Step1V8({ state, actions }: Step1Props) {
       return;
     }
 
-    if (activeBusiness && !state.business) {
-      actions.setBusiness(activeBusiness.name, {
-        address: activeBusiness.address,
-        website: activeBusiness.website,
-        description: activeBusiness.description,
-        photoAttributionName: activeBusiness.photoAttributionName,
-        photoAttributionUri: activeBusiness.photoAttributionUri,
-        placeId: activeBusiness.placeId,
-        formattedAddress: activeBusiness.formattedAddress,
-        photoUrl: activeBusiness.photoUrl,
-        lat: activeBusiness.lat,
-        lng: activeBusiness.lng,
-      });
-      globalThis.setTimeout(() => actions.confirmBusiness(), 0);
+    setBusinessError(null);
+    setIsConfirmingBusiness(true);
+
+    actions.setBusiness(activeBusiness.name, {
+      address: activeBusiness.address,
+      website: activeBusiness.website,
+      description: activeBusiness.description,
+      photoAttributionName: activeBusiness.photoAttributionName,
+      photoAttributionUri: activeBusiness.photoAttributionUri,
+      placeId: activeBusiness.placeId,
+      formattedAddress: activeBusiness.formattedAddress,
+      photoUrl: activeBusiness.photoUrl,
+      lat: activeBusiness.lat,
+      lng: activeBusiness.lng,
+    });
+
+    const detectedIndustry = activeBusiness.detectedIndustry;
+    const hasIndustry = detectedIndustry && (activeBusiness.confidence ?? 0) >= 0.75;
+    if (hasIndustry) {
+      actions.setIndustry(detectedIndustry);
+      actions.goToStep(3 as import("../wizardState").WizardStep);
       return;
     }
-    actions.confirmBusiness();
+
+    actions.goToStep(2 as import("../wizardState").WizardStep);
   };
 
   const businessSummaryLine = useMemo(() => {
@@ -1754,6 +1763,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                 <button
                   type="button"
                   onClick={handleConfirmBusiness}
+                  disabled={isConfirmingBusiness}
                   style={{
                     width: "100%",
                     height: 50,
@@ -1763,12 +1773,15 @@ export function Step1V8({ state, actions }: Step1Props) {
                     color: "#080B10",
                     fontSize: 14,
                     fontWeight: 900,
-                    cursor: "pointer",
+                    cursor: isConfirmingBusiness ? "wait" : "pointer",
+                    opacity: isConfirmingBusiness ? 0.82 : 1,
                   }}
                 >
-                  {activeBusiness.detectedIndustry
-                    ? "Confirm & Skip to Questionnaire"
-                    : "Confirm & Select Industry"}
+                  {isConfirmingBusiness
+                    ? "Opening questionnaire..."
+                    : activeBusiness.detectedIndustry
+                      ? "Confirm & Skip to Questionnaire"
+                      : "Confirm & Select Industry"}
                 </button>
 
                 <button
