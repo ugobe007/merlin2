@@ -1084,35 +1084,36 @@ export function Step4V8({ state, actions }: Props) {
             justifyContent: "center",
             gap: 12,
             minWidth: 210,
-            padding: "15px 24px",
+            padding: "16px 26px",
             borderRadius: 999,
-            background: stackConfirmed
-              ? "rgba(52,211,153,0.14)"
-              : "linear-gradient(135deg, #4f8aff, #9b6dff)",
-            border: stackConfirmed ? `2px solid ${C.green}` : "2px solid rgba(191,219,254,0.82)",
-            color: stackConfirmed ? C.green : "#ffffff",
-            fontSize: 16,
+            background: "transparent",
+            border: stackConfirmed ? `3px solid ${C.green}` : "3px solid rgba(79,138,255,0.92)",
+            color: stackConfirmed ? C.green : "#7dd3fc",
+            fontSize: 18,
             fontWeight: 900,
             cursor: "pointer",
-            letterSpacing: "0.03em",
+            letterSpacing: "0.04em",
+            textTransform: "uppercase" as const,
             transition: "all 0.18s ease",
             boxShadow: stackConfirmed
               ? "0 0 24px rgba(52,211,153,0.24)"
-              : "0 16px 34px rgba(79,138,255,0.34), 0 0 0 4px rgba(79,138,255,0.12)",
+              : "0 0 0 4px rgba(79,138,255,0.12), 0 0 28px rgba(79,138,255,0.20)",
           }}
           onMouseEnter={(e) => {
             if (!stackConfirmed) {
-              e.currentTarget.style.borderColor = "rgba(209,250,229,0.95)";
+              e.currentTarget.style.borderColor = "rgba(52,211,153,0.95)";
+              e.currentTarget.style.color = C.green;
               e.currentTarget.style.boxShadow =
-                "0 18px 40px rgba(79,138,255,0.42), 0 0 0 5px rgba(52,211,153,0.16)";
+                "0 0 0 5px rgba(52,211,153,0.14), 0 0 32px rgba(52,211,153,0.24)";
               e.currentTarget.style.transform = "translateY(-1px)";
             }
           }}
           onMouseLeave={(e) => {
             if (!stackConfirmed) {
-              e.currentTarget.style.borderColor = "rgba(191,219,254,0.82)";
+              e.currentTarget.style.borderColor = "rgba(79,138,255,0.92)";
+              e.currentTarget.style.color = "#7dd3fc";
               e.currentTarget.style.boxShadow =
-                "0 16px 34px rgba(79,138,255,0.34), 0 0 0 4px rgba(79,138,255,0.12)";
+                "0 0 0 4px rgba(79,138,255,0.12), 0 0 28px rgba(79,138,255,0.20)";
               e.currentTarget.style.transform = "translateY(0)";
             }
           }}
@@ -1123,13 +1124,13 @@ export function Step4V8({ state, actions }: Props) {
               width: 18,
               height: 18,
               borderRadius: "50%",
-              border: `2px solid ${stackConfirmed ? C.green : "rgba(255,255,255,0.92)"}`,
+              border: `2px solid ${stackConfirmed ? C.green : "currentColor"}`,
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              color: stackConfirmed ? C.green : "#ffffff",
+              color: "currentColor",
               flexShrink: 0,
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: 900,
             }}
           >

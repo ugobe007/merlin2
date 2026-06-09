@@ -305,6 +305,9 @@ export default function Step5V8({ state, actions }: Props) {
   const [savingQuote, setSavingQuote] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [feedbackRating, setFeedbackRating] = useState<number | null>(null);
+  const [feedbackSuggestion, setFeedbackSuggestion] = useState("");
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   // ── ALL CALLBACKS AND EFFECTS (MUST BE BEFORE EARLY RETURN) ────
   const handleLeadSubmit = useCallback(async () => {
@@ -347,6 +350,16 @@ export default function Step5V8({ state, actions }: Props) {
     sessionStorage.setItem("merlin_lead_captured", "true");
     setShowLeadGate(false);
   }, []);
+
+  const handleFeedbackSubmit = useCallback(() => {
+    if (!feedbackRating) return;
+    setFeedbackSubmitted(true);
+    void trackWizardEvent("wizard_feedback_submitted", {
+      step: 6,
+      rating: feedbackRating,
+      suggestion: feedbackSuggestion.trim() || undefined,
+    });
+  }, [feedbackRating, feedbackSuggestion]);
 
   // Export handler with real export integration
   const handleExport = useCallback(
@@ -2808,6 +2821,73 @@ export default function Step5V8({ state, actions }: Props) {
           >
             <Sparkles className="w-4 h-4 text-[#3ECF8E]" />
             <span className="text-sm font-bold text-[#3ECF8E] tracking-wide">Open ProStack™</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-cyan-300/25 bg-slate-950/60 p-5 shadow-[0_18px_45px_rgba(2,6,23,0.22)]">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="max-w-xl">
+            <div className="text-[11px] font-black uppercase tracking-[0.18em] text-cyan-300">
+              Quick feedback
+            </div>
+            <h3 className="mt-1 text-lg font-black text-white">
+              How was your Merlin quote experience?
+            </h3>
+            <p className="mt-1 text-sm leading-relaxed text-slate-300">
+              Rate this experience and tell us what would make the Energy Stack quote clearer or
+              more useful.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {[1, 2, 3, 4, 5].map((rating) => {
+              const selected = feedbackRating === rating;
+              return (
+                <button
+                  key={rating}
+                  type="button"
+                  onClick={() => {
+                    setFeedbackRating(rating);
+                    setFeedbackSubmitted(false);
+                  }}
+                  className={`h-11 w-11 rounded-full border-2 text-base font-black transition ${
+                    selected
+                      ? "border-cyan-300 text-cyan-200 shadow-[0_0_20px_rgba(34,211,238,0.26)]"
+                      : "border-slate-600 text-slate-300 hover:border-cyan-300/70 hover:text-cyan-200"
+                  }`}
+                  style={{ background: "transparent" }}
+                  aria-label={`Rate Merlin quote experience ${rating} out of 5`}
+                >
+                  {rating}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+          <label className="block">
+            <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-400">
+              Suggestions for Merlin
+            </span>
+            <textarea
+              value={feedbackSuggestion}
+              onChange={(event) => {
+                setFeedbackSuggestion(event.target.value);
+                setFeedbackSubmitted(false);
+              }}
+              rows={3}
+              placeholder="What should we improve, clarify, or add next?"
+              className="w-full resize-none rounded-xl border border-slate-700 bg-transparent px-4 py-3 text-sm font-medium text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-cyan-300/70"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={handleFeedbackSubmit}
+            disabled={!feedbackRating}
+            className="rounded-full border-2 border-cyan-300 px-6 py-3 text-sm font-black uppercase tracking-[0.08em] text-cyan-200 transition hover:border-emerald-300 hover:text-emerald-200 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
+            style={{ background: "transparent" }}
+          >
+            {feedbackSubmitted ? "Feedback sent" : "Send feedback"}
           </button>
         </div>
       </div>
