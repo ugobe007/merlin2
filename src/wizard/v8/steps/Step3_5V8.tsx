@@ -391,15 +391,17 @@ function AcceptButton({
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
-        padding: "12px 18px",
-        borderRadius: 10,
+        padding: "13px 20px",
+        borderRadius: 999,
         border: accepted ? "2px solid rgba(62,207,142,0.98)" : "2px solid rgba(62,207,142,0.72)",
-        background: "transparent",
+        background: accepted ? "rgba(62,207,142,0.07)" : "rgba(62,207,142,0.025)",
         color: "#3ecf8e",
         fontSize: 16,
         fontWeight: 900,
         cursor: "pointer",
-        boxShadow: accepted ? "0 0 18px rgba(62,207,142,0.12)" : "none",
+        boxShadow: accepted
+          ? "0 0 22px rgba(62,207,142,0.20), inset 0 0 0 1px rgba(62,207,142,0.16)"
+          : "0 0 18px rgba(62,207,142,0.12)",
       }}
     >
       <OptionCheck checked={accepted} />
@@ -1218,7 +1220,7 @@ function SolarCard({
                 cursor: "pointer",
                 fontSize: 12,
                 fontWeight: 800,
-                color: "#3ecf8e",
+                color: "#a78bfa",
                 letterSpacing: "0.05em",
                 textTransform: "uppercase",
                 marginBottom: 10,
