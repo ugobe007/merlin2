@@ -141,7 +141,7 @@ const _telemetryRows: UseCase[] = [
 
 const proofItems = ["Free & Instant", "No Utility Login Required", "CFO-Ready Report"];
 
-const HERO_HEADLINE_ROTATION_MS = 8200;
+const HERO_HEADLINE_ROTATION_MS = 15000;
 const HERO_INTAKE_STORAGE_KEY = "merlin_hero_intake_v1";
 const HERO_HEADLINE_TYPE_MS = 190;
 
@@ -1386,8 +1386,11 @@ export default function HeroSection() {
             className="mt-7 max-w-2xl text-lg leading-8 text-slate-400"
             style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif" }}
           >
-            Merlin uses <span className="font-semibold text-slate-200">Energy Stacking™</span> to
-            orchestrate utility, battery, solar, generator, and AI load optimization into one
+            Merlin uses{" "}
+            <span className="bg-[linear-gradient(90deg,#3FE8FF_0%,#22D3EE_38%,#A855F7_78%,#C084FC_100%)] bg-clip-text font-semibold text-transparent">
+              Energy Stacking™
+            </span>{" "}
+            to orchestrate utility, battery, solar, generator, and AI load optimization into one
             decision-ready infrastructure strategy.
           </p>
 
@@ -1421,7 +1424,7 @@ export default function HeroSection() {
         }
 
         .merlin-hero-headline-fade {
-          animation: merlinHeroHeadlineFade 8.2s ease-in-out infinite;
+          animation: merlinHeroHeadlineFade 15s ease-in-out infinite;
         }
 
         @media (prefers-reduced-motion: reduce) {
