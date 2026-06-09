@@ -1192,7 +1192,7 @@ function HeroIntakeCard() {
             className="max-w-[430px] text-[1.55rem] font-black leading-[1.04] tracking-[-0.045em] text-white sm:text-[1.82rem]"
             style={{ fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif" }}
           >
-            Enter your ZIP code to begin stacking.
+            Enter your ZIP code to begin.
           </h2>
           <p className="mt-2.5 max-w-md text-[13px] leading-5 text-slate-400">
             Merlin opens the right Step 3 profile from your location and facility type.
