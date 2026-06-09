@@ -41,8 +41,8 @@ export default function GridCongestionSection() {
                 className="max-w-3xl text-3xl font-black leading-tight tracking-[-0.04em] text-white sm:text-4xl lg:text-5xl"
                 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
               >
-                AI data centers are reshaping the grid.
-                <br className="hidden sm:block" /> Is your business paying the price?
+                AI is straining the grid.
+                <br className="hidden sm:block" /> Are your rates next?
               </h2>
 
               <p className="mt-6 max-w-3xl text-base leading-8 text-slate-400 sm:text-lg">
