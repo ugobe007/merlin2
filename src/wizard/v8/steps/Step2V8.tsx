@@ -103,6 +103,7 @@ interface Props {
 }
 
 export function Step2V8({ state, actions }: Props) {
+  const [navigatingSlug, setNavigatingSlug] = React.useState<IndustrySlug | null>(null);
   const locationLine = state.location
     ? [state.location.city, state.location.state, state.location.zip].filter(Boolean).join(", ")
     : "";
@@ -139,13 +140,17 @@ export function Step2V8({ state, actions }: Props) {
         {/* Industry card grid */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {INDUSTRIES.map((it) => {
-            const isSelected = state.industry === it.slug;
+            const slug = it.slug as IndustrySlug;
+            const isNavigating = navigatingSlug === slug;
+            const isSelected = state.industry === slug || isNavigating;
             return (
               <button
                 key={it.slug}
                 data-testid={`industry-card-v8-${it.slug.replace(/_/g, "-")}`}
+                disabled={navigatingSlug !== null}
                 onClick={() => {
-                  actions.setIndustry(it.slug as IndustrySlug);
+                  setNavigatingSlug(slug);
+                  actions.setIndustry(slug);
                   actions.goToStep(3);
                 }}
                 className="rounded-xl text-left overflow-hidden transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
@@ -158,7 +163,7 @@ export function Step2V8({ state, actions }: Props) {
                   boxShadow: isSelected
                     ? "0 0 0 3px rgba(155,109,255,0.18), 0 0 36px rgba(155,109,255,0.22)"
                     : "none",
-                  cursor: "pointer",
+                  cursor: navigatingSlug !== null ? "wait" : "pointer",
                   position: "relative",
                 }}
                 onMouseEnter={(e) => {
@@ -204,6 +209,27 @@ export function Step2V8({ state, actions }: Props) {
                         strokeLinejoin="round"
                       />
                     </svg>
+                  </div>
+                )}
+
+                {isNavigating && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      zIndex: 9,
+                      background: "rgba(8,13,31,0.56)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#3ecf8e",
+                      fontSize: 12,
+                      fontWeight: 900,
+                      letterSpacing: "0.04em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Opening Step 3...
                   </div>
                 )}
 
