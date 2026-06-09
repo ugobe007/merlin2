@@ -435,12 +435,12 @@ export default function WizardShellV7({
                 flex: 1,
                 borderRadius: 12,
                 background:
-                  "linear-gradient(180deg, rgba(12,22,45,0.90) 0%, rgba(10,16,32,0.78) 100%)",
-                border: "1px solid rgba(99,120,255,0.22)",
+                  "linear-gradient(180deg, rgba(15,25,52,0.96) 0%, rgba(10,16,32,0.92) 100%)",
+                border: "1px solid rgba(129,148,255,0.34)",
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
-                boxShadow: "0 0 0 1px rgba(99,120,255,0.06) inset",
+                boxShadow: "0 0 0 1px rgba(99,120,255,0.10) inset, 0 18px 45px rgba(2,6,23,0.22)",
               }}
             >
               {/* Advisor label bar */}
@@ -450,9 +450,9 @@ export default function WizardShellV7({
                   alignItems: "center",
                   gap: 8,
                   padding: "10px 16px",
-                  borderBottom: "1px solid rgba(99,120,255,0.18)",
+                  borderBottom: "1px solid rgba(129,148,255,0.28)",
                   background:
-                    "linear-gradient(135deg, rgba(99,120,255,0.10), rgba(155,109,255,0.08))",
+                    "linear-gradient(135deg, rgba(99,120,255,0.18), rgba(155,109,255,0.14))",
                   flexShrink: 0,
                 }}
               >
@@ -487,8 +487,8 @@ export default function WizardShellV7({
                 <span
                   style={{
                     fontSize: 10,
-                    fontWeight: 700,
-                    color: "rgba(155,109,255,0.90)",
+                    fontWeight: 900,
+                    color: "rgba(226,232,255,0.96)",
                     textTransform: "uppercase",
                     letterSpacing: "0.09em",
                   }}
@@ -518,7 +518,7 @@ export default function WizardShellV7({
                     <div
                       style={{
                         fontSize: 14,
-                        color: "rgba(232, 235, 243, 0.7)",
+                        color: "rgba(232, 235, 243, 0.86)",
                         lineHeight: 1.65,
                       }}
                     >

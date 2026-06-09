@@ -104,8 +104,8 @@ function wizardStepToDisplayIndex(step: number): number {
 // ── Accent helpers ────────────────────────────────────────────────────────────
 const ACCENT = "#4F8CFF";
 const T = {
-  secondary: "rgba(255,255,255,0.60)",
-  muted: "rgba(255,255,255,0.35)",
+  secondary: "rgba(245,248,255,0.84)",
+  muted: "rgba(226,232,240,0.68)",
 };
 
 function hi(text: string): React.ReactNode {
@@ -115,7 +115,14 @@ function bullet(text: string): React.ReactNode {
   return (
     <div
       key={text}
-      style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: T.secondary }}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        fontSize: 13,
+        color: T.secondary,
+        lineHeight: 1.45,
+      }}
     >
       <span style={{ color: ACCENT, fontSize: 10, flexShrink: 0 }}>●</span>
       {text}
@@ -444,18 +451,32 @@ function getAdvisorContent(
     case 5:
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
-            Build your energy stack.
+          <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", lineHeight: 1.35 }}>
+            Review your official Energy Stack quote.
           </div>
-          <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            Choose a stack strategy optimized for your facility's{" "}
-            {hi("grid exposure, load profile, and resilience requirements")}.
+          <div style={{ fontSize: 13.5, color: T.secondary, lineHeight: 1.6 }}>
+            This is the product recommendation: a Merlin Energy Stack tuned to your{" "}
+            {hi("utility cost, peak demand, and backup-power goals")}.
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+          <div
+            style={{
+              padding: "12px 14px",
+              borderRadius: 12,
+              background: "rgba(79,138,255,0.10)",
+              border: "1px solid rgba(79,138,255,0.26)",
+              color: "rgba(245,248,255,0.90)",
+              fontSize: 12.5,
+              lineHeight: 1.55,
+            }}
+          >
+            Move the optimization slider to see how cost, resilience, and annual savings change
+            before selecting the quote.
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 2 }}>
             {[
-              "Variant A–F: different cost vs. resilience balance",
-              "Adjust optimization weights in real time",
-              "Two stack sizes — right-sized or full coverage",
+              "Quote variants show cost vs. resilience tradeoffs",
+              "Savings update as the stack changes",
+              "Select the option you want Merlin to finalize",
             ].map(bullet)}
           </div>
         </div>
