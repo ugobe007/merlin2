@@ -393,9 +393,7 @@ function AcceptButton({
         gap: 8,
         padding: "12px 18px",
         borderRadius: 10,
-        border: accepted
-          ? "1.5px solid rgba(62,207,142,0.95)"
-          : "1.5px solid rgba(62,207,142,0.58)",
+        border: accepted ? "2px solid rgba(62,207,142,0.98)" : "2px solid rgba(62,207,142,0.72)",
         background: "transparent",
         color: "#3ecf8e",
         fontSize: 16,
@@ -490,6 +488,13 @@ function ConfigSummaryBar({
   annualSavingsK,
   paybackYears,
   roi10YrK,
+  utilityRate,
+  demandCharge,
+  peakSunHours,
+  solarGrade,
+  utilityProvider,
+  canopyPotentialKW,
+  canopyAreaLabel,
 }: {
   city: string;
   industry: string;
@@ -505,14 +510,30 @@ function ConfigSummaryBar({
   annualSavingsK: number;
   paybackYears: string;
   roi10YrK: number;
+  utilityRate: number;
+  demandCharge: number;
+  peakSunHours: number;
+  solarGrade?: string;
+  utilityProvider?: string;
+  canopyPotentialKW: number;
+  canopyAreaLabel: string;
 }) {
+  const demandAnnual =
+    demandCharge > 0 && peakLoadKW > 0 ? Math.round(peakLoadKW * demandCharge * 12) : 0;
+  const canopyText =
+    canopyPotentialKW > 0
+      ? `Adding a Solar Canopy to your ${canopyAreaLabel} gives you ${canopyPotentialKW} kW of additional capacity. If you want to maximize your solar then add the Solar Carport in Advanced Solar Coverage tab.`
+      : "Merlin is sizing solar from the usable roof and site constraints you entered.";
+
   return (
     <div
       style={{
-        background: "rgba(15,17,23,0.85)",
-        border: "1px solid rgba(255,255,255,0.09)",
-        borderRadius: 12,
-        padding: "14px 16px",
+        background:
+          "linear-gradient(135deg, rgba(15,23,42,0.94), rgba(12,18,35,0.88) 52%, rgba(19,14,37,0.92))",
+        border: "1px solid rgba(99,120,255,0.28)",
+        borderRadius: 16,
+        padding: "18px 20px",
+        boxShadow: "0 20px 48px rgba(2,6,23,0.26), inset 0 1px 0 rgba(255,255,255,0.04)",
       }}
     >
       <div
@@ -520,70 +541,138 @@ function ConfigSummaryBar({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          marginBottom: 12,
+          gap: 18,
+          marginBottom: 16,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ minWidth: 0 }}>
           <div
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: "rgba(62,207,142,0.12)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 16,
-              flexShrink: 0,
+              fontSize: 11,
+              fontWeight: 900,
+              color: "#38bdf8",
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              marginBottom: 8,
             }}
           >
-            🧙
+            Energy Stack Context
           </div>
+          <h2
+            style={{
+              fontSize: 28,
+              fontWeight: 900,
+              margin: 0,
+              lineHeight: 1.08,
+              letterSpacing: "-0.85px",
+              background: "linear-gradient(90deg, #9b6dff 0%, #4f8aff 48%, #38bdf8 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Configure Your Add-ons
+          </h2>
+          <div
+            style={{ fontSize: 13, color: "rgba(203,213,225,0.68)", marginTop: 7, lineHeight: 1.5 }}
+          >
+            {city}
+            {industry ? ` • ${industry}` : ""}
+            {peakLoadKW > 0 ? ` • ${peakLoadKW.toLocaleString()} kW peak` : ""}
+          </div>
+        </div>
+        <div style={{ textAlign: "right", flexShrink: 0 }}>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>Your Configuration</div>
             <div
               style={{
-                fontSize: 11,
-                color: "rgba(148,163,184,0.55)",
-                marginTop: 2,
+                fontSize: 10,
+                fontWeight: 800,
+                color: "rgba(148,163,184,0.62)",
+                letterSpacing: "0.09em",
+                textTransform: "uppercase",
+                marginBottom: 4,
               }}
             >
-              {city}
-              {industry ? ` • ${industry}` : ""}
-              {peakLoadKW > 0 ? ` • ${peakLoadKW.toLocaleString()} kW peak` : ""}
+              Add-ons Investment
+            </div>
+            <div
+              style={{
+                fontSize: 24,
+                fontWeight: 900,
+                color: "#f8fafc",
+                letterSpacing: "-0.7px",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              ${totalInvestmentK.toLocaleString()}K
+            </div>
+            <div style={{ fontSize: 10, color: "rgba(148,163,184,0.52)", marginTop: 3 }}>
+              BESS priced in Energy Stack
             </div>
           </div>
         </div>
-        <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 12 }}>
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              color: "rgba(148,163,184,0.5)",
-              letterSpacing: "0.07em",
-              textTransform: "uppercase",
-              marginBottom: 3,
-            }}
-          >
-            Add-ons Investment
-          </div>
-          <div
-            style={{
-              fontSize: 20,
-              fontWeight: 800,
-              color: "#f1f5f9",
-              letterSpacing: "-0.5px",
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            ${totalInvestmentK.toLocaleString()}K
-          </div>
-          <div style={{ fontSize: 10, color: "rgba(148,163,184,0.4)", marginTop: 2 }}>
-            BESS system cost added at quote
-          </div>
-        </div>
       </div>
-      <div style={{ display: "flex", gap: 8 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+          gap: 8,
+          marginBottom: 12,
+        }}
+      >
+        {[
+          { label: "Rate", value: `$${utilityRate.toFixed(2)}/kWh`, color: "#f59e0b" },
+          {
+            label: "Demand",
+            value: demandCharge > 0 ? `$${demandCharge.toFixed(2)}/kW` : "—",
+            color: "#3ecf8e",
+          },
+          { label: "Sun Hours", value: `${peakSunHours.toFixed(1)} hrs`, color: "#38bdf8" },
+          {
+            label: "Solar Grade",
+            value: solarGrade ? `Grade ${solarGrade}` : "—",
+            color: "#a78bfa",
+          },
+          { label: "Utility", value: utilityProvider || "Local tariff", color: "#e2e8f0" },
+        ].map((metric) => (
+          <div
+            key={metric.label}
+            style={{
+              minWidth: 0,
+              padding: "10px 11px",
+              borderRadius: 11,
+              background: "rgba(2,6,23,0.28)",
+              border: "1px solid rgba(148,163,184,0.12)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                color: "rgba(148,163,184,0.62)",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                marginBottom: 5,
+              }}
+            >
+              {metric.label}
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 900,
+                color: metric.color,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {metric.value}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
         {solarFeasible && solarKW > 0 && (
           <SummaryPill
             icon="⭐"
@@ -611,6 +700,58 @@ function ConfigSummaryBar({
             color="#38bdf8"
           />
         )}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 10 }}>
+        <div
+          style={{
+            borderRadius: 12,
+            background: "rgba(2,6,23,0.24)",
+            border: "1px solid rgba(62,207,142,0.20)",
+            padding: "12px 14px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 900,
+              color: "#3ecf8e",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              marginBottom: 6,
+            }}
+          >
+            ROI Tip
+          </div>
+          <div style={{ fontSize: 13, color: "rgba(226,232,240,0.78)", lineHeight: 1.55 }}>
+            {canopyText}
+          </div>
+        </div>
+        <div
+          style={{
+            borderRadius: 12,
+            background: "rgba(2,6,23,0.24)",
+            border: "1px solid rgba(56,189,248,0.20)",
+            padding: "12px 14px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 900,
+              color: "#38bdf8",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              marginBottom: 6,
+            }}
+          >
+            Solar Intel
+          </div>
+          <div style={{ fontSize: 13, color: "rgba(226,232,240,0.78)", lineHeight: 1.55 }}>
+            Given your exposure to sun light hours, Merlin will help maximize TOU (time of use)
+            savings.
+          </div>
+        </div>
       </div>
 
       {/* ── Live ROI Strip ── */}
@@ -726,6 +867,24 @@ function ConfigSummaryBar({
               </span>
             </div>
           </div>
+        </div>
+      )}
+      {demandAnnual > 0 && (
+        <div
+          style={{
+            marginTop: 10,
+            borderRadius: 11,
+            background: "rgba(56,189,248,0.06)",
+            border: "1px solid rgba(56,189,248,0.18)",
+            padding: "10px 12px",
+            fontSize: 12,
+            color: "rgba(203,213,225,0.78)",
+            lineHeight: 1.5,
+          }}
+        >
+          <strong style={{ color: "#38bdf8" }}>Demand charge:</strong> Your utility charges $
+          {demandCharge.toFixed(2)}/kW. At your {peakLoadKW.toLocaleString()} kW peak, that is ~$
+          {demandAnnual.toLocaleString()}/yr before BESS peak shaving.
         </div>
       )}
     </div>
@@ -1065,7 +1224,7 @@ function SolarCard({
                 marginBottom: 10,
               }}
             >
-              ▸ Advanced solar coverage
+              ▸ Advanced solar coverage · use this to adjust your solar footprint
             </summary>
             <div
               style={{
@@ -1245,7 +1404,9 @@ function SolarCard({
             marginBottom: 10,
           }}
         >
-          ▸ Panel grade settings
+          <span style={{ color: "#a78bfa" }}>
+            ▸ Panel grade settings · use this to choose solar types
+          </span>
         </summary>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           {(
@@ -3068,101 +3229,14 @@ export default function Step3_5V8({ state, actions }: Props) {
         annualSavingsK={annualSavingsK}
         paybackYears={paybackYears}
         roi10YrK={roi10YrK}
-      />
-      <div style={{ textAlign: "center", padding: "6px 0 10px" }}>
-        <h2
-          style={{
-            fontSize: 28,
-            fontWeight: 800,
-            color: "#fff",
-            margin: "0 0 8px",
-            letterSpacing: "-0.5px",
-          }}
-        >
-          Configure Your Add-ons
-        </h2>
-        <p
-          style={{
-            fontSize: 15,
-            color: "rgba(148,163,184,0.65)",
-            margin: 0,
-            lineHeight: 1.5,
-          }}
-        >
-          Fine-tune solar, EV charging, and backup generator
-        </p>
-        <button
-          type="button"
-          onClick={handleContinue}
-          style={{
-            marginTop: 14,
-            padding: "12px 20px",
-            borderRadius: 12,
-            border: "1.5px solid rgba(62,207,142,0.62)",
-            background: "transparent",
-            color: "#3ecf8e",
-            fontSize: 14,
-            fontWeight: 900,
-            cursor: "pointer",
-            letterSpacing: "0.01em",
-          }}
-        >
-          Continue → Build Energy Stack
-        </button>
-      </div>
-      <RoiIntelBanner
-        peakSunHours={peakSunHours}
         utilityRate={utilityRate}
-        hasTOU={state.intel?.hasTOU ?? false}
-        peakRate={state.intel?.peakRate ?? 0}
-        liveSolarKW={liveSolarKW}
-        solarMaxKW={solarEffectiveMaxKW}
-        solarRecKW={solarEffectiveRecKW}
-        canopyInterest={canopyInterest}
+        demandCharge={state.intel?.demandCharge ?? 0}
+        peakSunHours={peakSunHours}
+        solarGrade={state.intel?.solarGrade}
+        utilityProvider={state.intel?.utilityProvider}
         canopyPotentialKW={canopyPotentialKW}
-        canopyAreaLabel={isCarWash ? "vacuum station canopies" : "parking area"}
-        solarFeasible={solarFeasible}
-        onApplySolarRec={() => {
-          const kw = solarEffectiveRecKW;
-          handleSolarConfig(kw);
-          setPendingSolarKW(kw);
-        }}
+        canopyAreaLabel={isCarWash ? "Vacuum stations or parking lot" : "parking lot"}
       />
-      {/* ── Demand Charge Callout ─────────────────────────────────────────── */}
-      {/* Show when we have a real demand charge rate from the ZIP-code intel.  */}
-      {/* Helps customers understand why BESS pays off beyond just solar.       */}
-      {(state.intel?.demandCharge ?? 0) > 0 && state.peakLoadKW > 0 && (
-        <div
-          style={{
-            borderRadius: 10,
-            background: "rgba(15,23,42,0.34)",
-            border: "1px solid rgba(56,189,248,0.24)",
-            padding: "12px 16px",
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 10,
-          }}
-        >
-          <span style={{ fontSize: 18, lineHeight: 1, color: "#38bdf8" }}>⚡</span>
-          <div>
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#38bdf8",
-                marginBottom: 3,
-              }}
-            >
-              Your utility charges ${state.intel!.demandCharge}/kW in demand fees
-            </div>
-            <div style={{ fontSize: 12, color: "rgba(203,213,225,0.7)", lineHeight: 1.5 }}>
-              At your {state.peakLoadKW.toLocaleString()} kW peak that&apos;s ~$
-              {Math.round(state.peakLoadKW * state.intel!.demandCharge * 12).toLocaleString()}/yr
-              before any BESS. Peak shaving can cut that by up to 40%.
-            </div>
-          </div>
-        </div>
-      )}
       {solarFeasible && (
         <SolarCard
           maxKW={solarEffectiveMaxKW}
@@ -3388,25 +3462,30 @@ export default function Step3_5V8({ state, actions }: Props) {
           width: "100%",
           padding: "17px 24px",
           borderRadius: 12,
-          background: "linear-gradient(135deg, #4f8aff, #9b6dff)",
-          border: "none",
-          color: "#fff",
+          background: "transparent",
+          border: "1.75px solid rgba(79,138,255,0.52)",
+          color: "#38bdf8",
           fontSize: 16,
-          fontWeight: 700,
+          fontWeight: 900,
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           gap: 10,
-          boxShadow: "0 4px 20px rgba(79,138,255,0.30)",
+          boxShadow: "0 0 24px rgba(79,138,255,0.12)",
           marginTop: 8,
           letterSpacing: "0.01em",
+          WebkitTextFillColor: "transparent",
+          backgroundImage: "linear-gradient(90deg, #9b6dff 0%, #4f8aff 52%, #38bdf8 100%)",
+          WebkitBackgroundClip: "text",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = "0 6px 28px rgba(79,138,255,0.45)";
+          e.currentTarget.style.borderColor = "rgba(56,189,248,0.78)";
+          e.currentTarget.style.boxShadow = "0 0 30px rgba(79,138,255,0.24)";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = "none";
+          e.currentTarget.style.borderColor = "rgba(79,138,255,0.52)";
+          e.currentTarget.style.boxShadow = "0 0 24px rgba(79,138,255,0.12)";
           e.currentTarget.style.transform = "translateY(0)";
         }}
       >
