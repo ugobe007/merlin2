@@ -371,22 +371,40 @@ function SelectOptionCard({
   );
 }
 
-function AutoSavedNote({ label }: { label: string }) {
+function AcceptButton({
+  accepted,
+  label,
+  acceptedLabel,
+  onClick,
+}: {
+  accepted: boolean;
+  label: string;
+  acceptedLabel: string;
+  onClick: () => void;
+}) {
   return (
-    <div
+    <button
+      type="button"
+      onClick={onClick}
       style={{
         display: "inline-flex",
         alignItems: "center",
+        justifyContent: "center",
         gap: 8,
-        color: "#3ecf8e",
-        fontSize: 12,
-        fontWeight: 800,
-        letterSpacing: "0.02em",
+        padding: "10px 14px",
+        borderRadius: 10,
+        border: accepted ? "1.5px solid rgba(62,207,142,0.9)" : "1.5px solid rgba(99,120,255,0.45)",
+        background: "transparent",
+        color: accepted ? "#3ecf8e" : "#8fd7ff",
+        fontSize: 13,
+        fontWeight: 850,
+        cursor: "pointer",
+        boxShadow: accepted ? "0 0 18px rgba(62,207,142,0.12)" : "none",
       }}
     >
-      <OptionCheck checked />
-      {label}
-    </div>
+      <OptionCheck checked={accepted} />
+      {accepted ? acceptedLabel : label}
+    </button>
   );
 }
 
@@ -805,11 +823,13 @@ function SolarCard({
   const [sliderKW, setSliderKW] = useState(() =>
     Math.max(solarMin, Math.min(safeMax, initialKW > 0 ? initialKW : safeRec))
   );
+  const [accepted, setAccepted] = useState(false);
   // When canopy interest changes → recKW & maxKW update → snap slider to new rec.
   useEffect(() => {
     if (recKW > 0) {
       const clamped = Math.max(solarMin, Math.min(safeMax, recKW));
       setSliderKW(clamped);
+      setAccepted(false);
       onConfig(clamped);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -823,6 +843,7 @@ function SolarCard({
     if (pendingExternalKW == null) return;
     const clamped = Math.max(solarMin, pendingExternalKW);
     setSliderKW(clamped);
+    setAccepted(false);
     onPendingConsumed?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingExternalKW]);
@@ -836,6 +857,7 @@ function SolarCard({
   const handleChange = (v: number) => {
     const c = Math.max(solarMin, Math.min(safeMax, v));
     setSliderKW(c);
+    setAccepted(false);
     onConfig(c);
   };
 
@@ -1022,12 +1044,27 @@ function SolarCard({
               }
             }
           `}</style>
-          <div
+          <details
             style={{
-              padding: "10px 14px 12px",
+              margin: "0 14px 10px",
+              padding: "10px 0 0",
               borderTop: "1px solid rgba(255,255,255,0.06)",
             }}
           >
+            <summary
+              style={{
+                listStyle: "none",
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: 800,
+                color: "rgba(251,191,36,0.86)",
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+                marginBottom: 10,
+              }}
+            >
+              ▸ Advanced solar coverage
+            </summary>
             <div
               style={{
                 fontSize: 11,
@@ -1182,29 +1219,32 @@ function SolarCard({
                 </div>
               </div>
             )}
-          </div>
+          </details>
         </>
       )}
 
       {/* ── Panel Grade Toggle ─────────────────────────────────────────── */}
-      <div
+      <details
         style={{
-          padding: "10px 14px 8px",
+          margin: "0 14px 10px",
+          padding: "10px 0 0",
           borderTop: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        <div
+        <summary
           style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: "rgba(148,163,184,0.7)",
+            listStyle: "none",
+            cursor: "pointer",
+            fontSize: 12,
+            fontWeight: 800,
+            color: "rgba(148,163,184,0.76)",
+            letterSpacing: "0.05em",
             textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            marginBottom: 8,
+            marginBottom: 10,
           }}
         >
-          Panel Grade
-        </div>
+          ▸ Panel grade settings
+        </summary>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           {(
             [
@@ -1281,10 +1321,18 @@ function SolarCard({
           }
           return null;
         })()}
-      </div>
+      </details>
 
       <div style={{ padding: "0 16px 14px" }}>
-        <AutoSavedNote label={`${sliderKW.toLocaleString()} kW solar selection saved`} />
+        <AcceptButton
+          accepted={accepted}
+          label="Accept solar capacity"
+          acceptedLabel={`${sliderKW.toLocaleString()} kW solar accepted`}
+          onClick={() => {
+            onConfig(sliderKW);
+            setAccepted(true);
+          }}
+        />
       </div>
 
       <div
@@ -1795,6 +1843,7 @@ function EVChargingCard({
   const [l2, setL2] = useState(initialL2 > 0 ? initialL2 : recL2);
   const [dcfc, setDcfc] = useState(initialDcfc > 0 ? initialDcfc : 0);
   const [hpc, setHpc] = useState(initialHpc > 0 ? initialHpc : 0);
+  const [accepted, setAccepted] = useState(false);
   const [showDCFC, setShowDCFC] = useState(true); // Level 3 Fast Charging always visible
   const [showPanel, setShowPanel] = useState(false);
   const [panelAssessed, setPanelAssessed] = useState(
@@ -1811,6 +1860,7 @@ function EVChargingCard({
   const totalKW = l2 * 7.2 + dcfc * 50 + hpc * 250;
 
   const bump = (which: "l2" | "dcfc" | "hpc", dir: 1 | -1, max: number) => {
+    setAccepted(false);
     if (which === "l2") {
       const nv = Math.max(0, Math.min(max, l2 + dir));
       setL2(nv);
@@ -1833,6 +1883,7 @@ function EVChargingCard({
   };
 
   const handlePanelDone = (svc: ServiceType, amps: number, result: PanelAssessment) => {
+    setAccepted(false);
     setPanelAssessed(true);
     setPanelResult(result);
     setShowPanel(false);
@@ -1842,6 +1893,7 @@ function EVChargingCard({
   };
 
   const handlePanelCancel = () => {
+    setAccepted(false);
     setShowPanel(false);
     setPendingDcfc(0);
     // Revert DCFC to 0 if cancelled
@@ -2210,8 +2262,14 @@ function EVChargingCard({
         )}
 
         <div style={{ padding: "0 16px 16px" }}>
-          <AutoSavedNote
-            label={`${Math.round(totalKW).toLocaleString()} kW · ${l2 + dcfc + hpc} EV ports saved`}
+          <AcceptButton
+            accepted={accepted}
+            label="Accept EV charging"
+            acceptedLabel={`${Math.round(totalKW).toLocaleString()} kW · ${l2 + dcfc + hpc} EV ports accepted`}
+            onClick={() => {
+              onConfig(l2, dcfc, hpc);
+              setAccepted(true);
+            }}
           />
         </div>
       </Card>
@@ -2248,12 +2306,13 @@ function BackupGeneratorCard({
   onConfig: (kw: number) => void;
 }) {
   const safeMax = maxKW > 0 ? maxKW : peakLoadKW > 0 ? peakLoadKW * 2 : 2000;
-  const safeMin = minKW > 0 ? minKW : peakLoadKW > 0 ? Math.round(peakLoadKW * 0.5) : 0;
+  const safeMin = 0;
   const stepKW = safeMax <= 1000 ? 50 : safeMax <= 4000 ? 100 : 200;
   const safeRec = recKW > 0 ? recKW : Math.round(peakLoadKW * 1.25);
   const [sliderKW, setSliderKW] = useState(() =>
-    Math.max(safeMin, Math.min(safeMax, initialKW > 0 ? initialKW : safeRec))
+    Math.max(safeMin, Math.min(safeMax, initialKW > 0 ? initialKW : Math.max(minKW, safeRec)))
   );
+  const [accepted, setAccepted] = useState(false);
 
   const criticalKW = Math.round(peakLoadKW * (criticalLoadPct || 0.5));
   // Generator backup value is qualitative (avoided downtime) — not monetized per pricingServiceV45
@@ -2264,6 +2323,7 @@ function BackupGeneratorCard({
   const handleChange = (v: number) => {
     const c = Math.max(safeMin, Math.min(safeMax, v));
     setSliderKW(c);
+    setAccepted(false);
     onConfig(c);
   };
 
@@ -2430,19 +2490,27 @@ function BackupGeneratorCard({
           </span>
         </div>
       </div>
-      <CardDivider />
-      <div style={{ padding: "14px 16px" }}>
-        <div
+      <details
+        style={{
+          margin: "0 16px 12px",
+          paddingTop: 12,
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <summary
           style={{
-            fontSize: 14,
-            fontWeight: 600,
-            color: "rgba(203,213,225,0.75)",
+            listStyle: "none",
+            cursor: "pointer",
+            fontSize: 12,
+            fontWeight: 800,
+            color: "rgba(251,146,60,0.86)",
+            letterSpacing: "0.05em",
+            textTransform: "uppercase",
             marginBottom: 10,
-            letterSpacing: "0.03em",
           }}
         >
-          Fuel Type
-        </div>
+          ▸ Fuel type settings
+        </summary>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
           {fuelOptions.map((opt) => {
             const isSel = fuelType === opt.key;
@@ -2468,9 +2536,17 @@ function BackupGeneratorCard({
         >
           {selectedFuel.desc}
         </div>
-      </div>
+      </details>
       <div style={{ padding: "0 16px 14px" }}>
-        <AutoSavedNote label={`${sliderKW.toLocaleString()} kW generator selection saved`} />
+        <AcceptButton
+          accepted={accepted}
+          label="Accept generator setup"
+          acceptedLabel={`${sliderKW.toLocaleString()} kW generator accepted`}
+          onClick={() => {
+            onConfig(sliderKW);
+            setAccepted(true);
+          }}
+        />
       </div>
       <div
         style={{
@@ -2973,6 +3049,10 @@ export default function Step3_5V8({ state, actions }: Props) {
   const industryDisplay = state.industry
     ? state.industry.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
     : "";
+  const handleContinue = () => {
+    actions.setAnswer("step3_5Visited", true);
+    actions.goToStep(5 as WizardStep);
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -3014,6 +3094,24 @@ export default function Step3_5V8({ state, actions }: Props) {
         >
           Fine-tune solar, EV charging, and backup generator
         </p>
+        <button
+          type="button"
+          onClick={handleContinue}
+          style={{
+            marginTop: 14,
+            padding: "12px 20px",
+            borderRadius: 12,
+            border: "1.5px solid rgba(62,207,142,0.62)",
+            background: "transparent",
+            color: "#3ecf8e",
+            fontSize: 14,
+            fontWeight: 900,
+            cursor: "pointer",
+            letterSpacing: "0.01em",
+          }}
+        >
+          Continue → Build Energy Stack
+        </button>
       </div>
       <RoiIntelBanner
         peakSunHours={peakSunHours}
@@ -3288,10 +3386,7 @@ export default function Step3_5V8({ state, actions }: Props) {
       {/* ── Bottom CTA: mirrors shell nav so users don't need to scroll ── */}
       <button
         type="button"
-        onClick={() => {
-          actions.setAnswer("step3_5Visited", true);
-          actions.goToStep(5 as WizardStep);
-        }}
+        onClick={handleContinue}
         style={{
           width: "100%",
           padding: "17px 24px",
@@ -3318,7 +3413,7 @@ export default function Step3_5V8({ state, actions }: Props) {
           e.currentTarget.style.transform = "translateY(0)";
         }}
       >
-        🧙 Build My Tiers →
+        Continue → Build Energy Stack
       </button>
     </div>
   );
