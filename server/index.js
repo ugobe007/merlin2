@@ -12,11 +12,13 @@ import salesAgentRouter from './routes/sales-agent.js';
 import epcRouter from './routes/epc.js';
 import partnerApiRouter from './routes/partner-api.js';
 import wizardWorkflowRouter from './routes/wizard-workflow.js';
+import opportunitiesRouter from './routes/opportunities.js';
 
-// Load environment variables from server/.env
+// Load environment variables from server/.env, then root .env for local scripts
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '.env') });
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -47,6 +49,7 @@ app.use('/api/sales-agent', salesAgentRouter);
 app.use('/api/epc', epcRouter);
 app.use('/api/partner', partnerApiRouter);
 app.use('/api/wizard', wizardWorkflowRouter);
+app.use('/api', opportunitiesRouter);
 app.use('/api', demoRouter);
 
 // Health check — used by smoke tests and uptime monitors

@@ -21,6 +21,22 @@ export async function runOpportunityScraper(): Promise<{
   error?: string;
 }> {
   try {
+    try {
+      const response = await fetch("/api/scraper/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ minConfidence: 50, maxPerSource: 75 }),
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+
+      console.warn("Backend scraper unavailable, falling back to browser scraper", response.status);
+    } catch (backendError) {
+      console.warn("Backend scraper request failed, falling back to browser scraper", backendError);
+    }
+
     console.log("🧙‍♂️ Merlin is searching for opportunities...");
 
     // Run the scraper
