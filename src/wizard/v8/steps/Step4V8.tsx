@@ -442,20 +442,29 @@ export function Step4V8({ state, actions }: Props) {
             >
               Merlin Energy Stack Proposal
             </h1>
-            <p
+            <div
               style={{
-                fontSize: 14,
-                color: C.textSub,
-                marginTop: 8,
-                lineHeight: 1.6,
+                fontSize: 16,
+                color: "rgba(248,250,252,0.90)",
+                marginTop: 12,
+                lineHeight: 1.58,
                 maxWidth: 680,
+                padding: "14px 16px",
+                borderRadius: 14,
+                background:
+                  "linear-gradient(135deg, rgba(79,138,255,0.14), rgba(52,211,153,0.09), rgba(155,109,255,0.10))",
+                border: "1px solid rgba(148,163,184,0.24)",
+                boxShadow: "inset 3px 0 0 rgba(52,211,153,0.78)",
               }}
             >
-              This quote combines solar, battery storage, and grid optimization into one operating
-              system designed to reduce utility spend by {fmt$(tier.annualSavings)}/year, improve
-              peak load control, and keep {industryLabel} operations connected to resilient backup
-              power.
-            </p>
+              One operating system for solar, battery storage, and grid optimization — built to cut
+              utility spend by{" "}
+              <span style={{ color: C.green, fontWeight: 900 }}>
+                {fmt$(tier.annualSavings)}/year
+              </span>
+              , improve peak load control, and keep {industryLabel} operations connected to
+              resilient backup power.
+            </div>
           </div>
           <div
             style={{
@@ -1019,25 +1028,41 @@ export function Step4V8({ state, actions }: Props) {
       <div
         style={{
           marginTop: 28,
-          padding: "14px 16px",
-          borderRadius: 12,
-          background: "transparent",
+          padding: "18px 20px",
+          borderRadius: 18,
+          background: stackConfirmed
+            ? "linear-gradient(135deg, rgba(52,211,153,0.15), rgba(15,23,42,0.90))"
+            : "linear-gradient(135deg, rgba(79,138,255,0.16), rgba(155,109,255,0.12), rgba(15,23,42,0.92))",
           border: stackConfirmed
-            ? "1.5px solid rgba(62,207,142,0.72)"
-            : "1.5px solid rgba(79,138,255,0.30)",
+            ? "2px solid rgba(62,207,142,0.78)"
+            : "2px solid rgba(79,138,255,0.58)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: 14,
+          gap: 18,
           flexWrap: "wrap" as const,
-          boxShadow: stackConfirmed ? "0 0 24px rgba(62,207,142,0.18)" : "none",
+          boxShadow: stackConfirmed
+            ? "0 0 34px rgba(62,207,142,0.22), inset 0 1px 0 rgba(255,255,255,0.08)"
+            : "0 18px 45px rgba(2,6,23,0.26), 0 0 34px rgba(79,138,255,0.16), inset 0 1px 0 rgba(255,255,255,0.08)",
         }}
       >
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 3 }}>
-            Select this stack to generate your StackQuote™
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 900,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase" as const,
+              color: stackConfirmed ? C.green : C.sky,
+              marginBottom: 5,
+            }}
+          >
+            Next step
           </div>
-          <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 18, fontWeight: 900, color: C.text, marginBottom: 4 }}>
+            Select this Energy Stack to generate your StackQuote™
+          </div>
+          <div style={{ fontSize: 13.5, color: "rgba(232,235,243,0.78)", lineHeight: 1.5 }}>
             Includes financing options, incentives, and installer recommendations.
           </div>
         </div>
@@ -1056,29 +1081,39 @@ export function Step4V8({ state, actions }: Props) {
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 10,
-            padding: "10px 14px",
+            justifyContent: "center",
+            gap: 12,
+            minWidth: 210,
+            padding: "15px 24px",
             borderRadius: 999,
-            background: "transparent",
-            border: stackConfirmed ? `2px solid ${C.green}` : `2px solid ${C.sky}`,
-            color: stackConfirmed ? C.green : C.sky,
-            fontSize: 13,
+            background: stackConfirmed
+              ? "rgba(52,211,153,0.14)"
+              : "linear-gradient(135deg, #4f8aff, #9b6dff)",
+            border: stackConfirmed ? `2px solid ${C.green}` : "2px solid rgba(191,219,254,0.82)",
+            color: stackConfirmed ? C.green : "#ffffff",
+            fontSize: 16,
             fontWeight: 900,
             cursor: "pointer",
-            letterSpacing: "0.02em",
+            letterSpacing: "0.03em",
             transition: "all 0.18s ease",
-            boxShadow: stackConfirmed ? "0 0 22px rgba(52,211,153,0.24)" : "none",
+            boxShadow: stackConfirmed
+              ? "0 0 24px rgba(52,211,153,0.24)"
+              : "0 16px 34px rgba(79,138,255,0.34), 0 0 0 4px rgba(79,138,255,0.12)",
           }}
           onMouseEnter={(e) => {
             if (!stackConfirmed) {
-              e.currentTarget.style.borderColor = C.green;
-              e.currentTarget.style.color = C.green;
+              e.currentTarget.style.borderColor = "rgba(209,250,229,0.95)";
+              e.currentTarget.style.boxShadow =
+                "0 18px 40px rgba(79,138,255,0.42), 0 0 0 5px rgba(52,211,153,0.16)";
+              e.currentTarget.style.transform = "translateY(-1px)";
             }
           }}
           onMouseLeave={(e) => {
             if (!stackConfirmed) {
-              e.currentTarget.style.borderColor = C.sky;
-              e.currentTarget.style.color = C.sky;
+              e.currentTarget.style.borderColor = "rgba(191,219,254,0.82)";
+              e.currentTarget.style.boxShadow =
+                "0 16px 34px rgba(79,138,255,0.34), 0 0 0 4px rgba(79,138,255,0.12)";
+              e.currentTarget.style.transform = "translateY(0)";
             }
           }}
         >
@@ -1087,19 +1122,21 @@ export function Step4V8({ state, actions }: Props) {
             style={{
               width: 18,
               height: 18,
-              borderRadius: 5,
-              border: `2px solid ${stackConfirmed ? C.green : "currentColor"}`,
+              borderRadius: "50%",
+              border: `2px solid ${stackConfirmed ? C.green : "rgba(255,255,255,0.92)"}`,
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              color: C.green,
+              color: stackConfirmed ? C.green : "#ffffff",
               flexShrink: 0,
+              fontSize: 12,
+              fontWeight: 900,
             }}
           >
-            {stackConfirmed ? "✓" : ""}
+            {stackConfirmed ? "✓" : "→"}
           </span>
           <input type="checkbox" checked={stackConfirmed} readOnly style={{ display: "none" }} />
-          <span>{stackConfirmed ? "Stack selected" : "Select stack"}</span>
+          <span>{stackConfirmed ? "Stack selected" : "Select Stack"}</span>
         </label>
       </div>
 
