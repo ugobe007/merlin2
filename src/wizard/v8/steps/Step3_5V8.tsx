@@ -391,13 +391,15 @@ function AcceptButton({
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
-        padding: "10px 14px",
+        padding: "12px 18px",
         borderRadius: 10,
-        border: accepted ? "1.5px solid rgba(62,207,142,0.9)" : "1.5px solid rgba(99,120,255,0.45)",
+        border: accepted
+          ? "1.5px solid rgba(62,207,142,0.95)"
+          : "1.5px solid rgba(62,207,142,0.58)",
         background: "transparent",
-        color: accepted ? "#3ecf8e" : "#8fd7ff",
-        fontSize: 13,
-        fontWeight: 850,
+        color: "#3ecf8e",
+        fontSize: 16,
+        fontWeight: 900,
         cursor: "pointer",
         boxShadow: accepted ? "0 0 18px rgba(62,207,142,0.12)" : "none",
       }}
@@ -1057,7 +1059,7 @@ function SolarCard({
                 cursor: "pointer",
                 fontSize: 12,
                 fontWeight: 800,
-                color: "rgba(251,191,36,0.86)",
+                color: "#3ecf8e",
                 letterSpacing: "0.05em",
                 textTransform: "uppercase",
                 marginBottom: 10,
@@ -1162,7 +1164,7 @@ function SolarCard({
                   style={{
                     fontSize: 11,
                     fontWeight: 700,
-                    color: "rgba(251,191,36,0.7)",
+                    color: "rgba(62,207,142,0.78)",
                     textTransform: "uppercase",
                     letterSpacing: "0.08em",
                     marginBottom: 7,
@@ -1237,7 +1239,7 @@ function SolarCard({
             cursor: "pointer",
             fontSize: 12,
             fontWeight: 800,
-            color: "rgba(148,163,184,0.76)",
+            color: "#3ecf8e",
             letterSpacing: "0.05em",
             textTransform: "uppercase",
             marginBottom: 10,
@@ -1323,7 +1325,7 @@ function SolarCard({
         })()}
       </details>
 
-      <div style={{ padding: "0 16px 14px" }}>
+      <div style={{ padding: "0 16px 14px", display: "flex", justifyContent: "flex-end" }}>
         <AcceptButton
           accepted={accepted}
           label="Accept solar capacity"
@@ -2210,7 +2212,7 @@ function EVChargingCard({
           <summary
             style={{
               fontSize: 12,
-              color: "rgba(148,163,184,0.40)",
+              color: "#3ecf8e",
               cursor: "pointer",
               listStyle: "none",
               padding: "4px 0",
@@ -2261,7 +2263,7 @@ function EVChargingCard({
           </div>
         )}
 
-        <div style={{ padding: "0 16px 16px" }}>
+        <div style={{ padding: "0 16px 16px", display: "flex", justifyContent: "flex-end" }}>
           <AcceptButton
             accepted={accepted}
             label="Accept EV charging"
@@ -2503,7 +2505,7 @@ function BackupGeneratorCard({
             cursor: "pointer",
             fontSize: 12,
             fontWeight: 800,
-            color: "rgba(251,146,60,0.86)",
+            color: "#3ecf8e",
             letterSpacing: "0.05em",
             textTransform: "uppercase",
             marginBottom: 10,
@@ -2537,7 +2539,7 @@ function BackupGeneratorCard({
           {selectedFuel.desc}
         </div>
       </details>
-      <div style={{ padding: "0 16px 14px" }}>
+      <div style={{ padding: "0 16px 14px", display: "flex", justifyContent: "flex-end" }}>
         <AcceptButton
           accepted={accepted}
           label="Accept generator setup"
@@ -2699,20 +2701,15 @@ function RoiIntelBanner({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {shown.map((hint) => {
-        const isAmber = hint.color === "amber";
         const isBlue = hint.color === "blue";
-        const bg = isAmber
-          ? "rgba(245,158,11,0.07)"
-          : isBlue
-            ? "rgba(56,189,248,0.07)"
-            : "rgba(239,68,68,0.07)";
-        const border = isAmber
-          ? "1px solid rgba(245,158,11,0.22)"
-          : isBlue
-            ? "1px solid rgba(56,189,248,0.22)"
-            : "1px solid rgba(239,68,68,0.22)";
-        const labelColor = isAmber ? "#fbbf24" : isBlue ? "#38bdf8" : "#f87171";
-        const label = isAmber ? "ROI Tip" : isBlue ? "Solar Intel" : "Rate Alert";
+        const bg = "rgba(15,23,42,0.34)";
+        const border = isBlue
+          ? "1px solid rgba(56,189,248,0.24)"
+          : hint.color === "rose"
+            ? "1px solid rgba(248,113,113,0.24)"
+            : "1px solid rgba(62,207,142,0.24)";
+        const labelColor = isBlue ? "#38bdf8" : hint.color === "rose" ? "#f87171" : "#3ecf8e";
+        const label = hint.color === "amber" ? "ROI Tip" : isBlue ? "Solar Intel" : "Rate Alert";
         return (
           <div
             key={hint.id}
@@ -2753,7 +2750,7 @@ function RoiIntelBanner({
                     padding: "5px 12px",
                     borderRadius: 6,
                     border: `1px solid ${labelColor}55`,
-                    background: `${labelColor}14`,
+                    background: "transparent",
                     color: labelColor,
                     fontSize: 12,
                     fontWeight: 700,
@@ -3138,21 +3135,21 @@ export default function Step3_5V8({ state, actions }: Props) {
         <div
           style={{
             borderRadius: 10,
-            background: "rgba(245,158,11,0.08)",
-            border: "1px solid rgba(245,158,11,0.25)",
+            background: "rgba(15,23,42,0.34)",
+            border: "1px solid rgba(56,189,248,0.24)",
             padding: "12px 16px",
             display: "flex",
             alignItems: "flex-start",
             gap: 10,
           }}
         >
-          <span style={{ fontSize: 18, lineHeight: 1 }}>⚡</span>
+          <span style={{ fontSize: 18, lineHeight: 1, color: "#38bdf8" }}>⚡</span>
           <div>
             <div
               style={{
                 fontSize: 13,
                 fontWeight: 700,
-                color: "rgba(251,191,36,0.95)",
+                color: "#38bdf8",
                 marginBottom: 3,
               }}
             >
