@@ -47,13 +47,13 @@ function StepperBtn({ onClick, children }: { onClick: () => void; children: Reac
     <button
       onClick={onClick}
       style={{
-        width: 34,
-        height: 34,
+        width: 28,
+        height: 28,
         borderRadius: "50%",
         background: "rgba(99,120,255,0.10)",
         border: "1.5px solid rgba(99,120,255,0.25)",
         color: "rgba(255,255,255,0.85)",
-        fontSize: 20,
+        fontSize: 17,
         lineHeight: 1,
         cursor: "pointer",
         display: "flex",
@@ -88,7 +88,7 @@ function AddonSlider({
     <div
       style={{
         position: "relative",
-        height: 44,
+        height: 28,
         display: "flex",
         alignItems: "center",
       }}
@@ -98,7 +98,7 @@ function AddonSlider({
           position: "absolute",
           left: 0,
           right: 0,
-          height: 5,
+          height: 3,
           borderRadius: 3,
           background: "rgba(99,120,255,0.15)",
           top: "50%",
@@ -109,7 +109,7 @@ function AddonSlider({
         style={{
           position: "absolute",
           left: 0,
-          height: 5,
+          height: 3,
           width: `${pct}%`,
           borderRadius: 3,
           background: color,
@@ -121,14 +121,12 @@ function AddonSlider({
       <div
         style={{
           position: "absolute",
-          left: `calc(${pct}% - 10px)`,
-          width: 22,
-          height: 22,
+          left: `calc(${pct}% - 8px)`,
+          width: 16,
+          height: 16,
           borderRadius: "50%",
           background: color,
-          boxShadow: isAtRec
-            ? `0 0 0 3px ${color}55, 0 0 18px ${color}cc, 0 0 4px ${color}55`
-            : `0 0 12px ${color}99, 0 0 4px ${color}55`,
+          boxShadow: isAtRec ? `0 0 0 2px ${color}44, 0 0 12px ${color}99` : `0 0 8px ${color}77`,
           transition: "left 0.06s",
           pointerEvents: "none",
           zIndex: 1,
@@ -137,7 +135,7 @@ function AddonSlider({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 10,
+          fontSize: 9,
           fontWeight: 900,
           color: "#0D1117",
         }}
@@ -275,7 +273,7 @@ function _EVSliderRow({
   );
 }
 
-// ── Confirm Button ────────────────────────────────────────────────────────────
+// ── Compact Confirm Checkbox ──────────────────────────────────────────────────
 function ConfirmBtn({
   confirmed,
   needsConfirm = false,
@@ -289,118 +287,59 @@ function ConfirmBtn({
   confirmedLabel: string;
   onClick: () => void;
 }) {
-  // Inject @keyframes once into <head> so the animation name is available for inline style
-  useEffect(() => {
-    const id = "merlin-confirm-pulse-style";
-    if (!document.getElementById(id)) {
-      const el = document.createElement("style");
-      el.id = id;
-      el.textContent = `
-        @keyframes confirmGlow {
-          0%, 100% {
-            box-shadow: none;
-            border-color: rgba(130,100,255,0.55);
-            color: rgba(155,109,255,0.7);
-            text-shadow: none;
-          }
-          50% {
-            box-shadow: 0 0 0 2px rgba(130,100,255,0.25), 0 0 18px 4px rgba(130,100,255,0.20);
-            border-color: rgba(130,100,255,1.0);
-            color: #9b6dff;
-            text-shadow: none;
-          }
-        }
-      `;
-      document.head.appendChild(el);
-    }
-  }, []);
-
-  if (confirmed) {
-    // Compact success badge — not a big CTA, just a status indicator
-    return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 7,
-          padding: "9px 14px",
-          borderRadius: 8,
-          background: "transparent",
-          border: "1.5px solid rgba(130,100,255,0.60)",
-          boxShadow: "none",
-          fontSize: 13,
-          fontWeight: 700,
-          color: "#9b6dff",
-          letterSpacing: "0.04em",
-        }}
-      >
-        <div
-          style={{
-            width: 18,
-            height: 18,
-            borderRadius: "50%",
-            background: "transparent",
-            border: "1.5px solid rgba(130,100,255,0.60)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 10,
-            fontWeight: 900,
-            color: "#9b6dff",
-            flexShrink: 0,
-          }}
-        >
-          ✓
-        </div>
-        {confirmedLabel}
-        <button
-          onClick={onClick}
-          style={{
-            marginLeft: 6,
-            padding: "2px 8px",
-            borderRadius: 5,
-            border: "1px solid rgba(130,100,255,0.35)",
-            background: "transparent",
-            color: "rgba(155,109,255,0.7)",
-            fontSize: 11,
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          Edit
-        </button>
-      </div>
-    );
-  }
   return (
     <button
       onClick={onClick}
       style={{
-        width: "100%",
-        padding: needsConfirm ? "14px 16px" : "11px 16px",
-        borderRadius: 10,
-        border: "none",
-        background: "linear-gradient(135deg, #4f8aff, #9b6dff)",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        padding: "8px 12px",
+        borderRadius: 999,
+        border: confirmed
+          ? "1.5px solid rgba(62,207,142,0.86)"
+          : "1.5px solid rgba(79,138,255,0.56)",
+        background: "transparent",
         cursor: "pointer",
-        fontSize: needsConfirm ? 14 : 13,
-        fontWeight: 700,
-        letterSpacing: "0.05em",
+        fontSize: 12,
+        fontWeight: 850,
+        letterSpacing: "0.03em",
         textTransform: "uppercase" as const,
-        color: "#fff",
-        transition: "box-shadow 0.15s",
-        boxShadow: "0 4px 16px rgba(79,138,255,0.28)",
-        animation: "none",
-        position: "relative" as const,
+        color: confirmed ? "#3ecf8e" : "#8fd7ff",
+        transition: "border-color 0.15s, color 0.15s, box-shadow 0.15s",
+        boxShadow: confirmed ? "0 0 18px rgba(62,207,142,0.16)" : "none",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 24px rgba(79,138,255,0.45)";
+        if (!confirmed) {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(62,207,142,0.76)";
+          (e.currentTarget as HTMLButtonElement).style.color = "#3ecf8e";
+        }
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+        if (!confirmed) {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(79,138,255,0.56)";
+          (e.currentTarget as HTMLButtonElement).style.color = "#8fd7ff";
+        }
       }}
     >
-      {needsConfirm ? `✓ ${label}` : label}
+      <span
+        style={{
+          width: 16,
+          height: 16,
+          borderRadius: 4,
+          border: confirmed ? "1.5px solid #3ecf8e" : "1.5px solid currentColor",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#3ecf8e",
+          fontSize: 11,
+          lineHeight: 1,
+        }}
+      >
+        {confirmed ? "✓" : ""}
+      </span>
+      {confirmed ? confirmedLabel : label}
     </button>
   );
 }
@@ -864,29 +803,29 @@ function SolarCard({
           display: "flex",
           alignItems: "center",
           gap: 12,
-          padding: "16px 16px 14px",
+          padding: "12px 14px 10px",
         }}
       >
         <div
           style={{
-            width: 42,
-            height: 42,
+            width: 34,
+            height: 34,
             borderRadius: 10,
             background: "rgba(251,191,36,0.14)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 21,
+            fontSize: 18,
             flexShrink: 0,
           }}
         >
           ☀️
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>Solar PV Array</div>
+          <div style={{ fontSize: 16, fontWeight: 750, color: "#fff" }}>Solar PV Array</div>
           <div
             style={{
-              fontSize: 14,
+              fontSize: 12,
               color: "rgba(148,163,184,0.6)",
               marginTop: 2,
             }}
@@ -922,13 +861,13 @@ function SolarCard({
           display: "flex",
           alignItems: "center",
           gap: 12,
-          padding: "16px 16px 14px",
+          padding: "12px 14px 10px",
         }}
       >
         <span
           style={{
             flex: 1,
-            fontSize: 15,
+            fontSize: 13,
             color: "rgba(203,213,225,0.8)",
             fontWeight: 600,
           }}
@@ -948,7 +887,7 @@ function SolarCard({
             >
               <span
                 style={{
-                  fontSize: 26,
+                  fontSize: 22,
                   fontWeight: 800,
                   color: "#f1f5f9",
                   fontVariantNumeric: "tabular-nums",
@@ -999,7 +938,7 @@ function SolarCard({
           <StepperBtn onClick={() => handleChange(sliderKW + stepKW)}>+</StepperBtn>
         </div>
       </div>
-      <div style={{ padding: "0 16px 18px" }}>
+      <div style={{ padding: "0 14px 12px" }}>
         <AddonSlider
           value={sliderKW}
           min={solarMin}
@@ -1028,11 +967,11 @@ function SolarCard({
                 display: "flex",
                 alignItems: "center",
                 gap: 4,
-                padding: "3px 8px",
+                padding: "2px 7px",
                 borderRadius: 20,
                 background: "rgba(251,191,36,0.13)",
                 border: "1px solid rgba(251,191,36,0.28)",
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: 600,
                 color: "#fbbf24",
                 whiteSpace: "nowrap",
@@ -1061,7 +1000,7 @@ function SolarCard({
           `}</style>
           <div
             style={{
-              padding: "12px 16px 14px",
+              padding: "10px 14px 12px",
               borderTop: "1px solid rgba(255,255,255,0.06)",
             }}
           >
@@ -1078,12 +1017,12 @@ function SolarCard({
               {"☀️ Solar Coverage"}
             </div>
 
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {/* ── Rooftop — always included, active-confirmed badge ── */}
               <div
                 style={{
                   flex: 1,
-                  padding: "12px 6px 10px",
+                  padding: "9px 6px 8px",
                   borderRadius: 10,
                   border: "2px solid rgba(52,211,153,0.75)",
                   background: "transparent",
@@ -1091,7 +1030,7 @@ function SolarCard({
                   userSelect: "none",
                 }}
               >
-                <div style={{ fontSize: 22, lineHeight: 1 }}>🏠</div>
+                <div style={{ fontSize: 18, lineHeight: 1 }}>🏠</div>
                 <div
                   style={{
                     fontSize: 12,
@@ -1106,7 +1045,7 @@ function SolarCard({
                 {/* Show the slider's current value (what gets quoted), not the roof capacity cap */}
                 <div
                   style={{
-                    fontSize: 15,
+                    fontSize: 13,
                     fontWeight: 900,
                     color: "#fff",
                     marginTop: 3,
@@ -1161,7 +1100,7 @@ function SolarCard({
                     }}
                     style={{
                       flex: 1,
-                      padding: "12px 6px 10px",
+                      padding: "9px 6px 8px",
                       borderRadius: 10,
                       border: carportActive
                         ? "2px solid rgba(251,191,36,1.0)"
@@ -1176,7 +1115,7 @@ function SolarCard({
                         : undefined,
                     }}
                   >
-                    <div style={{ fontSize: 22, lineHeight: 1 }}>🏗️</div>
+                    <div style={{ fontSize: 18, lineHeight: 1 }}>🏗️</div>
                     <div
                       style={{
                         fontSize: 12,
@@ -1190,7 +1129,7 @@ function SolarCard({
                     </div>
                     <div
                       style={{
-                        fontSize: 15,
+                        fontSize: 13,
                         fontWeight: 900,
                         color: carportActive ? "#fbbf24" : "#fbbf24",
                         marginTop: 3,
@@ -1351,7 +1290,7 @@ function SolarCard({
       {/* ── Panel Grade Toggle ─────────────────────────────────────────── */}
       <div
         style={{
-          padding: "12px 16px 10px",
+          padding: "10px 14px 8px",
           borderTop: "1px solid rgba(255,255,255,0.06)",
         }}
       >
@@ -1367,7 +1306,7 @@ function SolarCard({
         >
           Panel Grade
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           {(
             [
               {
@@ -1400,7 +1339,7 @@ function SolarCard({
                 onClick={() => onPanelTierChange?.(id)}
                 style={{
                   flex: 1,
-                  padding: "10px 8px",
+                  padding: "8px 8px",
                   borderRadius: 9,
                   border,
                   background: bg,
@@ -1409,10 +1348,10 @@ function SolarCard({
                   transition: "border-color 0.15s, background 0.15s",
                 }}
               >
-                <div style={{ fontSize: 18, lineHeight: 1 }}>{emoji}</div>
+                <div style={{ fontSize: 15, lineHeight: 1 }}>{emoji}</div>
                 <div
                   style={{
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: 700,
                     color: labelColor,
                     marginTop: 5,

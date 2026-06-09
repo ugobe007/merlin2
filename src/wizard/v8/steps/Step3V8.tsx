@@ -756,9 +756,12 @@ export function Step3V8({ state, actions }: Props) {
           }}
         >
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: "#3ecf8e", marginBottom: 7 }}>
+            <div style={{ fontSize: 18, fontWeight: 950, color: "#3ecf8e", marginBottom: 7 }}>
               ✓ All {visibleQuestions.length} questions pre-filled
-              <span style={{ color: "#c084fc" }}> with {displayName} benchmarks</span>
+              <span style={{ color: "#3ecf8e", fontSize: 22, fontWeight: 950 }}>
+                {" "}
+                with {displayName} benchmarks
+              </span>
             </div>
             <div style={{ fontSize: 13, color: "rgba(226,232,240,0.78)", lineHeight: 1.45 }}>
               Smart defaults applied <span style={{ color: "#7dd3fc" }}>inline</span> — review below
@@ -772,29 +775,37 @@ export function Step3V8({ state, actions }: Props) {
               display: "flex",
               alignItems: "center",
               gap: 8,
-              padding: "12px 20px",
-              borderRadius: 12,
-              background: "transparent",
-              color: "#7dd3fc",
-              border: "2px solid #7dd3fc",
-              fontSize: 13,
+              padding: "14px 26px",
+              borderRadius: 14,
+              background:
+                "linear-gradient(rgba(10,15,30,0.94), rgba(10,15,30,0.94)) padding-box, linear-gradient(90deg, #8b5cf6, #38bdf8) border-box",
+              color: "transparent",
+              border: "2px solid transparent",
+              fontSize: 16,
               fontWeight: 900,
               cursor: "pointer",
               whiteSpace: "nowrap",
               flexShrink: 0,
-              boxShadow: "0 0 0 1px rgba(255,255,255,0.04) inset",
+              boxShadow: "none",
               letterSpacing: "0.02em",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = "#3ecf8e";
-              e.currentTarget.style.borderColor = "#3ecf8e";
+              e.currentTarget.style.borderColor = "transparent";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = "#7dd3fc";
-              e.currentTarget.style.borderColor = "#7dd3fc";
+              e.currentTarget.style.borderColor = "transparent";
             }}
           >
-            Use Smart Defaults → Skip to Add-ons
+            <span
+              style={{
+                background: "linear-gradient(90deg, #a78bfa 0%, #38bdf8 100%)",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              Use Smart Defaults → Skip to Add-ons
+            </span>
           </button>
         </div>
 
