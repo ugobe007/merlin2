@@ -1,6 +1,6 @@
 /**
- * EnergyStackingSection — Interactive 6-layer stack explorer
- * Design: list rows (left) + live inspector panel (right) + CO-OPTIMIZED OUTPUT footer
+ * EnergyStackingSection — Interactive Energy Architecture explorer
+ * Design: definition + score model + layer inspector + architecture output footer
  * Palette: wizard standard (violet/blue, no cyan)
  */
 
@@ -25,11 +25,11 @@ const P = {
 
 const SPARKS: Record<string, string> = {
   utility: "M0,9 L20,9 L40,9 L60,9 L80,9 L100,9 L120,9",
-  bess: "M0,13 C15,13 18,5 28,7 S42,11 52,7 S68,3 78,7 S92,11 102,6 S112,4 120,7",
-  solar: "M0,14 C18,14 28,3 44,2 S60,5 74,3 S88,2 102,5 S112,9 120,11",
-  generator: "M0,9 L28,9 C34,9 36,2 42,9 L68,9 C74,9 76,2 82,9 L120,9",
-  ai: "M0,11 C8,9 14,7 20,9 S28,13 34,9 S44,5 54,9 S64,13 74,7 S84,9 94,11 S108,7 120,9",
-  arbitrage: "M0,9 C14,11 18,7 28,9 S38,13 48,9 S58,5 68,9 S78,11 88,7 S104,9 120,9",
+  storage: "M0,13 C15,13 18,5 28,7 S42,11 52,7 S68,3 78,7 S92,11 102,6 S112,4 120,7",
+  generation: "M0,14 C18,14 28,3 44,2 S60,5 74,3 S88,2 102,5 S112,9 120,11",
+  dispatchable: "M0,9 L28,9 C34,9 36,2 42,9 L68,9 C74,9 76,2 82,9 L120,9",
+  flexible: "M0,11 C8,9 14,7 20,9 S28,13 34,9 S44,5 54,9 S64,13 74,7 S84,9 94,11 S108,7 120,9",
+  intelligence: "M0,9 C14,11 18,7 28,9 S38,13 48,9 S58,5 68,9 S78,11 88,7 S104,9 120,9",
 };
 
 interface LayerDef {
@@ -51,134 +51,177 @@ interface LayerDef {
 const LAYERS: LayerDef[] = [
   {
     id: "utility",
-    label: "Utility Power Grid",
+    label: "Utility",
     code: "L01",
-    sub: "Layer 1 — Interconnection Baseline",
+    sub: "Grid power · capacity · demand charges · TOU pricing",
     detail:
-      "Your grid connection provides the baseline service level. Tariff structure, demand charges, and time-of-use windows are modeled from your utility rate schedule and peak load profile.",
+      "Every architecture starts with the utility layer: available capacity, demand charges, time-of-use pricing, reliability, interconnection delays, and exposure to rate-case pressure.",
     defaultVal: 100,
     unit: "%",
     color: P.textSub,
-    sliderLabel: "Grid Dependency",
+    sliderLabel: "Utility Dependence",
     sliderMin: 20,
     sliderMax: 100,
     sliderStep: 5,
-    bulletPoint: "Sets baseline demand charges and grid exposure risk across all layers.",
+    bulletPoint:
+      "Defines the baseline risk, cost, and capacity constraint every other layer must solve around.",
   },
   {
-    id: "bess",
-    label: "Battery Storage (BESS)",
+    id: "storage",
+    label: "Storage",
     code: "L02",
-    sub: "Layer 2 — Physical Buffer & Peak Shaving",
+    sub: "BESS · peak shaving · backup · arbitrage · demand response",
     detail:
-      "Chemical energy buffer providing instantaneous peak demand reduction, emergency back-up support, and solar self-consumption optimization. Sized to your facility's peak load and critical coverage window.",
+      "The storage layer adds a physical buffer for peak shaving, backup coverage, tariff arbitrage, demand response, and solar self-consumption.",
     defaultVal: 150,
     unit: "kWh",
     color: P.purple,
-    sliderLabel: "Battery Reserve Capacity",
+    sliderLabel: "Storage Capacity",
     sliderMin: 25,
     sliderMax: 500,
     sliderStep: 25,
-    bulletPoint: "Reduces peak demand charges by storing and dispatching at critical rate windows.",
+    bulletPoint:
+      "Creates optionality: shift energy in time, protect operations, and monetize rate windows.",
   },
   {
-    id: "solar",
-    label: "Solar Generation",
+    id: "generation",
+    label: "Generation",
     code: "L03",
-    sub: "Layer 3 — Photovoltaic Production Harvest",
+    sub: "Solar · wind · fuel cell · small nuclear",
     detail:
-      "Daytime generation paired to load timing and site economics. Solar production offsets utility consumption and charges battery storage during peak production windows, compressing net load and demand exposure.",
+      "The generation layer offsets purchased energy and can improve sustainability, capacity planning, and long-term economics when paired with the right load profile.",
     defaultVal: 250,
     unit: "kW",
     color: P.amber,
-    sliderLabel: "Array Size",
+    sliderLabel: "On-Site Generation",
     sliderMin: 25,
     sliderMax: 500,
     sliderStep: 25,
-    bulletPoint: "Offsets daytime consumption and feeds battery storage for dispatch during peak.",
+    bulletPoint:
+      "Tests whether on-site production should reduce energy cost, reduce demand, or support a resilience objective.",
   },
   {
-    id: "generator",
-    label: "Generator Backup",
+    id: "dispatchable",
+    label: "Dispatchable Generation",
     code: "L04",
-    sub: "Layer 4 — Emergency Continuity Reserve",
+    sub: "Natural gas · diesel · emergency operation · grid independence",
     detail:
-      "Continuity layer for outages and critical operations coverage. Generator runtime is sized to bridge grid outages beyond battery storage duration, ensuring uninterrupted operations.",
+      "Dispatchable generation adds controllable power for emergency operation, extended outages, utility constraints, and higher independence requirements.",
     defaultVal: 3,
     unit: "hr",
     color: P.green,
-    sliderLabel: "Runtime Window",
+    sliderLabel: "Backup Runtime",
     sliderMin: 1,
     sliderMax: 12,
     sliderStep: 1,
-    bulletPoint: "Bridges extended outages beyond battery storage capacity.",
+    bulletPoint:
+      "Determines whether backup power is a compliance item, a resilience strategy, or a path toward grid independence.",
   },
   {
-    id: "ai",
-    label: "AI Load Optimization",
+    id: "flexible",
+    label: "Flexible Loads",
     code: "L05",
-    sub: "Layer 5 — Merlin Signal Intelligence",
+    sub: "EV charging · HVAC · data centers · manufacturing",
     detail:
-      "Merlin's core signal intelligence translates load behavior, tariff variability, and resilience constraints into one orchestrated stack strategy — adapting in real time to demand events and rate signals.",
+      "Flexible loads reveal what can move, what can shed, and what can be optimized before adding more equipment. This layer often changes the economics of the entire architecture.",
     defaultVal: 85,
     unit: "%",
     color: P.blue,
-    sliderLabel: "Optimization Efficiency",
+    sliderLabel: "Load Flexibility",
     sliderMin: 50,
     sliderMax: 99,
     sliderStep: 1,
-    bulletPoint: "Dispatch logic that adapts to peaks, tariffs, and risk posture in real time.",
+    bulletPoint: "Identifies operational flexibility before capital is spent on more hardware.",
   },
   {
-    id: "arbitrage",
-    label: "Dynamic Rate Arbitrage",
+    id: "intelligence",
+    label: "Intelligence",
     code: "L06",
-    sub: "Layer 6 — Financial Timing Dispatch",
+    sub: "Merlin · orchestration · scoring · architecture recommendation",
     detail:
-      "Financial control from timing power flows against rate structures. Charges storage during off-peak low-cost windows, dispatches during on-peak high-cost windows to extract maximum tariff spread.",
-    defaultVal: 18,
+      "Merlin is the orchestration layer. It ranks architecture options across cost, reliability, deployment speed, independence, and sustainability so the customer sees the right system before the quote.",
+    defaultVal: 78,
     unit: "%",
     color: P.fuchsia,
-    sliderLabel: "Arbitrage Window",
-    sliderMin: 5,
-    sliderMax: 35,
+    sliderLabel: "Architecture Confidence",
+    sliderMin: 40,
+    sliderMax: 100,
     sliderStep: 1,
-    bulletPoint: "Times charge/discharge cycles against real-time tariff differentials.",
+    bulletPoint: "Turns individual technologies into an Energy Architecture recommendation.",
   },
 ];
 
+const SCORE_FACTORS = [
+  { label: "Cost", weight: "20%" },
+  { label: "Reliability", weight: "20%" },
+  { label: "Deployment Speed", weight: "20%" },
+  { label: "Independence", weight: "20%" },
+  { label: "Sustainability", weight: "20%" },
+];
+
+const ARCHITECTURE_OUTPUTS = [
+  "Lowest Cost Architecture",
+  "Fastest Deployment Architecture",
+  "Maximum Resilience Architecture",
+  "Maximum Independence Architecture",
+  "Balanced Architecture",
+];
+
 function computeOutput(vals: Record<string, number>) {
-  const bess = vals.bess ?? 150;
-  const solar = vals.solar ?? 250;
-  const ai = vals.ai ?? 85;
-  const arb = vals.arbitrage ?? 18;
-  const gen = vals.generator ?? 3;
-  const hasSolar = solar > 50;
-  const hasBess = bess > 50;
+  const utility = vals.utility ?? 100;
+  const storage = vals.storage ?? 150;
+  const generation = vals.generation ?? 250;
+  const dispatchable = vals.dispatchable ?? 3;
+  const flexible = vals.flexible ?? 85;
+  const intelligence = vals.intelligence ?? 78;
+  const hasGeneration = generation > 75;
+  const hasStorage = storage > 50;
+  const hasDispatchable = dispatchable >= 4;
   const arch =
-    hasSolar && hasBess
-      ? "Solar + BESS Hybrid"
-      : hasBess
-        ? "BESS + Utility"
-        : hasSolar
-          ? "Solar + Utility"
+    hasGeneration && hasStorage && hasDispatchable
+      ? "Solar + BESS + Generator"
+      : hasGeneration && hasStorage
+        ? "Solar + BESS"
+        : hasStorage
+          ? "Utility + BESS"
           : "Utility Only";
-  const carbonOffset = Math.round((solar / 500) * 62 + (bess / 500) * 18);
-  const payback = Math.max(
-    2.5,
-    Math.min(
-      9.5,
-      6.2 -
-        ((ai - 50) / 100) * 1.8 -
-        (arb / 100) * 1.1 -
-        (hasSolar ? 0.6 : 0) -
-        (gen >= 3 ? 0.1 : 0)
-    )
-  ).toFixed(1);
-  const annualValue = Math.round(
-    (bess / 150) * 19500 + (hasSolar ? (solar / 250) * 23000 : 0) + (ai / 85) * 7500 + arb * 480
+  const cost = Math.max(
+    1,
+    Math.min(10, 9 - generation / 180 - storage / 450 + (100 - utility) / 45)
   );
-  return { arch, carbonOffset, payback, annualValue };
+  const reliability = Math.max(1, Math.min(10, 4.8 + storage / 95 + dispatchable * 0.55));
+  const speed = Math.max(
+    1,
+    Math.min(10, 10 - generation / 160 - dispatchable * 0.25 + flexible / 85)
+  );
+  const independence = Math.max(
+    1,
+    Math.min(10, 1 + generation / 80 + storage / 115 + dispatchable * 0.8)
+  );
+  const sustainability = Math.max(
+    1,
+    Math.min(10, 2.5 + generation / 70 + storage / 165 - dispatchable * 0.15)
+  );
+  const energyScore = Math.round(
+    ((cost + reliability + speed + independence + sustainability) / 5) * 10
+  );
+  const priority =
+    energyScore >= 78
+      ? "Balanced Architecture"
+      : reliability >= 8
+        ? "Maximum Resilience Architecture"
+        : speed >= 8
+          ? "Fastest Deployment Architecture"
+          : cost >= 7
+            ? "Lowest Cost Architecture"
+            : "Maximum Independence Architecture";
+  const annualValue = Math.round(
+    (storage / 150) * 16500 +
+      (hasGeneration ? (generation / 250) * 21000 : 0) +
+      (flexible / 85) * 8500 +
+      intelligence * 420
+  );
+  return { arch, energyScore, priority, annualValue };
 }
 
 function Sparkline({ path, color }: { path: string; color: string }) {
@@ -310,10 +353,11 @@ export default function EnergyStackingSection() {
               Energy Stacking™
             </h2>
             <p
-              style={{ fontSize: 15, color: P.textSub, lineHeight: 1.65, margin: 0, maxWidth: 560 }}
+              style={{ fontSize: 15, color: P.textSub, lineHeight: 1.65, margin: 0, maxWidth: 680 }}
             >
-              One building is no longer one power source. Merlin orchestrates a modern Energy Stack™
-              as an adaptive, software-native infrastructure system.
+              Energy Stacking is the process of combining multiple energy resources into a single
+              optimized architecture that balances cost, reliability, deployment speed, resilience,
+              independence, and sustainability.
             </p>
           </div>
           <button
@@ -356,6 +400,104 @@ export default function EnergyStackingSection() {
         </div>
 
         <div style={{ height: 1, background: P.border, marginBottom: 28 }} />
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1.05fr 1fr",
+            gap: 16,
+            marginBottom: 28,
+          }}
+          className="es-grid"
+        >
+          <div
+            style={{
+              border: `1px solid ${P.border}`,
+              borderRadius: 16,
+              background: "rgba(17,26,62,0.62)",
+              padding: "18px 20px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: P.fuchsia,
+                marginBottom: 10,
+              }}
+            >
+              The Energy Stacking Score
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(92px, 1fr))",
+                gap: 8,
+              }}
+            >
+              {SCORE_FACTORS.map((factor) => (
+                <div
+                  key={factor.label}
+                  style={{
+                    border: `1px solid ${P.border}`,
+                    borderRadius: 10,
+                    background: P.panelDeep,
+                    padding: "10px 8px",
+                  }}
+                >
+                  <div style={{ fontSize: 11, fontWeight: 800, color: P.text, lineHeight: 1.2 }}>
+                    {factor.label}
+                  </div>
+                  <div style={{ marginTop: 5, fontSize: 11, color: P.green, fontWeight: 800 }}>
+                    {factor.weight}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div
+            style={{
+              border: `1px solid rgba(130,100,255,0.28)`,
+              borderRadius: 16,
+              background: "linear-gradient(145deg, rgba(79,138,255,0.10), rgba(124,58,237,0.12))",
+              padding: "18px 20px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: P.blue,
+                marginBottom: 10,
+              }}
+            >
+              Merlin ranks architectures
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {ARCHITECTURE_OUTPUTS.map((outputLabel) => (
+                <span
+                  key={outputLabel}
+                  style={{
+                    border: `1px solid rgba(255,255,255,0.10)`,
+                    borderRadius: 999,
+                    background: "rgba(8,13,36,0.62)",
+                    color: P.textSub,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: "6px 10px",
+                  }}
+                >
+                  {outputLabel}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {/* ── Body: layer list + inspector ───────────────────────── */}
         <div
@@ -693,7 +835,7 @@ export default function EnergyStackingSection() {
           </div>
         </div>
 
-        {/* ── CO-OPTIMIZED OUTPUT strip ───────────────────────────── */}
+        {/* ── ENERGY ARCHITECTURE OUTPUT strip ────────────────────── */}
         <div
           style={{
             marginTop: 24,
@@ -749,11 +891,10 @@ export default function EnergyStackingSection() {
                   marginBottom: 2,
                 }}
               >
-                Co-Optimized Output
+                Energy Architecture Output
               </div>
               <div style={{ fontSize: 11, color: P.textSub, maxWidth: 200, lineHeight: 1.4 }}>
-                Merlin dynamically translates physical layer parameters into optimal business
-                metrics.
+                Merlin translates layered resources into a ranked architecture before the quote.
               </div>
             </div>
           </div>
@@ -767,19 +908,19 @@ export default function EnergyStackingSection() {
             [
               { label: "Recommended Stack", value: output.arch, color: P.text, size: 14 },
               {
-                label: "Carbon Offset",
-                value: `${output.carbonOffset}%`,
+                label: "Architecture Score",
+                value: `${output.energyScore}/100`,
                 color: P.green,
                 size: 20,
               },
               {
-                label: "Estimated Payback",
-                value: `${output.payback} Yrs`,
+                label: "Recommended Lens",
+                value: output.priority,
                 color: P.amber,
-                size: 20,
+                size: 14,
               },
               {
-                label: "Annual Value Forecast",
+                label: "Financial Outcome",
                 value: `$${output.annualValue.toLocaleString()} / yr`,
                 color: P.blue,
                 size: 17,

@@ -43,7 +43,7 @@ export default function AudienceStrip() {
                 Facility Owners &amp; Operators
               </span>
               <span className="text-[12px] text-slate-500">
-                Free StackQuote™ · No account · ~90 seconds
+                Free energy strategy · No account · ~90 seconds
               </span>
             </div>
             <ArrowRight
@@ -77,7 +77,7 @@ export default function AudienceStrip() {
                 EPCs, Developers &amp; Integrators
               </span>
               <span className="text-[12px] text-slate-500">
-                Embed StackQuote™ on your site · Free API key · No credit card
+                Embed Merlin intake · Free API key · No credit card
               </span>
             </div>
             <ArrowRight

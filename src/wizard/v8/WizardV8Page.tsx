@@ -608,6 +608,7 @@ export default function WizardV8Page() {
         businessTypeLabel?: string;
         businessName?: string;
         address?: string;
+        placeId?: string;
       } = {};
 
       try {
@@ -626,6 +627,7 @@ export default function WizardV8Page() {
         businessTypeLabel: heroDraft.businessTypeLabel,
         businessName: heroDraft.businessName,
         address: heroDraft.address,
+        placeId: heroDraft.placeId,
       });
 
       return;

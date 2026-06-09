@@ -73,14 +73,15 @@ export default function ValueSection() {
                 We looked at what AI could do and found a critical gap: general AI systems are not
                 trained on energy physics, utility tariff structures, BMS control logic, or the
                 demand profiles that separate a 450 kW car wash from a 2 MW data center. They
-                generate plausible-sounding text. They don't do the engineering. So we built{" "}
-                <span className="text-yellow-400 font-semibold">StackQuote</span> — an AI-enabled
-                orchestration engine designed specifically for the complexity of commercial and
-                industrial energy projects. It models BESS, solar, wind, backup generation, and EV
-                infrastructure together — configured to the specific load profile of each industry,
-                sized against live utility data, and delivered as an EPC-ready project model in
-                minutes. The kind of analysis that once required an engineering firm, six vendor
-                proposals, and fourteen months of calendar — produced before the first meeting.
+                generate plausible-sounding text. They don't do the engineering. So we built a{" "}
+                <span className="text-yellow-400 font-semibold">Merlin Energy Architecture</span>{" "}
+                engine — an AI-enabled orchestration layer designed specifically for the complexity
+                of commercial and industrial energy projects. It models BESS, solar, wind, backup
+                generation, EV infrastructure, flexible loads, and utility constraints together —
+                configured to the specific load profile of each industry, scored against live
+                utility data, and delivered as an EPC-ready project model in minutes. The kind of
+                analysis that once required an engineering firm, six vendor proposals, and fourteen
+                months of calendar — produced before the first meeting.
               </p>
 
               <p
@@ -105,7 +106,7 @@ export default function ValueSection() {
                   className="text-[10px] text-sky-400/60 uppercase tracking-widest font-semibold"
                   style={{ fontFamily: "'JetBrains Mono', monospace" }}
                 >
-                  What we built
+                  What Merlin produces
                 </p>
               </div>
               <div className="p-4 space-y-3">
@@ -123,7 +124,7 @@ export default function ValueSection() {
                       StackQuote™
                     </div>
                     <div className="text-[11px] text-slate-500 leading-snug">
-                      EPC-ready energy project models for facility operators
+                      Owner-facing proof for the recommended architecture
                     </div>
                   </div>
                 </div>
@@ -154,12 +155,12 @@ export default function ValueSection() {
                 className="text-[9px] text-sky-400/50 uppercase tracking-widest font-semibold"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
-                What StackQuote sizes
+                What Merlin analyzes
               </p>
               {[
                 { label: "BESS", note: "Battery energy storage — the core" },
                 { label: "Solar + Wind", note: "Generation stacked to the load" },
-                { label: "Backup generation", note: "Diesel, linear, emerging nuclear" },
+                { label: "Backup generation", note: "Diesel, natural gas, emerging nuclear" },
                 { label: "EV charging", note: "Revenue layer + load management" },
                 { label: "Power infrastructure", note: "Inverters, transformers, switches" },
                 { label: "BMS / ESS software", note: "Control logic & dispatch strategy" },

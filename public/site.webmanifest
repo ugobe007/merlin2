@@ -1,7 +1,7 @@
 {
-  "name": "TrueQuote",
-  "short_name": "TrueQuote",
-  "description": "Verified BESS & Solar Quotes — TrueQuote™ verified with NREL & IRA 2022 data",
+  "name": "Merlin Energy",
+  "short_name": "Merlin",
+  "description": "Energy Stacking intelligence for business utility risk, infrastructure strategy, and decision-ready project proof.",
   "icons": [
     {
       "src": "/favicon-16.png",
