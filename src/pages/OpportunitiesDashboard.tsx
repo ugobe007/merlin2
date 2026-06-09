@@ -27,7 +27,14 @@ const SIGNAL_LABELS: Record<string, string> = {
   sustainability_initiative: "🌱 Sustainability",
   energy_upgrade: "⚡ Energy Upgrade",
   facility_upgrade: "🔧 Facility Upgrade",
+  rfq: "📄 RFQ/RFP",
+  energy_project: "🔋 Energy Project",
+  high_utility_exposure: "💸 High Utility Exposure",
 };
+
+function signalLabel(signal: string): string {
+  return SIGNAL_LABELS[signal] || signal.replace(/_/g, " ");
+}
 
 // Industry display names
 const INDUSTRY_LABELS: Record<string, string> = {
@@ -348,7 +355,7 @@ export function OpportunitiesDashboard() {
                           key={signal}
                           className="text-xs px-2 py-0.5 bg-emerald-950/50 border border-emerald-800/30 rounded text-emerald-300"
                         >
-                          {SIGNAL_LABELS[signal]?.split(" ")[0]}
+                          {signalLabel(signal).split(" ")[0]}
                         </span>
                       ))}
                       {opp.signals.length > 2 && (
@@ -446,7 +453,7 @@ export function OpportunitiesDashboard() {
                     key={signal}
                     className="text-sm px-3 py-1 bg-emerald-950/50 border border-emerald-800/30 rounded-full text-emerald-300"
                   >
-                    {SIGNAL_LABELS[signal]}
+                    {signalLabel(signal)}
                   </span>
                 ))}
               </div>

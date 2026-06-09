@@ -75,6 +75,8 @@ Focus on:
 8. Opportunity signals (construction, expansion, energy needs, etc.)
 9. Key details relevant to BESS opportunities
 
+Prioritize RFQs/RFPs, procurement notices, companies preparing energy projects, and businesses with clear high utility-rate exposure such as demand charges, rising electricity costs, peak demand, grid constraints, or 24/7 energy-intensive operations.
+
 Return ONLY valid JSON in this exact format:
 {
   "company_name": "string",
@@ -92,7 +94,7 @@ Return ONLY valid JSON in this exact format:
     }
   ],
   "key_details": ["array", "of", "important", "facts"],
-  "signals": ["construction", "expansion", "new_opening", "funding", "acquisition", "sustainability_initiative", "energy_upgrade", "facility_upgrade"],
+  "signals": ["construction", "expansion", "new_opening", "funding", "acquisition", "sustainability_initiative", "energy_upgrade", "facility_upgrade", "rfq", "energy_project", "high_utility_exposure"],
   "confidence_score": 0-100,
   "reasoning": "brief explanation of why this is a good/bad opportunity"
 }

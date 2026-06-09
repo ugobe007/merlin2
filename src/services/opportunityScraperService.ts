@@ -34,6 +34,18 @@ const NEWS_SOURCES = [
     name: "Google News - Warehouse Logistics",
     url: "https://news.google.com/rss/search?q=warehouse+logistics+opening&hl=en-US&gl=US&ceid=US:en",
   },
+  {
+    name: "Google News - Energy RFQ RFP",
+    url: "https://news.google.com/rss/search?q=(RFQ+OR+RFP+OR+%22request+for+proposal%22)+(%22battery+storage%22+OR+solar+OR+microgrid+OR+%22energy+storage%22)&hl=en-US&gl=US&ceid=US:en",
+  },
+  {
+    name: "Google News - Commercial Energy Projects",
+    url: "https://news.google.com/rss/search?q=(%22energy+project%22+OR+%22solar+project%22+OR+%22battery+storage+project%22+OR+microgrid)+(%22commercial%22+OR+facility+OR+campus+OR+plant)&hl=en-US&gl=US&ceid=US:en",
+  },
+  {
+    name: "Google News - Utility Rate Exposure",
+    url: "https://news.google.com/rss/search?q=(%22high+electricity+rates%22+OR+%22utility+rate+increase%22+OR+%22demand+charges%22+OR+%22power+costs%22)+(%22data+center%22+OR+manufacturing+OR+warehouse+OR+hospital+OR+hotel)&hl=en-US&gl=US&ceid=US:en",
+  },
 ];
 
 // Keywords that signal opportunities
@@ -46,18 +58,63 @@ const SIGNAL_KEYWORDS: Record<OpportunitySignal, string[]> = {
   sustainability_initiative: ["sustainability", "renewable", "green", "carbon neutral", "net zero"],
   energy_upgrade: ["energy efficiency", "power upgrade", "electrical", "energy management"],
   facility_upgrade: ["modernization", "renovation", "upgrade", "retrofit"],
+  rfq: [
+    "rfq",
+    "rfp",
+    "request for quote",
+    "request for quotation",
+    "request for proposal",
+    "invitation to bid",
+    "bid solicitation",
+    "seeking proposals",
+    "procurement",
+    "tender",
+  ],
+  energy_project: [
+    "energy project",
+    "battery storage project",
+    "bess project",
+    "solar project",
+    "microgrid project",
+    "onsite power",
+    "distributed energy",
+    "energy resilience",
+    "backup power project",
+    "peak shaving",
+    "demand response",
+  ],
+  high_utility_exposure: [
+    "high electricity rates",
+    "utility rate increase",
+    "rising utility costs",
+    "power costs",
+    "energy costs",
+    "electricity costs",
+    "demand charges",
+    "peak demand charges",
+    "time-of-use rates",
+    "tou rates",
+    "grid constraints",
+    "power shortage",
+  ],
 };
 
 // High-value industries for energy projects
 const INDUSTRY_KEYWORDS: Record<IndustryType, string[]> = {
   data_center: ["data center", "server farm", "cloud infrastructure", "colocation"],
-  manufacturing: ["manufacturing", "factory", "plant", "production facility"],
+  manufacturing: [
+    "manufacturing",
+    "factory",
+    "plant",
+    "production facility",
+    "industrial facility",
+  ],
   logistics: ["warehouse", "distribution center", "logistics", "fulfillment center"],
   hospitality: ["hotel", "resort", "restaurant", "hospitality"],
   healthcare: ["hospital", "medical center", "healthcare facility", "clinic"],
-  retail: ["retail", "shopping center", "supermarket", "store"],
-  education: ["school", "university", "campus", "education"],
-  automotive: ["automotive", "car manufacturing", "assembly plant", "dealership"],
+  retail: ["retail", "shopping center", "supermarket", "store", "grocery"],
+  education: ["school", "university", "campus", "education", "college"],
+  automotive: ["automotive", "car manufacturing", "assembly plant", "dealership", "ev charging"],
   other: [],
 };
 
@@ -169,7 +226,7 @@ function detectIndustry(text: string): IndustryType | undefined {
 function extractCompanyName(title: string, description: string): string {
   // Try title first with the enhanced extraction
   let extracted = extractCompanyFromTitle(title);
-  
+
   if (extracted) {
     const cleaned = cleanCompanyName(extracted);
     if (cleaned && utilIsValidCompanyName(cleaned)) {
@@ -227,10 +284,29 @@ function calculateConfidence(signals: OpportunitySignal[], industry?: IndustryTy
     "new_opening",
     "expansion",
     "energy_upgrade",
+    "rfq",
+    "energy_project",
+    "high_utility_exposure",
   ];
   const hasHighValueSignal = signals.some((s) => highValueSignals.includes(s));
   if (hasHighValueSignal) {
     score += 20;
+  }
+
+  if (signals.includes("rfq")) {
+    score += 25;
+  }
+
+  if (signals.includes("energy_project")) {
+    score += 20;
+  }
+
+  if (signals.includes("high_utility_exposure")) {
+    score += 15;
+  }
+
+  if (signals.includes("high_utility_exposure") && industry) {
+    score += 10;
   }
 
   // Cap at 100
@@ -284,7 +360,7 @@ export async function scrapeOpportunities(): Promise<ScraperResult> {
 
       // Get company name quality score
       const nameQuality = scoreCompanyName(companyName);
-      
+
       // Skip if name quality is too low
       if (nameQuality < 50) {
         continue;
@@ -292,7 +368,7 @@ export async function scrapeOpportunities(): Promise<ScraperResult> {
 
       // Calculate confidence (factoring in name quality)
       const baseConfidence = calculateConfidence(signals, industry);
-      const confidence = Math.round((baseConfidence * 0.8) + (nameQuality * 0.2));
+      const confidence = Math.round(baseConfidence * 0.8 + nameQuality * 0.2);
 
       // Create opportunity
       const opportunity: Opportunity = {
