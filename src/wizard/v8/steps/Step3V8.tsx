@@ -743,26 +743,26 @@ export function Step3V8({ state, actions }: Props) {
         <div
           style={{
             marginBottom: 24,
-            padding: "22px 24px",
-            borderRadius: 18,
-            background:
-              "radial-gradient(circle at 8% 0%, rgba(167,139,250,0.38) 0%, rgba(167,139,250,0.16) 34%, transparent 56%), linear-gradient(135deg, rgba(124,58,237,0.42) 0%, rgba(37,99,235,0.30) 50%, rgba(16,185,129,0.18) 100%)",
-            border: "1.5px solid rgba(196,181,253,0.86)",
+            padding: "18px 20px",
+            borderRadius: 16,
+            background: "transparent",
+            border: "1.5px solid rgba(62,207,142,0.55)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: 18,
+            gap: 16,
             flexWrap: "wrap",
-            boxShadow:
-              "0 0 0 1px rgba(255,255,255,0.10) inset, 0 0 42px rgba(124,58,237,0.30), 0 22px 64px rgba(2,6,23,0.48)",
+            boxShadow: "0 0 0 1px rgba(255,255,255,0.05) inset, 0 0 32px rgba(62,207,142,0.16)",
           }}
         >
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: "#ddd6fe", marginBottom: 7 }}>
-              ✓ All {visibleQuestions.length} questions pre-filled with {displayName} benchmarks
+            <div style={{ fontSize: 16, fontWeight: 900, color: "#3ecf8e", marginBottom: 7 }}>
+              ✓ All {visibleQuestions.length} questions pre-filled
+              <span style={{ color: "#c084fc" }}> with {displayName} benchmarks</span>
             </div>
-            <div style={{ fontSize: 14, color: "rgba(241,245,249,0.86)", lineHeight: 1.45 }}>
-              Smart defaults applied — review and customize below, or skip straight to add-ons.
+            <div style={{ fontSize: 13, color: "rgba(226,232,240,0.78)", lineHeight: 1.45 }}>
+              Smart defaults applied <span style={{ color: "#7dd3fc" }}>inline</span> — review below
+              or skip straight to add-ons.
             </div>
           </div>
           <button
@@ -772,31 +772,26 @@ export function Step3V8({ state, actions }: Props) {
               display: "flex",
               alignItems: "center",
               gap: 8,
-              padding: "13px 24px",
-              borderRadius: 14,
+              padding: "12px 20px",
+              borderRadius: 12,
               background: "transparent",
               color: "#7dd3fc",
               border: "2px solid #7dd3fc",
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: 900,
               cursor: "pointer",
               whiteSpace: "nowrap",
               flexShrink: 0,
-              boxShadow: "0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 28px rgba(125,211,252,0.34)",
-              letterSpacing: "0.015em",
-              textShadow: "0 0 18px rgba(125,211,252,0.55)",
+              boxShadow: "0 0 0 1px rgba(255,255,255,0.04) inset",
+              letterSpacing: "0.02em",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = "#c4b5fd";
-              e.currentTarget.style.borderColor = "#c4b5fd";
-              e.currentTarget.style.boxShadow =
-                "0 0 0 1px rgba(255,255,255,0.10) inset, 0 0 34px rgba(196,181,253,0.44)";
+              e.currentTarget.style.color = "#3ecf8e";
+              e.currentTarget.style.borderColor = "#3ecf8e";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.color = "#7dd3fc";
               e.currentTarget.style.borderColor = "#7dd3fc";
-              e.currentTarget.style.boxShadow =
-                "0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 28px rgba(125,211,252,0.34)";
             }}
           >
             Use Smart Defaults → Skip to Add-ons
@@ -849,11 +844,13 @@ export function Step3V8({ state, actions }: Props) {
                   display: "flex",
                   alignItems: "center",
                   gap: 12,
-                  padding: "14px 16px",
+                  padding: "12px 20px",
+                  borderRadius: 12,
                   background: "transparent",
                   border: "none",
                   cursor: "pointer",
                   textAlign: "left",
+                  fontSize: 13,
                 }}
               >
                 {/* Icon */}

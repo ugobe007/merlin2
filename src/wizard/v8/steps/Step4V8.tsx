@@ -277,6 +277,7 @@ export function Step4V8({ state, actions }: Props) {
     if (selectedTierIndex === 2) return 85;
     return 50;
   });
+  const [stackConfirmed, setStackConfirmed] = useState(false);
 
   useEffect(() => {
     if (tiersStatus === "ready" && tiers && selectedTierIndex === null) {
@@ -465,10 +466,10 @@ export function Step4V8({ state, actions }: Props) {
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
-                  background: "rgba(245,158,11,0.07)",
-                  border: `1px solid rgba(245,158,11,0.28)`,
+                  background: "transparent",
+                  border: `1px solid rgba(125,211,252,0.28)`,
                   borderRadius: 8,
-                  color: C.amber,
+                  color: C.sky,
                   fontSize: 12,
                   fontWeight: 700,
                   cursor: "pointer",
@@ -478,12 +479,12 @@ export function Step4V8({ state, actions }: Props) {
                   transition: "all 0.15s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(245,158,11,0.14)";
-                  e.currentTarget.style.borderColor = "rgba(245,158,11,0.50)";
+                  e.currentTarget.style.color = C.green;
+                  e.currentTarget.style.borderColor = "rgba(62,207,142,0.50)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(245,158,11,0.07)";
-                  e.currentTarget.style.borderColor = "rgba(245,158,11,0.28)";
+                  e.currentTarget.style.color = C.sky;
+                  e.currentTarget.style.borderColor = "rgba(125,211,252,0.28)";
                 }}
               >
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -502,13 +503,13 @@ export function Step4V8({ state, actions }: Props) {
 
           <Panel
             style={{
-              border: "1.5px solid rgba(245,158,11,0.35)",
-              background: "rgba(245,158,11,0.03)",
+              border: "1.5px solid rgba(79,138,255,0.30)",
+              background: "transparent",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
               <span style={{ fontSize: 14 }}>⚡</span>
-              <SectionLabel>Optimization Strategy</SectionLabel>
+              <SectionLabel color={C.sky}>Optimization Strategy</SectionLabel>
             </div>
             <p
               style={{
@@ -527,7 +528,7 @@ export function Step4V8({ state, actions }: Props) {
                 display: "flex",
                 justifyContent: "space-between",
                 fontSize: 11,
-                color: C.amber,
+                color: C.textSub,
                 marginBottom: 8,
                 fontWeight: 700,
               }}
@@ -544,16 +545,16 @@ export function Step4V8({ state, actions }: Props) {
               className="amber-range"
               style={{
                 width: "100%",
-                background: `linear-gradient(to right, #fbbf24 0%, #f97316 ${strategyValue}%, rgba(255,255,255,0.14) ${strategyValue}%, rgba(255,255,255,0.14) 100%)`,
+                background: `linear-gradient(to right, #4f8aff 0%, #9b6dff ${strategyValue}%, rgba(255,255,255,0.14) ${strategyValue}%, rgba(255,255,255,0.14) 100%)`,
               }}
             />
             <div
               style={{
                 marginTop: 14,
-                padding: "14px 16px",
+                padding: "12px 14px",
                 borderRadius: 10,
-                background: "rgba(251,191,36,0.07)",
-                border: `1px solid rgba(251,191,36,0.30)`,
+                background: "transparent",
+                border: `1px solid rgba(125,211,252,0.24)`,
               }}
             >
               <div
@@ -580,7 +581,7 @@ export function Step4V8({ state, actions }: Props) {
                 {
                   label: "Solar",
                   value: tier.solarKW > 0 ? `${tier.solarKW} kW` : "—",
-                  color: C.amber,
+                  color: C.sky,
                 },
                 {
                   label: "Generator",
@@ -784,108 +785,99 @@ export function Step4V8({ state, actions }: Props) {
       <div
         style={{
           marginTop: 28,
-          padding: "20px 24px",
-          borderRadius: 14,
-          background:
-            "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(79,138,255,0.08) 100%)",
-          border: "1.5px solid rgba(124,58,237,0.35)",
+          padding: "14px 16px",
+          borderRadius: 12,
+          background: "transparent",
+          border: stackConfirmed
+            ? "1.5px solid rgba(62,207,142,0.72)"
+            : "1.5px solid rgba(79,138,255,0.30)",
           display: "flex",
-          flexDirection: "column" as const,
-          gap: 12,
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 14,
+          flexWrap: "wrap" as const,
+          boxShadow: stackConfirmed ? "0 0 24px rgba(62,207,142,0.18)" : "none",
         }}
       >
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: "rgba(124,58,237,0.18)",
-              border: "1px solid rgba(124,58,237,0.40)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              fontSize: 16,
-            }}
-          >
-            ✅
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 3 }}>
+            Select this stack to generate your StackQuote™
           </div>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 3 }}>
-              Ready to confirm your stack?
-            </div>
-            <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.55 }}>
-              Once confirmed, Merlin generates your full StackQuote™ — including financing options,
-              incentives, and matched installer recommendations.
-            </div>
+          <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.45 }}>
+            Includes financing options, incentives, and installer recommendations.
           </div>
         </div>
-        <button
-          type="button"
+        <label
           onClick={() => {
+            if (stackConfirmed) return;
+            setStackConfirmed(true);
             void trackWizardEvent("stack_confirmed", {
               tierIndex: tierIdx,
               strategy: strategyInfo.label,
               annualSavings: tier.annualSavings,
               netCost: tier.netCost,
             });
-            actions.goToStep(6 as WizardStep);
+            window.setTimeout(() => actions.goToStep(6 as WizardStep), 220);
           }}
           style={{
-            width: "100%",
-            padding: "15px 32px",
-            borderRadius: 10,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "10px 14px",
+            borderRadius: 999,
             background: "transparent",
-            border: `2px solid #7c3aed`,
-            color: "#c4b5fd",
-            fontSize: 16,
-            fontWeight: 700,
+            border: stackConfirmed ? `2px solid ${C.green}` : `2px solid ${C.sky}`,
+            color: stackConfirmed ? C.green : C.sky,
+            fontSize: 13,
+            fontWeight: 900,
             cursor: "pointer",
             letterSpacing: "0.02em",
             transition: "all 0.18s ease",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 10,
-            boxShadow: "0 0 20px rgba(124,58,237,0.22)",
+            boxShadow: stackConfirmed ? "0 0 22px rgba(52,211,153,0.24)" : "none",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "#9b6dff";
-            e.currentTarget.style.boxShadow = "0 0 32px rgba(124,58,237,0.40)";
-            e.currentTarget.style.transform = "translateY(-1px)";
+            if (!stackConfirmed) {
+              e.currentTarget.style.borderColor = C.green;
+              e.currentTarget.style.color = C.green;
+            }
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "#7c3aed";
-            e.currentTarget.style.boxShadow = "0 0 20px rgba(124,58,237,0.22)";
-            e.currentTarget.style.transform = "translateY(0)";
+            if (!stackConfirmed) {
+              e.currentTarget.style.borderColor = C.sky;
+              e.currentTarget.style.color = C.sky;
+            }
           }}
         >
-          <span>Confirm Your Energy Stack</span>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M3 8h10M9 4l4 4-4 4"
-              stroke="currentColor"
-              strokeWidth="1.9"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <p style={{ fontSize: 11, color: C.textMuted, textAlign: "center" as const, margin: 0 }}>
-          You can revisit and adjust your stack at any time before finalizing.
-        </p>
+          <span
+            aria-hidden="true"
+            style={{
+              width: 18,
+              height: 18,
+              borderRadius: 5,
+              border: `2px solid ${stackConfirmed ? C.green : "currentColor"}`,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: C.green,
+              flexShrink: 0,
+            }}
+          >
+            {stackConfirmed ? "✓" : ""}
+          </span>
+          <input type="checkbox" checked={stackConfirmed} readOnly style={{ display: "none" }} />
+          <span>{stackConfirmed ? "Stack selected" : "Select stack"}</span>
+        </label>
       </div>
 
       <style>{`
         @media (max-width: 720px) { .stack-builder-grid { grid-template-columns: 1fr !important; } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes chip-flash { 0% { box-shadow: 0 0 0 0 rgba(251,191,36,0.55); background: rgba(251,191,36,0.18); } 60% { box-shadow: 0 0 0 6px rgba(251,191,36,0); } 100% { background: rgba(255,255,255,0.03); box-shadow: none; } }
+        @keyframes chip-flash { 0% { box-shadow: 0 0 0 0 rgba(79,138,255,0.48); background: rgba(79,138,255,0.14); } 60% { box-shadow: 0 0 0 6px rgba(79,138,255,0); } 100% { background: rgba(255,255,255,0.03); box-shadow: none; } }
         .tier-chip-animate { animation: chip-flash 0.55s ease-out forwards; }
         input.amber-range { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 4px; outline: none; cursor: pointer; }
-        input.amber-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fde68a, #fbbf24 55%, #f97316); box-shadow: 0 0 12px rgba(251,191,36,0.80), 0 2px 6px rgba(0,0,0,0.40); cursor: pointer; border: 2px solid rgba(255,255,255,0.25); transition: transform 0.15s, box-shadow 0.15s; }
-        input.amber-range::-webkit-slider-thumb:hover { transform: scale(1.18); box-shadow: 0 0 20px rgba(251,191,36,0.95), 0 2px 8px rgba(0,0,0,0.50); }
-        input.amber-range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fde68a, #fbbf24 55%, #f97316); box-shadow: 0 0 12px rgba(251,191,36,0.80); cursor: pointer; border: 2px solid rgba(255,255,255,0.25); }
+        input.amber-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 12px rgba(251,191,36,0.54), 0 2px 6px rgba(0,0,0,0.40); cursor: pointer; border: 2px solid rgba(255,255,255,0.25); transition: transform 0.15s, box-shadow 0.15s; }
+        input.amber-range::-webkit-slider-thumb:hover { transform: scale(1.16); box-shadow: 0 0 18px rgba(251,191,36,0.72), 0 2px 8px rgba(0,0,0,0.50); }
+        input.amber-range::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 12px rgba(251,191,36,0.54); cursor: pointer; border: 2px solid rgba(255,255,255,0.25); }
       `}</style>
     </div>
   );
