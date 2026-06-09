@@ -1013,6 +1013,7 @@ export interface WizardActions {
     businessTypeLabel?: string;
     businessName?: string;
     address?: string;
+    placeId?: string;
   }) => void;
   // Step 2
   setIndustry: (slug: IndustrySlug) => void;

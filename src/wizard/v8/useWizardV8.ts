@@ -1201,6 +1201,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       businessTypeLabel?: string;
       businessName?: string;
       address?: string;
+      placeId?: string;
     }) => {
       const zip = input.zip.replace(/\D/g, "").slice(0, 5);
       const businessName = input.businessName?.trim() ?? "";
@@ -1241,6 +1242,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
         setBusiness(businessName || `${input.businessTypeLabel ?? "Commercial facility"} site`, {
           address,
           formattedAddress: address || undefined,
+          placeId: input.placeId,
         });
       }
 

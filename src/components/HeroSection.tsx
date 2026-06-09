@@ -1,6 +1,6 @@
 /* Merlin Energy — Agent-first homepage hero */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   Building2,
@@ -14,6 +14,12 @@ import {
   Zap,
 } from "lucide-react";
 import type { IndustrySlug } from "@/wizard/v8/wizardState";
+import {
+  enrichBusinessSuggestion,
+  fetchBusinessSuggestions,
+  importGooglePlacesLibrary,
+  type BusinessSuggestion,
+} from "@/wizard/v8/services/googlePlacesService";
 
 const _MERLIN_ICON = "/merlin-icon.png";
 
@@ -147,8 +153,8 @@ const HERO_HEADLINE_TYPE_MS = 190;
 
 const heroHeadlineAccents = [
   "Through Energy Stacking.",
-  "With the Energy OS.",
-  "Before You Call an EPC.",
+  "Into an Energy Strategy.",
+  "Before Utility Risk Hits Growth.",
 ];
 
 const heroBusinessTypes: Array<{ label: string; slug: IndustrySlug }> = [
@@ -1133,13 +1139,105 @@ function HeroIntakeCard() {
   const [businessType, setBusinessType] = useState<IndustrySlug | "">("");
   const [businessName, setBusinessName] = useState("");
   const [address, setAddress] = useState("");
+  const [businessSuggestions, setBusinessSuggestions] = useState<BusinessSuggestion[]>([]);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<BusinessSuggestion | null>(null);
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | undefined>();
+  const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
+  const [isResolvingSuggestion, setIsResolvingSuggestion] = useState(false);
   const [hasZipStarted, setHasZipStarted] = useState(false);
   const [error, setError] = useState("");
+  const sessionTokenRef = useRef<unknown>(null);
+  const suggestionRequestIdRef = useRef(0);
 
   const normalizedZip = zip.replace(/\D/g, "").slice(0, 5);
   const selectedTypeLabel =
     heroBusinessTypes.find((type) => type.slug === businessType)?.label ?? "commercial facility";
   const canContinue = normalizedZip.length === 5 && businessType;
+
+  useEffect(() => {
+    if (hasZipStarted) {
+      importGooglePlacesLibrary().catch(() => {
+        // Suggestions fail gracefully; users can still type manually.
+      });
+    }
+  }, [hasZipStarted]);
+
+  useEffect(() => {
+    if (!hasZipStarted || selectedSuggestion || businessName.trim().length < 2) {
+      setBusinessSuggestions([]);
+      setIsSuggestionsLoading(false);
+      return;
+    }
+
+    const requestId = suggestionRequestIdRef.current + 1;
+    suggestionRequestIdRef.current = requestId;
+
+    const timer = globalThis.setTimeout(async () => {
+      setIsSuggestionsLoading(true);
+
+      try {
+        const placesLibrary = await importGooglePlacesLibrary();
+        if (!placesLibrary) return;
+
+        if (!sessionTokenRef.current) {
+          sessionTokenRef.current = new placesLibrary.AutocompleteSessionToken();
+        }
+
+        const suggestions = await fetchBusinessSuggestions({
+          input: businessName.trim(),
+          countryCode: "US",
+          sessionToken: sessionTokenRef.current,
+          limit: 4,
+        });
+
+        if (suggestionRequestIdRef.current !== requestId) return;
+
+        const zipScopedSuggestions = normalizedZip
+          ? suggestions.filter((suggestion) =>
+              `${suggestion.secondaryText ?? ""} ${suggestion.label}`.includes(normalizedZip)
+            )
+          : suggestions;
+
+        setBusinessSuggestions(zipScopedSuggestions.length ? zipScopedSuggestions : suggestions);
+      } catch (placesError) {
+        console.error("❌ Hero Places autocomplete error:", placesError);
+        if (suggestionRequestIdRef.current === requestId) {
+          setBusinessSuggestions([]);
+        }
+      } finally {
+        if (suggestionRequestIdRef.current === requestId) {
+          setIsSuggestionsLoading(false);
+        }
+      }
+    }, 250);
+
+    return () => globalThis.clearTimeout(timer);
+  }, [businessName, hasZipStarted, normalizedZip, selectedSuggestion]);
+
+  const handleSuggestionSelect = async (suggestion: BusinessSuggestion) => {
+    setSelectedSuggestion(suggestion);
+    setBusinessSuggestions([]);
+    setBusinessName(suggestion.primaryText);
+    setAddress(suggestion.secondaryText || suggestion.label);
+    setSelectedPlaceId(suggestion.placeId);
+    setIsResolvingSuggestion(true);
+    setError("");
+
+    try {
+      const details = await enrichBusinessSuggestion({
+        suggestion,
+        fallbackAddress: suggestion.secondaryText || suggestion.label,
+      });
+
+      setSelectedPlaceId(details.placeId || suggestion.placeId);
+      if (details.formattedAddress) {
+        setAddress(details.formattedAddress);
+      }
+    } finally {
+      setIsResolvingSuggestion(false);
+      sessionTokenRef.current = null;
+    }
+  };
 
   const beginDetails = () => {
     if (normalizedZip.length !== 5) {
@@ -1164,6 +1262,7 @@ function HeroIntakeCard() {
       businessTypeLabel: selectedTypeLabel,
       businessName: businessName.trim(),
       address: address.trim(),
+      placeId: selectedPlaceId,
       createdAt: new Date().toISOString(),
     };
 
@@ -1262,10 +1361,43 @@ function HeroIntakeCard() {
                     </label>
                     <input
                       value={businessName}
-                      onChange={(event) => setBusinessName(event.target.value)}
+                      onChange={(event) => {
+                        setBusinessName(event.target.value);
+                        setSelectedSuggestion(null);
+                        setSelectedPlaceId(undefined);
+                        setError("");
+                      }}
                       placeholder="Acme Hotel"
+                      autoComplete="off"
                       className="h-10 rounded-lg border border-white/10 bg-[#0c1321] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/10"
                     />
+                    {(businessSuggestions.length > 0 || isSuggestionsLoading) && (
+                      <div className="overflow-hidden rounded-xl border border-cyan-300/15 bg-[#08111f] shadow-[0_18px_45px_rgba(0,0,0,0.32)]">
+                        {isSuggestionsLoading && businessSuggestions.length === 0 ? (
+                          <div className="px-3 py-2 text-xs font-semibold text-slate-500">
+                            Searching Google Places…
+                          </div>
+                        ) : (
+                          businessSuggestions.map((suggestion) => (
+                            <button
+                              key={suggestion.placeId}
+                              type="button"
+                              onClick={() => void handleSuggestionSelect(suggestion)}
+                              className="block w-full border-b border-white/[0.06] px-3 py-2 text-left transition last:border-b-0 hover:bg-cyan-300/8"
+                            >
+                              <span className="block text-sm font-bold text-white">
+                                {suggestion.primaryText}
+                              </span>
+                              {suggestion.secondaryText && (
+                                <span className="mt-0.5 block text-xs leading-4 text-slate-500">
+                                  {suggestion.secondaryText}
+                                </span>
+                              )}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="grid gap-2">
                     <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
@@ -1274,8 +1406,11 @@ function HeroIntakeCard() {
                     </label>
                     <input
                       value={address}
-                      onChange={(event) => setAddress(event.target.value)}
-                      placeholder="Street address"
+                      onChange={(event) => {
+                        setAddress(event.target.value);
+                        setSelectedPlaceId(undefined);
+                      }}
+                      placeholder={isResolvingSuggestion ? "Loading address…" : "Street address"}
                       className="h-10 rounded-lg border border-white/10 bg-[#0c1321] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/10"
                     />
                   </div>
@@ -1364,7 +1499,7 @@ export default function HeroSection() {
               textShadow: "0 1px 0 rgba(255,255,255,0.08), 0 14px 36px rgba(2,6,23,0.42)",
             }}
           >
-            <span className="inline-block">Reduce Grid Dependence </span>
+            <span className="inline-block">Reduce Utility Risk </span>
             <br />
             <span
               key={activeAccent}
@@ -1386,12 +1521,12 @@ export default function HeroSection() {
             className="mt-7 max-w-2xl text-lg leading-8 text-slate-400"
             style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif" }}
           >
-            Merlin uses{" "}
+            Merlin compares utility power, storage, solar, generators, and flexible loads to
+            recommend the{" "}
             <span className="bg-[linear-gradient(90deg,#3FE8FF_0%,#22D3EE_38%,#A855F7_78%,#C084FC_100%)] bg-clip-text font-semibold text-transparent">
-              Energy Stacking™
+              right energy architecture
             </span>{" "}
-            to orchestrate utility, battery, solar, generator, and AI load optimization into one
-            decision-ready infrastructure strategy.
+            for your business.
           </p>
 
           <div className="mt-7 flex flex-wrap gap-x-7 gap-y-3">

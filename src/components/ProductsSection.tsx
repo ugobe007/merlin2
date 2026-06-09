@@ -50,23 +50,23 @@ export default function ProductsSection() {
               className="text-4xl lg:text-6xl font-extrabold text-white leading-tight mb-4"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
-              MERLIN creates the quote.
+              MERLIN solves the energy strategy.
               <br />
-              <span className="gradient-text">Your team chooses the path.</span>
+              <span className="gradient-text">StackQuote proves the path.</span>
             </h2>
             <p
               className="text-slate-400 text-lg max-w-lg"
               style={{ fontFamily: "'DM Sans', sans-serif" }}
             >
-              StackQuote and ProStack are not separate stories. They are the customer and vendor
-              outputs MERLIN generates from the same energy intelligence engine.
+              StackQuote and ProStack are proof outputs. MERLIN uses the same energy intelligence
+              engine to turn business risk into customer-ready and vendor-ready decisions.
             </p>
           </div>
         </div>
 
         {/* Asymmetric product cards */}
         <div className="grid lg:grid-cols-[3fr_2fr] gap-5">
-          {/* StackQuote — dominant */}
+          {/* StackQuote proof output */}
           <div className="card-glass rounded-2xl overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
             {/* Image — taller for dominant card */}
             <div className="relative h-64 overflow-hidden">
@@ -113,8 +113,8 @@ export default function ProductsSection() {
                 className="text-slate-300 text-base mb-7 leading-relaxed"
                 style={{ fontFamily: "'DM Sans', sans-serif" }}
               >
-                StackQuote is the owner-facing Energy Brief MERLIN produces first: savings, project
-                cost, ROI, and what to build before a vendor proposal enters the conversation.
+                StackQuote is the owner-facing proof MERLIN produces first: savings, project cost,
+                ROI, and what to build before a vendor proposal enters the conversation.
               </p>
 
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-8">
@@ -131,7 +131,7 @@ export default function ProductsSection() {
                 className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold text-yellow-400 border border-yellow-500/40 hover:border-yellow-400 hover:text-yellow-300 transition-all duration-200"
                 style={{ fontFamily: "'Outfit', sans-serif" }}
               >
-                Run MERLIN StackQuote
+                Build My Energy Strategy
                 <ArrowRight size={16} />
               </a>
             </div>

@@ -1,10 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import IntelStripInline from "@/components/wizard/v7/shared/IntelStripInline";
 import type { BusinessData, WizardActions, WizardState } from "../wizardState";
-
-// Google Maps API key — must be set via VITE_GOOGLE_MAPS_API_KEY env var
-// Never hardcode API keys: use .env (local) or Fly.io secrets (production)
-const GOOGLE_MAPS_API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) ?? "";
+import {
+  enrichBusinessSuggestion,
+  fetchBusinessSuggestions,
+  importGooglePlacesLibrary,
+  loadGoogleMapsScript,
+  type BusinessSuggestion,
+  type GooglePlacesLibrary,
+} from "../services/googlePlacesService";
 
 const T = {
   accent: "#9b6dff",
@@ -56,172 +60,6 @@ const INTERNATIONAL_COUNTRIES = [
   { code: "CN", name: "China" },
   { code: "KR", name: "South Korea" },
 ];
-
-type GooglePlacesLibrary = {
-  Place?: new (options: { id: string }) => {
-    fetchFields: (request: { fields: string[] }) => Promise<void>;
-    id?: string;
-    displayName?: string | { text?: string };
-    formattedAddress?: string;
-    editorialSummary?: string | { text?: string };
-    websiteURI?: string;
-    location?: { lat?: number | (() => number); lng?: number | (() => number) };
-    photos?: Array<{
-      getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string;
-      authorAttributions?: Array<{
-        displayName?: string;
-        uri?: string;
-        photoURI?: string;
-      }>;
-    }>;
-  };
-  AutocompleteSuggestion: {
-    fetchAutocompleteSuggestions: (request: Record<string, unknown>) => Promise<{
-      suggestions?: Array<{
-        placePrediction?: {
-          placeId: string;
-          text?: { text: string };
-          mainText?: { text: string };
-          secondaryText?: { text: string };
-          toPlace: () => {
-            fetchFields: (request: { fields: string[] }) => Promise<void>;
-            id?: string;
-            displayName?: string | { text?: string };
-            formattedAddress?: string;
-            editorialSummary?: string | { text?: string };
-            websiteURI?: string;
-            location?: { lat?: number | (() => number); lng?: number | (() => number) };
-            photos?: Array<{
-              getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string;
-              authorAttributions?: Array<{
-                displayName?: string;
-                uri?: string;
-                photoURI?: string;
-              }>;
-            }>;
-          };
-        };
-      }>;
-    }>;
-  };
-  AutocompleteSessionToken: new () => unknown;
-};
-
-type BusinessSuggestion = {
-  placeId: string;
-  label: string;
-  primaryText: string;
-  secondaryText?: string;
-  prediction: {
-    toPlace: () => {
-      fetchFields: (request: { fields: string[] }) => Promise<void>;
-      id?: string;
-      displayName?: string | { text?: string };
-      formattedAddress?: string;
-      editorialSummary?: string | { text?: string };
-      websiteURI?: string;
-      location?: { lat?: number | (() => number); lng?: number | (() => number) };
-      photos?: Array<{
-        getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string;
-        authorAttributions?: Array<{
-          displayName?: string;
-          uri?: string;
-          photoURI?: string;
-        }>;
-      }>;
-    };
-  };
-};
-
-let googleMapsPromise: Promise<void> | null = null;
-
-function loadGoogleMapsScript(): Promise<void> {
-  if (typeof window === "undefined") {
-    return Promise.reject(new Error("Google Maps unavailable during SSR"));
-  }
-
-  if (!GOOGLE_MAPS_API_KEY) {
-    return Promise.reject(new Error("Missing VITE_GOOGLE_MAPS_API_KEY"));
-  }
-
-  if (typeof window.google?.maps?.importLibrary === "function") {
-    return Promise.resolve();
-  }
-
-  if (googleMapsPromise) {
-    return googleMapsPromise;
-  }
-
-  googleMapsPromise = new Promise((resolve, reject) => {
-    // Catch invalid key or HTTP-referrer restriction
-    (window as Window & { gm_authFailure?: () => void }).gm_authFailure = () => {
-      console.error(
-        "❌ Google Maps auth failure — key invalid, API target blocked, or domain not whitelisted"
-      );
-      googleMapsPromise = null; // allow retry
-      reject(new Error("Google Maps API key rejected (auth failure)"));
-    };
-
-    // Check if script already exists (from index.html preload or previous load)
-    const existing = document.querySelector('script[src*="maps.googleapis.com"]');
-    if (existing) {
-      // Script already loaded or loading
-      if (window.google?.maps) {
-        resolve();
-      } else {
-        existing.addEventListener("load", () => resolve(), { once: true });
-        existing.addEventListener("error", () => reject(new Error("Failed to load Google Maps")), {
-          once: true,
-        });
-      }
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.id = "merlin-v8-google-maps";
-    script.async = true;
-    script.src =
-      `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}` +
-      "&libraries=places&loading=async&v=weekly";
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Google Maps script (network error)"));
-    document.head.appendChild(script);
-  });
-
-  return googleMapsPromise;
-}
-
-function getCoordinate(value?: number | (() => number)) {
-  return typeof value === "function" ? value() : value;
-}
-
-function getPhotoPayload(place: {
-  photos?: Array<{
-    getURI?: (opts?: { maxWidth?: number; maxHeight?: number }) => string;
-    authorAttributions?: Array<{
-      displayName?: string;
-      uri?: string;
-      photoURI?: string;
-    }>;
-  }>;
-}) {
-  const photo = place.photos?.[0];
-  const attribution = photo?.authorAttributions?.[0];
-
-  let photoUrl: string | undefined;
-
-  try {
-    photoUrl = photo?.getURI?.({ maxWidth: 480, maxHeight: 320 });
-  } catch {
-    // photo URI unavailable
-  }
-
-  return {
-    photoUrl,
-    photoAttributionName: attribution?.displayName,
-    photoAttributionUri: attribution?.uri,
-  };
-}
 
 function titleCaseIndustry(industry: string) {
   return industry
@@ -331,6 +169,10 @@ export function Step1V8({ state, actions }: Step1Props) {
   // IP geolocation auto-detect — fires once on mount if no ZIP already seeded
   useEffect(() => {
     if (state.locationRaw) return; // already seeded by widget/URL params — don't override
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("zip") || params.get("source") === "hero-stacking-cta") return;
+
     fetch("https://ipapi.co/json/")
       .then((r) => r.json())
       .then((data: { postal?: string; city?: string; region_code?: string }) => {
@@ -357,12 +199,8 @@ export function Step1V8({ state, actions }: Step1Props) {
 
   const ensurePlacesLibrary = useCallback(async (): Promise<GooglePlacesLibrary | null> => {
     try {
-      await loadGoogleMapsScript();
-      if (!window.google?.maps?.importLibrary) return null;
       if (!placesLibraryRef.current) {
-        placesLibraryRef.current = (await window.google.maps.importLibrary(
-          "places"
-        )) as unknown as GooglePlacesLibrary;
+        placesLibraryRef.current = await importGooglePlacesLibrary();
       }
       setGoogleError(null);
       return placesLibraryRef.current;
@@ -403,79 +241,20 @@ export function Step1V8({ state, actions }: Step1Props) {
 
   const enrichSuggestion = useCallback(
     async (suggestion: BusinessSuggestion): Promise<Partial<BusinessData>> => {
-      const placesLibrary = await ensurePlacesLibrary();
-
       const fallbackAddress =
         suggestion.secondaryText ||
         suggestion.label ||
         streetAddress.trim() ||
         location?.formattedAddress;
 
-      try {
-        if (placesLibrary?.Place) {
-          const place = new placesLibrary.Place({ id: suggestion.placeId });
-
-          await place.fetchFields({
-            fields: [
-              "displayName",
-              "formattedAddress",
-              "location",
-              "photos",
-              "id",
-              "websiteURI",
-              "editorialSummary",
-            ],
-          });
-
-          return {
-            placeId: place.id || suggestion.placeId,
-            formattedAddress: place.formattedAddress || fallbackAddress,
-            ...getPhotoPayload(place),
-            website: place.websiteURI,
-            description:
-              typeof place.editorialSummary === "string"
-                ? place.editorialSummary
-                : place.editorialSummary?.text,
-            lat: getCoordinate(place.location?.lat) ?? location?.lat,
-            lng: getCoordinate(place.location?.lng) ?? location?.lng,
-          };
-        }
-
-        const place = suggestion.prediction.toPlace();
-        await place.fetchFields({
-          fields: [
-            "displayName",
-            "formattedAddress",
-            "location",
-            "photos",
-            "id",
-            "websiteURI",
-            "editorialSummary",
-          ],
-        });
-        return {
-          placeId: place.id || suggestion.placeId,
-          formattedAddress: place.formattedAddress || fallbackAddress,
-          ...getPhotoPayload(place),
-          website: place.websiteURI,
-          description:
-            typeof place.editorialSummary === "string"
-              ? place.editorialSummary
-              : place.editorialSummary?.text,
-          lat: getCoordinate(place.location?.lat) ?? location?.lat,
-          lng: getCoordinate(place.location?.lng) ?? location?.lng,
-        };
-      } catch (error) {
-        console.error("❌ Error enriching suggestion:", error);
-        return {
-          placeId: suggestion.placeId,
-          formattedAddress: fallbackAddress,
-          lat: location?.lat,
-          lng: location?.lng,
-        };
-      }
+      return enrichBusinessSuggestion({
+        suggestion,
+        fallbackAddress,
+        fallbackLat: location?.lat,
+        fallbackLng: location?.lng,
+      });
     },
-    [ensurePlacesLibrary, location?.formattedAddress, location?.lat, location?.lng, streetAddress]
+    [location?.formattedAddress, location?.lat, location?.lng, streetAddress]
   );
 
   useEffect(() => {
@@ -499,32 +278,14 @@ export function Step1V8({ state, actions }: Step1Props) {
       setIsSuggestionsLoading(true);
 
       try {
-        const { suggestions = [] } =
-          await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-            input: businessName.trim(),
-            includedRegionCodes: selectedCountryCode ? [selectedCountryCode] : undefined,
-            // Remove inputOffset - it's optional and was causing "InvalidValueError"
-            // inputOffset is for cursor position in partial completions, not needed here
-            sessionToken: sessionTokenRef.current,
-          });
+        const validSuggestions = await fetchBusinessSuggestions({
+          input: businessName.trim(),
+          countryCode: selectedCountryCode || undefined,
+          sessionToken: sessionTokenRef.current,
+          limit: 5,
+        });
 
         if (suggestionRequestIdRef.current !== requestId) return;
-
-        const validSuggestions = suggestions
-          .map((item) => {
-            const prediction = item.placePrediction;
-            if (!prediction) return null;
-            return {
-              placeId: prediction.placeId,
-              label: prediction.text?.text || prediction.mainText?.text || businessName.trim(),
-              primaryText:
-                prediction.mainText?.text || prediction.text?.text || businessName.trim(),
-              secondaryText: prediction.secondaryText?.text,
-              prediction,
-            } as BusinessSuggestion;
-          })
-          .filter((item): item is BusinessSuggestion => item !== null)
-          .slice(0, 5);
 
         setBusinessSuggestions(validSuggestions);
       } catch (error) {
