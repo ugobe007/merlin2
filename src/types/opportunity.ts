@@ -11,7 +11,10 @@ export type OpportunitySignal =
   | "acquisition"
   | "sustainability_initiative"
   | "energy_upgrade"
-  | "facility_upgrade";
+  | "facility_upgrade"
+  | "rfq"
+  | "energy_project"
+  | "high_utility_exposure";
 
 export type OpportunityStatus = "new" | "contacted" | "qualified" | "archived";
 
