@@ -307,7 +307,7 @@ export default function WizardShellV7({
               </div>
             </div>
 
-            {/* StackQuote™ Badge — top of rail, always visible */}
+            {/* Energy Stack Badge — top of rail, always visible */}
             <div style={{ padding: "0 0 12px" }}>
               <button
                 type="button"
@@ -321,28 +321,28 @@ export default function WizardShellV7({
                   padding: "14px 16px",
                   borderRadius: 14,
                   background:
-                    "linear-gradient(145deg, rgba(28,18,4,0.92) 0%, rgba(18,12,2,0.96) 100%)",
-                  border: "1.5px solid rgba(245,158,11,0.45)",
-                  boxShadow: "0 0 28px rgba(245,158,11,0.10), inset 0 1px 0 rgba(245,158,11,0.08)",
+                    "linear-gradient(145deg, rgba(35,24,70,0.92) 0%, rgba(8,25,48,0.96) 100%)",
+                  border: "1.5px solid rgba(79,138,255,0.46)",
+                  boxShadow: "0 0 30px rgba(79,138,255,0.16), inset 0 1px 0 rgba(255,255,255,0.08)",
                   cursor: "pointer",
                   transition: "all 0.2s ease",
                   WebkitFontSmoothing: "antialiased",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(245,158,11,0.70)";
+                  e.currentTarget.style.borderColor = "rgba(56,189,248,0.72)";
                   e.currentTarget.style.boxShadow =
-                    "0 0 36px rgba(245,158,11,0.20), inset 0 1px 0 rgba(245,158,11,0.14)";
+                    "0 0 38px rgba(79,138,255,0.28), inset 0 1px 0 rgba(255,255,255,0.12)";
                   e.currentTarget.style.background =
-                    "linear-gradient(145deg, rgba(36,23,5,0.95) 0%, rgba(22,15,3,0.98) 100%)";
+                    "linear-gradient(145deg, rgba(43,29,86,0.95) 0%, rgba(10,32,60,0.98) 100%)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(245,158,11,0.45)";
+                  e.currentTarget.style.borderColor = "rgba(79,138,255,0.46)";
                   e.currentTarget.style.boxShadow =
-                    "0 0 28px rgba(245,158,11,0.10), inset 0 1px 0 rgba(245,158,11,0.08)";
+                    "0 0 30px rgba(79,138,255,0.16), inset 0 1px 0 rgba(255,255,255,0.08)";
                   e.currentTarget.style.background =
-                    "linear-gradient(145deg, rgba(28,18,4,0.92) 0%, rgba(18,12,2,0.96) 100%)";
+                    "linear-gradient(145deg, rgba(35,24,70,0.92) 0%, rgba(8,25,48,0.96) 100%)";
                 }}
-                aria-label="Learn about StackQuote verification"
+                aria-label="Learn about the Energy Stack quote"
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                   <svg
@@ -355,8 +355,8 @@ export default function WizardShellV7({
                   >
                     <path
                       d="M10 1L2 4.5V10C2 14.97 5.42 19.6 10 21C14.58 19.6 18 14.97 18 10V4.5L10 1Z"
-                      fill="rgba(245,158,11,0.15)"
-                      stroke="#F2C14F"
+                      fill="rgba(79,138,255,0.15)"
+                      stroke="#38bdf8"
                       strokeWidth="1.4"
                       strokeLinejoin="round"
                     />
@@ -372,11 +372,11 @@ export default function WizardShellV7({
                     style={{
                       fontSize: 17,
                       fontWeight: 800,
-                      color: "#F5F0E8",
+                      color: "#F8FAFC",
                       letterSpacing: "0.01em",
                     }}
                   >
-                    StackQuote™
+                    Energy Stack
                   </span>
                   <span
                     style={{
@@ -384,8 +384,8 @@ export default function WizardShellV7({
                       height: 8,
                       borderRadius: "50%",
                       background:
-                        "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
-                      boxShadow: "0 0 8px rgba(242,193,79,0.55)",
+                        "radial-gradient(circle at 30% 30%, #38bdf8, #4f8aff 60%, #9b6dff 100%)",
+                      boxShadow: "0 0 10px rgba(79,138,255,0.65)",
                       flexShrink: 0,
                     }}
                   />
@@ -721,30 +721,11 @@ export default function WizardShellV7({
               )}
             </div>
 
-            {/* Step Content — ref-based animation restart prevents flash on step change */}
-            <div
-              ref={stepContentRef}
-              className="merlin-step merlin-step-enter"
-              style={{
-                background: "rgba(255, 255, 255, 0.02)",
-                borderRadius: "0 0 12px 12px",
-                padding: 28,
-                border: "1px solid rgba(255, 255, 255, 0.05)",
-                borderTop: "none",
-                minHeight: 400,
-                willChange: "transform, opacity",
-                animation:
-                  "merlin-step-fadein 0.28s ease-out, heartbeatBorder 4s ease-in-out 0.4s infinite",
-              }}
-            >
-              {children}
-            </div>
-
-            {/* Live Telemetry Bar — rendered when intel data is available */}
+            {/* Live Telemetry Bar — surfaced above content when intel data is available */}
             {telemetry && (telemetry.rate || telemetry.utility) && (
               <div
                 style={{
-                  borderTop: "1px solid rgba(99,120,255,0.12)",
+                  borderBottom: "1px solid rgba(99,120,255,0.12)",
                   padding: "10px 20px",
                   display: "flex",
                   flexWrap: "wrap",
@@ -755,8 +736,7 @@ export default function WizardShellV7({
                   fontSize: 11,
                   color: "#4a5568",
                   fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-                  background: "rgba(255,255,255,0.01)",
-                  borderRadius: "0 0 12px 12px",
+                  background: "rgba(15,23,42,0.30)",
                 }}
               >
                 {telemetry.rate != null && (
@@ -794,7 +774,7 @@ export default function WizardShellV7({
                     <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
                     <span>
                       Grade{" "}
-                      <span style={{ color: "#e8eaf6", fontWeight: 700 }}>{telemetry.grade}</span>
+                      <span style={{ color: "#a78bfa", fontWeight: 700 }}>{telemetry.grade}</span>
                     </span>
                   </>
                 )}
@@ -815,11 +795,30 @@ export default function WizardShellV7({
                 {telemetry.utility && (
                   <>
                     <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
-                    <span style={{ color: "rgba(232,235,243,0.5)" }}>{telemetry.utility}</span>
+                    <span style={{ color: "rgba(232,235,243,0.58)" }}>{telemetry.utility}</span>
                   </>
                 )}
               </div>
             )}
+
+            {/* Step Content — ref-based animation restart prevents flash on step change */}
+            <div
+              ref={stepContentRef}
+              className="merlin-step merlin-step-enter"
+              style={{
+                background: "rgba(255, 255, 255, 0.02)",
+                borderRadius: "0 0 12px 12px",
+                padding: 28,
+                border: "1px solid rgba(255, 255, 255, 0.05)",
+                borderTop: "none",
+                minHeight: 400,
+                willChange: "transform, opacity",
+                animation:
+                  "merlin-step-fadein 0.28s ease-out, heartbeatBorder 4s ease-in-out 0.4s infinite",
+              }}
+            >
+              {children}
+            </div>
           </div>
 
           {/* Step transition animation + responsive */}

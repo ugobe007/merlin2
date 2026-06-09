@@ -384,18 +384,19 @@ function getAdvisorContent(
     case 4:
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
-            Customize your scope.
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: 1.4 }}>
+            Build the add-ons that make your {hi("Energy Stack")} work harder.
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            Add-ons are optional but can significantly improve your ROI. Merlin has pre-selected the
-            most common upgrades for {hi(industry ? industry.replace(/_/g, " ") : "your facility")}.
+            Solar changes energy cost. EV charging can add revenue. Generator capacity changes
+            resilience. Use this step to accept Merlin&apos;s baseline or push the stack toward more
+            capacity before quote optimization.
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
             {[
-              "Solar: Based on electricity rates & space",
-              "Generator: Based on grid reliability",
-              "EV Charging: Based on facility type",
+              "Start with solar: accept the recommended kW, then use Advanced Solar Coverage for carport/canopy expansion.",
+              "Use Panel Grade Settings when roof area is tight or you want premium solar types.",
+              "Only add EV or generator if revenue, fleet needs, or outage risk justify the scope.",
             ].map(bullet)}
           </div>
           {peakLoadKW > 0 && (
@@ -403,8 +404,9 @@ function getAdvisorContent(
               style={{
                 padding: "14px 16px",
                 borderRadius: 10,
-                background: "rgba(62,207,142,0.06)",
-                border: "1px solid rgba(62,207,142,0.22)",
+                background:
+                  "linear-gradient(135deg, rgba(79,138,255,0.10), rgba(155,109,255,0.08))",
+                border: "1px solid rgba(79,138,255,0.26)",
                 marginTop: 8,
               }}
             >
@@ -413,7 +415,7 @@ function getAdvisorContent(
                   fontSize: 11,
                   fontWeight: 700,
                   letterSpacing: "0.06em",
-                  color: "rgba(62,207,142,0.7)",
+                  color: "#38bdf8",
                   marginBottom: 6,
                   textTransform: "uppercase",
                 }}
@@ -424,7 +426,7 @@ function getAdvisorContent(
                 style={{
                   fontSize: 28,
                   fontWeight: 800,
-                  color: ACCENT,
+                  color: "#a78bfa",
                   letterSpacing: "-0.5px",
                   fontVariantNumeric: "tabular-nums",
                 }}
@@ -432,7 +434,7 @@ function getAdvisorContent(
                 {Math.round(peakLoadKW).toLocaleString()} kW
               </div>
               <div style={{ fontSize: 11, color: T.muted, marginTop: 4 }}>
-                All recommendations sized from this baseline
+                Add-ons should support this load without distracting from BESS ROI.
               </div>
             </div>
           )}
