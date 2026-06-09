@@ -352,6 +352,11 @@ export function Step4V8({ state, actions }: Props) {
   const evCost = bd?.evChargingCost ?? 0;
   const genCost = bd?.generatorCost ?? (tier.generatorKW > 0 ? tier.grossCost * 0.15 : 0);
   const breakdownTotal = solarCost + bessCost + evCost + genCost;
+  const quoteDate = new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 
   const evSpec =
     level2Chargers > 0 && dcfcChargers > 0
@@ -363,49 +368,196 @@ export function Step4V8({ state, actions }: Props) {
           : "Configured";
 
   const industryLabel = industry?.replace(/_/g, " ") ?? "your facility";
+  const quoteId = `MER-${(industry ?? "SITE").replace(/_/g, "").slice(0, 4).toUpperCase()}-${Math.max(1, Math.round(tier.netCost / 1000))}`;
+  const monthlySavings = Math.max(0, Math.round(tier.annualSavings / 12));
+  const savingsDrivers = [
+    {
+      label: "Generate cheaper power on-site",
+      text:
+        tier.solarKW > 0
+          ? `${tier.solarKW.toLocaleString()} kW solar offsets daytime utility energy before it hits the meter.`
+          : "Solar is not included in this stack, so savings rely primarily on storage and tariff optimization.",
+    },
+    {
+      label: "Store energy and shave peaks",
+      text: `${tier.bessKWh.toLocaleString()} kWh battery storage discharges during expensive peak windows and reduces demand spikes.`,
+    },
+    {
+      label: "Use the grid as backup, not default",
+      text: `${intel?.utilityProvider ?? "The utility grid"} stays connected while Merlin shifts usage toward the lowest-cost mix of solar, storage, and grid power.`,
+    },
+  ];
 
   return (
     <div
       style={{
-        maxWidth: 1060,
+        maxWidth: 1080,
         margin: "0 auto",
         padding: "0 4px 40px",
         color: C.text,
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
-      <div style={{ marginBottom: 28, paddingTop: 4 }}>
+      <div
+        style={{
+          marginBottom: 20,
+          padding: "22px 24px",
+          borderRadius: 18,
+          background:
+            "linear-gradient(135deg, rgba(15,23,42,0.92), rgba(17,26,62,0.86) 54%, rgba(31,20,58,0.86))",
+          border: "1px solid rgba(99,120,255,0.28)",
+          boxShadow: "0 22px 60px rgba(2,6,23,0.30), inset 0 1px 0 rgba(255,255,255,0.05)",
+        }}
+      >
         <div
           style={{
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase" as const,
-            color: C.purple,
-            marginBottom: 6,
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 18,
+            alignItems: "flex-start",
           }}
         >
-          Energy Stacking™
+          <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 900,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase" as const,
+                color: C.purple,
+                marginBottom: 6,
+              }}
+            >
+              Official Energy Stack™ Quote
+            </div>
+            <h1
+              style={{
+                fontSize: 30,
+                fontWeight: 900,
+                color: C.text,
+                margin: 0,
+                letterSpacing: "-0.8px",
+                fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif",
+              }}
+            >
+              Merlin Energy Stack Proposal
+            </h1>
+            <p
+              style={{
+                fontSize: 14,
+                color: C.textSub,
+                marginTop: 8,
+                lineHeight: 1.6,
+                maxWidth: 680,
+              }}
+            >
+              This quote combines solar, battery storage, and grid optimization into one operating
+              system designed to reduce utility spend by {fmt$(tier.annualSavings)}/year, improve
+              peak load control, and keep {industryLabel} operations connected to resilient backup
+              power.
+            </p>
+          </div>
+          <div
+            style={{
+              minWidth: 190,
+              padding: "12px 14px",
+              borderRadius: 12,
+              background: "rgba(2,6,23,0.28)",
+              border: "1px solid rgba(148,163,184,0.14)",
+              textAlign: "right" as const,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                color: C.textMuted,
+                fontWeight: 800,
+                letterSpacing: "0.10em",
+                textTransform: "uppercase" as const,
+              }}
+            >
+              Quote ID
+            </div>
+            <div style={{ fontSize: 16, color: C.text, fontWeight: 900, marginTop: 4 }}>
+              {quoteId}
+            </div>
+            <div style={{ fontSize: 11, color: C.textMuted, marginTop: 6 }}>{quoteDate}</div>
+            <div style={{ fontSize: 11, color: C.green, fontWeight: 800, marginTop: 8 }}>
+              Preliminary · Ready to select
+            </div>
+          </div>
         </div>
-        <h1
+
+        <div
           style={{
-            fontSize: 24,
-            fontWeight: 800,
-            color: C.text,
-            margin: 0,
-            letterSpacing: "-0.4px",
-            fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif",
+            display: "grid",
+            gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+            gap: 10,
+            marginTop: 18,
           }}
         >
-          Build Your Energy Stack™
-        </h1>
-        <p
-          style={{ fontSize: 13, color: C.textSub, marginTop: 6, lineHeight: 1.55, maxWidth: 600 }}
-        >
-          Review your system components, then use the strategy slider to balance cost vs.
-          resilience. When the financial model reflects your goals, confirm your stack to see your
-          full quote.
-        </p>
+          {[
+            {
+              label: "Annual Savings",
+              value: fmt$(tier.annualSavings),
+              sub: `~${fmt$(monthlySavings)}/mo`,
+              color: C.green,
+            },
+            {
+              label: "Net Investment",
+              value: fmt$(tier.netCost),
+              sub: `after ${Math.round(tier.itcRate * 100)}% ITC`,
+              color: C.text,
+            },
+            {
+              label: "Payback",
+              value: `${tier.paybackYears.toFixed(1)} yrs`,
+              sub: "simple payback",
+              color: C.amber,
+            },
+            {
+              label: "10-Year ROI",
+              value: `${Math.round(tier.roi10Year)}%`,
+              sub: "net return",
+              color: tier.roi10Year >= 0 ? C.green : C.red,
+            },
+          ].map((item) => (
+            <div
+              key={item.label}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                background: "rgba(2,6,23,0.24)",
+                border: "1px solid rgba(148,163,184,0.12)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 10,
+                  color: C.textMuted,
+                  fontWeight: 800,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase" as const,
+                  marginBottom: 5,
+                }}
+              >
+                {item.label}
+              </div>
+              <div
+                style={{
+                  fontSize: 24,
+                  color: item.color,
+                  fontWeight: 900,
+                  letterSpacing: "-0.4px",
+                  fontVariantNumeric: "tabular-nums" as const,
+                }}
+              >
+                {item.value}
+              </div>
+              <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>{item.sub}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div
@@ -414,7 +566,7 @@ export function Step4V8({ state, actions }: Props) {
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <Panel>
-            <SectionLabel color={C.sky}>🔧 Stack Components</SectionLabel>
+            <SectionLabel color={C.sky}>🔧 Quoted System</SectionLabel>
             <StackRow
               icon="☀️"
               name="Solar PV"
@@ -503,13 +655,57 @@ export function Step4V8({ state, actions }: Props) {
 
           <Panel
             style={{
+              background: "linear-gradient(135deg, rgba(62,207,142,0.07), rgba(56,189,248,0.045))",
+              border: "1px solid rgba(62,207,142,0.22)",
+            }}
+          >
+            <SectionLabel color={C.green}>How this stack saves money</SectionLabel>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {savingsDrivers.map((driver, index) => (
+                <div
+                  key={driver.label}
+                  style={{ display: "flex", gap: 10, alignItems: "flex-start" }}
+                >
+                  <div
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: 7,
+                      background: "rgba(62,207,142,0.12)",
+                      border: "1px solid rgba(62,207,142,0.28)",
+                      color: C.green,
+                      fontSize: 12,
+                      fontWeight: 900,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {index + 1}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, color: C.text, fontWeight: 800, marginBottom: 2 }}>
+                      {driver.label}
+                    </div>
+                    <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.5 }}>
+                      {driver.text}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Panel>
+
+          <Panel
+            style={{
               border: "1.5px solid rgba(79,138,255,0.30)",
               background: "transparent",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
               <span style={{ fontSize: 14 }}>⚡</span>
-              <SectionLabel color={C.sky}>Optimization Strategy</SectionLabel>
+              <SectionLabel color={C.sky}>Stack Optimization Slider</SectionLabel>
             </div>
             <p
               style={{
@@ -520,9 +716,47 @@ export function Step4V8({ state, actions }: Props) {
                 marginTop: -4,
               }}
             >
-              Drag the slider to adjust your energy stack optimization — shift left for faster
-              payback, right for maximum grid resilience.
+              The slider changes the Energy Stack recommendation before you select the quote. Move
+              left to lower system size and upfront cost; move right to increase storage coverage,
+              peak shaving, and outage resilience.
             </p>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gap: 8,
+                marginBottom: 12,
+              }}
+            >
+              {[
+                { label: "Left", text: "Lower cost", color: C.sky },
+                { label: "Middle", text: "Balanced ROI", color: C.amber },
+                { label: "Right", text: "More resilience", color: C.purple },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  style={{
+                    border: `1px solid ${item.color}40`,
+                    borderRadius: 9,
+                    padding: "8px 9px",
+                    background: `${item.color}0f`,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: item.color,
+                      fontWeight: 900,
+                      textTransform: "uppercase" as const,
+                      letterSpacing: "0.08em",
+                    }}
+                  >
+                    {item.label}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.textSub, marginTop: 3 }}>{item.text}</div>
+                </div>
+              ))}
+            </div>
             <div
               style={{
                 display: "flex",
@@ -642,7 +876,7 @@ export function Step4V8({ state, actions }: Props) {
           <Panel
             style={{ border: `1px solid ${C.purpleBorder}`, background: "rgba(155,109,255,0.05)" }}
           >
-            <SectionLabel color={C.purple}>💰 Live Financial Model</SectionLabel>
+            <SectionLabel color={C.purple}>💰 Quote Summary</SectionLabel>
             <div
               style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}
             >
