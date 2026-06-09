@@ -169,13 +169,13 @@ export function BillUploadPanel({ onExtracted, onCleared, uploadedData }: BillUp
   const loadingLabel = status === "parsing" ? "Reading file…" : "Extracting data…";
 
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div style={{ marginBottom: 14 }}>
       <div
         style={{
           display: "flex",
           alignItems: "center",
           gap: 8,
-          marginBottom: 10,
+          marginBottom: 7,
         }}
       >
         <span
@@ -212,14 +212,14 @@ export function BillUploadPanel({ onExtracted, onCleared, uploadedData }: BillUp
         onDrop={onDrop}
         onClick={() => !isLoading && fileInputRef.current?.click()}
         style={{
-          border: `1.5px dashed ${isDragging ? "rgba(0,210,100,0.7)" : "rgba(255,255,255,0.15)"}`,
+          border: `1px solid ${isDragging ? "rgba(0,210,100,0.62)" : "rgba(255,255,255,0.09)"}`,
           borderRadius: 12,
-          padding: "20px 24px",
+          padding: "11px 14px",
           display: "flex",
           alignItems: "center",
-          gap: 16,
+          gap: 12,
           cursor: isLoading ? "default" : "pointer",
-          background: isDragging ? "rgba(0,210,100,0.06)" : "rgba(255,255,255,0.02)",
+          background: isDragging ? "rgba(0,210,100,0.06)" : "rgba(255,255,255,0.018)",
           transition: "all 0.2s",
         }}
       >
@@ -236,8 +236,8 @@ export function BillUploadPanel({ onExtracted, onCleared, uploadedData }: BillUp
           <>
             <div
               style={{
-                width: 36,
-                height: 36,
+                width: 30,
+                height: 30,
                 borderRadius: "50%",
                 border: "2px solid rgba(0,210,100,0.3)",
                 borderTopColor: "#00d264",
@@ -257,14 +257,14 @@ export function BillUploadPanel({ onExtracted, onCleared, uploadedData }: BillUp
           <>
             <div
               style={{
-                width: 36,
-                height: 36,
+                width: 30,
+                height: 30,
                 borderRadius: 8,
                 background: "rgba(0,210,100,0.1)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 18,
+                fontSize: 15,
                 flexShrink: 0,
               }}
             >
@@ -274,15 +274,15 @@ export function BillUploadPanel({ onExtracted, onCleared, uploadedData }: BillUp
               <div
                 style={{
                   color: "rgba(255,255,255,0.85)",
-                  fontWeight: 600,
-                  fontSize: 14,
-                  marginBottom: 2,
+                  fontWeight: 700,
+                  fontSize: 13,
+                  marginBottom: 1,
                 }}
               >
-                Drop your utility bill here, or click to browse
+                Drop utility bill or click to browse
               </div>
-              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
-                PDF, CSV, or Excel · Your bill stays on your device, never stored
+              <div style={{ color: "rgba(255,255,255,0.38)", fontSize: 11 }}>
+                PDF, CSV, or Excel · optional, never stored
               </div>
             </div>
           </>
@@ -305,8 +305,8 @@ export function BillUploadPanel({ onExtracted, onCleared, uploadedData }: BillUp
         </div>
       )}
 
-      <div style={{ marginTop: 8, color: "rgba(255,255,255,0.3)", fontSize: 11 }}>
-        Skip this if you don't have it handy — the wizard works without it.
+      <div style={{ marginTop: 6, color: "rgba(255,255,255,0.26)", fontSize: 10.5 }}>
+        Skip if you don&apos;t have it handy.
       </div>
     </div>
   );
