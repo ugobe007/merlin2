@@ -1293,9 +1293,9 @@ function HeroIntakeCard() {
           <button
             type="button"
             onClick={hasZipStarted ? launchWizard : beginDetails}
-            className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-200/25 bg-[linear-gradient(135deg,#3ECF8E_0%,#7DD3FC_62%,#A78BFA_125%)] px-4 py-3 text-sm font-black text-[#04110c] transition hover:bg-[linear-gradient(135deg,#63E6A7_0%,#93C5FD_62%,#C4B5FD_125%)]"
+            className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-300/60 bg-transparent px-4 py-3.5 text-base font-black text-emerald-200 transition hover:border-cyan-300/75 hover:text-cyan-100 sm:text-lg"
           >
-            {hasZipStarted ? "Continue to Step 3" : "Begin Stacking"} <ArrowRight size={18} />
+            {hasZipStarted ? "Continue to Step 3" : "Start Stacking"} <ArrowRight size={20} />
           </button>
 
           <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.025] px-3 py-2 text-[10px] font-bold text-slate-400">
