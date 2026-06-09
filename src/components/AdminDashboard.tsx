@@ -43,6 +43,7 @@ import AdminSettingsTab from "./admin/tabs/AdminSettingsTab";
 import AdminMarketingTab from "./admin/tabs/AdminMarketingTab";
 import AdminWhitepapersTab from "./admin/tabs/AdminWhitepapersTab";
 import MetaCalculationsPage from "@/pages/MetaCalculationsPage";
+import OpportunitiesDashboard from "@/pages/OpportunitiesDashboard";
 
 /**
  * System Administrator Dashboard
@@ -92,6 +93,7 @@ const AdminDashboard: React.FC = () => {
     | "migration"
     | "aiData"
     | "marketing"
+    | "opportunities"
     | "whitepapers"
   >(
     (() => {
@@ -116,6 +118,7 @@ const AdminDashboard: React.FC = () => {
         "realtime",
         "settings",
         "marketing",
+        "opportunities",
         "whitepapers",
       ];
       return (p && valid.includes(p) ? p : "dashboard") as
@@ -139,6 +142,7 @@ const AdminDashboard: React.FC = () => {
         | "migration"
         | "aiData"
         | "marketing"
+        | "opportunities"
         | "whitepapers";
     })()
   );
@@ -341,6 +345,13 @@ const AdminDashboard: React.FC = () => {
           label: "Marketing Kit",
           icon: Megaphone,
           description: "Email, LinkedIn & SMS outreach templates",
+        },
+        {
+          key: "opportunities",
+          label: "Lead Opportunities",
+          icon: TrendingUp,
+          description: "RFQs, energy projects & high-utility exposure leads",
+          highlight: true,
         },
         {
           key: "whitepapers",
@@ -670,6 +681,16 @@ const AdminDashboard: React.FC = () => {
                 </button>
 
                 <button
+                  onClick={() => setActiveTab("opportunities")}
+                  className="group flex items-center gap-2 p-3 bg-emerald-500/5 hover:bg-white/[0.06] border border-emerald-500/20 hover:border-emerald-500/30 rounded-xl transition-all duration-200 hover:shadow-md"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-[1.02] transition-transform">
+                    <TrendingUp className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-white/80">Lead Opportunities</span>
+                </button>
+
+                <button
                   onClick={() => setActiveTab("settings")}
                   className="group flex items-center gap-2 p-3 bg-orange-500/5 hover:bg-white/[0.06] border border-orange-500/20 hover:border-orange-500/30 rounded-xl transition-all duration-200 hover:shadow-md"
                 >
@@ -762,6 +783,7 @@ const AdminDashboard: React.FC = () => {
         {activeTab === "settings" && <AdminSettingsTab />}
 
         {activeTab === "marketing" && <AdminMarketingTab />}
+        {activeTab === "opportunities" && <OpportunitiesDashboard />}
         {activeTab === "whitepapers" && <AdminWhitepapersTab />}
 
         {activeTab === "aiData" && (
