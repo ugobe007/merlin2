@@ -743,22 +743,22 @@ export function Step3V8({ state, actions }: Props) {
         <div
           style={{
             marginBottom: 24,
-            padding: "18px 20px",
-            borderRadius: 16,
+            padding: "16px 18px",
+            borderRadius: 18,
             background: "transparent",
-            border: "1.5px solid rgba(62,207,142,0.55)",
+            border: "1px solid rgba(62,207,142,0.44)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             gap: 16,
             flexWrap: "wrap",
-            boxShadow: "0 0 0 1px rgba(255,255,255,0.05) inset, 0 0 32px rgba(62,207,142,0.16)",
+            boxShadow: "0 0 0 1px rgba(255,255,255,0.045) inset",
           }}
         >
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 18, fontWeight: 950, color: "#3ecf8e", marginBottom: 7 }}>
+            <div style={{ fontSize: 20, fontWeight: 950, color: "#3ecf8e", marginBottom: 7 }}>
               ✓ All {visibleQuestions.length} questions pre-filled
-              <span style={{ color: "#3ecf8e", fontSize: 22, fontWeight: 950 }}>
+              <span style={{ color: "#3ecf8e", fontSize: 24, fontWeight: 950 }}>
                 {" "}
                 with {displayName} benchmarks
               </span>
@@ -775,10 +775,10 @@ export function Step3V8({ state, actions }: Props) {
               display: "flex",
               alignItems: "center",
               gap: 8,
-              padding: "14px 26px",
+              padding: "12px 20px",
               borderRadius: 14,
               background:
-                "linear-gradient(rgba(10,15,30,0.94), rgba(10,15,30,0.94)) padding-box, linear-gradient(90deg, #8b5cf6, #38bdf8) border-box",
+                "linear-gradient(#070d1f, #070d1f) padding-box, linear-gradient(90deg, #8b5cf6, #38bdf8) border-box",
               color: "transparent",
               border: "2px solid transparent",
               fontSize: 16,

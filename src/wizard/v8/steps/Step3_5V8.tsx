@@ -273,74 +273,120 @@ function _EVSliderRow({
   );
 }
 
-// ── Compact Confirm Checkbox ──────────────────────────────────────────────────
-function ConfirmBtn({
-  confirmed,
-  needsConfirm = false,
-  label,
-  confirmedLabel,
-  onClick,
-}: {
-  confirmed: boolean;
-  needsConfirm?: boolean;
-  label: string;
-  confirmedLabel: string;
-  onClick: () => void;
-}) {
+function OptionCheck({ checked }: { checked: boolean }) {
   return (
-    <button
-      onClick={onClick}
+    <span
       style={{
+        width: 18,
+        height: 18,
+        borderRadius: 5,
+        border: checked ? "1.5px solid #3ecf8e" : "1.5px solid rgba(148,163,184,0.42)",
+        color: checked ? "#3ecf8e" : "transparent",
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: 8,
-        padding: "8px 12px",
-        borderRadius: 999,
-        border: confirmed
-          ? "1.5px solid rgba(62,207,142,0.86)"
-          : "1.5px solid rgba(79,138,255,0.56)",
-        background: "transparent",
-        cursor: "pointer",
         fontSize: 12,
-        fontWeight: 850,
-        letterSpacing: "0.03em",
-        textTransform: "uppercase" as const,
-        color: confirmed ? "#3ecf8e" : "#8fd7ff",
-        transition: "border-color 0.15s, color 0.15s, box-shadow 0.15s",
-        boxShadow: confirmed ? "0 0 18px rgba(62,207,142,0.16)" : "none",
-      }}
-      onMouseEnter={(e) => {
-        if (!confirmed) {
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(62,207,142,0.76)";
-          (e.currentTarget as HTMLButtonElement).style.color = "#3ecf8e";
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!confirmed) {
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(79,138,255,0.56)";
-          (e.currentTarget as HTMLButtonElement).style.color = "#8fd7ff";
-        }
+        fontWeight: 900,
+        lineHeight: 1,
+        flexShrink: 0,
       }}
     >
-      <span
-        style={{
-          width: 16,
-          height: 16,
-          borderRadius: 4,
-          border: confirmed ? "1.5px solid #3ecf8e" : "1.5px solid currentColor",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#3ecf8e",
-          fontSize: 11,
-          lineHeight: 1,
-        }}
-      >
-        {confirmed ? "✓" : ""}
+      ✓
+    </span>
+  );
+}
+
+function SelectOptionCard({
+  checked,
+  icon,
+  label,
+  value,
+  meta,
+  accent = "#8fd7ff",
+  onClick,
+}: {
+  checked: boolean;
+  icon?: string;
+  label: string;
+  value?: string;
+  meta?: string;
+  accent?: string;
+  onClick?: () => void;
+}) {
+  const Tag = onClick ? "button" : "div";
+  return (
+    <Tag
+      onClick={onClick as never}
+      style={{
+        width: "100%",
+        padding: "10px 11px",
+        borderRadius: 12,
+        border: checked ? "1.5px solid rgba(62,207,142,0.86)" : "1px solid rgba(99,120,255,0.28)",
+        background: "transparent",
+        color: checked ? "#3ecf8e" : "rgba(226,232,240,0.88)",
+        cursor: onClick ? "pointer" : "default",
+        textAlign: "left",
+        display: "flex",
+        gap: 10,
+        alignItems: "flex-start",
+        transition: "border-color 0.15s, color 0.15s, box-shadow 0.15s",
+        boxShadow: checked ? "0 0 20px rgba(62,207,142,0.10)" : "none",
+      }}
+    >
+      <OptionCheck checked={checked} />
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: "flex", gap: 7, alignItems: "center", marginBottom: 4 }}>
+          {icon && <span style={{ fontSize: 14, color: accent, lineHeight: 1 }}>{icon}</span>}
+          <span style={{ fontSize: 13, fontWeight: 850, lineHeight: 1.15 }}>{label}</span>
+        </span>
+        {value && (
+          <span
+            style={{
+              display: "block",
+              fontSize: 15,
+              fontWeight: 900,
+              color: checked ? "#3ecf8e" : "#f8fafc",
+              fontVariantNumeric: "tabular-nums",
+              lineHeight: 1.2,
+            }}
+          >
+            {value}
+          </span>
+        )}
+        {meta && (
+          <span
+            style={{
+              display: "block",
+              fontSize: 11,
+              color: checked ? "rgba(62,207,142,0.72)" : "rgba(148,163,184,0.62)",
+              lineHeight: 1.35,
+              marginTop: 4,
+            }}
+          >
+            {meta}
+          </span>
+        )}
       </span>
-      {confirmed ? confirmedLabel : label}
-    </button>
+    </Tag>
+  );
+}
+
+function AutoSavedNote({ label }: { label: string }) {
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        color: "#3ecf8e",
+        fontSize: 12,
+        fontWeight: 800,
+        letterSpacing: "0.02em",
+      }}
+    >
+      <OptionCheck checked />
+      {label}
+    </div>
   );
 }
 
@@ -759,10 +805,9 @@ function SolarCard({
   const [sliderKW, setSliderKW] = useState(() =>
     Math.max(solarMin, Math.min(safeMax, initialKW > 0 ? initialKW : safeRec))
   );
-  const [confirmed, setConfirmed] = useState(false);
   // When canopy interest changes → recKW & maxKW update → snap slider to new rec.
   useEffect(() => {
-    if (!confirmed && recKW > 0) {
+    if (recKW > 0) {
       const clamped = Math.max(solarMin, Math.min(safeMax, recKW));
       setSliderKW(clamped);
       onConfig(clamped);
@@ -778,7 +823,6 @@ function SolarCard({
     if (pendingExternalKW == null) return;
     const clamped = Math.max(solarMin, pendingExternalKW);
     setSliderKW(clamped);
-    setConfirmed(false);
     onPendingConsumed?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingExternalKW]);
@@ -792,7 +836,6 @@ function SolarCard({
   const handleChange = (v: number) => {
     const c = Math.max(solarMin, Math.min(safeMax, v));
     setSliderKW(c);
-    setConfirmed(false);
     onConfig(c);
   };
 
@@ -896,25 +939,6 @@ function SolarCard({
               >
                 {sliderKW.toLocaleString()} kW
               </span>
-              {confirmed && (
-                <div
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: "50%",
-                    background: "#4F8CFF",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 11,
-                    fontWeight: 900,
-                    color: "#fff",
-                    flexShrink: 0,
-                  }}
-                >
-                  ✓
-                </div>
-              )}
             </div>
             <div
               style={{
@@ -1019,76 +1043,43 @@ function SolarCard({
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {/* ── Rooftop — always included, active-confirmed badge ── */}
-              <div
-                style={{
-                  flex: 1,
-                  padding: "9px 6px 8px",
-                  borderRadius: 10,
-                  border: "2px solid rgba(52,211,153,0.75)",
-                  background: "transparent",
-                  textAlign: "center",
-                  userSelect: "none",
-                }}
-              >
-                <div style={{ fontSize: 18, lineHeight: 1 }}>🏠</div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: "rgba(52,211,153,0.95)",
-                    marginTop: 5,
-                    lineHeight: 1.2,
-                  }}
-                >
-                  Rooftop
-                </div>
-                {/* Show the slider's current value (what gets quoted), not the roof capacity cap */}
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 900,
-                    color: "#fff",
-                    marginTop: 3,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {canopyInterest === "yes"
+              <SelectOptionCard
+                checked
+                icon="🏠"
+                label="Rooftop"
+                value={
+                  canopyInterest === "yes"
                     ? roofOnlyKW > 0
                       ? `${roofOnlyKW.toLocaleString()} kW`
                       : "—"
                     : sliderKW > 0
                       ? `${sliderKW.toLocaleString()} kW`
-                      : "—"}
-                </div>
-                {/* When no carport: show roof max as subtext so user knows the ceiling */}
-                {canopyInterest !== "yes" && roofOnlyKW > 0 && sliderKW < roofOnlyKW && (
-                  <div style={{ fontSize: 10, color: "rgba(52,211,153,0.5)", marginTop: 1 }}>
-                    of {roofOnlyKW.toLocaleString()} kW max
-                  </div>
-                )}
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: "#34d399",
-                    fontWeight: 700,
-                    marginTop: 4,
-                    background: "transparent",
-                    border: "1px solid rgba(52,211,153,0.5)",
-                    borderRadius: 4,
-                    padding: "2px 6px",
-                    display: "inline-block",
-                  }}
-                >
-                  ✓ Included
-                </div>
-              </div>
+                      : "—"
+                }
+                meta={
+                  canopyInterest !== "yes" && roofOnlyKW > 0 && sliderKW < roofOnlyKW
+                    ? `Included · ${roofOnlyKW.toLocaleString()} kW roof max`
+                    : "Included"
+                }
+                accent="#fbbf24"
+              />
 
               {/* ── Carport — optional add-on toggle ── */}
               {(() => {
                 const carportActive = canopyInterest === "yes";
                 const additiveKW = withCanopyKW - roofOnlyKW;
                 return (
-                  <button
+                  <SelectOptionCard
+                    checked={carportActive}
+                    icon="🏗️"
+                    label={`${carportActive ? "Remove" : "Add"} ${canopyLabel}`}
+                    value={additiveKW > 0 ? `+${additiveKW.toLocaleString()} kW` : "—"}
+                    meta={
+                      carportActive
+                        ? `${withCanopyKW.toLocaleString()} kW total selected`
+                        : `Optional ${canopyAreaLabel} canopy`
+                    }
+                    accent="#fbbf24"
                     onClick={() => {
                       const nextVal = carportActive ? "no" : "yes";
                       if (onCarportToggle) {
@@ -1096,64 +1087,8 @@ function SolarCard({
                       } else {
                         onCanopyChange?.(nextVal);
                       }
-                      setConfirmed(false);
                     }}
-                    style={{
-                      flex: 1,
-                      padding: "9px 6px 8px",
-                      borderRadius: 10,
-                      border: carportActive
-                        ? "2px solid rgba(251,191,36,1.0)"
-                        : "2px solid rgba(251,191,36,0.55)",
-                      background: "transparent",
-                      cursor: "pointer",
-                      textAlign: "center",
-                      transition: "border-color 0.15s, box-shadow 0.15s",
-                      animation: carportActive ? "none" : "carportGlow 1.8s ease-in-out infinite",
-                      boxShadow: carportActive
-                        ? "0 0 0 3px rgba(251,191,36,0.18), 0 0 12px 2px rgba(251,191,36,0.1)"
-                        : undefined,
-                    }}
-                  >
-                    <div style={{ fontSize: 18, lineHeight: 1 }}>🏗️</div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: carportActive ? "#fbbf24" : "rgba(251,191,36,0.95)",
-                        marginTop: 5,
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      {carportActive ? `✓ ${canopyLabel} Added` : `+ Add ${canopyLabel}`}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 900,
-                        color: carportActive ? "#fbbf24" : "#fbbf24",
-                        marginTop: 3,
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {additiveKW > 0 ? `+${additiveKW.toLocaleString()} kW` : "—"}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 700,
-                        marginTop: 4,
-                        background: "transparent",
-                        border: `1px solid ${carportActive ? "rgba(251,191,36,0.6)" : "rgba(251,191,36,0.4)"}`,
-                        borderRadius: 4,
-                        padding: "2px 6px",
-                        display: "inline-block",
-                        color: carportActive ? "#fbbf24" : "rgba(251,191,36,0.8)",
-                      }}
-                    >
-                      {carportActive ? `${withCanopyKW.toLocaleString()} kW total` : "Tap to add →"}
-                    </div>
-                  </button>
+                  />
                 );
               })()}
             </div>
@@ -1219,51 +1154,15 @@ function SolarCard({
                   ).map(({ id, label, sub, cost }) => {
                     const active = solarStructureType === id;
                     return (
-                      <button
+                      <SelectOptionCard
                         key={id}
+                        checked={active}
+                        label={label}
+                        value={cost}
+                        meta={sub}
+                        accent="#fbbf24"
                         onClick={() => onStructureTypeChange?.(id)}
-                        style={{
-                          flex: 1,
-                          padding: "9px 6px",
-                          borderRadius: 8,
-                          border: active
-                            ? "2px solid rgba(251,191,36,0.9)"
-                            : "1px solid rgba(251,191,36,0.3)",
-                          background: active ? "rgba(251,191,36,0.07)" : "transparent",
-                          cursor: "pointer",
-                          textAlign: "center",
-                          transition: "border-color 0.15s, background 0.15s",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: active ? "#fbbf24" : "#fff",
-                          }}
-                        >
-                          {active ? `✓ ${label}` : label}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 10,
-                            color: "rgba(148,163,184,0.7)",
-                            marginTop: 2,
-                          }}
-                        >
-                          {sub}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            color: active ? "#fbbf24" : "rgba(251,191,36,0.7)",
-                            marginTop: 3,
-                          }}
-                        >
-                          {cost}
-                        </div>
-                      </button>
+                      />
                     );
                   })}
                 </div>
@@ -1315,7 +1214,6 @@ function SolarCard({
                 label: "Standard",
                 sub: "Best $/kWh ratio",
                 spec: "~400W · $0.30/W",
-                accentColor: "rgba(16,185,129,",
               },
               {
                 id: "premium" as const,
@@ -1323,56 +1221,21 @@ function SolarCard({
                 label: "Premium",
                 sub: "Max roof yield",
                 spec: "REC Alpha · 22.3%",
-                accentColor: "rgba(130,100,255,",
               },
             ] as const
-          ).map(({ id, emoji, label, sub, spec, accentColor }) => {
+          ).map(({ id, emoji, label, sub, spec }) => {
             const active = solarPanelTier === id;
-            const border = active
-              ? `2px solid ${accentColor}1.0)`
-              : "1px solid rgba(255,255,255,0.1)";
-            const bg = active ? `${accentColor}0.07)` : "transparent";
-            const labelColor = active ? `${accentColor}1.0)` : "#fff";
             return (
-              <button
+              <SelectOptionCard
                 key={id}
+                checked={active}
+                icon={emoji}
+                label={label}
+                value={spec}
+                meta={sub}
+                accent={id === "premium" ? "#a78bfa" : "#3ecf8e"}
                 onClick={() => onPanelTierChange?.(id)}
-                style={{
-                  flex: 1,
-                  padding: "8px 8px",
-                  borderRadius: 9,
-                  border,
-                  background: bg,
-                  cursor: "pointer",
-                  textAlign: "center",
-                  transition: "border-color 0.15s, background 0.15s",
-                }}
-              >
-                <div style={{ fontSize: 15, lineHeight: 1 }}>{emoji}</div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: labelColor,
-                    marginTop: 5,
-                  }}
-                >
-                  {active ? `✓ ${label}` : label}
-                </div>
-                <div style={{ fontSize: 11, color: "rgba(148,163,184,0.7)", marginTop: 2 }}>
-                  {sub}
-                </div>
-                <div
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    color: `${accentColor}0.85)`,
-                    marginTop: 3,
-                  }}
-                >
-                  {spec}
-                </div>
-              </button>
+              />
             );
           })}
         </div>
@@ -1421,16 +1284,7 @@ function SolarCard({
       </div>
 
       <div style={{ padding: "0 16px 14px" }}>
-        <ConfirmBtn
-          confirmed={confirmed}
-          needsConfirm={!confirmed}
-          label="Confirm Solar Capacity"
-          confirmedLabel={`${sliderKW.toLocaleString()} kW confirmed`}
-          onClick={() => {
-            onConfig(sliderKW);
-            setConfirmed(true);
-          }}
-        />
+        <AutoSavedNote label={`${sliderKW.toLocaleString()} kW solar selection saved`} />
       </div>
 
       <div
@@ -1941,7 +1795,6 @@ function EVChargingCard({
   const [l2, setL2] = useState(initialL2 > 0 ? initialL2 : recL2);
   const [dcfc, setDcfc] = useState(initialDcfc > 0 ? initialDcfc : 0);
   const [hpc, setHpc] = useState(initialHpc > 0 ? initialHpc : 0);
-  const [confirmed, setConfirmed] = useState(false);
   const [showDCFC, setShowDCFC] = useState(true); // Level 3 Fast Charging always visible
   const [showPanel, setShowPanel] = useState(false);
   const [panelAssessed, setPanelAssessed] = useState(
@@ -1958,7 +1811,6 @@ function EVChargingCard({
   const totalKW = l2 * 7.2 + dcfc * 50 + hpc * 250;
 
   const bump = (which: "l2" | "dcfc" | "hpc", dir: 1 | -1, max: number) => {
-    setConfirmed(false);
     if (which === "l2") {
       const nv = Math.max(0, Math.min(max, l2 + dir));
       setL2(nv);
@@ -2358,15 +2210,8 @@ function EVChargingCard({
         )}
 
         <div style={{ padding: "0 16px 16px" }}>
-          <ConfirmBtn
-            confirmed={confirmed}
-            needsConfirm={!confirmed}
-            label="Confirm EV Charging"
-            confirmedLabel={`${Math.round(totalKW).toLocaleString()} kW · ${l2 + dcfc + hpc} ports confirmed`}
-            onClick={() => {
-              onConfig(l2, dcfc, hpc);
-              setConfirmed(true);
-            }}
+          <AutoSavedNote
+            label={`${Math.round(totalKW).toLocaleString()} kW · ${l2 + dcfc + hpc} EV ports saved`}
           />
         </div>
       </Card>
@@ -2409,7 +2254,6 @@ function BackupGeneratorCard({
   const [sliderKW, setSliderKW] = useState(() =>
     Math.max(safeMin, Math.min(safeMax, initialKW > 0 ? initialKW : safeRec))
   );
-  const [confirmed, setConfirmed] = useState(false);
 
   const criticalKW = Math.round(peakLoadKW * (criticalLoadPct || 0.5));
   // Generator backup value is qualitative (avoided downtime) — not monetized per pricingServiceV45
@@ -2420,7 +2264,6 @@ function BackupGeneratorCard({
   const handleChange = (v: number) => {
     const c = Math.max(safeMin, Math.min(safeMax, v));
     setSliderKW(c);
-    setConfirmed(false);
     onConfig(c);
   };
 
@@ -2541,25 +2384,6 @@ function BackupGeneratorCard({
               >
                 {sliderKW.toLocaleString()} kW
               </span>
-              {confirmed && (
-                <div
-                  style={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: "50%",
-                    background: "#34d399",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 11,
-                    fontWeight: 900,
-                    color: "#0d1230",
-                    flexShrink: 0,
-                  }}
-                >
-                  ✓
-                </div>
-              )}
               {savingsK > 0 && (
                 <span style={{ fontSize: 13, color: "#9b6dff", fontWeight: 700 }}>
                   +${savingsK}K
@@ -2619,58 +2443,19 @@ function BackupGeneratorCard({
         >
           Fuel Type
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
           {fuelOptions.map((opt) => {
             const isSel = fuelType === opt.key;
             return (
-              <button
+              <SelectOptionCard
                 key={opt.key}
+                checked={isSel}
+                icon={opt.icon}
+                label={opt.label}
+                meta={opt.desc}
+                accent={opt.key === "linear" ? "#22d3ee" : "#fb923c"}
                 onClick={() => onFuelChange(opt.key)}
-                style={{
-                  flex: 1,
-                  padding: "10px 6px",
-                  borderRadius: 8,
-                  border: isSel
-                    ? "1.5px solid rgba(249,115,22,0.45)"
-                    : "1px solid rgba(255,255,255,0.1)",
-                  background: isSel ? "rgba(249,115,22,0.11)" : "rgba(255,255,255,0.03)",
-                  color: isSel ? "#fb923c" : "rgba(203,213,225,0.65)",
-                  fontSize: 14,
-                  fontWeight: isSel ? 700 : 500,
-                  cursor: "pointer",
-                  position: "relative",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 5,
-                  transition: "all 0.15s",
-                }}
-              >
-                <span style={{ fontSize: 14 }}>{opt.icon}</span>
-                {opt.label}
-                {isSel && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: -7,
-                      right: -7,
-                      width: 17,
-                      height: 17,
-                      borderRadius: "50%",
-                      background: "#fb923c",
-                      border: "2px solid #0D1117",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 8,
-                      fontWeight: 900,
-                      color: "#0D1117",
-                    }}
-                  >
-                    ✓
-                  </div>
-                )}
-              </button>
+              />
             );
           })}
         </div>
@@ -2685,16 +2470,7 @@ function BackupGeneratorCard({
         </div>
       </div>
       <div style={{ padding: "0 16px 14px" }}>
-        <ConfirmBtn
-          confirmed={confirmed}
-          needsConfirm={!confirmed}
-          label="Confirm Generator Setup"
-          confirmedLabel={`${sliderKW.toLocaleString()} kW confirmed`}
-          onClick={() => {
-            onConfig(sliderKW);
-            setConfirmed(true);
-          }}
-        />
+        <AutoSavedNote label={`${sliderKW.toLocaleString()} kW generator selection saved`} />
       </div>
       <div
         style={{
