@@ -743,24 +743,25 @@ export function Step3V8({ state, actions }: Props) {
         <div
           style={{
             marginBottom: 24,
-            padding: "18px 20px",
-            borderRadius: 16,
+            padding: "22px 24px",
+            borderRadius: 18,
             background:
-              "linear-gradient(135deg, rgba(155,109,255,0.24) 0%, rgba(79,138,255,0.16) 48%, rgba(62,207,142,0.10) 100%)",
-            border: "1px solid rgba(167,139,250,0.52)",
+              "radial-gradient(circle at 8% 0%, rgba(167,139,250,0.38) 0%, rgba(167,139,250,0.16) 34%, transparent 56%), linear-gradient(135deg, rgba(124,58,237,0.42) 0%, rgba(37,99,235,0.30) 50%, rgba(16,185,129,0.18) 100%)",
+            border: "1.5px solid rgba(196,181,253,0.86)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: 12,
+            gap: 18,
             flexWrap: "wrap",
-            boxShadow: "0 0 0 1px rgba(255,255,255,0.04) inset, 0 18px 48px rgba(17,24,39,0.34)",
+            boxShadow:
+              "0 0 0 1px rgba(255,255,255,0.10) inset, 0 0 42px rgba(124,58,237,0.30), 0 22px 64px rgba(2,6,23,0.48)",
           }}
         >
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: "#c4b5fd", marginBottom: 5 }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: "#ddd6fe", marginBottom: 7 }}>
               ✓ All {visibleQuestions.length} questions pre-filled with {displayName} benchmarks
             </div>
-            <div style={{ fontSize: 13, color: "rgba(226,232,240,0.78)", lineHeight: 1.45 }}>
+            <div style={{ fontSize: 14, color: "rgba(241,245,249,0.86)", lineHeight: 1.45 }}>
               Smart defaults applied — review and customize below, or skip straight to add-ons.
             </div>
           </div>
@@ -771,24 +772,31 @@ export function Step3V8({ state, actions }: Props) {
               display: "flex",
               alignItems: "center",
               gap: 8,
-              padding: "12px 22px",
-              borderRadius: 12,
-              background: "linear-gradient(135deg, #a78bfa 0%, #7dd3fc 100%)",
-              color: "#08111f",
-              border: "1px solid rgba(255,255,255,0.18)",
-              fontSize: 13,
-              fontWeight: 800,
+              padding: "13px 24px",
+              borderRadius: 14,
+              background: "transparent",
+              color: "#7dd3fc",
+              border: "2px solid #7dd3fc",
+              fontSize: 14,
+              fontWeight: 900,
               cursor: "pointer",
               whiteSpace: "nowrap",
               flexShrink: 0,
-              boxShadow: "0 10px 28px rgba(124,58,237,0.24)",
-              letterSpacing: "0.01em",
+              boxShadow: "0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 28px rgba(125,211,252,0.34)",
+              letterSpacing: "0.015em",
+              textShadow: "0 0 18px rgba(125,211,252,0.55)",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = "0 12px 34px rgba(124,58,237,0.34)";
+              e.currentTarget.style.color = "#c4b5fd";
+              e.currentTarget.style.borderColor = "#c4b5fd";
+              e.currentTarget.style.boxShadow =
+                "0 0 0 1px rgba(255,255,255,0.10) inset, 0 0 34px rgba(196,181,253,0.44)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = "0 10px 28px rgba(124,58,237,0.24)";
+              e.currentTarget.style.color = "#7dd3fc";
+              e.currentTarget.style.borderColor = "#7dd3fc";
+              e.currentTarget.style.boxShadow =
+                "0 0 0 1px rgba(255,255,255,0.08) inset, 0 0 28px rgba(125,211,252,0.34)";
             }}
           >
             Use Smart Defaults → Skip to Add-ons
