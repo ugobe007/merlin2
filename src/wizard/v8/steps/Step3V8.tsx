@@ -758,11 +758,12 @@ export function Step3V8({ state, actions }: Props) {
             alignItems: "center",
             justifyContent: "space-between",
             gap: 16,
-            flexWrap: "wrap",
+            flexWrap: "nowrap",
+            position: "relative",
             boxShadow: "0 0 34px rgba(62,207,142,0.10), 0 0 0 1px rgba(255,255,255,0.045) inset",
           }}
         >
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, paddingRight: 18 }}>
             <div style={{ fontSize: 20, fontWeight: 950, color: "#3ecf8e", marginBottom: 7 }}>
               ✓ All {visibleQuestions.length} questions pre-filled
               <span style={{ color: "#3ecf8e", fontSize: 24, fontWeight: 950 }}>
@@ -782,26 +783,27 @@ export function Step3V8({ state, actions }: Props) {
               display: "flex",
               alignItems: "center",
               gap: 8,
-              padding: "12px 20px",
+              padding: "12px 22px",
               borderRadius: 14,
               background: "transparent",
               color: "transparent",
-              border: "2px solid rgba(56,189,248,0.72)",
+              border: "2px solid rgba(167,139,250,0.82)",
               fontSize: 17,
               fontWeight: 900,
               cursor: "pointer",
               whiteSpace: "nowrap",
               flexShrink: 0,
-              boxShadow: "none",
+              marginLeft: "auto",
+              boxShadow: "0 0 24px rgba(167,139,250,0.12)",
               letterSpacing: "0.02em",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(167,139,250,0.82)";
-              e.currentTarget.style.boxShadow = "0 0 28px rgba(56,189,248,0.18)";
+              e.currentTarget.style.borderColor = "rgba(56,189,248,0.92)";
+              e.currentTarget.style.boxShadow = "0 0 30px rgba(56,189,248,0.22)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(56,189,248,0.72)";
-              e.currentTarget.style.boxShadow = "none";
+              e.currentTarget.style.borderColor = "rgba(167,139,250,0.82)";
+              e.currentTarget.style.boxShadow = "0 0 24px rgba(167,139,250,0.12)";
             }}
           >
             <span
