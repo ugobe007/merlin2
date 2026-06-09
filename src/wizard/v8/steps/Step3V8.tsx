@@ -646,7 +646,7 @@ export function Step3V8({ state, actions }: Props) {
     <div style={{ minHeight: "100vh" }}>
       <div
         ref={sectionTopRef}
-        style={{ maxWidth: 920, margin: "0 auto", padding: "16px 24px 40px" }}
+        style={{ maxWidth: 960, margin: "0 auto", padding: "8px 24px 36px" }}
       >
         {/* ── Utility Bill Upload ── */}
         <BillUploadPanel
@@ -658,30 +658,35 @@ export function Step3V8({ state, actions }: Props) {
         {/* ── Universal: Project Type preamble ── */}
         <div
           style={{
-            marginBottom: 20,
-            padding: "16px 20px",
+            marginBottom: 14,
+            padding: "12px 16px",
             borderRadius: 14,
-            background: "#111a3e",
+            background: "rgba(17,26,62,0.66)",
             border: "1px solid rgba(99,120,255,0.18)",
+            display: "grid",
+            gridTemplateColumns: "1fr 1.25fr",
+            alignItems: "center",
+            gap: 14,
           }}
         >
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: "rgba(255,255,255,0.65)",
-              marginBottom: 10,
-              letterSpacing: "0.03em",
-              textTransform: "uppercase",
-            }}
-          >
-            🏗️ Project Type
+          <div>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 800,
+                color: "rgba(255,255,255,0.72)",
+                marginBottom: 4,
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+              }}
+            >
+              🏗️ Project Type
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.44)", lineHeight: 1.45 }}>
+              Existing site or greenfield project? This only tunes solar roof/canopy assumptions.
+            </div>
           </div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", marginBottom: 12 }}>
-            Is this an existing operating facility, or a new build / ground-up project? This shapes
-            how Merlin models roof constraints and panel selection.
-          </div>
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             {(
               [
                 {
@@ -707,8 +712,7 @@ export function Step3V8({ state, actions }: Props) {
                   type="button"
                   onClick={() => actions.setAnswer("project_type", value)}
                   style={{
-                    flex: 1,
-                    padding: "12px 14px",
+                    padding: "10px 12px",
                     borderRadius: 10,
                     border: active
                       ? `2px solid ${accentColor}0.70)`
@@ -719,7 +723,7 @@ export function Step3V8({ state, actions }: Props) {
                     transition: "border-color 0.15s, background 0.15s",
                   }}
                 >
-                  <div style={{ fontSize: 20, marginBottom: 6 }}>{emoji}</div>
+                  <div style={{ fontSize: 16, marginBottom: 4 }}>{emoji}</div>
                   <div
                     style={{
                       fontSize: 13,
@@ -730,7 +734,9 @@ export function Step3V8({ state, actions }: Props) {
                   >
                     {active ? `✓ ${label}` : label}
                   </div>
-                  <div style={{ fontSize: 11, color: "rgba(148,163,184,0.70)", lineHeight: 1.4 }}>
+                  <div
+                    style={{ fontSize: 10.5, color: "rgba(148,163,184,0.68)", lineHeight: 1.35 }}
+                  >
                     {sub}
                   </div>
                 </button>
@@ -742,17 +748,18 @@ export function Step3V8({ state, actions }: Props) {
         {/* ── Use Smart Defaults skip banner ── */}
         <div
           style={{
-            marginBottom: 24,
+            marginBottom: 14,
             padding: "16px 18px",
             borderRadius: 18,
-            background: "transparent",
-            border: "1px solid rgba(62,207,142,0.44)",
+            background:
+              "linear-gradient(135deg, rgba(62,207,142,0.10), rgba(56,189,248,0.06), rgba(155,109,255,0.06))",
+            border: "1.5px solid rgba(62,207,142,0.46)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             gap: 16,
             flexWrap: "wrap",
-            boxShadow: "0 0 0 1px rgba(255,255,255,0.045) inset",
+            boxShadow: "0 0 34px rgba(62,207,142,0.10), 0 0 0 1px rgba(255,255,255,0.045) inset",
           }}
         >
           <div style={{ minWidth: 0 }}>
@@ -777,11 +784,10 @@ export function Step3V8({ state, actions }: Props) {
               gap: 8,
               padding: "12px 20px",
               borderRadius: 14,
-              background:
-                "linear-gradient(#070d1f, #070d1f) padding-box, linear-gradient(90deg, #8b5cf6, #38bdf8) border-box",
+              background: "transparent",
               color: "transparent",
-              border: "2px solid transparent",
-              fontSize: 16,
+              border: "2px solid rgba(56,189,248,0.72)",
+              fontSize: 17,
               fontWeight: 900,
               cursor: "pointer",
               whiteSpace: "nowrap",
@@ -790,10 +796,12 @@ export function Step3V8({ state, actions }: Props) {
               letterSpacing: "0.02em",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "transparent";
+              e.currentTarget.style.borderColor = "rgba(167,139,250,0.82)";
+              e.currentTarget.style.boxShadow = "0 0 28px rgba(56,189,248,0.18)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "transparent";
+              e.currentTarget.style.borderColor = "rgba(56,189,248,0.72)";
+              e.currentTarget.style.boxShadow = "none";
             }}
           >
             <span
@@ -809,153 +817,172 @@ export function Step3V8({ state, actions }: Props) {
           </button>
         </div>
 
-        {/* ── Accordion sections ── */}
-        {orderedSections.map((sec) => {
-          const isOpen = openSections.has(sec.id);
-          const sectionQs = sectionQuestionMap.get(sec.id) ?? [];
-          const answered = getSectionAnswered(sec.id);
-          const total = sectionQs.length;
-          const complete = isSectionComplete(sec.id);
+        {/* ── Compact profile section hub ── */}
+        <div
+          style={{
+            borderRadius: 18,
+            border: "1px solid rgba(99,120,255,0.18)",
+            background: "rgba(10,18,43,0.58)",
+            padding: 12,
+            boxShadow: "0 18px 44px rgba(2,6,23,0.18), inset 0 1px 0 rgba(255,255,255,0.03)",
+          }}
+        >
+          <div
+            style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}
+          >
+            {orderedSections.map((sec) => {
+              const isOpen = openSections.has(sec.id);
+              const sectionQs = sectionQuestionMap.get(sec.id) ?? [];
+              const answered = getSectionAnswered(sec.id);
+              const total = sectionQs.length;
+              const complete = isSectionComplete(sec.id);
 
-          // Build a 2-line preview of first 2-3 default values for collapsed state
-          const previewItems = sectionQs
-            .slice(0, 3)
-            .map((q) => {
-              const val = answers[q.id];
-              const displayVal = Array.isArray(val) ? val.join(", ") : String(val ?? "");
-              const label = q.title || q.label || "";
-              return label && displayVal
-                ? `${String(label).split(" ").slice(0, 3).join(" ")}: ${displayVal}`
-                : null;
-            })
-            .filter(Boolean);
+              // Build a 2-line preview of first 2-3 default values for collapsed state
+              const previewItems = sectionQs
+                .slice(0, 3)
+                .map((q) => {
+                  const val = answers[q.id];
+                  const displayVal = Array.isArray(val) ? val.join(", ") : String(val ?? "");
+                  const label = q.title || q.label || "";
+                  return label && displayVal
+                    ? `${String(label).split(" ").slice(0, 3).join(" ")}: ${displayVal}`
+                    : null;
+                })
+                .filter(Boolean);
 
-          return (
-            <div
-              key={sec.id}
-              style={{
-                marginBottom: 10,
-                borderRadius: 12,
-                border: isOpen
-                  ? "1px solid rgba(130,100,255,0.40)"
-                  : complete
-                    ? "1px solid rgba(52,211,153,0.25)"
-                    : "1px solid rgba(99,120,255,0.18)",
-                background: isOpen ? "rgba(155,109,255,0.05)" : "#111a3e",
-                transition: "border-color 0.2s ease",
-                overflow: "hidden",
-              }}
-            >
-              {/* Accordion header — always visible */}
-              <button
-                type="button"
-                onClick={() => toggleSection(sec.id)}
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "12px 20px",
-                  borderRadius: 12,
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  fontSize: 13,
-                }}
-              >
-                {/* Icon */}
-                {sec.icon && <span style={{ fontSize: 20, flexShrink: 0 }}>{sec.icon}</span>}
-
-                {/* Labels */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
+              return (
+                <div
+                  key={sec.id}
+                  style={{
+                    gridColumn: isOpen ? "1 / -1" : undefined,
+                    marginBottom: 0,
+                    borderRadius: 12,
+                    border: isOpen
+                      ? "1px solid rgba(130,100,255,0.40)"
+                      : complete
+                        ? "1px solid rgba(52,211,153,0.25)"
+                        : "1px solid rgba(99,120,255,0.18)",
+                    background: isOpen ? "rgba(155,109,255,0.08)" : "rgba(17,26,62,0.74)",
+                    transition: "border-color 0.2s ease",
+                    overflow: "hidden",
+                  }}
+                >
+                  {/* Accordion header — always visible */}
+                  <button
+                    type="button"
+                    onClick={() => toggleSection(sec.id)}
                     style={{
+                      width: "100%",
                       display: "flex",
                       alignItems: "center",
-                      gap: 8,
-                      marginBottom: previewItems.length > 0 && !isOpen ? 4 : 0,
+                      gap: 12,
+                      padding: "12px 14px",
+                      borderRadius: 12,
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      fontSize: 13,
                     }}
                   >
+                    {/* Icon */}
+                    {sec.icon && <span style={{ fontSize: 18, flexShrink: 0 }}>{sec.icon}</span>}
+
+                    {/* Labels */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          marginBottom: previewItems.length > 0 && !isOpen ? 4 : 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 700,
+                            color: isOpen ? "#9b6dff" : "rgba(255,255,255,0.90)",
+                          }}
+                        >
+                          {sec.label}
+                        </span>
+                        {complete && !isOpen && (
+                          <span
+                            style={{
+                              width: 16,
+                              height: 16,
+                              borderRadius: "50%",
+                              background: "#34d399",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: 9,
+                              fontWeight: 800,
+                              color: "#0d1230",
+                              flexShrink: 0,
+                            }}
+                          >
+                            ✓
+                          </span>
+                        )}
+                        <span
+                          style={{
+                            fontSize: 11,
+                            color: "rgba(255,255,255,0.30)",
+                            marginLeft: "auto",
+                          }}
+                        >
+                          {answered}/{total}
+                        </span>
+                      </div>
+                      {/* Collapsed preview */}
+                      {!isOpen && previewItems.length > 0 && (
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "rgba(255,255,255,0.40)",
+                            lineHeight: 1.5,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {previewItems.join(" · ")}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Chevron */}
                     <span
                       style={{
                         fontSize: 14,
-                        fontWeight: 700,
-                        color: isOpen ? "#9b6dff" : "rgba(255,255,255,0.90)",
+                        color: "rgba(255,255,255,0.35)",
+                        flexShrink: 0,
+                        transition: "transform 0.2s ease",
+                        transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
                       }}
                     >
-                      {sec.label}
+                      ▼
                     </span>
-                    {complete && !isOpen && (
-                      <span
-                        style={{
-                          width: 16,
-                          height: 16,
-                          borderRadius: "50%",
-                          background: "#34d399",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 9,
-                          fontWeight: 800,
-                          color: "#0d1230",
-                          flexShrink: 0,
-                        }}
-                      >
-                        ✓
-                      </span>
-                    )}
-                    <span
-                      style={{ fontSize: 11, color: "rgba(255,255,255,0.30)", marginLeft: "auto" }}
-                    >
-                      {answered}/{total}
-                    </span>
-                  </div>
-                  {/* Collapsed preview */}
-                  {!isOpen && previewItems.length > 0 && (
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: "rgba(255,255,255,0.40)",
-                        lineHeight: 1.5,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {previewItems.join(" · ")}
+                  </button>
+
+                  {/* Accordion body */}
+                  {isOpen && (
+                    <div style={{ padding: "0 14px 14px" }}>
+                      {sectionQs.map((q, idx) => renderQuestion(q, idx))}
                     </div>
                   )}
                 </div>
-
-                {/* Chevron */}
-                <span
-                  style={{
-                    fontSize: 14,
-                    color: "rgba(255,255,255,0.35)",
-                    flexShrink: 0,
-                    transition: "transform 0.2s ease",
-                    transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-                  }}
-                >
-                  ▼
-                </span>
-              </button>
-
-              {/* Accordion body */}
-              {isOpen && (
-                <div style={{ padding: "0 16px 16px" }}>
-                  {sectionQs.map((q, idx) => renderQuestion(q, idx))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        </div>
 
         {/* ── Always-visible Choose Add-ons CTA ── */}
         <div
           style={{
-            marginTop: 24,
+            marginTop: 18,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -1006,20 +1033,22 @@ export function Step3V8({ state, actions }: Props) {
               gap: 8,
               padding: "13px 22px",
               borderRadius: 10,
-              background: "linear-gradient(135deg, #4f8aff, #9b6dff)",
-              border: "none",
-              color: "#fff",
-              fontSize: 14,
-              fontWeight: 700,
+              background: "transparent",
+              border: "2px solid rgba(79,138,255,0.64)",
+              color: "#93c5fd",
+              fontSize: 16,
+              fontWeight: 900,
               cursor: "pointer",
-              boxShadow: "0 4px 16px rgba(79,138,255,0.30)",
+              boxShadow: "0 0 22px rgba(79,138,255,0.14)",
               letterSpacing: "0.01em",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = "0 0 0 2px rgba(139,92,246,0.25)";
+              e.currentTarget.style.borderColor = "rgba(56,189,248,0.80)";
+              e.currentTarget.style.boxShadow = "0 0 30px rgba(79,138,255,0.24)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = "none";
+              e.currentTarget.style.borderColor = "rgba(79,138,255,0.64)";
+              e.currentTarget.style.boxShadow = "0 0 22px rgba(79,138,255,0.14)";
             }}
           >
             Choose add-ons
