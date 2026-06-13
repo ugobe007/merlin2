@@ -764,9 +764,17 @@ export function Step3V8({ state, actions }: Props) {
           }}
         >
           <div style={{ minWidth: 0, paddingRight: 18 }}>
-            <div style={{ fontSize: 20, fontWeight: 950, color: "#3ecf8e", marginBottom: 7 }}>
+            <div
+              style={{
+                fontSize: 21,
+                fontWeight: 950,
+                color: "#3ecf8e",
+                marginBottom: 7,
+                lineHeight: 1.25,
+              }}
+            >
               ✓ All {visibleQuestions.length} questions pre-filled
-              <span style={{ color: "#3ecf8e", fontSize: 24, fontWeight: 950 }}>
+              <span style={{ color: "#3ecf8e", fontWeight: 950 }}>
                 {" "}
                 with {displayName} benchmarks
               </span>
@@ -783,18 +791,18 @@ export function Step3V8({ state, actions }: Props) {
               display: "flex",
               alignItems: "center",
               gap: 8,
-              padding: "12px 22px",
-              borderRadius: 14,
+              padding: "16px 30px",
+              borderRadius: 16,
               background: "transparent",
               color: "transparent",
-              border: "2px solid rgba(167,139,250,0.82)",
-              fontSize: 17,
+              border: "2.5px solid rgba(167,139,250,0.85)",
+              fontSize: 20,
               fontWeight: 900,
               cursor: "pointer",
               whiteSpace: "nowrap",
               flexShrink: 0,
               marginLeft: "auto",
-              boxShadow: "0 0 24px rgba(167,139,250,0.12)",
+              boxShadow: "0 0 28px rgba(167,139,250,0.16)",
               letterSpacing: "0.02em",
             }}
             onMouseEnter={(e) => {
@@ -812,6 +820,8 @@ export function Step3V8({ state, actions }: Props) {
                 WebkitBackgroundClip: "text",
                 backgroundClip: "text",
                 color: "transparent",
+                WebkitTextStroke: "0.6px rgba(13,18,48,0.55)",
+                paintOrder: "stroke fill",
               }}
             >
               Use Smart Defaults → Skip to Add-ons
@@ -823,12 +833,45 @@ export function Step3V8({ state, actions }: Props) {
         <div
           style={{
             borderRadius: 18,
-            border: "1px solid rgba(99,120,255,0.18)",
-            background: "rgba(10,18,43,0.58)",
-            padding: 12,
-            boxShadow: "0 18px 44px rgba(2,6,23,0.18), inset 0 1px 0 rgba(255,255,255,0.03)",
+            border: "1px solid rgba(99,120,255,0.20)",
+            background: "linear-gradient(180deg, rgba(13,22,52,0.66), rgba(9,16,38,0.60))",
+            padding: 14,
+            boxShadow: "0 18px 44px rgba(2,6,23,0.22), inset 0 1px 0 rgba(255,255,255,0.04)",
           }}
         >
+          {/* Section hub header */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "2px 4px 12px",
+              marginBottom: 10,
+              borderBottom: "1px solid rgba(99,120,255,0.14)",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "rgba(148,163,184,0.85)",
+              }}
+            >
+              Facility Profile
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: "rgba(148,163,184,0.65)",
+              }}
+            >
+              {answeredCount} of {visibleQuestions.length} complete
+            </span>
+          </div>
+
           <div
             style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}
           >
@@ -839,16 +882,24 @@ export function Step3V8({ state, actions }: Props) {
               const total = sectionQs.length;
               const complete = isSectionComplete(sec.id);
 
-              // Build a 2-line preview of first 2-3 default values for collapsed state
+              // Humanize raw answer values (snake_case → Title) for a cleaner preview
+              const humanizeVal = (s: string) =>
+                s
+                  .replace(/[_-]+/g, " ")
+                  .replace(/\s+/g, " ")
+                  .trim()
+                  .replace(/^\w/, (c) => c.toUpperCase());
+
+              // Build a single-line preview of the first few default values
               const previewItems = sectionQs
                 .slice(0, 3)
                 .map((q) => {
                   const val = answers[q.id];
-                  const displayVal = Array.isArray(val) ? val.join(", ") : String(val ?? "");
-                  const label = q.title || q.label || "";
-                  return label && displayVal
-                    ? `${String(label).split(" ").slice(0, 3).join(" ")}: ${displayVal}`
-                    : null;
+                  const rawVal = Array.isArray(val) ? val.join(", ") : String(val ?? "");
+                  if (!rawVal) return null;
+                  const label = String(q.title || q.label || "").replace(/[?:]\s*$/, "");
+                  const displayVal = humanizeVal(rawVal);
+                  return label ? `${label}: ${displayVal}` : displayVal;
                 })
                 .filter(Boolean);
 
@@ -860,12 +911,19 @@ export function Step3V8({ state, actions }: Props) {
                     marginBottom: 0,
                     borderRadius: 12,
                     border: isOpen
-                      ? "1px solid rgba(130,100,255,0.40)"
+                      ? "1px solid rgba(130,100,255,0.45)"
                       : complete
-                        ? "1px solid rgba(52,211,153,0.25)"
-                        : "1px solid rgba(99,120,255,0.18)",
-                    background: isOpen ? "rgba(155,109,255,0.08)" : "rgba(17,26,62,0.74)",
-                    transition: "border-color 0.2s ease",
+                        ? "1px solid rgba(52,211,153,0.30)"
+                        : "1px solid rgba(99,120,255,0.20)",
+                    background: isOpen
+                      ? "linear-gradient(180deg, rgba(155,109,255,0.12), rgba(120,80,230,0.06))"
+                      : "linear-gradient(180deg, rgba(20,30,68,0.80), rgba(15,24,56,0.72))",
+                    boxShadow:
+                      complete && !isOpen
+                        ? "inset 0 0 0 1px rgba(52,211,153,0.06), 0 6px 18px rgba(2,6,23,0.18)"
+                        : "0 6px 18px rgba(2,6,23,0.16)",
+                    transition:
+                      "border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease",
                     overflow: "hidden",
                   }}
                 >
@@ -873,12 +931,18 @@ export function Step3V8({ state, actions }: Props) {
                   <button
                     type="button"
                     onClick={() => toggleSection(sec.id)}
+                    onMouseEnter={(e) => {
+                      if (!isOpen) e.currentTarget.style.background = "rgba(255,255,255,0.035)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
                     style={{
                       width: "100%",
                       display: "flex",
                       alignItems: "center",
                       gap: 12,
-                      padding: "12px 14px",
+                      padding: "13px 14px",
                       borderRadius: 12,
                       background: "transparent",
                       border: "none",
@@ -902,9 +966,10 @@ export function Step3V8({ state, actions }: Props) {
                       >
                         <span
                           style={{
-                            fontSize: 14,
+                            fontSize: 13.5,
                             fontWeight: 700,
-                            color: isOpen ? "#9b6dff" : "rgba(255,255,255,0.90)",
+                            letterSpacing: "0.01em",
+                            color: isOpen ? "#b89bff" : "rgba(241,245,249,0.94)",
                           }}
                         >
                           {sec.label}
@@ -930,9 +995,19 @@ export function Step3V8({ state, actions }: Props) {
                         )}
                         <span
                           style={{
-                            fontSize: 11,
-                            color: "rgba(255,255,255,0.30)",
                             marginLeft: "auto",
+                            flexShrink: 0,
+                            padding: "2px 8px",
+                            borderRadius: 999,
+                            fontSize: 10.5,
+                            fontWeight: 700,
+                            color: complete ? "rgba(52,211,153,0.95)" : "rgba(203,213,225,0.70)",
+                            background: complete
+                              ? "rgba(52,211,153,0.12)"
+                              : "rgba(255,255,255,0.05)",
+                            border: complete
+                              ? "1px solid rgba(52,211,153,0.28)"
+                              : "1px solid rgba(255,255,255,0.08)",
                           }}
                         >
                           {answered}/{total}
@@ -1032,16 +1107,16 @@ export function Step3V8({ state, actions }: Props) {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8,
-              padding: "13px 22px",
-              borderRadius: 10,
+              gap: 10,
+              padding: "16px 32px",
+              borderRadius: 12,
               background: "transparent",
               border: "2px solid rgba(79,138,255,0.64)",
               color: "#93c5fd",
-              fontSize: 16,
+              fontSize: 18,
               fontWeight: 900,
               cursor: "pointer",
-              boxShadow: "0 0 22px rgba(79,138,255,0.14)",
+              boxShadow: "0 0 26px rgba(79,138,255,0.16)",
               letterSpacing: "0.01em",
             }}
             onMouseEnter={(e) => {
@@ -1054,7 +1129,7 @@ export function Step3V8({ state, actions }: Props) {
             }}
           >
             Choose add-ons
-            <ChevronRight size={16} />
+            <ChevronRight size={20} />
           </button>
         </div>
       </div>
