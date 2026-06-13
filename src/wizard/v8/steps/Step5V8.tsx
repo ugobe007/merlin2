@@ -905,7 +905,7 @@ export default function Step5V8({ state, actions }: Props) {
           <div className="absolute inset-0" style={{ background: "rgba(52,211,153,0.025)" }} />
 
           <div
-            className="relative p-8 rounded-xl"
+            className="relative p-6 rounded-xl"
             style={{
               border: "2px solid rgba(52,211,153,0.40)",
               background: "rgba(52,211,153,0.03)",
@@ -913,7 +913,7 @@ export default function Step5V8({ state, actions }: Props) {
           >
             <div className="text-center">
               <div
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-3"
                 style={{
                   background: "rgba(62,207,142,0.10)",
                   border: "1px solid rgba(62,207,142,0.28)",
@@ -1111,286 +1111,118 @@ export default function Step5V8({ state, actions }: Props) {
       {/* ================================================================
           YOUR NEXT STEPS — Build Your Energy Stack
       ================================================================ */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, rgba(17,26,62,0.95) 0%, rgba(13,18,48,0.98) 100%)",
-          border: "1.5px solid rgba(99,120,255,0.28)",
-          borderRadius: 16,
-          padding: "24px 28px",
-          boxShadow: "0 0 40px rgba(79,138,255,0.08), 0 8px 32px rgba(0,0,0,0.3)",
-        }}
-      >
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-5">
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: "rgba(155,109,255,0.15)",
-              border: "1px solid rgba(155,109,255,0.35)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
+      <div style={{ marginTop: 2 }}>
+        {/* Header — compact inline */}
+        <div className="flex items-center gap-2 mb-2.5">
+          <ClipboardList className="w-3.5 h-3.5" style={{ color: "#9b6dff" }} />
+          <p
+            className="text-[10px] font-bold tracking-[0.16em] uppercase"
+            style={{ color: "#9b6dff" }}
           >
-            <ClipboardList className="w-4 h-4" style={{ color: "#9b6dff" }} />
-          </div>
-          <div>
-            <p
-              className="text-[10px] font-bold tracking-[0.16em] uppercase"
-              style={{ color: "#9b6dff" }}
-            >
-              Your Path Forward
-            </p>
-            <h2
-              className="text-base font-bold text-white leading-tight"
-              style={{ fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif", fontSize: 17 }}
-            >
-              Here's how to build your energy stack
-            </h2>
-          </div>
+            Your Path Forward
+          </p>
+          <span className="text-xs text-slate-500 truncate">
+            Here's how to build your energy stack
+          </span>
         </div>
 
-        {/* Steps grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Step 1 — Export Quote */}
-          <div
-            style={{
-              background: "rgba(79,138,255,0.06)",
-              border: "1px solid rgba(79,138,255,0.20)",
-              borderRadius: 12,
-              padding: "14px 16px",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 12,
-            }}
-          >
+        {/* Inline numbered steps — Supabase-style, no padding */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+          {[
+            {
+              n: 1,
+              color: "#4f8aff",
+              title: "Save your quote",
+              desc: "Export as PDF, Word, or Excel to share with your team or lender.",
+              cta: "Go to Export",
+              arrow: "\u2193",
+              onClick: () =>
+                document
+                  .getElementById("step5-export-section")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+            },
+            {
+              n: 2,
+              color: "#34d399",
+              title: "Review financing options",
+              desc: "Compare C-PACE, PACE, SBA 7(a), and equipment financing programs matched to your project.",
+              cta: "See Financing",
+              arrow: "\u2193",
+              onClick: () =>
+                document
+                  .getElementById("step5-financing-section")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+            },
+            {
+              n: 3,
+              color: "#f59e0b",
+              title: "Find a certified installer",
+              desc: "Merlin matched installers in your area who specialize in commercial energy storage.",
+              cta: "View Installers",
+              arrow: "\u2193",
+              onClick: () =>
+                document
+                  .getElementById("step5-installers-section")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+            },
+            {
+              n: 4,
+              color: "#9b6dff",
+              title: "Get your full engineering package",
+              desc: "ProStack\u2122 adds custom equipment sizing, DCF/IRR modeling, and bank-ready documentation.",
+              cta: "Upgrade to ProStack\u2122",
+              arrow: "\u2192",
+              onClick: openProQuotePage,
+            },
+          ].map((s) => (
             <div
+              key={s.n}
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: "50%",
-                background: "rgba(79,138,255,0.18)",
-                border: "1px solid rgba(79,138,255,0.40)",
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                fontSize: 11,
-                fontWeight: 800,
-                color: "#4f8aff",
+                alignItems: "baseline",
+                gap: 10,
+                padding: "7px 0",
+                borderBottom: "1px solid rgba(255,255,255,0.07)",
               }}
             >
-              1
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white mb-0.5">Save your quote</p>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Export as PDF, Word, or Excel to share with your team or lender.
+              <span
+                style={{
+                  color: s.color,
+                  fontWeight: 800,
+                  fontSize: 12,
+                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                  fontVariantNumeric: "tabular-nums",
+                  flexShrink: 0,
+                  minWidth: 12,
+                }}
+              >
+                {s.n}
+              </span>
+              <p className="flex-1 min-w-0 text-[13px] leading-snug">
+                <span className="font-semibold text-white">{s.title}</span>
+                <span className="text-slate-500">
+                  {" \u2014 "}
+                  {s.desc}
+                </span>
               </p>
               <button
-                onClick={() => {
-                  const el = document.getElementById("step5-export-section");
-                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
+                onClick={s.onClick}
                 style={{
-                  marginTop: 8,
+                  flexShrink: 0,
                   fontSize: 11,
                   fontWeight: 700,
-                  color: "#4f8aff",
+                  color: s.color,
                   background: "none",
                   border: "none",
                   padding: 0,
                   cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
+                  whiteSpace: "nowrap",
                 }}
               >
-                Go to Export <span style={{ fontSize: 13 }}>↓</span>
+                {s.cta} <span style={{ fontSize: 13 }}>{s.arrow}</span>
               </button>
             </div>
-          </div>
-
-          {/* Step 2 — Review Financing */}
-          <div
-            style={{
-              background: "rgba(52,211,153,0.05)",
-              border: "1px solid rgba(52,211,153,0.18)",
-              borderRadius: 12,
-              padding: "14px 16px",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 12,
-            }}
-          >
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: "50%",
-                background: "rgba(52,211,153,0.15)",
-                border: "1px solid rgba(52,211,153,0.35)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                fontSize: 11,
-                fontWeight: 800,
-                color: "#34d399",
-              }}
-            >
-              2
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white mb-0.5">Review financing options</p>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Compare C-PACE, PACE, SBA 7(a), and equipment financing programs matched to your
-                project.
-              </p>
-              <button
-                onClick={() => {
-                  const el = document.getElementById("step5-financing-section");
-                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-                style={{
-                  marginTop: 8,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#34d399",
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                See Financing <span style={{ fontSize: 13 }}>↓</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Step 3 — Find Installer */}
-          <div
-            style={{
-              background: "rgba(245,158,11,0.05)",
-              border: "1px solid rgba(245,158,11,0.18)",
-              borderRadius: 12,
-              padding: "14px 16px",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 12,
-            }}
-          >
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: "50%",
-                background: "rgba(245,158,11,0.15)",
-                border: "1px solid rgba(245,158,11,0.35)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                fontSize: 11,
-                fontWeight: 800,
-                color: "#f59e0b",
-              }}
-            >
-              3
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white mb-0.5">Find a certified installer</p>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Merlin matched installers in your area who specialize in commercial energy storage.
-              </p>
-              <button
-                onClick={() => {
-                  const el = document.getElementById("step5-installers-section");
-                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-                style={{
-                  marginTop: 8,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#f59e0b",
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                View Installers <span style={{ fontSize: 13 }}>↓</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Step 4 — ProStack */}
-          <div
-            style={{
-              background: "rgba(155,109,255,0.06)",
-              border: "1px solid rgba(155,109,255,0.22)",
-              borderRadius: 12,
-              padding: "14px 16px",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 12,
-            }}
-          >
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: "50%",
-                background: "rgba(155,109,255,0.18)",
-                border: "1px solid rgba(155,109,255,0.40)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                fontSize: 11,
-                fontWeight: 800,
-                color: "#9b6dff",
-              }}
-            >
-              4
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white mb-0.5">
-                Get your full engineering package
-              </p>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                ProStack™ adds custom equipment sizing, DCF/IRR modeling, and bank-ready
-                documentation.
-              </p>
-              <button
-                onClick={openProQuotePage}
-                style={{
-                  marginTop: 8,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#9b6dff",
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                Upgrade to ProStack™ <span style={{ fontSize: 13 }}>→</span>
-              </button>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
