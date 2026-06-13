@@ -576,7 +576,7 @@ function resolveCanGoNext(step: number, state: S): boolean {
 
 const NEXT_LABELS: Partial<Record<number, string>> = {
   3: "Choose add-ons →",
-  4: "Build my tiers →",
+  4: "Build my Energy Stack →",
   5: "See your quote →",
 };
 
