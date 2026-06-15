@@ -595,7 +595,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 8px 14px;
 }
 
 .wiz-addon-row-label {
@@ -620,8 +620,8 @@
 }
 
 .wiz-addon-hint {
-  margin: 0 14px 10px;
-  padding: 8px 10px;
+  margin: 0 14px 8px;
+  padding: 7px 10px;
   border-radius: 8px;
   background: transparent;
   border: 1px solid rgba(56, 189, 248, 0.18);
@@ -636,8 +636,66 @@
 .wiz-addon-stepper-row {
   display: flex;
   align-items: center;
-  padding: 10px 14px;
+  padding: 8px 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.wiz-addon-advanced {
+  margin: 2px 14px 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.wiz-addon-details {
+  margin: 0;
+  padding: 0;
+}
+
+.wiz-addon-details + .wiz-addon-details {
+  margin-top: 0;
+}
+
+.wiz-addon-details-summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 4px 0;
+  line-height: 1.35;
+}
+
+.wiz-addon-details-summary::-webkit-details-marker {
+  display: none;
+}
+
+.wiz-addon-details-summary::before {
+  content: "▸ ";
+}
+
+.wiz-addon-details[open] > .wiz-addon-details-summary::before {
+  content: "▾ ";
+}
+
+.wiz-addon-details-summary--violet {
+  color: #a78bfa;
+}
+
+.wiz-addon-actions {
+  padding: 0 14px 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.wiz-addon-merlin-note {
+  padding: 8px 14px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.wiz-addon-details[open] > .wiz-addon-details-summary {
+  margin-bottom: 6px;
 }
 
 .wiz-addon-teaser {

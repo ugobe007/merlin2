@@ -231,6 +231,7 @@ export function Step3V8({ state, actions }: Props) {
   // Track which sections are expanded in the accordion
   // Sections that the user has manually changed start expanded
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
+  const [profileOptionalOpen, setProfileOptionalOpen] = useState(false);
   const prevIndustryRef = useRef(industry);
   useEffect(() => {
     if (prevIndustryRef.current !== industry) {
@@ -248,6 +249,7 @@ export function Step3V8({ state, actions }: Props) {
     prevDetailRef.current = detailLevel;
     if (detailLevel === "streamline") {
       setOpenSections(new Set());
+      setProfileOptionalOpen(false);
     } else {
       setOpenSections(new Set(orderedSections.map((s) => s.id)));
     }
@@ -269,6 +271,7 @@ export function Step3V8({ state, actions }: Props) {
           ((q as unknown as Record<string, unknown>).section as string) || "general";
         setOpenSections((prev) => {
           if (prev.has(sectionId)) return prev;
+          setProfileOptionalOpen(true);
           return new Set([...prev, sectionId]);
         });
       }
@@ -278,6 +281,7 @@ export function Step3V8({ state, actions }: Props) {
   );
 
   const toggleSection = useCallback((sectionId: string) => {
+    setProfileOptionalOpen(true);
     setOpenSections((prev) => {
       const next = new Set(prev);
       if (next.has(sectionId)) next.delete(sectionId);
@@ -742,10 +746,9 @@ export function Step3V8({ state, actions }: Props) {
         {detailLevel === "streamline" && (
           <div className="wiz-s3-streamline">
             <div className="wiz-s3-streamline-text">
-              <strong>{visibleQuestions.length} questions</strong> pre-filled with {displayName}{" "}
-              benchmarks — continue now or expand a section below to customize.
+              <strong>Defaults applied</strong> for {displayName} — you&apos;re ready for add-ons.
               <span className="wiz-s3-streamline-hint">
-                Override only what you know. Defaults are industry-calibrated.
+                Expand profile below only if you want to override specific inputs.
               </span>
             </div>
             <button
@@ -758,77 +761,134 @@ export function Step3V8({ state, actions }: Props) {
           </div>
         )}
 
-        <div className="wiz-s3-hub">
-          <div className="wiz-s3-hub-hdr">
-            <span className="wiz-s3-hub-title">Facility profile</span>
-            <span className="wiz-s3-hub-count">
-              {answeredCount} of {displayedCount} complete
-            </span>
-          </div>
+        {detailLevel === "streamline" ? (
+          <details
+            className="wiz-s3-profile-optional"
+            open={profileOptionalOpen}
+            onToggle={(e) => setProfileOptionalOpen((e.target as HTMLDetailsElement).open)}
+          >
+            <summary className="wiz-s3-profile-optional-summary">
+              <span>Customize facility profile</span>
+              <span className="wiz-s3-profile-optional-meta">
+                Optional · {displayedCount} defaults applied
+              </span>
+            </summary>
+            <div className="wiz-s3-hub wiz-s3-hub--optional">
+              <div className="wiz-s3-sections">
+                {orderedSections.map((sec) => {
+                  const isOpen = openSections.has(sec.id);
+                  const sectionQs = sectionQuestionMap.get(sec.id) ?? [];
+                  const answered = getSectionAnswered(sec.id);
+                  const total = sectionQs.length;
+                  const complete = isSectionComplete(sec.id);
 
-          <div className="wiz-s3-sections">
-            {orderedSections.map((sec) => {
-              const isOpen = openSections.has(sec.id);
-              const sectionQs = sectionQuestionMap.get(sec.id) ?? [];
-              const answered = getSectionAnswered(sec.id);
-              const total = sectionQs.length;
-              const complete = isSectionComplete(sec.id);
+                  return (
+                    <div
+                      key={sec.id}
+                      className={`wiz-s3-section${isOpen ? " open" : ""}${complete ? " complete" : ""}`}
+                    >
+                      <button
+                        type="button"
+                        className="wiz-s3-section-trigger"
+                        onClick={() => toggleSection(sec.id)}
+                      >
+                        {sec.icon && <span className="wiz-s3-section-icon">{sec.icon}</span>}
+                        <div className="wiz-s3-section-body-wrap">
+                          <div className="wiz-s3-section-title-row">
+                            <span className="wiz-s3-section-title">{sec.label}</span>
+                            {complete && !isOpen && <span className="wiz-s3-section-check">✓</span>}
+                            <span className="wiz-s3-section-badge">
+                              {answered}/{total}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="wiz-s3-section-chevron">▼</span>
+                      </button>
 
-              const humanizeVal = (s: string) =>
-                s
-                  .replace(/[_-]+/g, " ")
-                  .replace(/\s+/g, " ")
-                  .trim()
-                  .replace(/^\w/, (c) => c.toUpperCase());
-
-              const previewItems = sectionQs
-                .slice(0, 3)
-                .map((q) => {
-                  const val = answers[q.id];
-                  const rawVal = Array.isArray(val) ? val.join(", ") : String(val ?? "");
-                  if (!rawVal) return null;
-                  const label = String(q.title || q.label || "").replace(/[?:]\s*$/, "");
-                  const displayVal = humanizeVal(rawVal);
-                  return label ? `${label}: ${displayVal}` : displayVal;
-                })
-                .filter(Boolean);
-
-              return (
-                <div
-                  key={sec.id}
-                  className={`wiz-s3-section${isOpen ? " open" : ""}${complete ? " complete" : ""}`}
-                >
-                  <button
-                    type="button"
-                    className="wiz-s3-section-trigger"
-                    onClick={() => toggleSection(sec.id)}
-                  >
-                    {sec.icon && <span className="wiz-s3-section-icon">{sec.icon}</span>}
-                    <div className="wiz-s3-section-body-wrap">
-                      <div className="wiz-s3-section-title-row">
-                        <span className="wiz-s3-section-title">{sec.label}</span>
-                        {complete && !isOpen && <span className="wiz-s3-section-check">✓</span>}
-                        <span className="wiz-s3-section-badge">
-                          {answered}/{total}
-                        </span>
-                      </div>
-                      {!isOpen && previewItems.length > 0 && (
-                        <div className="wiz-s3-section-preview">{previewItems.join(" · ")}</div>
+                      {isOpen && (
+                        <div className="wiz-s3-section-content">
+                          {sectionQs.map((q, idx) => renderQuestion(q, idx))}
+                        </div>
                       )}
                     </div>
-                    <span className="wiz-s3-section-chevron">▼</span>
-                  </button>
+                  );
+                })}
+              </div>
+            </div>
+          </details>
+        ) : (
+          <div className="wiz-s3-hub">
+            <div className="wiz-s3-hub-hdr">
+              <span className="wiz-s3-hub-title">Facility profile</span>
+              <span className="wiz-s3-hub-count">
+                {answeredCount} of {displayedCount} complete
+              </span>
+            </div>
 
-                  {isOpen && (
-                    <div className="wiz-s3-section-content">
-                      {sectionQs.map((q, idx) => renderQuestion(q, idx))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            <div className="wiz-s3-sections">
+              {orderedSections.map((sec) => {
+                const isOpen = openSections.has(sec.id);
+                const sectionQs = sectionQuestionMap.get(sec.id) ?? [];
+                const answered = getSectionAnswered(sec.id);
+                const total = sectionQs.length;
+                const complete = isSectionComplete(sec.id);
+
+                const humanizeVal = (s: string) =>
+                  s
+                    .replace(/[_-]+/g, " ")
+                    .replace(/\s+/g, " ")
+                    .trim()
+                    .replace(/^\w/, (c) => c.toUpperCase());
+
+                const previewItems = sectionQs
+                  .slice(0, 3)
+                  .map((q) => {
+                    const val = answers[q.id];
+                    const rawVal = Array.isArray(val) ? val.join(", ") : String(val ?? "");
+                    if (!rawVal) return null;
+                    const label = String(q.title || q.label || "").replace(/[?:]\s*$/, "");
+                    const displayVal = humanizeVal(rawVal);
+                    return label ? `${label}: ${displayVal}` : displayVal;
+                  })
+                  .filter(Boolean);
+
+                return (
+                  <div
+                    key={sec.id}
+                    className={`wiz-s3-section${isOpen ? " open" : ""}${complete ? " complete" : ""}`}
+                  >
+                    <button
+                      type="button"
+                      className="wiz-s3-section-trigger"
+                      onClick={() => toggleSection(sec.id)}
+                    >
+                      {sec.icon && <span className="wiz-s3-section-icon">{sec.icon}</span>}
+                      <div className="wiz-s3-section-body-wrap">
+                        <div className="wiz-s3-section-title-row">
+                          <span className="wiz-s3-section-title">{sec.label}</span>
+                          {complete && !isOpen && <span className="wiz-s3-section-check">✓</span>}
+                          <span className="wiz-s3-section-badge">
+                            {answered}/{total}
+                          </span>
+                        </div>
+                        {!isOpen && previewItems.length > 0 && (
+                          <div className="wiz-s3-section-preview">{previewItems.join(" · ")}</div>
+                        )}
+                      </div>
+                      <span className="wiz-s3-section-chevron">▼</span>
+                    </button>
+
+                    {isOpen && (
+                      <div className="wiz-s3-section-content">
+                        {sectionQs.map((q, idx) => renderQuestion(q, idx))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
