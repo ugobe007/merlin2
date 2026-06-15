@@ -93,6 +93,11 @@ import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
 import type { WizardState, QuoteTier, TierLabel } from "./wizardState";
 import type { HybridCoverage, HybridStrategy, PowerSourceDescriptor } from "./wizardState";
 import { industryRequiresGenerator } from "./addonSizing";
+import {
+  applyDataCenterFinancials,
+  resolveDataCenterItLoadKW,
+  type DataCenterFinancialBreakdown,
+} from "./dataCenterFinancials";
 
 // Dev-only logging helper — compiled away in production bundles
 
@@ -928,8 +933,46 @@ function buildOneTier(
     0.05,
     energySavingsNet > 0 ? energySavingsNet : undefined
   );
-  const paybackYears = v45ROI.paybackYears;
-  const roi10Year = v45ROI.roi10Year;
+
+  // ── Data-center dual ROI model ───────────────────────────────────────────
+  // Generator is resilience capex ($0 utility savings). Primary payback uses
+  // energy package investment only; total-project payback stored for disclosure.
+  let dcFinancials: DataCenterFinancialBreakdown | undefined;
+  let paybackYears = v45ROI.paybackYears;
+  let paybackYearsEnergyOnly = v45ROI.paybackYearsEnergyOnly;
+  let roi10Year = v45ROI.roi10Year;
+  let npv25Year = v45ROI.npv25Year;
+  let finalAnnualSavings = annualSavings;
+  let finalGrossAnnualSavings = grossAnnualSavings;
+
+  if (state.industry === "data_center") {
+    const itLoadKW = resolveDataCenterItLoadKW(
+      state.facilityCalcDetails,
+      state.baseLoadKW,
+      state.facilityCalcDetails?.effectivePue
+    );
+    const existingUps = (state.step3Answers?.existingUPS as string | undefined) ?? "lead-acid";
+
+    dcFinancials = applyDataCenterFinancials({
+      itLoadKW,
+      bessKW,
+      bessKWh,
+      generatorCost: v45Costs.generatorCost,
+      totalNetInvestment: netCost,
+      baseAnnualSavings: annualSavings,
+      baseEnergySavingsNet: energySavingsNet,
+      demandChargePerKWMonth: demandCharge,
+      existingUps,
+      facilityDetails: state.facilityCalcDetails,
+    });
+
+    finalAnnualSavings = dcFinancials.totalAnnualSavings;
+    finalGrossAnnualSavings = grossAnnualSavings + dcFinancials.dcAddOnSavings;
+    paybackYears = dcFinancials.paybackYearsEnergy;
+    paybackYearsEnergyOnly = dcFinancials.paybackYearsEnergy;
+    roi10Year = dcFinancials.roi10YearEnergy;
+    npv25Year = dcFinancials.npv25Energy;
+  }
 
   // Map v45 equipment subtotal to a margin band label for transparency
   const equipSubtotal = v45Costs.equipmentSubtotal;
@@ -976,6 +1019,14 @@ function buildOneTier(
       : []),
     // Warnings from all guardrails
     ...addonValidation.allWarnings.map((w) => `⚠️  ${w}`),
+    // Data-center financial model audit trail
+    ...(dcFinancials
+      ? [
+          `DC financials: energy package $${dcFinancials.energyNetInvestment.toLocaleString("en-US")} net · resilience (generator) $${dcFinancials.resilienceNetInvestment.toLocaleString("en-US")}`,
+          `DC add-on savings: UPS displacement $${dcFinancials.upsDisplacementSavings.toLocaleString("en-US")}/yr + capacity deferral $${dcFinancials.capacityDeferralSavings.toLocaleString("en-US")}/yr`,
+          `Payback: ${dcFinancials.paybackYearsEnergy.toFixed(1)} yr (energy package) · ${dcFinancials.paybackYearsTotal.toFixed(1)} yr (total project incl. generator)`,
+        ]
+      : []),
   ];
 
   return {
@@ -1005,9 +1056,9 @@ function buildOneTier(
       evChargingCost: Math.round(v45Costs.evChargingCost + v45Costs.evInfrastructureCost),
     },
     // V4.5 honest TCO: persist both gross and net savings
-    grossAnnualSavings,
+    grossAnnualSavings: finalGrossAnnualSavings,
     annualReserves,
-    annualSavings, // NET savings (gross - reserves)
+    annualSavings: finalAnnualSavings, // NET savings (gross - reserves + DC add-ons)
     // Use v45Savings.evChargingRevenue when EV chargers are configured (Step 3.5 path sets
     // dcfcChargers/level2Chargers directly — state.evRevenuePerYear stays 0 in that flow).
     evRevenuePerYear: evChargerCount > 0 ? v45Savings.evChargingRevenue : evRevenuePerYear,
@@ -1022,9 +1073,24 @@ function buildOneTier(
     dcfcCCFees: v45Savings.dcfcCCFees,
     dcfcSessionsPerDay: v45Savings.dcfcSessionsPerDay,
     paybackYears,
-    paybackYearsEnergyOnly: v45ROI.paybackYearsEnergyOnly,
+    paybackYearsEnergyOnly,
     roi10Year,
-    npv: v45ROI.npv25Year, // 25-year NPV, 5% discount rate (pricingServiceV45.calculateROI)
+    npv: npv25Year, // 25-year NPV, 5% discount rate (pricingServiceV45.calculateROI)
+    ...(dcFinancials
+      ? {
+          dataCenterFinancials: {
+            energyNetInvestment: dcFinancials.energyNetInvestment,
+            resilienceNetInvestment: dcFinancials.resilienceNetInvestment,
+            upsDisplacementSavings: dcFinancials.upsDisplacementSavings,
+            capacityDeferralSavings: dcFinancials.capacityDeferralSavings,
+            dcAddOnSavings: dcFinancials.dcAddOnSavings,
+            paybackYearsTotal: dcFinancials.paybackYearsTotal,
+            generatorPaybackDragYears: dcFinancials.generatorPaybackDragYears,
+            roi10YearTotal: dcFinancials.roi10YearTotal,
+            npv25Total: dcFinancials.npv25Total,
+          },
+        }
+      : {}),
     // V4.5 margin transparency (from pricingServiceV45 tiered Merlin fee)
     marginBandId,
     blendedMarginPercent,
@@ -1400,6 +1466,23 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
 
   // Build the guardrail metadata
   const utilityRateCents = Math.round((state.intel?.utilityRate ?? 0.15) * 100);
+  const dcFin = adjusted.dataCenterFinancials;
+  const genericHighPaybackReason =
+    `Payback of ${originalPayback.toFixed(0)} years exceeds the ${target}-year target. ` +
+    `At your local rate of ${utilityRateCents}¢/kWh, savings from demand charge reduction ` +
+    `and solar are limited for this configuration. To improve ROI: (1) add more solar ` +
+    `capacity in Step 3.5 — solar has the best per-kW savings at this location; (2) verify ` +
+    `your utility rate with your provider — some commercial accounts qualify for ` +
+    `demand-response programs that significantly improve BESS economics.`;
+  const dataCenterHighPaybackReason =
+    dcFin && dcFin.paybackYearsTotal > adjusted.paybackYears + 1
+      ? `Energy package payback is ${adjusted.paybackYears.toFixed(0)} years (BESS + solar, excl. generator). ` +
+        `Total project payback including the ${adjusted.generatorKW > 0 ? `${adjusted.generatorKW} kW generator` : "resilience package"} ` +
+        `is ${dcFin.paybackYearsTotal.toFixed(0)} years — generator adds ~${dcFin.generatorPaybackDragYears.toFixed(1)} yrs with no direct utility savings. ` +
+        `At ${utilityRateCents}¢/kWh, demand charge reduction and UPS displacement are your primary savings levers. ` +
+        `Increase solar in Step 3.5 or confirm demand-response eligibility to improve energy ROI.`
+      : genericHighPaybackReason;
+
   const guardrail: QuoteTier["guardrail"] =
     removedComponents.length > 0
       ? {
@@ -1418,12 +1501,9 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
           adjustedPaybackYears: originalPayback,
           removedComponents: [],
           reason:
-            `Payback of ${originalPayback.toFixed(0)} years exceeds the ${target}-year target. ` +
-            `At your local rate of ${utilityRateCents}¢/kWh, savings from demand charge reduction ` +
-            `and solar are limited for this configuration. To improve ROI: (1) add more solar ` +
-            `capacity in Step 3.5 — solar has the best per-kW savings at this location; (2) verify ` +
-            `your utility rate with your provider — some commercial accounts qualify for ` +
-            `demand-response programs that significantly improve BESS economics.`,
+            state.industry === "data_center"
+              ? dataCenterHighPaybackReason
+              : genericHighPaybackReason,
         };
 
   return { ...adjusted, guardrail };
