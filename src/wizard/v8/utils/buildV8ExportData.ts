@@ -120,6 +120,7 @@ export function buildV8ExportData(state: WizardState): QuoteExportData {
       baseLoadKW: state.baseLoadKW,
       peakLoadKW: state.peakLoadKW,
       energyKWhPerDay: state.peakLoadKW * 24 * 0.4, // Rough estimate
+      ...(state.facilityCalcDetails ? { facilityDetails: state.facilityCalcDetails } : {}),
     },
 
     // Financial Analysis

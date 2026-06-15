@@ -25,6 +25,8 @@ import {
 } from "@/wizard/v7/schema/curatedFieldsResolver";
 import QuestionCard from "@/components/wizard/v7/steps/QuestionCard";
 import { isAnswered } from "@/components/wizard/v7/steps/step3Helpers";
+import { getCriticalFieldIds } from "@/wizard/v7/schema/step3CriticalFields";
+import type { Step3DetailLevel } from "../wizardState";
 
 interface Props {
   state: WizardState;
@@ -142,10 +144,34 @@ export function Step3V8({ state, actions }: Props) {
     [answers]
   );
 
-  // Visible questions
+  // Visible questions (after conditional logic)
   const visibleQuestions = useMemo(
     () => questions.filter((q) => q.id && q.id !== "undefined").filter(isQuestionVisible),
     [questions, isQuestionVisible]
+  );
+
+  // ─── Detail level (streamline | critical | all) ──────────────────────────
+  const detailLevel: Step3DetailLevel = state.step3DetailLevel ?? "streamline";
+
+  // The subset of questions that genuinely drive this industry's quote.
+  const criticalIds = useMemo(
+    () => getCriticalFieldIds(curatedSchema.industry, questions),
+    [curatedSchema.industry, questions]
+  );
+
+  // Questions actually shown for the active detail level. In "critical" mode we
+  // surface only the quote-driving inputs; the rest keep their smart defaults.
+  const displayedQuestions = useMemo(() => {
+    if (detailLevel === "critical") {
+      return visibleQuestions.filter((q) => criticalIds.has(q.id));
+    }
+    return visibleQuestions;
+  }, [visibleQuestions, detailLevel, criticalIds]);
+
+  // Count of critical questions currently visible (for the selector label).
+  const criticalCount = useMemo(
+    () => visibleQuestions.filter((q) => criticalIds.has(q.id)).length,
+    [visibleQuestions, criticalIds]
   );
 
   // Get dynamic options
@@ -170,13 +196,13 @@ export function Step3V8({ state, actions }: Props) {
   // Map sectionId → questions for that section
   const sectionQuestionMap = useMemo(() => {
     const map = new Map<string, CuratedField[]>();
-    for (const q of visibleQuestions) {
+    for (const q of displayedQuestions) {
       const sectionId = ((q as unknown as Record<string, unknown>).section as string) || "general";
       if (!map.has(sectionId)) map.set(sectionId, []);
       map.get(sectionId)!.push(q);
     }
     return map;
-  }, [visibleQuestions]);
+  }, [displayedQuestions]);
 
   // Ordered sections: prefer schema sections (filtered to those that have questions),
   // fall back to deriving from question.section values in order.
@@ -188,7 +214,7 @@ export function Step3V8({ state, actions }: Props) {
     // Fallback: derive from question order
     const seen = new Set<string>();
     const result: CuratedSection[] = [];
-    for (const q of visibleQuestions) {
+    for (const q of displayedQuestions) {
       const id = ((q as unknown as Record<string, unknown>).section as string) || "general";
       if (!seen.has(id)) {
         seen.add(id);
@@ -200,7 +226,7 @@ export function Step3V8({ state, actions }: Props) {
       }
     }
     return result;
-  }, [curatedSchema.sections, sectionQuestionMap, visibleQuestions]);
+  }, [curatedSchema.sections, sectionQuestionMap, displayedQuestions]);
 
   // Track which sections are expanded in the accordion
   // Sections that the user has manually changed start expanded
@@ -212,6 +238,20 @@ export function Step3V8({ state, actions }: Props) {
       prevIndustryRef.current = industry;
     }
   }, [industry]);
+
+  // When the user switches detail level, expand everything for critical/all
+  // (so the questions to answer are immediately visible) and collapse for
+  // streamline. Only fires on an actual mode change, preserving manual toggles.
+  const prevDetailRef = useRef(detailLevel);
+  useEffect(() => {
+    if (prevDetailRef.current === detailLevel) return;
+    prevDetailRef.current = detailLevel;
+    if (detailLevel === "streamline") {
+      setOpenSections(new Set());
+    } else {
+      setOpenSections(new Set(orderedSections.map((s) => s.id)));
+    }
+  }, [detailLevel, orderedSections]);
 
   // Expand a section when the user manually edits a question inside it
   const setAnswerWithTracking = useCallback(
@@ -640,7 +680,39 @@ export function Step3V8({ state, actions }: Props) {
     return qs.length > 0 && qs.every((q) => isAnswered(answers[q.id]));
   };
 
-  const answeredCount = visibleQuestions.filter((q) => isAnswered(answers[q.id])).length;
+  const answeredCount = displayedQuestions.filter((q) => isAnswered(answers[q.id])).length;
+  const displayedCount = displayedQuestions.length;
+
+  // Detail-level selector options
+  const detailOptions: Array<{
+    id: Step3DetailLevel;
+    emoji: string;
+    label: string;
+    sub: string;
+    accent: string;
+  }> = [
+    {
+      id: "streamline",
+      emoji: "⚡",
+      label: "Streamline",
+      sub: "Smart defaults — fastest",
+      accent: "rgba(62,207,142,",
+    },
+    {
+      id: "critical",
+      emoji: "🎯",
+      label: "Key questions",
+      sub: `${criticalCount} inputs that drive your quote`,
+      accent: "rgba(99,179,237,",
+    },
+    {
+      id: "all",
+      emoji: "📋",
+      label: "Full detail",
+      sub: `All ${visibleQuestions.length} — most accurate`,
+      accent: "rgba(167,139,250,",
+    },
+  ];
 
   return (
     <div style={{ minHeight: "100vh" }}>
@@ -745,89 +817,155 @@ export function Step3V8({ state, actions }: Props) {
           </div>
         </div>
 
-        {/* ── Use Smart Defaults skip banner ── */}
+        {/* ── Detail level selector (Streamline / Key questions / Full detail) ── */}
         <div
           style={{
             marginBottom: 14,
-            padding: "16px 18px",
-            borderRadius: 18,
-            background:
-              "linear-gradient(135deg, rgba(62,207,142,0.10), rgba(56,189,248,0.06), rgba(155,109,255,0.06))",
-            border: "1.5px solid rgba(62,207,142,0.46)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 16,
-            flexWrap: "nowrap",
-            position: "relative",
-            boxShadow: "0 0 34px rgba(62,207,142,0.10), 0 0 0 1px rgba(255,255,255,0.045) inset",
+            padding: 12,
+            borderRadius: 16,
+            background: "rgba(17,26,62,0.66)",
+            border: "1px solid rgba(99,120,255,0.18)",
           }}
         >
-          <div style={{ minWidth: 0, paddingRight: 18 }}>
-            <div
-              style={{
-                fontSize: 21,
-                fontWeight: 950,
-                color: "#3ecf8e",
-                marginBottom: 7,
-                lineHeight: 1.25,
-              }}
-            >
-              ✓ All {visibleQuestions.length} questions pre-filled
-              <span style={{ color: "#3ecf8e", fontWeight: 950 }}>
-                {" "}
-                with {displayName} benchmarks
-              </span>
-            </div>
-            <div style={{ fontSize: 13, color: "rgba(226,232,240,0.78)", lineHeight: 1.45 }}>
-              Smart defaults applied <span style={{ color: "#7dd3fc" }}>inline</span> — review below
-              or skip straight to add-ons.
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
+          <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "16px 30px",
-              borderRadius: 16,
-              background: "transparent",
-              color: "transparent",
-              border: "2.5px solid rgba(167,139,250,0.85)",
-              fontSize: 20,
-              fontWeight: 900,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-              marginLeft: "auto",
-              boxShadow: "0 0 28px rgba(167,139,250,0.16)",
-              letterSpacing: "0.02em",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(56,189,248,0.92)";
-              e.currentTarget.style.boxShadow = "0 0 30px rgba(56,189,248,0.22)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(167,139,250,0.82)";
-              e.currentTarget.style.boxShadow = "0 0 24px rgba(167,139,250,0.12)";
+              fontSize: 12,
+              fontWeight: 800,
+              color: "rgba(255,255,255,0.72)",
+              marginBottom: 8,
+              letterSpacing: "0.05em",
+              textTransform: "uppercase",
             }}
           >
-            <span
+            ⚙️ How much do you want to fill in?
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+            {detailOptions.map(({ id, emoji, label, sub, accent }) => {
+              const active = detailLevel === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => actions.setDetailLevel(id)}
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 10,
+                    border: active
+                      ? `2px solid ${accent}0.70)`
+                      : "1px solid rgba(255,255,255,0.10)",
+                    background: active ? `${accent}0.10)` : "transparent",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "border-color 0.15s, background 0.15s",
+                  }}
+                >
+                  <div style={{ fontSize: 15, marginBottom: 4 }}>{emoji}</div>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: active ? `${accent}1.0)` : "rgba(255,255,255,0.82)",
+                      marginBottom: 3,
+                    }}
+                  >
+                    {active ? `✓ ${label}` : label}
+                  </div>
+                  <div
+                    style={{ fontSize: 10.5, color: "rgba(148,163,184,0.68)", lineHeight: 1.35 }}
+                  >
+                    {sub}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Use Smart Defaults skip banner (streamline only) ── */}
+        {detailLevel === "streamline" && (
+          <div
+            style={{
+              marginBottom: 14,
+              padding: "16px 18px",
+              borderRadius: 18,
+              background:
+                "linear-gradient(135deg, rgba(62,207,142,0.10), rgba(56,189,248,0.06), rgba(155,109,255,0.06))",
+              border: "1.5px solid rgba(62,207,142,0.46)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 16,
+              flexWrap: "nowrap",
+              position: "relative",
+              boxShadow: "0 0 34px rgba(62,207,142,0.10), 0 0 0 1px rgba(255,255,255,0.045) inset",
+            }}
+          >
+            <div style={{ minWidth: 0, paddingRight: 18 }}>
+              <div
+                style={{
+                  fontSize: 21,
+                  fontWeight: 950,
+                  color: "#3ecf8e",
+                  marginBottom: 7,
+                  lineHeight: 1.25,
+                }}
+              >
+                ✓ All {visibleQuestions.length} questions pre-filled
+                <span style={{ color: "#3ecf8e", fontWeight: 950 }}>
+                  {" "}
+                  with {displayName} benchmarks
+                </span>
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(226,232,240,0.78)", lineHeight: 1.45 }}>
+                Smart defaults applied <span style={{ color: "#7dd3fc" }}>inline</span> — review
+                below or skip straight to add-ons.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
               style={{
-                background: "linear-gradient(90deg, #a78bfa 0%, #38bdf8 100%)",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "16px 30px",
+                borderRadius: 16,
+                background: "transparent",
                 color: "transparent",
-                WebkitTextStroke: "0.6px rgba(13,18,48,0.55)",
-                paintOrder: "stroke fill",
+                border: "2.5px solid rgba(167,139,250,0.85)",
+                fontSize: 20,
+                fontWeight: 900,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                marginLeft: "auto",
+                boxShadow: "0 0 28px rgba(167,139,250,0.16)",
+                letterSpacing: "0.02em",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "rgba(56,189,248,0.92)";
+                e.currentTarget.style.boxShadow = "0 0 30px rgba(56,189,248,0.22)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "rgba(167,139,250,0.82)";
+                e.currentTarget.style.boxShadow = "0 0 24px rgba(167,139,250,0.12)";
               }}
             >
-              Use Smart Defaults → Skip to Add-ons
-            </span>
-          </button>
-        </div>
+              <span
+                style={{
+                  background: "linear-gradient(90deg, #a78bfa 0%, #38bdf8 100%)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                  WebkitTextStroke: "0.6px rgba(13,18,48,0.55)",
+                  paintOrder: "stroke fill",
+                }}
+              >
+                Use Smart Defaults → Skip to Add-ons
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* ── Compact profile section hub ── */}
         <div
@@ -868,7 +1006,7 @@ export function Step3V8({ state, actions }: Props) {
                 color: "rgba(148,163,184,0.65)",
               }}
             >
-              {answeredCount} of {visibleQuestions.length} complete
+              {answeredCount} of {displayedCount} complete
             </span>
           </div>
 
@@ -1097,7 +1235,7 @@ export function Step3V8({ state, actions }: Props) {
 
           {/* Overall progress */}
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.30)" }}>
-            {answeredCount} / {visibleQuestions.length} answered
+            {answeredCount} / {displayedCount} answered
           </div>
 
           {/* Choose add-ons */}

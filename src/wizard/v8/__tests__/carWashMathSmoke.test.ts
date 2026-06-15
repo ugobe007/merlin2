@@ -102,6 +102,8 @@ function carWashState(overrides: Partial<WizardState>): WizardState {
       facilityType: "full_service",
       roofType: "opaque_metal",
     },
+    step3DetailLevel: overrides.step3DetailLevel ?? "streamline",
+    facilityCalcDetails: overrides.facilityCalcDetails ?? null,
     evChargers: null,
     baseLoadKW: overrides.baseLoadKW ?? 38,
     peakLoadKW: overrides.peakLoadKW ?? 95,

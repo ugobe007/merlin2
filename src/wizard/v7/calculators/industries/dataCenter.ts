@@ -1,6 +1,21 @@
 import type { CalculatorContract, CalcInputs, CalcRunResult, CalcValidation } from "../contract";
 import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
 
+/**
+ * Parse a PUE band string ("1.3-1.5") or single value ("1.45") into a
+ * representative midpoint. Using the midpoint (rather than the lower bound)
+ * gives a more realistic facility envelope for the selected band.
+ */
+function parsePueMidpoint(band: string): number {
+  const parts = String(band)
+    .split("-")
+    .map((s) => parseFloat(s.trim()))
+    .filter((n) => !Number.isNaN(n));
+  if (parts.length === 0) return 1.5;
+  if (parts.length === 1) return parts[0];
+  return (parts[0] + parts[1]) / 2;
+}
+
 export const DC_LOAD_V1_SSOT: CalculatorContract = {
   id: "dc_load_v1",
   requiredInputs: ["itLoadCapacity", "currentPUE", "itUtilization", "dataCenterTier"] as const,
@@ -25,6 +40,7 @@ export const DC_LOAD_V1_SSOT: CalculatorContract = {
     //   coolingSystem (curated: "air-cooled"/"water-cooled"/"immersion"/"hybrid") → metadata
     //   (no direct calc impact yet — captured in assumptions for StackQuote audit trail)
     if (inputs.coolingSystem) assumptions.push(`Cooling: ${inputs.coolingSystem}`);
+    //   evaporativeCooling → drives the PUE / cooling-load / water model below.
     //   redundancy (curated: "n"/"n+1"/"2n"/"2n+1") → metadata
     if (inputs.redundancy) assumptions.push(`Redundancy: ${inputs.redundancy}`);
     //   requiredRuntime (curated: "15min"/"30min"/"1hr"/"4hr"/"8hr") → metadata
@@ -43,6 +59,22 @@ export const DC_LOAD_V1_SSOT: CalculatorContract = {
     const itUtilization = String(inputs.itUtilization || "60-80%");
     const dataCenterTier = String(inputs.dataCenterTier || inputs.uptimeRequirement || "tier_3");
 
+    // Evaporative (water-side) cooling. The V8 Step 3 toggle stores "yes"/"no";
+    // also accept booleans. Legacy data centers overwhelmingly use evaporative heat
+    // rejection, so default ON when the field was never set.
+    const evapRaw = (inputs as Record<string, unknown>).evaporativeCooling;
+    const usesEvaporative =
+      evapRaw == null || evapRaw === ""
+        ? true
+        : evapRaw === true ||
+          evapRaw === "yes" ||
+          evapRaw === "true" ||
+          evapRaw === 1 ||
+          evapRaw === "1";
+    assumptions.push(
+      `Evaporative cooling: ${usesEvaporative ? "yes (water-side)" : "no (mechanical)"}`
+    );
+
     // 2. Map to SSOT parameters (field names the SSOT actually reads)
     const useCaseData: Record<string, unknown> = {
       itLoadKW: itLoadKW ?? inputs.itLoadCapacity,
@@ -55,48 +87,67 @@ export const DC_LOAD_V1_SSOT: CalculatorContract = {
       rackDensityKW: inputs.rackDensityKW,
     };
 
-    assumptions.push(`IT load: ${itLoadKW ?? "default"} kW`);
-    assumptions.push(`PUE: ${currentPUE}`);
-    assumptions.push(`Utilization: ${itUtilization}`);
-    assumptions.push(`Tier: ${dataCenterTier}`);
-
-    // 3. Delegate to SSOT (NO calculation logic here!)
+    // 3. Delegate to SSOT for the raw power profile + audit trail (fallback path).
     const result = calculateUseCasePower("data-center", useCaseData);
+    const dutyCycle = 0.95; // Data centers run ~95% load (near-continuous)
 
-    // 4. Convert to contract format
-    const powerKW = result.powerMW * 1000;
-    const peakLoadKW = Math.round(powerKW);
-    const dutyCycle = 0.95; // Data centers run 95% load (near-continuous)
+    // 4. PUE / cooling / water model
+    // 4a. Representative PUE from the selected band (midpoint, not lower bound).
+    const pueNum = parsePueMidpoint(currentPUE);
+
+    // IT load is the primary payload (fall back to the SSOT-derived figure).
+    const itLoadKWActual =
+      itLoadKW && Number(itLoadKW) > 0 ? Number(itLoadKW) : (result.powerMW * 1000) / pueNum;
+
+    // 4b. Fixed infrastructure losses — independent of cooling technology.
+    const upsLossesKW = itLoadKWActual * 0.05; // 5% UPS loss
+    const pdusKW = itLoadKWActual * 0.03; // 3% PDU loss
+    const fansKW = itLoadKWActual * 0.04; // 4% air-handler fans
+    const otherKW = upsLossesKW + pdusKW + fansKW;
+
+    // 4c. Base facility envelope implied by the selected PUE.
+    const baseTotalKW = itLoadKWActual * pueNum;
+    const lightingKW = baseTotalKW * 0.02; // 2% lighting
+    const controlsKW = baseTotalKW * 0.02; // 2% BMS/monitoring
+    let baseCoolingKW = baseTotalKW - itLoadKWActual - otherKW - lightingKW - controlsKW;
+    if (baseCoolingKW < 0) {
+      baseCoolingKW = 0;
+      warnings.push("cooling_remainder_negative: low PUE caused negative cooling allocation");
+    }
+
+    // 4d. Evaporative cooling adjustment.
+    // Water-side / evaporative heat rejection (cooling towers, adiabatic, swamp) is
+    // materially more efficient than mechanical DX / chiller-only cooling, so it
+    // lowers cooling energy (and the effective PUE). Mechanical-only carries a small
+    // penalty. IT load, losses, lighting and controls are unaffected.
+    const coolingFactor = usesEvaporative ? 0.82 : 1.1;
+    const coolingKW = baseCoolingKW * coolingFactor;
+
+    // 4e. Effective facility total + PUE after the cooling adjustment.
+    const facilityTotalKW = itLoadKWActual + coolingKW + otherKW + lightingKW + controlsKW;
+    const effectivePUE = itLoadKWActual > 0 ? facilityTotalKW / itLoadKWActual : pueNum;
+    const peakLoadKW = Math.round(facilityTotalKW);
     const baseLoadKW = Math.round(peakLoadKW * dutyCycle);
     const energyKWhPerDay = Math.round(baseLoadKW * 24);
 
-    // 4a. Compute contributor breakdown (PUE-based exact-sum accounting)
-    // Parse PUE to numeric
-    const pueStr = String(currentPUE || "1.5");
-    const pueNum = parseFloat(pueStr.split("-")[0]) || 1.5; // "1.3-1.5" → 1.3
+    // 4f. Water Usage Effectiveness (WUE) — liters of water per kWh of IT energy.
+    // Evaporative towers consume significant water; dry/mechanical cooling is minimal.
+    const wueLPerKWh = usesEvaporative ? 1.8 : 0.2;
+    const itEnergyKWhPerYear = itLoadKWActual * 8760 * dutyCycle;
+    const annualWaterGallons = Math.round(wueLPerKWh * itEnergyKWhPerYear * 0.264172);
 
-    // IT load is the primary payload
-    const itLoadKWActual = itLoadKW ? Number(itLoadKW) : peakLoadKW / pueNum;
-
-    // Infrastructure losses (non-cooling)
-    const upsLossesKW = itLoadKWActual * 0.05; // 5% UPS loss
-    const pdusKW = itLoadKWActual * 0.03; // 3% PDU loss
-    const fansKW = itLoadKWActual * 0.04; // 4% CRAC/CRAH fans
-    let otherKW = upsLossesKW + pdusKW + fansKW;
-
-    // Lighting & controls as % of total
-    const lightingKW = peakLoadKW * 0.02; // 2% lighting
-    const controlsKW = peakLoadKW * 0.02; // 2% BMS/monitoring
-
-    // Cooling = remainder (sum=total by construction)
-    let coolingKW = peakLoadKW - itLoadKWActual - otherKW - lightingKW - controlsKW;
-
-    // Guard: prevent negative cooling (low PUE edge case)
-    if (coolingKW < 0) {
-      otherKW += coolingKW; // Roll negative into other to preserve sum
-      coolingKW = 0;
-      warnings.push("cooling_remainder_negative: low PUE caused negative cooling allocation");
-    }
+    assumptions.push(`IT load: ${Math.round(itLoadKWActual).toLocaleString()} kW`);
+    assumptions.push(
+      `PUE: ${pueNum.toFixed(2)} band → ${effectivePUE.toFixed(2)} effective (${
+        usesEvaporative ? "evaporative" : "mechanical"
+      } cooling)`
+    );
+    assumptions.push(`Cooling load: ${Math.round(coolingKW).toLocaleString()} kW`);
+    assumptions.push(`Utilization: ${itUtilization}`);
+    assumptions.push(`Tier: ${dataCenterTier}`);
+    assumptions.push(
+      `Est. water use: ${annualWaterGallons.toLocaleString()} gal/yr (WUE ${wueLPerKWh} L/kWh)`
+    );
 
     const kWContributorsTotalKW = itLoadKWActual + coolingKW + otherKW + lightingKW + controlsKW;
 
@@ -131,10 +182,18 @@ export const DC_LOAD_V1_SSOT: CalculatorContract = {
           pdus: pdusKW,
           fans: fansKW,
           pue: pueNum,
+          effectivePue: Math.round(effectivePUE * 100) / 100,
+          evaporativeCooling: usesEvaporative,
+          coolingFactor,
+          wueLitersPerKWh: wueLPerKWh,
+          annualWaterGallons,
         },
       },
       notes: [
-        `PUE: ${pueNum.toFixed(2)} → cooling allocation: ${coolingKW.toFixed(1)}kW`,
+        `PUE ${pueNum.toFixed(2)} band → ${effectivePUE.toFixed(2)} effective (${
+          usesEvaporative ? "evaporative" : "mechanical"
+        } cooling) → cooling ${coolingKW.toFixed(0)}kW`,
+        `Estimated water use: ${annualWaterGallons.toLocaleString()} gal/yr (WUE ${wueLPerKWh} L/kWh)`,
         `Infrastructure losses: UPS=${upsLossesKW.toFixed(1)}kW, PDU=${pdusKW.toFixed(1)}kW, Fans=${fansKW.toFixed(1)}kW`,
       ],
     };

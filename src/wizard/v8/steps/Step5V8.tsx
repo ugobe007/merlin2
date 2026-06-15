@@ -36,6 +36,7 @@ import {
   Landmark,
   ExternalLink,
   Home,
+  Droplets,
 } from "lucide-react";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import TrueQuoteFinancialModal from "@/components/wizard/v7/shared/TrueQuoteFinancialModal";
@@ -79,6 +80,14 @@ function fmt$(n: number | null | undefined, countryCode?: string): string {
 function fmtNum(n: number | null | undefined, fallback = "—"): string {
   if (n === null || n === undefined || !Number.isFinite(n)) return fallback;
   return String(Math.round(n));
+}
+
+/** Compact volume label for facility water-use estimates (gal/yr). */
+function fmtWaterGallons(gallons: number): string {
+  if (!Number.isFinite(gallons) || gallons <= 0) return "—";
+  if (gallons >= 1_000_000) return `${(gallons / 1_000_000).toFixed(1)}M gal/yr`;
+  if (gallons >= 1_000) return `${Math.round(gallons / 1_000)}K gal/yr`;
+  return `${Math.round(gallons).toLocaleString()} gal/yr`;
 }
 
 // ── State-specific incentive data ────────────────────────────────────────────
@@ -566,6 +575,8 @@ export default function Step5V8({ state, actions }: Props) {
   const { tiers, selectedTierIndex, location, industry } = state;
   const tier = tiers && selectedTierIndex !== null ? tiers[selectedTierIndex] : undefined;
   const countryCode = state.countryCode || state.country || "US";
+  const dcProfile =
+    state.facilityCalcDetails?.industry === "data_center" ? state.facilityCalcDetails : null;
 
   // Debug logging (dev only, runs once on mount)
   React.useEffect(() => {
@@ -1323,6 +1334,22 @@ export default function Step5V8({ state, actions }: Props) {
           value={`${fmtNum(state.baseLoadKW)} kW`}
           accent="text-amber-400"
         />
+        {dcProfile && (
+          <StatItem
+            icon={<Zap className="w-3.5 h-3.5" />}
+            label="Peak"
+            value={`${fmtNum(state.peakLoadKW)} kW`}
+            accent="text-orange-400"
+          />
+        )}
+        {dcProfile && (
+          <StatItem
+            icon={<Building2 className="w-3.5 h-3.5" />}
+            label="PUE"
+            value={`${dcProfile.effectivePue.toFixed(2)} effective`}
+            accent="text-cyan-400"
+          />
+        )}
         <StatItem
           icon={<Battery className="w-3.5 h-3.5" />}
           label="BESS"
@@ -1360,6 +1387,58 @@ export default function Step5V8({ state, actions }: Props) {
           />
         )}
       </div>
+
+      {/* Data center facility load profile — PUE, cooling, water (WUE) */}
+      {dcProfile && (
+        <div className="py-3 border-b border-white/[0.06]">
+          <div className="flex items-center gap-2 mb-2.5">
+            <Building2 className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              Facility Load Profile
+            </span>
+            <span className="ml-auto text-[10px] text-slate-500">StackQuote™ verified</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="rounded-lg bg-cyan-500/8 border border-cyan-500/20 px-3 py-2">
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">
+                IT Load
+              </div>
+              <div className="text-sm font-bold text-white tabular-nums">
+                {fmtNum(dcProfile.itLoadKW)} kW
+              </div>
+            </div>
+            <div className="rounded-lg bg-cyan-500/8 border border-cyan-500/20 px-3 py-2">
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">PUE</div>
+              <div className="text-sm font-bold text-white tabular-nums">
+                {dcProfile.pueBand.toFixed(2)} → {dcProfile.effectivePue.toFixed(2)}
+              </div>
+              <div className="text-[10px] text-slate-500 mt-0.5">
+                {dcProfile.evaporativeCooling ? "evaporative" : "mechanical"} cooling
+              </div>
+            </div>
+            <div className="rounded-lg bg-cyan-500/8 border border-cyan-500/20 px-3 py-2">
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5">
+                Cooling Load
+              </div>
+              <div className="text-sm font-bold text-white tabular-nums">
+                {fmtNum(dcProfile.coolingKW)} kW
+              </div>
+            </div>
+            <div className="rounded-lg bg-cyan-500/8 border border-cyan-500/20 px-3 py-2">
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                <Droplets className="w-3 h-3" />
+                Water Use
+              </div>
+              <div className="text-sm font-bold text-white tabular-nums">
+                {fmtWaterGallons(dcProfile.annualWaterGallons)}
+              </div>
+              <div className="text-[10px] text-slate-500 mt-0.5">
+                WUE {dcProfile.wueLitersPerKWh} L/kWh
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ================================================================
           EQUIPMENT & FINANCIAL SUMMARY — Horizontal layout
