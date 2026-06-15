@@ -577,6 +577,7 @@ export default function Step5V8({ state, actions }: Props) {
   const countryCode = state.countryCode || state.country || "US";
   const dcProfile =
     state.facilityCalcDetails?.industry === "data_center" ? state.facilityCalcDetails : null;
+  const dcFin = tier?.dataCenterFinancials;
 
   // Debug logging (dev only, runs once on mount)
   React.useEffect(() => {
@@ -1084,7 +1085,7 @@ export default function Step5V8({ state, actions }: Props) {
               )}
 
               {/* ROI snapshot below hero */}
-              <div className="mt-5 inline-flex items-center gap-4 px-5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+              <div className="mt-5 inline-flex flex-wrap items-center justify-center gap-4 px-5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                 <TrendingUp className="w-4 h-4 text-[#3ECF8E]" />
                 <span className="text-sm text-slate-300">
                   Payback in{" "}
@@ -1100,6 +1101,18 @@ export default function Step5V8({ state, actions }: Props) {
                         </span>
                       )}
                     </>
+                  ) : dcFin ? (
+                    <>
+                      <strong className="text-[#3ECF8E]">
+                        {Math.round(tier.paybackYears)} years
+                      </strong>
+                      <span className="text-xs text-slate-500 ml-1">(energy package)</span>
+                      {dcFin.paybackYearsTotal > tier.paybackYears + 1 && (
+                        <span className="text-xs text-amber-400/90 ml-1.5">
+                          · {Math.round(dcFin.paybackYearsTotal)} yr total project
+                        </span>
+                      )}
+                    </>
                   ) : (
                     <strong className="text-[#3ECF8E]">
                       {Math.round(tier.paybackYears)} years
@@ -1112,6 +1125,12 @@ export default function Step5V8({ state, actions }: Props) {
                   <strong className={tier.roi10Year >= 0 ? "text-[#3ECF8E]" : "text-red-400"}>
                     {tier.roi10Year.toFixed(0)}%
                   </strong>
+                  {dcFin && dcFin.roi10YearTotal !== tier.roi10Year && (
+                    <span className="text-xs text-slate-500 ml-1">
+                      ({dcFin.roi10YearTotal >= 0 ? "+" : ""}
+                      {dcFin.roi10YearTotal.toFixed(0)}% total)
+                    </span>
+                  )}
                 </span>
               </div>
             </div>
@@ -1693,14 +1712,24 @@ export default function Step5V8({ state, actions }: Props) {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="text-[10px] font-bold text-emerald-300/80 uppercase tracking-[0.28em]">
-                      Net Investment
+                      {dcFin ? "Energy Package Investment" : "Net Investment"}
                     </div>
                     <div className="mt-2 text-4xl font-black text-white tracking-tight tabular-nums">
-                      {fmt$(tier.netCost, countryCode)}
+                      {fmt$(dcFin ? dcFin.energyNetInvestment : tier.netCost, countryCode)}
                     </div>
                     <div className="mt-2 max-w-md text-sm leading-relaxed text-slate-300">
-                      After federal incentives, this is the capital required to put the full system
-                      in service.
+                      {dcFin ? (
+                        <>
+                          BESS + solar after federal incentives. Total project net cost{" "}
+                          {fmt$(tier.netCost, countryCode)} includes{" "}
+                          {fmt$(dcFin.resilienceNetInvestment, countryCode)} generator resilience.
+                        </>
+                      ) : (
+                        <>
+                          After federal incentives, this is the capital required to put the full
+                          system in service.
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-right">
@@ -1717,16 +1746,90 @@ export default function Step5V8({ state, actions }: Props) {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4">
                   <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
-                    Upfront Cost
+                    {dcFin ? "Total Project Cost" : "Upfront Cost"}
                   </div>
                   <div className="mt-2 text-2xl font-bold text-white tabular-nums">
                     {fmt$(tier.grossCost, countryCode)}
                   </div>
                   <div className="mt-1 text-xs text-slate-400">
-                    Full installed project value before credits
+                    {dcFin
+                      ? "Full installed scope before credits (energy + resilience)"
+                      : "Full installed project value before credits"}
                   </div>
                 </div>
 
+                {dcFin ? (
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-300/80">
+                      Resilience Package
+                    </div>
+                    <div className="mt-2 text-2xl font-bold text-amber-300 tabular-nums">
+                      {fmt$(dcFin.resilienceNetInvestment, countryCode)}
+                    </div>
+                    <div className="mt-1 text-xs text-amber-200/70">
+                      Generator — not ITC-eligible, no direct utility savings
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300/80">
+                      Federal ITC
+                    </div>
+                    <div className="mt-2 text-2xl font-bold text-emerald-400 tabular-nums">
+                      −{fmt$(tier.itcAmount, countryCode)}
+                    </div>
+                    <div className="mt-1 text-xs text-emerald-200/70">
+                      {tier.itcBasisBreakdown ? (
+                        <>
+                          <span className="font-medium">
+                            {Math.round(tier.itcRate * 100)}% ×{" "}
+                            {fmt$(tier.itcBasisBreakdown.totalEligible, countryCode)} eligible basis
+                          </span>
+                          <div className="mt-2 space-y-0.5 text-[11px] text-emerald-200/60">
+                            {tier.itcBasisBreakdown.solarEligible > 0 && (
+                              <div className="flex justify-between">
+                                <span>Solar (equip + labor)</span>
+                                <span>
+                                  {fmt$(tier.itcBasisBreakdown.solarEligible, countryCode)}
+                                </span>
+                              </div>
+                            )}
+                            {tier.itcBasisBreakdown.bessEligible > 0 && (
+                              <div className="flex justify-between">
+                                <span>BESS</span>
+                                <span>
+                                  {fmt$(tier.itcBasisBreakdown.bessEligible, countryCode)}
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex justify-between">
+                              <span>Site / Installation</span>
+                              <span>{fmt$(tier.itcBasisBreakdown.siteEligible, countryCode)}</span>
+                            </div>
+                            {(tier.itcBasisBreakdown.generatorCost > 0 ||
+                              tier.itcBasisBreakdown.evChargingCost > 0) && (
+                              <div className="mt-1.5 pt-1.5 border-t border-emerald-500/20 text-[10px] text-emerald-300/40">
+                                Not §48-eligible:
+                                {tier.itcBasisBreakdown.generatorCost > 0 &&
+                                  ` Generator ${fmt$(tier.itcBasisBreakdown.generatorCost, countryCode)}`}
+                                {tier.itcBasisBreakdown.generatorCost > 0 &&
+                                  tier.itcBasisBreakdown.evChargingCost > 0 &&
+                                  " · "}
+                                {tier.itcBasisBreakdown.evChargingCost > 0 &&
+                                  `EV chargers ${fmt$(tier.itcBasisBreakdown.evChargingCost, countryCode)}`}
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <span>{Math.round(tier.itcRate * 100)}% tax credit applied</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {dcFin && (
                 <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
                   <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300/80">
                     Federal ITC
@@ -1758,17 +1861,10 @@ export default function Step5V8({ state, actions }: Props) {
                             <span>Site / Installation</span>
                             <span>{fmt$(tier.itcBasisBreakdown.siteEligible, countryCode)}</span>
                           </div>
-                          {(tier.itcBasisBreakdown.generatorCost > 0 ||
-                            tier.itcBasisBreakdown.evChargingCost > 0) && (
+                          {tier.itcBasisBreakdown.generatorCost > 0 && (
                             <div className="mt-1.5 pt-1.5 border-t border-emerald-500/20 text-[10px] text-emerald-300/40">
-                              Not §48-eligible:
-                              {tier.itcBasisBreakdown.generatorCost > 0 &&
-                                ` Generator ${fmt$(tier.itcBasisBreakdown.generatorCost, countryCode)}`}
-                              {tier.itcBasisBreakdown.generatorCost > 0 &&
-                                tier.itcBasisBreakdown.evChargingCost > 0 &&
-                                " · "}
-                              {tier.itcBasisBreakdown.evChargingCost > 0 &&
-                                `EV chargers ${fmt$(tier.itcBasisBreakdown.evChargingCost, countryCode)}`}
+                              Not §48-eligible: Generator{" "}
+                              {fmt$(tier.itcBasisBreakdown.generatorCost, countryCode)}
                             </div>
                           )}
                         </div>
@@ -1778,10 +1874,12 @@ export default function Step5V8({ state, actions }: Props) {
                     )}
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Savings Breakdown — surfaced prominently for transparency */}
-              {((tier.demandChargeSavings ?? 0) > 0 || (tier.evRevenuePerYear ?? 0) > 0) && (
+              {((tier.demandChargeSavings ?? 0) > 0 ||
+                (tier.evRevenuePerYear ?? 0) > 0 ||
+                (dcFin?.dcAddOnSavings ?? 0) > 0) && (
                 <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
                   <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 mb-3">
                     Annual Savings Breakdown
@@ -1804,6 +1902,22 @@ export default function Step5V8({ state, actions }: Props) {
                             countryCode
                           )}
                           /yr
+                        </span>
+                      </div>
+                    )}
+                    {(dcFin?.upsDisplacementSavings ?? 0) > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">🔋 UPS battery displacement</span>
+                        <span className="text-cyan-400 font-semibold tabular-nums">
+                          {fmt$(dcFin!.upsDisplacementSavings, countryCode)}/yr
+                        </span>
+                      </div>
+                    )}
+                    {(dcFin?.capacityDeferralSavings ?? 0) > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">🏗️ Grid capacity deferral</span>
+                        <span className="text-cyan-400 font-semibold tabular-nums">
+                          {fmt$(dcFin!.capacityDeferralSavings, countryCode)}/yr
                         </span>
                       </div>
                     )}
@@ -1906,7 +2020,7 @@ export default function Step5V8({ state, actions }: Props) {
               <div className="grid gap-3">
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
                   <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
-                    Payback Window
+                    {dcFin ? "Energy Package Payback" : "Payback Window"}
                   </div>
                   <div className="mt-2 flex items-end gap-2">
                     <span className="text-3xl font-black text-white tabular-nums">
@@ -1914,6 +2028,14 @@ export default function Step5V8({ state, actions }: Props) {
                     </span>
                     <span className="pb-1 text-sm font-semibold text-slate-400">years</span>
                   </div>
+                  {dcFin && dcFin.paybackYearsTotal > tier.paybackYears + 1 && (
+                    <div className="mt-1 text-xs text-amber-300/80">
+                      Total project (incl. generator):{" "}
+                      <strong className="text-amber-200">
+                        {Math.round(dcFin.paybackYearsTotal)} years
+                      </strong>
+                    </div>
+                  )}
                   <div className="mt-2 h-2 rounded-full bg-white/[0.06] overflow-hidden">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400"
@@ -1935,11 +2057,22 @@ export default function Step5V8({ state, actions }: Props) {
                             <strong className="text-amber-300">
                               Generator ({tier.generatorKW} kW)
                             </strong>{" "}
-                            adds resilience but no direct savings — it extends payback by est.{" "}
-                            {Math.round(
-                              ((tier.generatorKW * 700) / Math.max(1, tier.annualSavings)) * 10
-                            ) / 10}{" "}
-                            yrs. Remove in Step 3.5 to shorten payback.
+                            {dcFin ? (
+                              <>
+                                is quoted as a separate resilience investment — it adds ~
+                                {dcFin.generatorPaybackDragYears.toFixed(1)} yrs to total-project
+                                payback with no direct utility savings. Energy ROI above excludes
+                                this capex.
+                              </>
+                            ) : (
+                              <>
+                                adds resilience but no direct savings — it extends payback by est.{" "}
+                                {Math.round(
+                                  ((tier.generatorKW * 700) / Math.max(1, tier.annualSavings)) * 10
+                                ) / 10}{" "}
+                                yrs. Remove in Step 3.5 to shorten payback.
+                              </>
+                            )}
                           </span>
                         </div>
                       )}
@@ -1989,13 +2122,25 @@ export default function Step5V8({ state, actions }: Props) {
                     {tier.roi10Year.toFixed(0)}%
                   </div>
                   <div className="mt-1 text-sm text-slate-400">
-                    Return relative to post-incentive project cost
+                    {dcFin
+                      ? "Return on energy package investment (excl. generator)"
+                      : "Return relative to post-incentive project cost"}
                   </div>
+                  {dcFin && (
+                    <div className="mt-2 text-xs text-slate-500">
+                      Total project 10yr ROI:{" "}
+                      <span
+                        className={dcFin.roi10YearTotal >= 0 ? "text-amber-300" : "text-red-400/80"}
+                      >
+                        {dcFin.roi10YearTotal.toFixed(0)}%
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
                   <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
-                    25-Year NPV (Project)
+                    {dcFin ? "25-Year NPV (Energy Package)" : "25-Year NPV (Project)"}
                   </div>
                   <div
                     className={`mt-2 text-3xl font-black tabular-nums ${tier.npv >= 0 ? "text-emerald-400" : "text-red-400"}`}
@@ -2005,6 +2150,16 @@ export default function Step5V8({ state, actions }: Props) {
                   <div className="mt-1 text-sm text-slate-400">
                     Unlevered · long-term value after discounting future savings
                   </div>
+                  {dcFin && (
+                    <div className="mt-2 text-xs text-slate-500">
+                      Total project NPV:{" "}
+                      <span
+                        className={dcFin.npv25Total >= 0 ? "text-amber-300" : "text-red-400/80"}
+                      >
+                        {fmt$(dcFin.npv25Total, countryCode)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 

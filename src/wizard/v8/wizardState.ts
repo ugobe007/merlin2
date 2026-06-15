@@ -401,6 +401,21 @@ export interface QuoteTier {
    * Present only when evRevenuePerYear > 0.
    */
   paybackYearsEnergyOnly?: number;
+  /**
+   * Data-center dual ROI model — energy package vs full project (incl. generator).
+   * Present when industry === 'data_center' and generator cost is material.
+   */
+  dataCenterFinancials?: {
+    energyNetInvestment: number;
+    resilienceNetInvestment: number;
+    upsDisplacementSavings: number;
+    capacityDeferralSavings: number;
+    dcAddOnSavings: number;
+    paybackYearsTotal: number;
+    generatorPaybackDragYears: number;
+    roi10YearTotal: number;
+    npv25Total: number;
+  };
   roi10Year: number; // percent, e.g. 185.0
   npv: number;
   // Margin policy (V4.5 transparency)
