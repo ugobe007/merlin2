@@ -543,30 +543,11 @@ function ConfigSummaryBar({
 
 // ── Card Shell ────────────────────────────────────────────────────────────────
 function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        borderRadius: 12,
-        background: "rgba(15,17,23,0.7)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        overflow: "hidden",
-      }}
-    >
-      {children}
-    </div>
-  );
+  return <div className="wiz-addon-card">{children}</div>;
 }
 
 function CardDivider() {
-  return (
-    <div
-      style={{
-        height: 1,
-        background: "rgba(255,255,255,0.05)",
-        margin: "0 16px",
-      }}
-    />
-  );
+  return <div className="wiz-addon-divider" />;
 }
 
 // ── Solar PV Array Card ───────────────────────────────────────────────────────
@@ -674,85 +655,25 @@ function SolarCard({
 
   return (
     <Card>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "12px 14px 10px",
-        }}
-      >
-        <div
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 10,
-            background: "rgba(251,191,36,0.14)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 18,
-            flexShrink: 0,
-          }}
-        >
-          ☀️
-        </div>
+      <div className="wiz-addon-hdr">
+        <div className="wiz-addon-icon solar">☀️</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 750, color: "#fff" }}>Solar PV Array</div>
-          <div
-            style={{
-              fontSize: 12,
-              color: "rgba(148,163,184,0.6)",
-              marginTop: 2,
-            }}
-          >
+          <div className="wiz-addon-title">Solar PV Array</div>
+          <div className="wiz-addon-sub">
             {peakLoadKW > 0 ? `${peakLoadKW.toLocaleString()} kW peak` : ""}
             {peakLoadKW > 0 && safeMax > 0 ? " • " : ""}
             {safeMax > 0 ? `Max: ${safeMax.toLocaleString()} kW` : ""}
             {solarGrade ? ` • ${solarGrade}` : ""}
           </div>
         </div>
-        {isOptimal && (
-          <div
-            style={{
-              padding: "3px 9px",
-              borderRadius: 5,
-              background: "rgba(16,185,129,0.12)",
-              border: "1px solid rgba(16,185,129,0.3)",
-              fontSize: 10,
-              fontWeight: 800,
-              color: "#3ECF8E",
-              letterSpacing: "0.07em",
-              textTransform: "uppercase",
-              flexShrink: 0,
-            }}
-          >
-            OPTIMAL
-          </div>
-        )}
+        {isOptimal && <span className="wiz-addon-badge">Optimal</span>}
       </div>
       <CardDivider />
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "12px 14px 10px",
-        }}
-      >
-        <span
-          style={{
-            flex: 1,
-            fontSize: 13,
-            color: "rgba(203,213,225,0.8)",
-            fontWeight: 600,
-          }}
-        >
-          Solar Capacity
-        </span>
+      <div className="wiz-addon-row">
+        <span className="wiz-addon-row-label">Solar Capacity</span>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <StepperBtn onClick={() => handleChange(sliderKW - stepKW)}>−</StepperBtn>
-          <div style={{ textAlign: "center", minWidth: 110 }}>
+          <div style={{ textAlign: "center", minWidth: 100 }}>
             <div
               style={{
                 display: "flex",
@@ -761,17 +682,7 @@ function SolarCard({
                 gap: 7,
               }}
             >
-              <span
-                style={{
-                  fontSize: 22,
-                  fontWeight: 800,
-                  color: "#f1f5f9",
-                  fontVariantNumeric: "tabular-nums",
-                  letterSpacing: "-0.3px",
-                }}
-              >
-                {sliderKW.toLocaleString()} kW
-              </span>
+              <span className="wiz-addon-kw">{sliderKW.toLocaleString()} kW</span>
             </div>
             <div
               style={{
@@ -1732,33 +1643,26 @@ function EVChargingCard({
     max: number;
     which: "l2" | "dcfc" | "hpc";
   }) => (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        padding: "12px 16px",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
-      }}
-    >
+    <div className="wiz-addon-stepper-row">
       <div
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: 8,
-          background: `${color}18`,
+          width: 30,
+          height: 30,
+          borderRadius: 7,
+          background: `${color}14`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 18,
+          fontSize: 15,
           flexShrink: 0,
-          marginRight: 12,
+          marginRight: 10,
         }}
       >
         {icon}
       </div>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>{label}</div>
-        <div style={{ fontSize: 11, color: "rgba(148,163,184,0.55)", marginTop: 1 }}>{sub}</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>{label}</div>
+        <div style={{ fontSize: 10, color: "rgba(148,163,184,0.55)", marginTop: 1 }}>{sub}</div>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
         <button
@@ -1832,58 +1736,22 @@ function EVChargingCard({
         />
       )}
       <Card>
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 16px 14px" }}>
-          <div
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: 10,
-              background: "rgba(56,189,248,0.12)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 21,
-              flexShrink: 0,
-            }}
-          >
-            ⚡
-          </div>
+        <div className="wiz-addon-hdr">
+          <div className="wiz-addon-icon ev">⚡</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>EV Charging</div>
-            <div style={{ fontSize: 14, color: "rgba(148,163,184,0.6)", marginTop: 2 }}>
-              Employee &amp; customer charging
-            </div>
+            <div className="wiz-addon-title">EV Charging</div>
+            <div className="wiz-addon-sub">Employee &amp; customer charging</div>
           </div>
           {totalKW > 0 && (
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 900,
-                color: "#38bdf8",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
+            <span className="wiz-addon-kw-accent" style={{ color: "#38bdf8" }}>
               {Math.round(totalKW)} kW
-            </div>
+            </span>
           )}
         </div>
 
-        {/* Merlin recommendation pill */}
-        <div
-          style={{
-            margin: "0 16px 14px",
-            padding: "9px 12px",
-            borderRadius: 8,
-            background: "rgba(56,189,248,0.07)",
-            border: "1px solid rgba(56,189,248,0.18)",
-            display: "flex",
-            gap: 7,
-            alignItems: "flex-start",
-          }}
-        >
-          <span style={{ fontSize: 13, flexShrink: 0, marginTop: 1 }}>🧙</span>
-          <div style={{ fontSize: 13, color: "rgba(203,213,225,0.85)", lineHeight: 1.55 }}>
+        <div className="wiz-addon-hint">
+          <span style={{ flexShrink: 0 }}>🧙</span>
+          <div>
             <strong style={{ color: "#38bdf8" }}>Merlin recommends {recL2} Level 2</strong> for your
             facility. <strong style={{ color: "#a78bfa" }}>Level 3 Fast Charging</strong> adds
             $18K/yr revenue per charger (480V 3-phase required).
@@ -2175,40 +2043,15 @@ function BackupGeneratorCard({
 
   return (
     <Card>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "16px 16px 14px",
-        }}
-      >
-        <div
-          style={{
-            width: 42,
-            height: 42,
-            borderRadius: 10,
-            background: fuelType === "linear" ? "rgba(34,211,238,0.12)" : "rgba(249,115,22,0.14)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 21,
-            flexShrink: 0,
-          }}
-        >
+      <div className="wiz-addon-hdr">
+        <div className={`wiz-addon-icon ${fuelType === "linear" ? "gen-linear" : "gen"}`}>
           {fuelType === "linear" ? "🔄" : "🏭"}
         </div>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>
+          <div className="wiz-addon-title">
             {fuelType === "linear" ? "Linear Generator" : "Backup Generator"}
           </div>
-          <div
-            style={{
-              fontSize: 14,
-              color: "rgba(148,163,184,0.6)",
-              marginTop: 2,
-            }}
-          >
+          <div className="wiz-addon-sub">
             {fuelType === "linear"
               ? "Continuous baseload · trickle-charges BESS"
               : `Critical load protection${criticalKW > 0 ? ` • ${criticalKW.toLocaleString()} kW critical` : ""}`}
@@ -2216,27 +2059,11 @@ function BackupGeneratorCard({
         </div>
       </div>
       <CardDivider />
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "16px 16px 14px",
-        }}
-      >
-        <span
-          style={{
-            flex: 1,
-            fontSize: 15,
-            color: "rgba(203,213,225,0.8)",
-            fontWeight: 600,
-          }}
-        >
-          Generator Capacity
-        </span>
+      <div className="wiz-addon-row">
+        <span className="wiz-addon-row-label">Generator Capacity</span>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <StepperBtn onClick={() => handleChange(sliderKW - stepKW)}>−</StepperBtn>
-          <div style={{ textAlign: "center", minWidth: 130 }}>
+          <div style={{ textAlign: "center", minWidth: 120 }}>
             <div
               style={{
                 display: "flex",
@@ -2246,17 +2073,7 @@ function BackupGeneratorCard({
                 flexWrap: "wrap",
               }}
             >
-              <span
-                style={{
-                  fontSize: 26,
-                  fontWeight: 800,
-                  color: "#f1f5f9",
-                  fontVariantNumeric: "tabular-nums",
-                  letterSpacing: "-0.3px",
-                }}
-              >
-                {sliderKW.toLocaleString()} kW
-              </span>
+              <span className="wiz-addon-kw">{sliderKW.toLocaleString()} kW</span>
               {savingsK > 0 && (
                 <span style={{ fontSize: 13, color: "#9b6dff", fontWeight: 700 }}>
                   +${savingsK}K
@@ -2913,19 +2730,7 @@ export default function Step3_5V8({ state, actions }: Props) {
       {wantsEV ? (
         <>
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button
-              onClick={handleRemoveEV}
-              style={{
-                padding: "5px 14px",
-                borderRadius: 6,
-                border: "1px solid rgba(56,189,248,0.25)",
-                background: "transparent",
-                color: "rgba(56,189,248,0.65)",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
+            <button type="button" onClick={handleRemoveEV} className="wiz-btn-addon-remove ev">
               ✕ Remove EV Charging
             </button>
           </div>
@@ -2943,58 +2748,19 @@ export default function Step3_5V8({ state, actions }: Props) {
           />
         </>
       ) : (
-        <div
-          style={{
-            borderRadius: 12,
-            background: "rgba(15,17,23,0.7)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            padding: "16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 10,
-                background: "rgba(56,189,248,0.10)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 21,
-                flexShrink: 0,
-              }}
-            >
-              ⚡
-            </div>
+        <div className="wiz-addon-teaser">
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div className="wiz-addon-icon ev">⚡</div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(203,213,225,0.85)" }}>
+              <div className="wiz-addon-title" style={{ color: "rgba(203,213,225,0.85)" }}>
                 EV Charging
               </div>
-              <div style={{ fontSize: 12, color: "rgba(148,163,184,0.5)", marginTop: 2 }}>
+              <div className="wiz-addon-sub">
                 Optional add-on · Customer &amp; fleet charging revenue
               </div>
             </div>
           </div>
-          <button
-            onClick={handleAddEV}
-            style={{
-              padding: "9px 16px",
-              borderRadius: 8,
-              border: "1.5px solid rgba(56,189,248,0.4)",
-              background: "transparent",
-              color: "#38bdf8",
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
+          <button type="button" onClick={handleAddEV} className="wiz-btn-addon-add ev">
             + Add EV Charging
           </button>
         </div>
@@ -3003,17 +2769,9 @@ export default function Step3_5V8({ state, actions }: Props) {
         <>
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <button
+              type="button"
               onClick={handleRemoveGenerator}
-              style={{
-                padding: "5px 14px",
-                borderRadius: 6,
-                border: "1px solid rgba(249,115,22,0.25)",
-                background: "transparent",
-                color: "rgba(249,115,22,0.65)",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
+              className="wiz-btn-addon-remove gen"
             >
               ✕ Remove Generator
             </button>
@@ -3042,58 +2800,19 @@ export default function Step3_5V8({ state, actions }: Props) {
           />
         </>
       ) : (
-        <div
-          style={{
-            borderRadius: 12,
-            background: "rgba(15,17,23,0.7)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            padding: "16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 10,
-                background: "rgba(249,115,22,0.10)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 21,
-                flexShrink: 0,
-              }}
-            >
-              🏭
-            </div>
+        <div className="wiz-addon-teaser">
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div className="wiz-addon-icon gen">🏭</div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "rgba(203,213,225,0.85)" }}>
+              <div className="wiz-addon-title" style={{ color: "rgba(203,213,225,0.85)" }}>
                 Backup Generator
               </div>
-              <div style={{ fontSize: 12, color: "rgba(148,163,184,0.5)", marginTop: 2 }}>
+              <div className="wiz-addon-sub">
                 Optional resilience add-on · Does not affect solar/BESS ROI
               </div>
             </div>
           </div>
-          <button
-            onClick={handleAddGenerator}
-            style={{
-              padding: "9px 16px",
-              borderRadius: 8,
-              border: "1.5px solid rgba(249,115,22,0.4)",
-              background: "transparent",
-              color: "#fb923c",
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
+          <button type="button" onClick={handleAddGenerator} className="wiz-btn-addon-add gen">
             + Add Generator
           </button>
         </div>
