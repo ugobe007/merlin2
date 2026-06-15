@@ -26,7 +26,7 @@ import React, { Suspense, lazy, useEffect, useMemo } from "react";
 import { useWizardV8 } from "./useWizardV8";
 import type { WizardStep, IndustrySlug } from "./wizardState";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
-import { EV_PACKAGE_COUNTS } from "./addonSizing";
+import { buildStep4AddonCommit } from "./addonSizing";
 
 // Lazy-load all steps — Step0 (mode select) is the true entry point and is
 // eagerly imported above. Step1 is preloaded immediately so it feels instant.
@@ -788,40 +788,16 @@ export default function WizardV8Page() {
         }}
         onNext={() => {
           if (step === 4) {
-            // ── Persist Step 3.5 Add-on configuration before advancing ────────
-            // Solar + Generator: kW already committed to state via setAddonConfig on CONFIRM
-            const committedSolarKW = state.wantsSolar ? state.solarKW : 0;
-            const committedGenKW = state.wantsGenerator ? state.generatorKW : 0;
-
-            // EV Chargers — counts from SSOT (addonSizing.EV_PACKAGE_COUNTS)
-            // "custom" mode writes directly to state.level2Chargers/dcfcChargers via setAddonConfig
-            const evScope = (state.step3Answers?.evScope as string) ?? "pkg_pro";
-            let evCounts: { level2: number; dcfc: number };
-            if (evScope === "custom") {
-              // Custom mode: counts already committed to state via setAddonConfig
-              evCounts = state.wantsEVCharging
-                ? { level2: state.level2Chargers, dcfc: state.dcfcChargers }
-                : { level2: 0, dcfc: 0 };
-            } else {
-              const pkgCounts =
-                (EV_PACKAGE_COUNTS as Record<string, { l2: number; dcfc: number }>)[evScope] ??
-                EV_PACKAGE_COUNTS.pkg_pro;
-              evCounts = state.wantsEVCharging
-                ? { level2: pkgCounts.l2, dcfc: pkgCounts.dcfc }
-                : { level2: 0, dcfc: 0 };
-            }
-
-            // Commit all four in one dispatch
-            actions.setAddonConfig({
-              solarKW: committedSolarKW,
-              generatorKW: committedGenKW,
-              linearGeneratorKW: state.linearGeneratorKW ?? 0,
-              level2Chargers: evCounts.level2,
-              dcfcChargers: evCounts.dcfc,
-              hpcChargers: state.wantsEVCharging ? state.hpcChargers : 0,
-            });
+            actions.setAddonConfig(buildStep4AddonCommit(state));
             actions.setAnswer("step3_5Visited", true);
             actions.goToStep(5);
+          } else if (step === 5) {
+            const tierIdx =
+              state.selectedTierIndex !== null ? state.selectedTierIndex : (1 as 0 | 1 | 2);
+            if (state.selectedTierIndex === null && state.tiers) {
+              actions.selectTier(tierIdx);
+            }
+            actions.goToStep(6);
           } else {
             actions.goToStep((step + 1) as WizardStep);
           }

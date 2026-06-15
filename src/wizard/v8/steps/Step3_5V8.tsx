@@ -18,6 +18,7 @@ import {
   industryRequiresGenerator,
   industryPanelTier,
   industryPanelTierReason,
+  buildStep4AddonCommit,
 } from "../addonSizing";
 import {
   getFacilityConstraints,
@@ -2675,6 +2676,7 @@ export default function Step3_5V8({ state, actions }: Props) {
     ? state.industry.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
     : "";
   const handleContinue = () => {
+    actions.setAddonConfig(buildStep4AddonCommit(state));
     actions.setAnswer("step3_5Visited", true);
     actions.goToStep(5 as WizardStep);
   };
