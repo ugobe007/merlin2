@@ -180,6 +180,80 @@
   background: #4338ca;
 }
 
+/* Streamline — optional profile collapsed by default */
+.wiz-s3-profile-optional {
+  margin-top: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.25);
+}
+
+.wiz-s3-profile-optional-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.wiz-s3-profile-optional-summary::-webkit-details-marker {
+  display: none;
+}
+
+.wiz-s3-profile-optional-meta {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.wiz-s3-hub--optional {
+  border: none;
+  border-radius: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 10px 12px 12px;
+  background: transparent;
+}
+
+.wiz-s3-hub--optional .wiz-s3-sections {
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.wiz-s3-hub--optional .wiz-s3-section {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.wiz-s3-hub--optional .wiz-s3-section.complete:not(.open) {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.wiz-s3-hub--optional .wiz-s3-section-trigger {
+  padding: 9px 12px;
+}
+
+.wiz-s3-hub--optional .wiz-s3-section-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.wiz-s3-hub--optional .wiz-s3-section-check,
+.wiz-s3-hub--optional .wiz-s3-section-badge {
+  font-size: 0.625rem;
+  opacity: 0.85;
+}
+
+.wiz-s3-hub--optional .wiz-s3-section-preview {
+  display: none;
+}
+
 /* Section hub */
 .wiz-s3-hub {
   border: 1px solid rgba(255, 255, 255, 0.12);
