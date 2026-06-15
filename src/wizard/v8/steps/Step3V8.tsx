@@ -742,9 +742,9 @@ export function Step3V8({ state, actions }: Props) {
         )}
 
         {/* ── Project type + detail level (single toolbar) ── */}
-        <div className="wiz-stroke-accent wiz-toolbar">
+        <div className="wiz-toolbar-indigo wiz-toolbar">
           <div className="wiz-toolbar-block">
-            <div className="wiz-section-label">Project type</div>
+            <div className="wiz-section-label-indigo">Project type</div>
             <div className="wiz-pill-row cols-2">
               {(
                 [
@@ -776,7 +776,7 @@ export function Step3V8({ state, actions }: Props) {
             </div>
           </div>
           <div className="wiz-toolbar-block">
-            <div className="wiz-section-label">How much detail?</div>
+            <div className="wiz-section-label-indigo">How much detail?</div>
             <div className="wiz-pill-row cols-3">
               {detailOptions.map(({ id, label, sub }) => {
                 const active = detailLevel === id;
@@ -807,13 +807,15 @@ export function Step3V8({ state, actions }: Props) {
                 selection. Override only what you know — defaults are industry-calibrated.
               </span>
             </div>
-            <button
-              type="button"
-              className="wiz-btn-skip-prominent"
-              onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
-            >
-              Skip to add-ons →
-            </button>
+            <div className="wiz-streamline-skip-row">
+              <button
+                type="button"
+                className="wiz-btn-skip-prominent"
+                onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
+              >
+                Skip to add-ons →
+              </button>
+            </div>
           </div>
         )}
 

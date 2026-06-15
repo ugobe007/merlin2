@@ -16,6 +16,23 @@
   border-radius: 12px;
 }
 
+/* Step 3 toolbar — indigo headline treatment */
+.wiz-toolbar-indigo {
+  border: 1px solid rgba(99, 102, 241, 0.5);
+  border-bottom: 3px solid #6366f1;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.07);
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.12);
+}
+
+.wiz-section-label-indigo {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #818cf8;
+}
+
 .wiz-section-label {
   font-size: 0.6875rem;
   font-weight: 700;
@@ -67,15 +84,20 @@
 
 .wiz-streamline-panel {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 14px;
-  flex-wrap: wrap;
-  padding: 12px 14px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
   margin-bottom: 14px;
-  border: 1px solid rgba(99, 102, 241, 0.28);
+  border: 1px solid rgba(99, 102, 241, 0.35);
   border-radius: 10px;
-  background: rgba(99, 102, 241, 0.04);
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.wiz-streamline-skip-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+  border-top: 1px solid rgba(99, 102, 241, 0.2);
 }
 
 .wiz-streamline-copy {
@@ -100,26 +122,33 @@
 }
 
 .wiz-btn-skip-prominent {
-  padding: 10px 18px;
-  border-radius: 9px;
-  border: 1.5px solid rgba(99, 102, 241, 0.65);
-  background: rgba(99, 102, 241, 0.14);
-  color: #c7d2fe;
-  font-size: 0.875rem;
+  padding: 12px 28px;
+  border-radius: 10px;
+  border: 2px solid #a5b4fc;
+  background: #6366f1;
+  color: #ffffff;
+  font-size: 0.9375rem;
   font-weight: 800;
+  letter-spacing: 0.02em;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.4),
+    0 4px 20px rgba(99, 102, 241, 0.45);
   transition:
-    border-color 0.15s,
     background 0.15s,
-    color 0.15s;
+    box-shadow 0.15s,
+    transform 0.15s;
 }
 
 .wiz-btn-skip-prominent:hover {
-  border-color: rgba(129, 140, 248, 0.85);
-  background: rgba(99, 102, 241, 0.22);
-  color: #e0e7ff;
+  background: #4f46e5;
+  border-color: #c7d2fe;
+  box-shadow:
+    0 0 0 1px rgba(129, 140, 248, 0.6),
+    0 6px 28px rgba(99, 102, 241, 0.55);
+  transform: translateY(-1px);
 }
 
 .wiz-optional-link {
@@ -197,27 +226,38 @@
   background: rgba(99, 120, 255, 0.06);
 }
 
-/* Project type pills — indigo accent */
+/* Project type pills — indigo accent (visible even when inactive) */
 .wiz-pill-project {
-  border-color: rgba(99, 102, 241, 0.28);
+  border-color: rgba(99, 102, 241, 0.55);
+  background: rgba(99, 102, 241, 0.1);
 }
 
-.wiz-pill-project:hover {
-  border-color: rgba(99, 102, 241, 0.5);
-  background: rgba(99, 102, 241, 0.05);
-}
-
-.wiz-pill-project.active {
-  border-color: rgba(99, 102, 241, 0.7);
-  background: rgba(99, 102, 241, 0.12);
-}
-
-.wiz-pill-project.active .wiz-pill-title {
+.wiz-pill-project .wiz-pill-title {
   color: #c7d2fe;
 }
 
+.wiz-pill-project .wiz-pill-sub {
+  color: rgba(165, 180, 252, 0.7);
+}
+
+.wiz-pill-project:hover {
+  border-color: rgba(129, 140, 248, 0.85);
+  background: rgba(99, 102, 241, 0.18);
+}
+
+.wiz-pill-project.active {
+  border-color: #818cf8;
+  background: rgba(99, 102, 241, 0.28);
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.25);
+}
+
+.wiz-pill-project.active .wiz-pill-title {
+  color: #eef2ff;
+  font-weight: 800;
+}
+
 .wiz-pill-project.active .wiz-pill-sub {
-  color: rgba(165, 180, 252, 0.75);
+  color: rgba(199, 210, 254, 0.9);
 }
 
 .wiz-pill-title {
