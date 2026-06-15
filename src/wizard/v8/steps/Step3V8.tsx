@@ -765,7 +765,7 @@ export function Step3V8({ state, actions }: Props) {
                   <button
                     key={value}
                     type="button"
-                    className={`wiz-pill${active ? " active" : ""}`}
+                    className={`wiz-pill wiz-pill-project${active ? " active" : ""}`}
                     onClick={() => actions.setAnswer("project_type", value)}
                   >
                     <div className="wiz-pill-title">{active ? `✓ ${label}` : label}</div>
@@ -798,19 +798,30 @@ export function Step3V8({ state, actions }: Props) {
 
         {/* ── Streamline path — slim note + skip ── */}
         {detailLevel === "streamline" && (
-          <div className="wiz-note">
-            <span>
+          <div className="wiz-streamline-panel">
+            <div className="wiz-streamline-copy">
               <strong>{visibleQuestions.length} questions</strong> pre-filled with {displayName}{" "}
-              benchmarks — expand any section below to override.
-            </span>
+              benchmarks — you can continue now or expand any section below to customize your quote.
+              <span className="wiz-customize-hint">
+                Facility profile answers shape system sizing, annual savings, and equipment
+                selection. Override only what you know — defaults are industry-calibrated.
+              </span>
+            </div>
             <button
               type="button"
-              className="wiz-btn-skip"
+              className="wiz-btn-skip-prominent"
               onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
             >
               Skip to add-ons →
             </button>
           </div>
+        )}
+
+        {detailLevel !== "streamline" && (
+          <p className="wiz-step-desc" style={{ margin: "0 0 12px" }}>
+            Expand any section below to customize your quote — facility profile answers drive system
+            sizing, annual savings, and equipment selection.
+          </p>
         )}
 
         {/* ── Compact profile section hub ── */}
