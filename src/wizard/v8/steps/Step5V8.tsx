@@ -762,109 +762,20 @@ export default function Step5V8({ state, actions }: Props) {
             Start Again
           </button>
           <button
+            type="button"
             onClick={() => setShowDataSourcesModal(true)}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 6,
-              padding: "10px 18px",
-              borderRadius: 12,
-              background: "linear-gradient(145deg, rgba(28,18,4,0.92) 0%, rgba(18,12,2,0.96) 100%)",
-              border: "1.5px solid rgba(245,158,11,0.45)",
-              boxShadow: "0 0 22px rgba(245,158,11,0.10), inset 0 1px 0 rgba(245,158,11,0.08)",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              WebkitFontSmoothing: "antialiased",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(245,158,11,0.70)";
-              e.currentTarget.style.boxShadow =
-                "0 0 32px rgba(245,158,11,0.22), inset 0 1px 0 rgba(245,158,11,0.14)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(245,158,11,0.45)";
-              e.currentTarget.style.boxShadow =
-                "0 0 22px rgba(245,158,11,0.10), inset 0 1px 0 rgba(245,158,11,0.08)";
-            }}
+            className="wiz-badge-stackquote"
+            aria-label="View StackQuote verified pricing data sources"
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <svg
-                width="16"
-                height="18"
-                viewBox="0 0 20 22"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                style={{ flexShrink: 0 }}
-              >
-                <path
-                  d="M10 1L2 4.5V10C2 14.97 5.42 19.6 10 21C14.58 19.6 18 14.97 18 10V4.5L10 1Z"
-                  fill="rgba(245,158,11,0.15)"
-                  stroke="#F2C14F"
-                  strokeWidth="1.4"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M7 11L9.5 13.5L14 8.5"
-                  stroke="#3ECF8E"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span
-                style={{ fontSize: 14, fontWeight: 800, color: "#F5F0E8", letterSpacing: "0.01em" }}
-              >
-                StackQuote™
-              </span>
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: "50%",
-                  background:
-                    "radial-gradient(circle at 30% 30%, #FFDFA3, #F2C14F 60%, #B8892F 100%)",
-                  boxShadow: "0 0 7px rgba(242,193,79,0.55)",
-                  flexShrink: 0,
-                }}
-              />
+            <div className="wiz-badge-stackquote-row">
+              <Shield className="wiz-badge-stackquote-icon" />
+              <span className="wiz-badge-stackquote-label">StackQuote™</span>
+              <span className="wiz-badge-stackquote-dot" aria-hidden />
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <svg
-                width="10"
-                height="10"
-                viewBox="0 0 12 12"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle
-                  cx="6"
-                  cy="6"
-                  r="5.5"
-                  fill="rgba(62,207,142,0.15)"
-                  stroke="#3ECF8E"
-                  strokeWidth="1"
-                />
-                <path
-                  d="M3.5 6L5.5 8L8.5 4"
-                  stroke="#3ECF8E"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span
-                style={{
-                  fontSize: 9.5,
-                  fontWeight: 600,
-                  color: "rgba(255,255,255,0.40)",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Verified Pricing
-              </span>
-            </div>
+            <span className="wiz-badge-stackquote-sub">
+              <Check className="wiz-badge-stackquote-check" aria-hidden />
+              Verified Pricing
+            </span>
           </button>
         </div>
       </div>
