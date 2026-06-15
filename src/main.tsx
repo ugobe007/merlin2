@@ -1,5 +1,6 @@
 import "./styles/merlin-design-system.css";
 import "./styles/admin-supabase.css";
+import "./styles/wizard-stroke.css";
 import "./styles/mobile-responsive.css";
 import { createRoot } from "react-dom/client";
 import "./index.css";

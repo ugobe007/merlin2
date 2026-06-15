@@ -27,12 +27,6 @@ function BriefExampleCard() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(63,232,255,0.14),transparent_32%),radial-gradient(circle_at_88%_18%,rgba(168,85,247,0.16),transparent_34%),linear-gradient(145deg,rgba(63,232,255,0.045),rgba(88,28,135,0.11)_52%,rgba(96,165,250,0.045))]" />
       <div className="relative flex items-start justify-between gap-4 border-b border-[#3FE8FF]/14 pb-5">
         <div>
-          <div
-            className="mb-2 text-[10px] uppercase tracking-[0.18em] text-cyan-300/70"
-            style={{ fontFamily: "'JetBrains Mono', monospace" }}
-          >
-            Redesigned Output Example
-          </div>
           <h3
             className="text-base font-bold text-white sm:text-lg"
             style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}

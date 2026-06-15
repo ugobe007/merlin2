@@ -83,6 +83,7 @@ export function Step3V8({ state, actions }: Props) {
 
   // Track auto-filled defaults
   const [defaultFilledIds, setDefaultFilledIds] = useState<Set<string>>(new Set());
+  const [billUploadOpen, setBillUploadOpen] = useState(Boolean(state.uploadedBillData));
   const appliedSchemaRef = useRef<string>("");
 
   // Auto-apply smart defaults on load
@@ -715,268 +716,105 @@ export function Step3V8({ state, actions }: Props) {
   ];
 
   return (
-    <div style={{ minHeight: "100vh" }}>
+    <div className="wiz-root" style={{ minHeight: "100vh" }}>
       <div
         ref={sectionTopRef}
         style={{ maxWidth: 960, margin: "0 auto", padding: "8px 24px 36px" }}
       >
-        {/* ── Utility Bill Upload ── */}
-        <BillUploadPanel
-          uploadedData={state.uploadedBillData}
-          onExtracted={actions.setBillData}
-          onCleared={actions.clearBillData}
-        />
-
-        {/* ── Universal: Project Type preamble ── */}
-        <div
-          style={{
-            marginBottom: 14,
-            padding: "12px 16px",
-            borderRadius: 14,
-            background: "rgba(17,26,62,0.66)",
-            border: "1px solid rgba(99,120,255,0.18)",
-            display: "grid",
-            gridTemplateColumns: "1fr 1.25fr",
-            alignItems: "center",
-            gap: 14,
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 800,
-                color: "rgba(255,255,255,0.72)",
-                marginBottom: 4,
-                letterSpacing: "0.05em",
-                textTransform: "uppercase",
-              }}
-            >
-              🏗️ Project Type
-            </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.44)", lineHeight: 1.45 }}>
-              Existing site or greenfield project? This only tunes solar roof/canopy assumptions.
-            </div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            {(
-              [
-                {
-                  value: "existing" as const,
-                  emoji: "🏢",
-                  label: "Existing facility",
-                  sub: "Working with a real roof/canopy you already have",
-                  accentColor: "rgba(62,207,142,",
-                },
-                {
-                  value: "greenfield" as const,
-                  emoji: "🌱",
-                  label: "Greenfield / new build",
-                  sub: "Designing the footprint from scratch",
-                  accentColor: "rgba(99,179,237,",
-                },
-              ] as const
-            ).map(({ value, emoji, label, sub, accentColor }) => {
-              const active = projectType === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => actions.setAnswer("project_type", value)}
-                  style={{
-                    padding: "10px 12px",
-                    borderRadius: 10,
-                    border: active
-                      ? `2px solid ${accentColor}0.70)`
-                      : "1px solid rgba(255,255,255,0.10)",
-                    background: active ? `${accentColor}0.08)` : "transparent",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "border-color 0.15s, background 0.15s",
-                  }}
-                >
-                  <div style={{ fontSize: 16, marginBottom: 4 }}>{emoji}</div>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: active ? `${accentColor}1.0)` : "rgba(255,255,255,0.80)",
-                      marginBottom: 3,
-                    }}
-                  >
-                    {active ? `✓ ${label}` : label}
-                  </div>
-                  <div
-                    style={{ fontSize: 10.5, color: "rgba(148,163,184,0.68)", lineHeight: 1.35 }}
-                  >
-                    {sub}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── Detail level selector (Streamline / Key questions / Full detail) ── */}
-        <div
-          style={{
-            marginBottom: 14,
-            padding: 12,
-            borderRadius: 16,
-            background: "rgba(17,26,62,0.66)",
-            border: "1px solid rgba(99,120,255,0.18)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 800,
-              color: "rgba(255,255,255,0.72)",
-              marginBottom: 8,
-              letterSpacing: "0.05em",
-              textTransform: "uppercase",
-            }}
+        {/* ── Utility Bill Upload (collapsed until requested) ── */}
+        {!state.uploadedBillData && !billUploadOpen ? (
+          <button
+            type="button"
+            className="wiz-optional-link"
+            onClick={() => setBillUploadOpen(true)}
           >
-            ⚙️ How much do you want to fill in?
+            📄 Have a utility bill? Upload to auto-fill peak demand and rates
+          </button>
+        ) : (
+          <BillUploadPanel
+            uploadedData={state.uploadedBillData}
+            onExtracted={actions.setBillData}
+            onCleared={() => {
+              actions.clearBillData();
+              setBillUploadOpen(false);
+            }}
+          />
+        )}
+
+        {/* ── Project type + detail level (single toolbar) ── */}
+        <div className="wiz-stroke-accent wiz-toolbar">
+          <div className="wiz-toolbar-block">
+            <div className="wiz-section-label">Project type</div>
+            <div className="wiz-pill-row cols-2">
+              {(
+                [
+                  {
+                    value: "existing" as const,
+                    label: "Existing facility",
+                    sub: "Real roof / canopy on site",
+                  },
+                  {
+                    value: "greenfield" as const,
+                    label: "Greenfield",
+                    sub: "Designing footprint from scratch",
+                  },
+                ] as const
+              ).map(({ value, label, sub }) => {
+                const active = projectType === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`wiz-pill${active ? " active" : ""}`}
+                    onClick={() => actions.setAnswer("project_type", value)}
+                  >
+                    <div className="wiz-pill-title">{active ? `✓ ${label}` : label}</div>
+                    <div className="wiz-pill-sub">{sub}</div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-            {detailOptions.map(({ id, emoji, label, sub, accent }) => {
-              const active = detailLevel === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => actions.setDetailLevel(id)}
-                  style={{
-                    padding: "10px 12px",
-                    borderRadius: 10,
-                    border: active
-                      ? `2px solid ${accent}0.70)`
-                      : "1px solid rgba(255,255,255,0.10)",
-                    background: active ? `${accent}0.10)` : "transparent",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "border-color 0.15s, background 0.15s",
-                  }}
-                >
-                  <div style={{ fontSize: 15, marginBottom: 4 }}>{emoji}</div>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: active ? `${accent}1.0)` : "rgba(255,255,255,0.82)",
-                      marginBottom: 3,
-                    }}
+          <div className="wiz-toolbar-block">
+            <div className="wiz-section-label">How much detail?</div>
+            <div className="wiz-pill-row cols-3">
+              {detailOptions.map(({ id, label, sub }) => {
+                const active = detailLevel === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    className={`wiz-pill${active ? " active" : ""}`}
+                    onClick={() => actions.setDetailLevel(id)}
                   >
-                    {active ? `✓ ${label}` : label}
-                  </div>
-                  <div
-                    style={{ fontSize: 10.5, color: "rgba(148,163,184,0.68)", lineHeight: 1.35 }}
-                  >
-                    {sub}
-                  </div>
-                </button>
-              );
-            })}
+                    <div className="wiz-pill-title">{active ? `✓ ${label}` : label}</div>
+                    <div className="wiz-pill-sub">{sub}</div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* ── Use Smart Defaults skip banner (streamline only) ── */}
+        {/* ── Streamline path — slim note + skip ── */}
         {detailLevel === "streamline" && (
-          <div
-            style={{
-              marginBottom: 14,
-              padding: "16px 18px",
-              borderRadius: 18,
-              background:
-                "linear-gradient(135deg, rgba(62,207,142,0.10), rgba(56,189,248,0.06), rgba(155,109,255,0.06))",
-              border: "1.5px solid rgba(62,207,142,0.46)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 16,
-              flexWrap: "nowrap",
-              position: "relative",
-              boxShadow: "0 0 34px rgba(62,207,142,0.10), 0 0 0 1px rgba(255,255,255,0.045) inset",
-            }}
-          >
-            <div style={{ minWidth: 0, paddingRight: 18 }}>
-              <div
-                style={{
-                  fontSize: 21,
-                  fontWeight: 950,
-                  color: "#3ecf8e",
-                  marginBottom: 7,
-                  lineHeight: 1.25,
-                }}
-              >
-                ✓ All {visibleQuestions.length} questions pre-filled
-                <span style={{ color: "#3ecf8e", fontWeight: 950 }}>
-                  {" "}
-                  with {displayName} benchmarks
-                </span>
-              </div>
-              <div style={{ fontSize: 13, color: "rgba(226,232,240,0.78)", lineHeight: 1.45 }}>
-                Smart defaults applied <span style={{ color: "#7dd3fc" }}>inline</span> — review
-                below or skip straight to add-ons.
-              </div>
-            </div>
+          <div className="wiz-note">
+            <span>
+              <strong>{visibleQuestions.length} questions</strong> pre-filled with {displayName}{" "}
+              benchmarks — expand any section below to override.
+            </span>
             <button
               type="button"
+              className="wiz-btn-skip"
               onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "16px 30px",
-                borderRadius: 16,
-                background: "transparent",
-                color: "transparent",
-                border: "2.5px solid rgba(167,139,250,0.85)",
-                fontSize: 20,
-                fontWeight: 900,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-                marginLeft: "auto",
-                boxShadow: "0 0 28px rgba(167,139,250,0.16)",
-                letterSpacing: "0.02em",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "rgba(56,189,248,0.92)";
-                e.currentTarget.style.boxShadow = "0 0 30px rgba(56,189,248,0.22)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "rgba(167,139,250,0.82)";
-                e.currentTarget.style.boxShadow = "0 0 24px rgba(167,139,250,0.12)";
-              }}
             >
-              <span
-                style={{
-                  background: "linear-gradient(90deg, #a78bfa 0%, #38bdf8 100%)",
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  color: "transparent",
-                  WebkitTextStroke: "0.6px rgba(13,18,48,0.55)",
-                  paintOrder: "stroke fill",
-                }}
-              >
-                Use Smart Defaults → Skip to Add-ons
-              </span>
+              Skip to add-ons →
             </button>
           </div>
         )}
 
         {/* ── Compact profile section hub ── */}
-        <div
-          style={{
-            borderRadius: 18,
-            border: "1px solid rgba(99,120,255,0.20)",
-            background: "linear-gradient(180deg, rgba(13,22,52,0.66), rgba(9,16,38,0.60))",
-            padding: 14,
-            boxShadow: "0 18px 44px rgba(2,6,23,0.22), inset 0 1px 0 rgba(255,255,255,0.04)",
-          }}
-        >
+        <div className="wiz-stroke" style={{ padding: 14 }}>
           {/* Section hub header */}
           <div
             style={{
