@@ -358,30 +358,56 @@
 }
 
 .wiz-strategy-pill {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.35);
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.wiz-strategy-pill:hover {
+  border-color: rgba(129, 140, 248, 0.45);
+  background: rgba(99, 102, 241, 0.06);
 }
 
 .wiz-strategy-pill.active {
-  border-color: rgba(79, 138, 255, 0.55);
-  background: rgba(79, 138, 255, 0.06);
+  border: 2px solid rgba(99, 102, 241, 0.75);
+  background: rgba(99, 102, 241, 0.12);
+  padding: 11px 13px;
+}
+
+.wiz-strategy-pill-tier {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #818cf8;
+  margin-bottom: 4px;
+}
+
+.wiz-strategy-pill-icon {
+  font-size: 0.875rem;
+  line-height: 1;
 }
 
 .wiz-strategy-pill-label {
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
   font-weight: 800;
-  color: #f8fafc;
-  margin-bottom: 3px;
+  color: #ffffff;
+  margin-bottom: 4px;
+  line-height: 1.25;
 }
 
 .wiz-strategy-pill-sub {
-  font-size: 0.6875rem;
-  color: rgba(148, 163, 184, 0.7);
+  font-size: 0.75rem;
+  color: #94a3b8;
   line-height: 1.4;
 }
 
@@ -538,15 +564,18 @@
 }
 
 .wiz-addon-title {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: #f8fafc;
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
 }
 
 .wiz-addon-sub {
-  font-size: 0.75rem;
-  color: rgba(148, 163, 184, 0.65);
-  margin-top: 1px;
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  margin-top: 3px;
+  line-height: 1.35;
 }
 
 .wiz-addon-badge {
@@ -737,6 +766,50 @@
 .wiz-quote-section-body {
   padding: 0 14px 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Quote breakdown — prominent amber title (matches StackQuote™ badge) */
+.wiz-quote-section--breakdown {
+  border-color: rgba(245, 158, 11, 0.28);
+}
+
+.wiz-quote-section--breakdown.open {
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.08);
+}
+
+.wiz-quote-section-trigger--breakdown {
+  padding: 14px 16px;
+  border-left: 3px solid rgba(251, 191, 36, 0.75);
+  background: rgba(245, 158, 11, 0.04);
+  transition:
+    background 0.15s,
+    border-left-color 0.15s;
+}
+
+.wiz-quote-section-trigger--breakdown:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-left-color: #fbbf24;
+}
+
+.wiz-quote-breakdown-title {
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fcd34d;
+  line-height: 1.2;
+}
+
+.wiz-quote-section-hint {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.wiz-quote-section--breakdown .wiz-quote-section-chevron {
+  color: #fbbf24;
 }
 
 .wiz-btn-ghost {

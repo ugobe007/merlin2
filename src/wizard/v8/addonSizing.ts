@@ -327,42 +327,85 @@ export function industryPanelTierReason(
 
   if (PREMIUM_PANEL_INDUSTRIES.has(industry)) {
     const reasons: Record<string, string> = {
-      car_wash:      "Small roof (4–8K sqft) + high load — every W/sqft counts.",
-      restaurant:    "Tiny roof (2–5K sqft) + kitchen/HVAC load — max density needed.",
-      ev_charging:   "Canopy footprint is fixed — higher wattage = more kW offset.",
-      gas_station:   "Small canopy + store roof — premium packs more kW into tight footprint.",
-      apartment:     "Shared roof across units — premium panels improve per-unit ROI.",
-      gym:           "Mid-size roof + HVAC peaks — premium boosts class-time offset.",
-      fitness_center:"Mid-size roof + HVAC peaks — premium boosts class-time offset.",
-      hospital:      "Massive 24/7 load on limited roof — premium closes the gap.",
-      healthcare:    "High clinical load density — premium squeezes more kW from limited roof.",
-      casino:        "Extreme 24/7 load on fixed entertainment footprint — premium maximizes offset.",
-      data_center:   "Immense power draw, modest roof — premium captures every available kW.",
-      indoor_farm:   "Intensive grow-lights + HVAC on a constrained roof — premium is the right call.",
-      hotel:         "Mid-rise roof vs. HVAC + guest load — premium improves energy offset meaningfully.",
-      residential:   "Small roof — premium panels fit more capacity in limited residential area.",
+      car_wash: "Small roof (4–8K sqft) + high load — every W/sqft counts.",
+      restaurant: "Tiny roof (2–5K sqft) + kitchen/HVAC load — max density needed.",
+      ev_charging: "Canopy footprint is fixed — higher wattage = more kW offset.",
+      gas_station: "Small canopy + store roof — premium packs more kW into tight footprint.",
+      apartment: "Shared roof across units — premium panels improve per-unit ROI.",
+      gym: "Mid-size roof + HVAC peaks — premium boosts class-time offset.",
+      fitness_center: "Mid-size roof + HVAC peaks — premium boosts class-time offset.",
+      hospital: "Massive 24/7 load on limited roof — premium closes the gap.",
+      healthcare: "High clinical load density — premium squeezes more kW from limited roof.",
+      casino: "Extreme 24/7 load on fixed entertainment footprint — premium maximizes offset.",
+      data_center: "Immense power draw, modest roof — premium captures every available kW.",
+      indoor_farm:
+        "Intensive grow-lights + HVAC on a constrained roof — premium is the right call.",
+      hotel: "Mid-rise roof vs. HVAC + guest load — premium improves energy offset meaningfully.",
+      residential: "Small roof — premium panels fit more capacity in limited residential area.",
     };
     return reasons[industry] ?? "Space-constrained roof — premium panels maximize capacity.";
   }
 
   if (STANDARD_PANEL_INDUSTRIES.has(industry)) {
     const reasons: Record<string, string> = {
-      warehouse:       "Vast roof, low load — standard panels fill the need at best $/kWh.",
-      cold_storage:    "Large roof, flat refrigeration load — volume standard panels win.",
-      manufacturing:   "Abundant roof — savings come from BESS demand shaving, not panel grade.",
-      truck_stop:      "Large canopy coverage — standard panels maximize kWh at lowest cost.",
-      airport:         "Massive terminal roof — standard panels generate volume offset efficiently.",
-      college:         "Sprawling campus roof — standard panels at volume deliver best $/kWh.",
-      government:      "Large public-facility roof — standard panels optimize taxpayer ROI.",
+      warehouse: "Vast roof, low load — standard panels fill the need at best $/kWh.",
+      cold_storage: "Large roof, flat refrigeration load — volume standard panels win.",
+      manufacturing: "Abundant roof — savings come from BESS demand shaving, not panel grade.",
+      truck_stop: "Large canopy coverage — standard panels maximize kWh at lowest cost.",
+      airport: "Massive terminal roof — standard panels generate volume offset efficiently.",
+      college: "Sprawling campus roof — standard panels at volume deliver best $/kWh.",
+      government: "Large public-facility roof — standard panels optimize taxpayer ROI.",
       shopping_center: "Mall-scale roof — standard panels fill it cost-effectively.",
-      agricultural:    "Vast land for ground-mount — standard panels dominate on $/kWh.",
-      retail:          "Medium box-store roof — standard panels are the right cost call.",
-      office:          "Standard commercial roof, workday peaks — standard panels optimize ROI.",
-      microgrid:       "System design handles offset — standard panels cost-optimize generation.",
-      other:           "Roof space appears abundant — standard panels deliver best $/kWh.",
+      agricultural: "Vast land for ground-mount — standard panels dominate on $/kWh.",
+      retail: "Medium box-store roof — standard panels are the right cost call.",
+      office: "Standard commercial roof, workday peaks — standard panels optimize ROI.",
+      microgrid: "System design handles offset — standard panels cost-optimize generation.",
+      other: "Roof space appears abundant — standard panels deliver best $/kWh.",
     };
     return reasons[industry] ?? "Roof space is abundant — standard panels deliver best $/kWh.";
   }
 
   return null;
+}
+
+/**
+ * Finalize add-on kW/charger counts before leaving Step 4 (Add-ons).
+ * Zeros disabled add-ons and resolves EV package presets to L2/DCFC counts.
+ * Used by WizardShell Next and the in-page Continue CTA — must stay in sync.
+ */
+export function buildStep4AddonCommit(state: WizardState): {
+  solarKW: number;
+  generatorKW: number;
+  linearGeneratorKW: number;
+  level2Chargers: number;
+  dcfcChargers: number;
+  hpcChargers: number;
+} {
+  const committedSolarKW = state.wantsSolar ? state.solarKW : 0;
+  const committedGenKW = state.wantsGenerator ? state.generatorKW : 0;
+  const committedLinearGenKW = state.wantsGenerator ? (state.linearGeneratorKW ?? 0) : 0;
+
+  const evScope = (state.step3Answers?.evScope as string) ?? "pkg_pro";
+  let evCounts: { level2: number; dcfc: number };
+  if (evScope === "custom") {
+    evCounts = state.wantsEVCharging
+      ? { level2: state.level2Chargers, dcfc: state.dcfcChargers }
+      : { level2: 0, dcfc: 0 };
+  } else {
+    const pkgCounts =
+      (EV_PACKAGE_COUNTS as Record<string, { l2: number; dcfc: number }>)[evScope] ??
+      EV_PACKAGE_COUNTS.pkg_pro;
+    evCounts = state.wantsEVCharging
+      ? { level2: pkgCounts.l2, dcfc: pkgCounts.dcfc }
+      : { level2: 0, dcfc: 0 };
+  }
+
+  return {
+    solarKW: committedSolarKW,
+    generatorKW: committedGenKW,
+    linearGeneratorKW: committedLinearGenKW,
+    level2Chargers: evCounts.level2,
+    dcfcChargers: evCounts.dcfc,
+    hpcChargers: state.wantsEVCharging ? state.hpcChargers : 0,
+  };
 }

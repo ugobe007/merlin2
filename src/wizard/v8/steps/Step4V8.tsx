@@ -40,12 +40,24 @@ function sliderToTierIndex(v: number): 0 | 1 | 2 {
   return 2;
 }
 
-const STRATEGY: Record<0 | 1 | 2, { label: string; sub: string }> = {
-  0: { label: "Cost-Focused", sub: "Smaller system, faster payback, lower upfront investment" },
-  1: { label: "Balanced", sub: "Optimal mix of savings, resilience, and investment size" },
+const STRATEGY: Record<0 | 1 | 2, { tier: string; label: string; sub: string; icon: string }> = {
+  0: {
+    tier: "Starter",
+    label: "Cost-Focused",
+    sub: "Smaller system, faster payback, lower upfront investment",
+    icon: "💰",
+  },
+  1: {
+    tier: "Balanced",
+    label: "Recommended",
+    sub: "Optimal mix of savings, resilience, and investment size",
+    icon: "⚖️",
+  },
   2: {
+    tier: "Complete",
     label: "Resilience-First",
     sub: "Maximum grid independence, peak shaving, and outage coverage",
+    icon: "🛡️",
   },
 };
 
@@ -270,6 +282,7 @@ export function Step4V8({ state, actions }: Props) {
     baseLoadKW,
     peakLoadKW,
     industry,
+    location,
   } = state;
 
   const [strategyValue, setStrategyValue] = useState<number>(() => {
@@ -302,6 +315,45 @@ export function Step4V8({ state, actions }: Props) {
   };
 
   if (tiersStatus === "fetching" || tiersStatus === "idle") {
+    if (baseLoadKW <= 0 || !location) {
+      return (
+        <div
+          style={{
+            padding: "48px 24px",
+            textAlign: "center" as const,
+            color: C.textSub,
+            maxWidth: 480,
+            margin: "0 auto",
+          }}
+        >
+          <div style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 8 }}>
+            Facility load not ready
+          </div>
+          <div style={{ fontSize: 14, lineHeight: 1.55, marginBottom: 20 }}>
+            {baseLoadKW <= 0
+              ? "Complete your facility profile (Step 3) so Merlin can size your energy stack."
+              : "Add your site location so we can model utility rates and incentives."}
+          </div>
+          <button
+            type="button"
+            onClick={() => actions.goToStep((baseLoadKW <= 0 ? 3 : 1) as WizardStep)}
+            style={{
+              padding: "12px 22px",
+              borderRadius: 10,
+              border: "2px solid rgba(79,138,255,0.85)",
+              background: "transparent",
+              color: "#7dd3fc",
+              fontSize: 14,
+              fontWeight: 800,
+              cursor: "pointer",
+            }}
+          >
+            ← {baseLoadKW <= 0 ? "Back to facility profile" : "Back to site setup"}
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div
         style={{
@@ -334,13 +386,36 @@ export function Step4V8({ state, actions }: Props) {
     return (
       <div
         style={{
-          padding: "40px 24px",
+          padding: "48px 24px",
           textAlign: "center" as const,
           color: C.textSub,
-          fontSize: 14,
+          maxWidth: 480,
+          margin: "0 auto",
         }}
       >
-        Could not load stack model. Please go back and try again.
+        <div style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 8 }}>
+          Stack model failed
+        </div>
+        <div style={{ fontSize: 14, lineHeight: 1.55, marginBottom: 20 }}>
+          We couldn&apos;t build your three quote tiers. Go back to add-ons and try again, or adjust
+          your facility profile.
+        </div>
+        <button
+          type="button"
+          onClick={() => actions.goToStep(4 as WizardStep)}
+          style={{
+            padding: "12px 22px",
+            borderRadius: 10,
+            border: "2px solid rgba(79,138,255,0.85)",
+            background: "transparent",
+            color: "#7dd3fc",
+            fontSize: 14,
+            fontWeight: 800,
+            cursor: "pointer",
+          }}
+        >
+          ← Back to add-ons
+        </button>
       </div>
     );
   }
@@ -570,6 +645,10 @@ export function Step4V8({ state, actions }: Props) {
                   className={`wiz-strategy-pill${tierIdx === idx ? " active" : ""}`}
                   onClick={() => selectStrategyTier(idx)}
                 >
+                  <div className="wiz-strategy-pill-tier">
+                    <span className="wiz-strategy-pill-icon">{STRATEGY[idx].icon}</span>
+                    {STRATEGY[idx].tier}
+                  </div>
                   <div className="wiz-strategy-pill-label">{STRATEGY[idx].label}</div>
                   <div className="wiz-strategy-pill-sub">{STRATEGY[idx].sub}</div>
                 </button>
@@ -585,8 +664,10 @@ export function Step4V8({ state, actions }: Props) {
               }}
             >
               <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.55 }}>
-                <strong style={{ color: C.amber }}>{strategyInfo.label}</strong> —{" "}
-                {strategyInfo.sub}
+                <strong style={{ color: C.amber }}>
+                  {strategyInfo.tier} · {strategyInfo.label}
+                </strong>{" "}
+                — {strategyInfo.sub}
               </div>
             </div>
             <div
@@ -847,7 +928,11 @@ export function Step4V8({ state, actions }: Props) {
               annualSavings: tier.annualSavings,
               netCost: tier.netCost,
             });
-            window.setTimeout(() => actions.goToStep(6 as WizardStep), 220);
+            window.setTimeout(() => {
+              const idx = sliderToTierIndex(strategyValue);
+              if (selectedTierIndex !== idx) actions.selectTier(idx);
+              actions.goToStep(6 as WizardStep);
+            }, 220);
           }}
           style={{
             display: "inline-flex",

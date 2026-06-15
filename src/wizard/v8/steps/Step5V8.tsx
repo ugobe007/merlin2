@@ -674,7 +674,7 @@ export default function Step5V8({ state, actions }: Props) {
             onClick={() => actions.goToStep(5)}
             className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
           >
-            ← Back to Configuration
+            ← Back to Energy Stack
           </button>
         </div>
       </div>
@@ -1201,15 +1201,17 @@ export default function Step5V8({ state, actions }: Props) {
       )}
 
       {/* ── Quote breakdown — collapsed by default ── */}
-      <div className="wiz-quote-section">
+      <div
+        className={`wiz-quote-section wiz-quote-section--breakdown${quoteDetailsOpen ? " open" : ""}`}
+      >
         <button
           type="button"
-          className="wiz-quote-section-trigger"
+          className="wiz-quote-section-trigger wiz-quote-section-trigger--breakdown"
           onClick={() => setQuoteDetailsOpen((o) => !o)}
         >
           <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
-            <span className="wiz-section-label">Quote breakdown</span>
-            <span className="text-xs text-slate-500">
+            <span className="wiz-quote-breakdown-title">Quote breakdown</span>
+            <span className="wiz-quote-section-hint">
               {fmtNum(tier.bessKWh)} kWh BESS
               {tier.solarKW > 0 ? ` · ${fmtNum(tier.solarKW)} kW solar` : ""}
               {tier.generatorKW > 0 ? ` · ${fmtNum(tier.generatorKW)} kW gen` : ""}
@@ -1217,9 +1219,9 @@ export default function Step5V8({ state, actions }: Props) {
             </span>
           </div>
           {quoteDetailsOpen ? (
-            <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
+            <ChevronUp className="w-4 h-4 wiz-quote-section-chevron shrink-0" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
+            <ChevronDown className="w-4 h-4 wiz-quote-section-chevron shrink-0" />
           )}
         </button>
 

@@ -25,6 +25,7 @@
 
 import { describe, it, expect } from "vitest";
 import type { WizardState } from "../wizardState";
+import { buildStep4AddonCommit } from "../addonSizing";
 
 /**
  * Helper: Create minimal state for Step 3.5 testing
@@ -616,5 +617,39 @@ describe("Edge cases", () => {
 
     expect(state.solarKW).toBe(5000);
     expect(state.solarKW).toBeLessThanOrEqual(state.solarPhysicalCapKW);
+  });
+});
+
+// =============================================================================
+// STEP 4 ADDON COMMIT (Continue CTA + shell Next must match)
+// =============================================================================
+
+describe("buildStep4AddonCommit", () => {
+  it("zeros solar when wantsSolar is false", () => {
+    const state = createStep35State({ wantsSolar: false, solarKW: 250 });
+    expect(buildStep4AddonCommit(state).solarKW).toBe(0);
+  });
+
+  it("resolves EV package preset counts when wantsEVCharging is true", () => {
+    const state = createStep35State({
+      wantsEVCharging: true,
+      step3Answers: { evScope: "pkg_pro" },
+      level2Chargers: 0,
+      dcfcChargers: 0,
+    });
+    const commit = buildStep4AddonCommit(state);
+    expect(commit.level2Chargers).toBeGreaterThan(0);
+    expect(commit.dcfcChargers).toBeGreaterThan(0);
+  });
+
+  it("zeros generator fields when wantsGenerator is false", () => {
+    const state = createStep35State({
+      wantsGenerator: false,
+      generatorKW: 400,
+      linearGeneratorKW: 200,
+    });
+    const commit = buildStep4AddonCommit(state);
+    expect(commit.generatorKW).toBe(0);
+    expect(commit.linearGeneratorKW).toBe(0);
   });
 });
