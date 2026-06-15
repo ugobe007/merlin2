@@ -14,7 +14,6 @@
  */
 
 import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { WizardState, WizardActions } from "../wizardState";
 import { BillUploadPanel } from "./BillUploadPanel";
 import {
@@ -298,7 +297,7 @@ export function Step3V8({ state, actions }: Props) {
     // Non-inline types: QuestionCard handles its own header, title, and tip — render standalone
     if (!["buttons", "number_input", "toggle"].includes(q.type)) {
       return (
-        <div key={q.id} id={`question-${q.id}`} style={{ marginBottom: 12 }}>
+        <div key={q.id} id={`question-${q.id}`} className="wiz-s3-q-wrap">
           <QuestionCard
             q={q}
             index={indexInSection}
@@ -312,46 +311,9 @@ export function Step3V8({ state, actions }: Props) {
     }
 
     return (
-      <div
-        key={q.id}
-        id={`question-${q.id}`}
-        style={{
-          background: "rgba(30, 41, 59, 0.6)",
-          borderRadius: 12,
-          padding: 0,
-          marginBottom: 12,
-          border: "1px solid rgba(99,120,255,0.18)",
-        }}
-      >
-        {/* Question Header */}
-        <div
-          style={{
-            background: "rgba(51, 65, 85, 0.6)",
-            padding: "10px 16px",
-            borderTopLeftRadius: 12,
-            borderTopRightRadius: 12,
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-          }}
-        >
-          <div
-            style={{
-              background: "rgba(99, 102, 241, 0.2)",
-              color: "#94a3b8",
-              width: 24,
-              height: 24,
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 12,
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
-          >
-            {indexInSection + 1}
-          </div>
+      <div key={q.id} id={`question-${q.id}`} className="wiz-s3-q">
+        <div className="wiz-s3-q-hdr">
+          <div className="wiz-s3-q-num">{indexInSection + 1}</div>
 
           {/* Restore button when user changed a smart-defaulted field */}
           {qAny.smartDefault !== undefined &&
@@ -390,40 +352,17 @@ export function Step3V8({ state, actions }: Props) {
             )}
         </div>
 
-        {/* Question Content */}
-        <div style={{ padding: 16 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "white", marginBottom: 6 }}>
-            {q.title || q.label}
-          </div>
+        <div className="wiz-s3-q-body">
+          <div className="wiz-s3-q-title">{q.title || q.label}</div>
 
-          {!!qAny.description && (
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>
-              {String(qAny.description)}
-            </div>
-          )}
+          {!!qAny.description && <div className="wiz-s3-q-desc">{String(qAny.description)}</div>}
 
           {merlinTip && (
-            <div
-              style={{
-                background: "rgba(59, 130, 246, 0.08)",
-                border: "1px solid rgba(59, 130, 246, 0.2)",
-                borderRadius: 10,
-                padding: "10px 14px",
-                marginBottom: 14,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "start", gap: 8 }}>
-                <div style={{ color: "#94a3b8", fontSize: 14, flexShrink: 0, marginTop: 1 }}>
-                  💡
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", marginBottom: 3 }}>
-                    Merlin's Tip
-                  </div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.45 }}>
-                    {merlinTip}
-                  </div>
-                </div>
+            <div className="wiz-s3-q-tip">
+              <div className="wiz-s3-q-tip-icon">💡</div>
+              <div>
+                <div className="wiz-s3-q-tip-label">Merlin's Tip</div>
+                <div className="wiz-s3-q-tip-text">{merlinTip}</div>
               </div>
             </div>
           )}
@@ -497,9 +436,7 @@ export function Step3V8({ state, actions }: Props) {
                         </span>
                       </div>
                       {opt.description && (
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
-                          {opt.description}
-                        </div>
+                        <div className="wiz-s3-q-opt-desc">{opt.description}</div>
                       )}
                     </div>
                     {/* Circle checkmark indicator */}
@@ -891,28 +828,6 @@ export function Step3V8({ state, actions }: Props) {
               );
             })}
           </div>
-        </div>
-
-        <div className="wiz-s3-footer">
-          <button
-            type="button"
-            className="wiz-s3-back"
-            onClick={() => actions.goToStep(2 as import("../wizardState").WizardStep)}
-          >
-            <ChevronLeft size={16} />
-            Industry
-          </button>
-          <span className="wiz-s3-progress">
-            {answeredCount} / {displayedCount} answered
-          </span>
-          <button
-            type="button"
-            className="wiz-s3-continue"
-            onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
-          >
-            Choose add-ons
-            <ChevronRight size={20} />
-          </button>
         </div>
       </div>
     </div>
