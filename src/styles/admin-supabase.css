@@ -1,0 +1,325 @@
+/* Admin Supabase-style — stroke + font, no fill, inline text */
+
+.admin-supabase {
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
+}
+
+.admin-supabase .admin-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ink-primary);
+  letter-spacing: -0.01em;
+}
+
+.admin-supabase .admin-subtitle {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+.admin-supabase .admin-section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* Stroke-only panel — transparent fill */
+.admin-supabase .admin-stroke {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: 0;
+}
+
+.admin-supabase .admin-stroke-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  background: transparent;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.admin-supabase .admin-stroke-row:last-child {
+  border-bottom: none;
+}
+
+/* KPI grid — inline cells, no fill */
+.admin-supabase .admin-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--glass-border);
+  background: transparent;
+}
+
+@media (max-width: 768px) {
+  .admin-supabase .admin-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.admin-supabase .admin-kpi-cell {
+  padding: 10px 12px;
+  background: transparent;
+  border-right: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.admin-supabase .admin-kpi-cell:nth-child(4n) {
+  border-right: none;
+}
+
+@media (max-width: 768px) {
+  .admin-supabase .admin-kpi-cell:nth-child(2n) {
+    border-right: none;
+  }
+}
+
+.admin-supabase .admin-kpi-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ink-primary);
+  line-height: 1.2;
+}
+
+.admin-supabase .admin-kpi-label {
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.admin-supabase .admin-kpi-meta {
+  font-size: 0.6875rem;
+  color: var(--intel);
+}
+
+/* Quick actions — stroke links */
+.admin-supabase .admin-action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  border: 1px solid var(--glass-border);
+  background: transparent;
+}
+
+.admin-supabase .admin-action-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  color: var(--ink-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s;
+}
+
+.admin-supabase .admin-action-link:hover {
+  color: var(--intel);
+}
+
+.admin-supabase .admin-action-link svg {
+  width: 14px;
+  height: 14px;
+  color: var(--ink-muted);
+  flex-shrink: 0;
+}
+
+/* Status bar — stroke only */
+.admin-supabase .admin-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  font-size: 0.8125rem;
+}
+
+.admin-supabase .admin-status-ok {
+  border-color: rgba(34, 197, 94, 0.35);
+  color: var(--ink-secondary);
+}
+
+.admin-supabase .admin-status-warn {
+  border-color: rgba(251, 191, 36, 0.35);
+  color: var(--ink-secondary);
+}
+
+.admin-supabase .admin-status-error {
+  border-color: rgba(239, 68, 68, 0.35);
+  color: var(--ink-secondary);
+}
+
+/* Tables — Supabase inline */
+.admin-supabase .admin-table-wrap {
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  overflow: hidden;
+}
+
+.admin-supabase .admin-table-header {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--glass-border);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-primary);
+  background: transparent;
+}
+
+.admin-supabase table.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.admin-supabase table.admin-table th {
+  padding: 6px 10px;
+  text-align: left;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  border-bottom: 1px solid var(--glass-border);
+  background: transparent;
+}
+
+.admin-supabase table.admin-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--glass-border);
+  color: var(--ink-secondary);
+  background: transparent;
+}
+
+.admin-supabase table.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-supabase table.admin-table tr:hover td {
+  color: var(--ink-primary);
+}
+
+.admin-supabase .admin-code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--intel);
+  border: 1px solid var(--glass-border);
+  padding: 1px 6px;
+  background: transparent;
+  border-radius: 0;
+}
+
+/* Inputs — stroke only */
+.admin-supabase .admin-input {
+  padding: 6px 8px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--ink-primary);
+  font-size: 0.8125rem;
+  border-radius: 0;
+}
+
+.admin-supabase .admin-input:focus {
+  outline: none;
+  border-color: var(--intel);
+}
+
+/* Buttons — stroke primary */
+.admin-supabase .admin-btn-stroke {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--ink-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 0;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.admin-supabase .admin-btn-stroke:hover {
+  border-color: var(--intel);
+  color: var(--ink-primary);
+}
+
+.admin-supabase .admin-btn-stroke.active {
+  border-color: var(--intel);
+  color: var(--intel);
+}
+
+.admin-supabase .admin-btn-primary {
+  border-color: var(--intel);
+  color: var(--intel);
+}
+
+/* Health / alert severity strokes */
+.admin-supabase .admin-health-pass {
+  border-color: rgba(34, 197, 94, 0.35);
+  color: #4ade80;
+}
+
+.admin-supabase .admin-health-warn {
+  border-color: rgba(251, 191, 36, 0.35);
+  color: #fbbf24;
+}
+
+.admin-supabase .admin-health-fail {
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+/* Template picker chips */
+.admin-supabase .admin-template-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border: 1px solid var(--glass-border);
+  margin-bottom: 8px;
+}
+
+.admin-supabase .admin-template-chip {
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--glass-border);
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.admin-supabase .admin-template-chip:last-child {
+  border-right: none;
+}
+
+.admin-supabase .admin-template-chip.active {
+  color: var(--magic);
+}
+
+.admin-supabase .admin-preview {
+  min-height: 200px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--ink-secondary);
+  white-space: pre-wrap;
+}

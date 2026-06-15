@@ -519,225 +519,134 @@ const AdminDashboard: React.FC = () => {
 
         {/* Dashboard Tab */}
         {activeTab === "dashboard" && (
-          <div className="space-y-5">
-            {/* Section Header */}
+          <div className="admin-supabase space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-lg flex items-center justify-center shadow-md shadow-emerald-500/10">
-                  <BarChart3 className="w-4 h-4 text-white" />
-                </div>
-                <h2 className="text-lg font-bold text-white">System Overview</h2>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-white/50">
-                <div className="w-1.5 h-1.5 bg-emerald-500/50 rounded-full animate-pulse"></div>
+              <h2 className="admin-title">System Overview</h2>
+              <span className="admin-subtitle flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 Live
-              </div>
+              </span>
             </div>
 
-            {/* Stats Grid - Compact cards */}
-            <div className="grid md:grid-cols-4 gap-4">
-              {/* Total Users */}
-              <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-4 border border-white/[0.08] shadow-lg shadow-black/10 hover:shadow-xl transition-all duration-200">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-sky-400 rounded-lg flex items-center justify-center">
-                    <Users className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-xs font-medium text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">
+            <div className="admin-kpi-grid">
+              <div className="admin-kpi-cell">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="admin-kpi-value">
+                    {statsLoading ? "—" : stats.totalUsers.toLocaleString()}
+                  </span>
+                  <span className="admin-kpi-meta">
                     {statsLoading ? "…" : `${stats.freeUsers} free`}
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-white">
-                  {statsLoading ? "—" : stats.totalUsers.toLocaleString()}
-                </p>
-                <p className="text-xs text-white/50 mt-0.5">Total Users</p>
-                {/* Mini chart placeholder */}
-                <div className="mt-2 flex items-end gap-0.5 h-6">
-                  {[40, 65, 45, 70, 55, 80, 60].map((h, i) => (
-                    <div
-                      key={i}
-                      className="flex-1 bg-gradient-to-t from-blue-500/40 to-blue-500/10 rounded-sm"
-                      style={{ height: `${h}%` }}
-                    ></div>
-                  ))}
-                </div>
+                <div className="admin-kpi-label mt-1">Total Users</div>
               </div>
-
-              {/* Quotes Today */}
-              <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-4 border border-emerald-500/10 shadow-lg shadow-emerald-500/5 hover:shadow-xl transition-all duration-200">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
-                    <TrendingUp className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-xs font-medium text-emerald-400 bg-emerald-500/5 px-2 py-0.5 rounded-full">
-                    today
+              <div className="admin-kpi-cell">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="admin-kpi-value">
+                    {statsLoading ? "—" : stats.quotesGeneratedToday}
                   </span>
+                  <span className="admin-kpi-meta">today</span>
                 </div>
-                <p className="text-2xl font-bold text-white">
-                  {statsLoading ? "—" : stats.quotesGeneratedToday}
-                </p>
-                <p className="text-xs text-white/50 mt-0.5">Quotes Today</p>
-                <div className="mt-2 flex items-end gap-0.5 h-6">
-                  {[30, 50, 40, 75, 60, 85, 70].map((h, i) => (
-                    <div
-                      key={i}
-                      className="flex-1 bg-gradient-to-t from-emerald-500/40 to-emerald-500/10 rounded-sm"
-                      style={{ height: `${h}%` }}
-                    ></div>
-                  ))}
-                </div>
+                <div className="admin-kpi-label mt-1">Quotes Today</div>
               </div>
-
-              {/* Monthly Revenue */}
-              <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-4 border border-white/[0.08] shadow-lg shadow-black/10 hover:shadow-xl transition-all duration-200">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-lg flex items-center justify-center">
-                    <DollarSign className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                    active subs
+              <div className="admin-kpi-cell">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="admin-kpi-value">
+                    {statsLoading ? "—" : `$${stats.monthlyRevenue.toLocaleString()}`}
                   </span>
+                  <span className="admin-kpi-meta">active subs</span>
                 </div>
-                <p className="text-2xl font-bold text-white">
-                  {statsLoading ? "—" : `$${stats.monthlyRevenue.toLocaleString()}`}
-                </p>
-                <p className="text-xs text-white/50 mt-0.5">Monthly Revenue</p>
-                <div className="mt-2 flex items-end gap-0.5 h-6">
-                  {[45, 55, 50, 65, 70, 80, 90].map((h, i) => (
-                    <div
-                      key={i}
-                      className="flex-1 bg-gradient-to-t from-emerald-600/50 to-emerald-500/20 rounded-sm"
-                      style={{ height: `${h}%` }}
-                    ></div>
-                  ))}
-                </div>
+                <div className="admin-kpi-label mt-1">Monthly Revenue</div>
               </div>
-
-              {/* Active Sessions */}
-              <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-4 border border-orange-500/10 shadow-lg shadow-orange-500/5 hover:shadow-xl transition-all duration-200">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg flex items-center justify-center">
-                    <Activity className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 bg-emerald-500/50 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-white/50">Live</span>
-                  </div>
+              <div className="admin-kpi-cell">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="admin-kpi-value">
+                    {statsLoading ? "—" : stats.activeSessions}
+                  </span>
+                  <span className="admin-kpi-meta">paid</span>
                 </div>
-                <p className="text-2xl font-bold text-white">
-                  {statsLoading ? "—" : stats.activeSessions}
-                </p>
-                <p className="text-xs text-white/50 mt-0.5">Active Paid Subs</p>
-                <div className="mt-2 flex items-end gap-0.5 h-6">
-                  {[60, 45, 70, 55, 80, 65, 75].map((h, i) => (
-                    <div
-                      key={i}
-                      className="flex-1 bg-gradient-to-t from-orange-500/40 to-orange-500/10 rounded-sm"
-                      style={{ height: `${h}%` }}
-                    ></div>
-                  ))}
-                </div>
+                <div className="admin-kpi-label mt-1">Active Paid Subs</div>
               </div>
             </div>
 
-            {/* Quick Actions - Compact professional buttons */}
-            <div className="bg-white/[0.03] backdrop-blur-md rounded-xl p-5 border border-white/[0.08] shadow-lg shadow-black/10">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-6 bg-gradient-to-br from-amber-500 to-orange-500 rounded-md flex items-center justify-center">
-                  <Zap className="w-3 h-3 text-white" />
-                </div>
-                <h3 className="text-sm font-bold text-white/80 uppercase tracking-wide">
-                  Quick Actions
-                </h3>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <div className="admin-section-label mb-2">Quick Actions</div>
+              <div className="admin-action-grid">
                 <button
+                  type="button"
                   onClick={() => setActiveTab("useCases")}
-                  className="group flex items-center gap-2 p-3 bg-blue-500/5 hover:bg-white/[0.06] border border-white/[0.08] hover:border-white/[0.12] rounded-xl transition-all duration-200 hover:shadow-md"
+                  className="admin-action-link"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-[1.02] transition-transform">
-                    <FileText className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-sm font-medium text-white/80">Use Cases</span>
+                  <FileText />
+                  Use Cases
                 </button>
-
                 <button
+                  type="button"
                   onClick={() => setActiveTab("users")}
-                  className="group flex items-center gap-2 p-3 bg-emerald-500/5 hover:bg-white/[0.06] border border-emerald-500/20 hover:border-emerald-500/30 rounded-xl transition-all duration-200 hover:shadow-md"
+                  className="admin-action-link"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-[1.02] transition-transform">
-                    <Users className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-sm font-medium text-white/80">Users</span>
+                  <Users />
+                  Users
                 </button>
-
                 <button
+                  type="button"
                   onClick={() => setActiveTab("analytics")}
-                  className="group flex items-center gap-2 p-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] hover:border-emerald-500/30 rounded-xl transition-all duration-200 hover:shadow-md"
+                  className="admin-action-link"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-[1.02] transition-transform">
-                    <TrendingUp className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-sm font-medium text-white/80">Analytics</span>
+                  <TrendingUp />
+                  Analytics
                 </button>
-
                 <button
+                  type="button"
                   onClick={() => setActiveTab("opportunities")}
-                  className="group flex items-center gap-2 p-3 bg-emerald-500/5 hover:bg-white/[0.06] border border-emerald-500/20 hover:border-emerald-500/30 rounded-xl transition-all duration-200 hover:shadow-md"
+                  className="admin-action-link"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-[1.02] transition-transform">
-                    <TrendingUp className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-sm font-medium text-white/80">Lead Opportunities</span>
+                  <TrendingUp />
+                  Lead Opportunities
                 </button>
-
                 <button
+                  type="button"
                   onClick={() => setActiveTab("settings")}
-                  className="group flex items-center gap-2 p-3 bg-orange-500/5 hover:bg-white/[0.06] border border-orange-500/20 hover:border-orange-500/30 rounded-xl transition-all duration-200 hover:shadow-md"
+                  className="admin-action-link"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-[1.02] transition-transform">
-                    <Settings className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-sm font-medium text-white/80">Settings</span>
+                  <Settings />
+                  Settings
                 </button>
               </div>
             </div>
 
-            {/* System Status Banner - Compact */}
             <div
-              className={`rounded-xl p-3 flex items-center justify-between ${
+              className={`admin-status-bar ${
                 stats.systemHealth === "operational"
-                  ? "bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-500/20"
+                  ? "admin-status-ok"
                   : stats.systemHealth === "degraded"
-                    ? "bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-500/20/50"
-                    : "bg-gradient-to-r from-red-50 to-rose-50 border border-red-500/20/50"
+                    ? "admin-status-warn"
+                    : "admin-status-error"
               }`}
             >
-              <div className="flex items-center gap-2">
-                <div
-                  className={`w-2 h-2 rounded-full animate-pulse ${
+              <span>
+                <span
+                  className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${
                     stats.systemHealth === "operational"
-                      ? "bg-emerald-500/50"
+                      ? "bg-emerald-400"
                       : stats.systemHealth === "degraded"
-                        ? "bg-amber-500/50"
-                        : "bg-red-500/50"
+                        ? "bg-amber-400"
+                        : "bg-red-400"
                   }`}
-                ></div>
-                <span className="text-sm font-medium text-white/80">
-                  All systems {stats.systemHealth}
-                </span>
-              </div>
-              <div className="flex items-center gap-6 text-sm text-white/60">
+                />
+                All systems {stats.systemHealth}
+              </span>
+              <span className="flex flex-wrap gap-4">
                 <span>
-                  Uptime: <span className="font-semibold text-emerald-400">{stats.uptime}%</span>
+                  Uptime <strong className="text-emerald-400">{stats.uptime}%</strong>
                 </span>
                 <span>
-                  API:{" "}
-                  <span className="font-semibold text-blue-400">{stats.apiResponseTime}ms</span>
+                  API <strong className="text-[var(--intel)]">{stats.apiResponseTime}ms</strong>
                 </span>
                 <span>
-                  Errors: <span className="font-semibold text-white/80">{stats.errorRate}%</span>
+                  Errors <strong>{stats.errorRate}%</strong>
                 </span>
-              </div>
+              </span>
             </div>
           </div>
         )}
