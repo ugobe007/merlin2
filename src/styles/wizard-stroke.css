@@ -65,6 +65,63 @@
   color: #38bdf8;
 }
 
+.wiz-streamline-panel {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.wiz-streamline-copy {
+  flex: 1;
+  min-width: 200px;
+  font-size: 0.8125rem;
+  color: rgba(203, 213, 225, 0.88);
+  line-height: 1.55;
+}
+
+.wiz-streamline-copy strong {
+  color: #a5b4fc;
+  font-weight: 700;
+}
+
+.wiz-customize-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.72);
+  line-height: 1.45;
+}
+
+.wiz-btn-skip-prominent {
+  padding: 10px 18px;
+  border-radius: 9px;
+  border: 1.5px solid rgba(99, 102, 241, 0.65);
+  background: rgba(99, 102, 241, 0.14);
+  color: #c7d2fe;
+  font-size: 0.875rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+
+.wiz-btn-skip-prominent:hover {
+  border-color: rgba(129, 140, 248, 0.85);
+  background: rgba(99, 102, 241, 0.22);
+  color: #e0e7ff;
+}
+
 .wiz-optional-link {
   display: block;
   width: 100%;
@@ -138,6 +195,29 @@
 .wiz-pill.active {
   border-color: rgba(99, 120, 255, 0.5);
   background: rgba(99, 120, 255, 0.06);
+}
+
+/* Project type pills — indigo accent */
+.wiz-pill-project {
+  border-color: rgba(99, 102, 241, 0.28);
+}
+
+.wiz-pill-project:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.wiz-pill-project.active {
+  border-color: rgba(99, 102, 241, 0.7);
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.wiz-pill-project.active .wiz-pill-title {
+  color: #c7d2fe;
+}
+
+.wiz-pill-project.active .wiz-pill-sub {
+  color: rgba(165, 180, 252, 0.75);
 }
 
 .wiz-pill-title {
@@ -552,4 +632,85 @@
 .wiz-btn-addon-remove.gen {
   color: rgba(249, 115, 22, 0.7);
   border-color: rgba(249, 115, 22, 0.25);
+}
+
+/* Step 6 quote page */
+.wiz-quote-header {
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: transparent;
+}
+
+.wiz-quote-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.wiz-quote-meta {
+  font-size: 0.6875rem;
+  color: rgba(148, 163, 184, 0.6);
+  margin-top: 4px;
+}
+
+.wiz-quote-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.wiz-quote-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: transparent;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.wiz-quote-section {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: transparent;
+  overflow: hidden;
+}
+
+.wiz-quote-section-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+}
+
+.wiz-quote-section-body {
+  padding: 0 14px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.wiz-btn-ghost {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: rgba(203, 213, 225, 0.85);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.wiz-btn-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.22);
 }
