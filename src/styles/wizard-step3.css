@@ -1,0 +1,403 @@
+/* Step 3 — Facility Profile (high-contrast, stroke-only) */
+
+.wiz-s3 {
+  color: #f1f5f9;
+}
+
+.wiz-s3-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 8px 20px 40px;
+}
+
+.wiz-s3-bill-link {
+  display: block;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  text-align: left;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.wiz-s3-bill-link:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #f8fafc;
+}
+
+/* Configurator — project type + detail level */
+.wiz-s3-panel {
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 12px;
+  background: transparent;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.wiz-s3-config {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 720px) {
+  .wiz-s3-config {
+    grid-template-columns: 1fr 1.4fr;
+  }
+}
+
+.wiz-s3-field-label {
+  margin: 0 0 10px;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a5b4fc;
+}
+
+.wiz-s3-choices {
+  display: grid;
+  gap: 8px;
+}
+
+.wiz-s3-choices.cols-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.wiz-s3-choices.cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 640px) {
+  .wiz-s3-choices.cols-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wiz-s3-choice {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.wiz-s3-choice:hover {
+  border-color: rgba(129, 140, 248, 0.55);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.wiz-s3-choice.active {
+  border: 2px solid #6366f1;
+  background: rgba(99, 102, 241, 0.18);
+  padding: 11px 13px;
+}
+
+.wiz-s3-choice-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.3;
+  margin-bottom: 3px;
+}
+
+.wiz-s3-choice-sub {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.wiz-s3-choice.active .wiz-s3-choice-label {
+  color: #ffffff;
+}
+
+.wiz-s3-choice.active .wiz-s3-choice-sub {
+  color: #c7d2fe;
+}
+
+/* Streamline path */
+.wiz-s3-streamline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  border-radius: 10px;
+  background: rgba(52, 211, 153, 0.06);
+}
+
+.wiz-s3-streamline-text {
+  flex: 1;
+  min-width: 220px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  line-height: 1.55;
+}
+
+.wiz-s3-streamline-text strong {
+  color: #34d399;
+  font-weight: 800;
+}
+
+.wiz-s3-streamline-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+.wiz-s3-skip {
+  padding: 12px 22px;
+  border-radius: 10px;
+  border: none;
+  background: #4f46e5;
+  color: #ffffff;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.wiz-s3-skip:hover {
+  background: #4338ca;
+}
+
+/* Section hub */
+.wiz-s3-hub {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: transparent;
+  padding: 14px;
+}
+
+.wiz-s3-hub-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.wiz-s3-hub-title {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e2e8f0;
+}
+
+.wiz-s3-hub-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.wiz-s3-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .wiz-s3-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wiz-s3-section {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.wiz-s3-section.open {
+  grid-column: 1 / -1;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.wiz-s3-section.complete:not(.open) {
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+.wiz-s3-section-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+
+.wiz-s3-section-trigger:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.wiz-s3-section-icon {
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.wiz-s3-section-body-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.wiz-s3-section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wiz-s3-section-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.wiz-s3-section.open .wiz-s3-section-title {
+  color: #c7d2fe;
+}
+
+.wiz-s3-section-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #34d399;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+.wiz-s3-section-badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.wiz-s3-section.complete .wiz-s3-section-badge {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.wiz-s3-section-preview {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #94a3b8;
+  line-height: 1.45;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wiz-s3-section-chevron {
+  font-size: 0.75rem;
+  color: #64748b;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.wiz-s3-section.open .wiz-s3-section-chevron {
+  transform: rotate(180deg);
+  color: #a5b4fc;
+}
+
+.wiz-s3-section-content {
+  padding: 0 14px 14px;
+}
+
+/* Footer nav */
+.wiz-s3-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.wiz-s3-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.wiz-s3-back:hover {
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.wiz-s3-progress {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.wiz-s3-continue {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 10px;
+  border: 2px solid #4f8aff;
+  background: transparent;
+  color: #93c5fd;
+  font-size: 1.0625rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.wiz-s3-continue:hover {
+  border-color: #38bdf8;
+  color: #e0f2fe;
+}

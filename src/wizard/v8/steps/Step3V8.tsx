@@ -716,16 +716,21 @@ export function Step3V8({ state, actions }: Props) {
   ];
 
   return (
-    <div className="wiz-root" style={{ minHeight: "100vh" }}>
-      <div
-        ref={sectionTopRef}
-        style={{ maxWidth: 960, margin: "0 auto", padding: "8px 24px 36px" }}
-      >
-        {/* ── Utility Bill Upload (collapsed until requested) ── */}
+    <div className="wiz-root wiz-s3">
+      <div className="wiz-s3-inner" ref={sectionTopRef}>
+        <div className="wiz-step-header">
+          <div className="wiz-step-eyebrow">Step 3 of 6 · Facility profile</div>
+          <h1 className="wiz-step-title">{displayName} profile</h1>
+          <p className="wiz-step-desc">
+            Tell us about your site — or keep the smart defaults and continue. Answers here drive
+            system sizing, savings, and equipment selection.
+          </p>
+        </div>
+
         {!state.uploadedBillData && !billUploadOpen ? (
           <button
             type="button"
-            className="wiz-optional-link"
+            className="wiz-s3-bill-link"
             onClick={() => setBillUploadOpen(true)}
           >
             📄 Have a utility bill? Upload to auto-fill peak demand and rates
@@ -741,129 +746,90 @@ export function Step3V8({ state, actions }: Props) {
           />
         )}
 
-        {/* ── Project type + detail level (single toolbar) ── */}
-        <div className="wiz-toolbar-indigo wiz-toolbar">
-          <div className="wiz-toolbar-block">
-            <div className="wiz-section-label-indigo">Project type</div>
-            <div className="wiz-pill-row cols-2">
-              {(
-                [
-                  {
-                    value: "existing" as const,
-                    label: "Existing facility",
-                    sub: "Real roof / canopy on site",
-                  },
-                  {
-                    value: "greenfield" as const,
-                    label: "Greenfield",
-                    sub: "Designing footprint from scratch",
-                  },
-                ] as const
-              ).map(({ value, label, sub }) => {
-                const active = projectType === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    className={`wiz-pill wiz-pill-project${active ? " active" : ""}`}
-                    onClick={() => actions.setAnswer("project_type", value)}
-                  >
-                    <div className="wiz-pill-title">{active ? `✓ ${label}` : label}</div>
-                    <div className="wiz-pill-sub">{sub}</div>
-                  </button>
-                );
-              })}
+        <div className="wiz-s3-panel">
+          <div className="wiz-s3-config">
+            <div>
+              <h3 className="wiz-s3-field-label">Project type</h3>
+              <div className="wiz-s3-choices cols-2">
+                {(
+                  [
+                    {
+                      value: "existing" as const,
+                      label: "Existing facility",
+                      sub: "Real roof / canopy on site",
+                    },
+                    {
+                      value: "greenfield" as const,
+                      label: "Greenfield",
+                      sub: "Designing footprint from scratch",
+                    },
+                  ] as const
+                ).map(({ value, label, sub }) => {
+                  const active = projectType === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      className={`wiz-s3-choice${active ? " active" : ""}`}
+                      onClick={() => actions.setAnswer("project_type", value)}
+                    >
+                      <div className="wiz-s3-choice-label">{active ? `✓ ${label}` : label}</div>
+                      <div className="wiz-s3-choice-sub">{sub}</div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-          <div className="wiz-toolbar-block">
-            <div className="wiz-section-label-indigo">How much detail?</div>
-            <div className="wiz-pill-row cols-3">
-              {detailOptions.map(({ id, label, sub }) => {
-                const active = detailLevel === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    className={`wiz-pill${active ? " active" : ""}`}
-                    onClick={() => actions.setDetailLevel(id)}
-                  >
-                    <div className="wiz-pill-title">{active ? `✓ ${label}` : label}</div>
-                    <div className="wiz-pill-sub">{sub}</div>
-                  </button>
-                );
-              })}
+            <div>
+              <h3 className="wiz-s3-field-label">How much detail?</h3>
+              <div className="wiz-s3-choices cols-3">
+                {detailOptions.map(({ id, label, sub }) => {
+                  const active = detailLevel === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      className={`wiz-s3-choice${active ? " active" : ""}`}
+                      onClick={() => actions.setDetailLevel(id)}
+                    >
+                      <div className="wiz-s3-choice-label">{active ? `✓ ${label}` : label}</div>
+                      <div className="wiz-s3-choice-sub">{sub}</div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* ── Streamline path — slim note + skip ── */}
         {detailLevel === "streamline" && (
-          <div className="wiz-streamline-panel">
-            <div className="wiz-streamline-copy">
+          <div className="wiz-s3-streamline">
+            <div className="wiz-s3-streamline-text">
               <strong>{visibleQuestions.length} questions</strong> pre-filled with {displayName}{" "}
-              benchmarks — you can continue now or expand any section below to customize your quote.
-              <span className="wiz-customize-hint">
-                Facility profile answers shape system sizing, annual savings, and equipment
-                selection. Override only what you know — defaults are industry-calibrated.
+              benchmarks — continue now or expand a section below to customize.
+              <span className="wiz-s3-streamline-hint">
+                Override only what you know. Defaults are industry-calibrated.
               </span>
             </div>
-            <div className="wiz-streamline-skip-row">
-              <button
-                type="button"
-                className="wiz-btn-skip-prominent"
-                onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
-              >
-                Skip to add-ons →
-              </button>
-            </div>
+            <button
+              type="button"
+              className="wiz-s3-skip"
+              onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
+            >
+              Skip to add-ons →
+            </button>
           </div>
         )}
 
-        {detailLevel !== "streamline" && (
-          <p className="wiz-step-desc" style={{ margin: "0 0 12px" }}>
-            Expand any section below to customize your quote — facility profile answers drive system
-            sizing, annual savings, and equipment selection.
-          </p>
-        )}
-
-        {/* ── Compact profile section hub ── */}
-        <div className="wiz-stroke" style={{ padding: 14 }}>
-          {/* Section hub header */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "2px 4px 12px",
-              marginBottom: 10,
-              borderBottom: "1px solid rgba(99,120,255,0.14)",
-            }}
-          >
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 800,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: "rgba(148,163,184,0.85)",
-              }}
-            >
-              Facility Profile
-            </span>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "rgba(148,163,184,0.65)",
-              }}
-            >
+        <div className="wiz-s3-hub">
+          <div className="wiz-s3-hub-hdr">
+            <span className="wiz-s3-hub-title">Facility profile</span>
+            <span className="wiz-s3-hub-count">
               {answeredCount} of {displayedCount} complete
             </span>
           </div>
 
-          <div
-            style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}
-          >
+          <div className="wiz-s3-sections">
             {orderedSections.map((sec) => {
               const isOpen = openSections.has(sec.id);
               const sectionQs = sectionQuestionMap.get(sec.id) ?? [];
@@ -871,7 +837,6 @@ export function Step3V8({ state, actions }: Props) {
               const total = sectionQs.length;
               const complete = isSectionComplete(sec.id);
 
-              // Humanize raw answer values (snake_case → Title) for a cleaner preview
               const humanizeVal = (s: string) =>
                 s
                   .replace(/[_-]+/g, " ")
@@ -879,7 +844,6 @@ export function Step3V8({ state, actions }: Props) {
                   .trim()
                   .replace(/^\w/, (c) => c.toUpperCase());
 
-              // Build a single-line preview of the first few default values
               const previewItems = sectionQs
                 .slice(0, 3)
                 .map((q) => {
@@ -895,147 +859,31 @@ export function Step3V8({ state, actions }: Props) {
               return (
                 <div
                   key={sec.id}
-                  style={{
-                    gridColumn: isOpen ? "1 / -1" : undefined,
-                    marginBottom: 0,
-                    borderRadius: 12,
-                    border: isOpen
-                      ? "1px solid rgba(130,100,255,0.45)"
-                      : complete
-                        ? "1px solid rgba(52,211,153,0.30)"
-                        : "1px solid rgba(99,120,255,0.20)",
-                    background: isOpen
-                      ? "linear-gradient(180deg, rgba(155,109,255,0.12), rgba(120,80,230,0.06))"
-                      : "linear-gradient(180deg, rgba(20,30,68,0.80), rgba(15,24,56,0.72))",
-                    boxShadow:
-                      complete && !isOpen
-                        ? "inset 0 0 0 1px rgba(52,211,153,0.06), 0 6px 18px rgba(2,6,23,0.18)"
-                        : "0 6px 18px rgba(2,6,23,0.16)",
-                    transition:
-                      "border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease",
-                    overflow: "hidden",
-                  }}
+                  className={`wiz-s3-section${isOpen ? " open" : ""}${complete ? " complete" : ""}`}
                 >
-                  {/* Accordion header — always visible */}
                   <button
                     type="button"
+                    className="wiz-s3-section-trigger"
                     onClick={() => toggleSection(sec.id)}
-                    onMouseEnter={(e) => {
-                      if (!isOpen) e.currentTarget.style.background = "rgba(255,255,255,0.035)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                    }}
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "13px 14px",
-                      borderRadius: 12,
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      fontSize: 13,
-                    }}
                   >
-                    {/* Icon */}
-                    {sec.icon && <span style={{ fontSize: 18, flexShrink: 0 }}>{sec.icon}</span>}
-
-                    {/* Labels */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          marginBottom: previewItems.length > 0 && !isOpen ? 4 : 0,
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: 13.5,
-                            fontWeight: 700,
-                            letterSpacing: "0.01em",
-                            color: isOpen ? "#b89bff" : "rgba(241,245,249,0.94)",
-                          }}
-                        >
-                          {sec.label}
-                        </span>
-                        {complete && !isOpen && (
-                          <span
-                            style={{
-                              width: 16,
-                              height: 16,
-                              borderRadius: "50%",
-                              background: "#34d399",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: 9,
-                              fontWeight: 800,
-                              color: "#0d1230",
-                              flexShrink: 0,
-                            }}
-                          >
-                            ✓
-                          </span>
-                        )}
-                        <span
-                          style={{
-                            marginLeft: "auto",
-                            flexShrink: 0,
-                            padding: "2px 8px",
-                            borderRadius: 999,
-                            fontSize: 10.5,
-                            fontWeight: 700,
-                            color: complete ? "rgba(52,211,153,0.95)" : "rgba(203,213,225,0.70)",
-                            background: complete
-                              ? "rgba(52,211,153,0.12)"
-                              : "rgba(255,255,255,0.05)",
-                            border: complete
-                              ? "1px solid rgba(52,211,153,0.28)"
-                              : "1px solid rgba(255,255,255,0.08)",
-                          }}
-                        >
+                    {sec.icon && <span className="wiz-s3-section-icon">{sec.icon}</span>}
+                    <div className="wiz-s3-section-body-wrap">
+                      <div className="wiz-s3-section-title-row">
+                        <span className="wiz-s3-section-title">{sec.label}</span>
+                        {complete && !isOpen && <span className="wiz-s3-section-check">✓</span>}
+                        <span className="wiz-s3-section-badge">
                           {answered}/{total}
                         </span>
                       </div>
-                      {/* Collapsed preview */}
                       {!isOpen && previewItems.length > 0 && (
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: "rgba(255,255,255,0.40)",
-                            lineHeight: 1.5,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {previewItems.join(" · ")}
-                        </div>
+                        <div className="wiz-s3-section-preview">{previewItems.join(" · ")}</div>
                       )}
                     </div>
-
-                    {/* Chevron */}
-                    <span
-                      style={{
-                        fontSize: 14,
-                        color: "rgba(255,255,255,0.35)",
-                        flexShrink: 0,
-                        transition: "transform 0.2s ease",
-                        transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-                      }}
-                    >
-                      ▼
-                    </span>
+                    <span className="wiz-s3-section-chevron">▼</span>
                   </button>
 
-                  {/* Accordion body */}
                   {isOpen && (
-                    <div style={{ padding: "0 14px 14px" }}>
+                    <div className="wiz-s3-section-content">
                       {sectionQs.map((q, idx) => renderQuestion(q, idx))}
                     </div>
                   )}
@@ -1045,77 +893,22 @@ export function Step3V8({ state, actions }: Props) {
           </div>
         </div>
 
-        {/* ── Always-visible Choose Add-ons CTA ── */}
-        <div
-          style={{
-            marginTop: 18,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
-          {/* Back */}
+        <div className="wiz-s3-footer">
           <button
             type="button"
+            className="wiz-s3-back"
             onClick={() => actions.goToStep(2 as import("../wizardState").WizardStep)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "11px 18px",
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.10)",
-              background: "transparent",
-              color: "rgba(255,255,255,0.65)",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-              e.currentTarget.style.color = "white";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-              e.currentTarget.style.color = "rgba(255,255,255,0.65)";
-            }}
           >
-            <ChevronLeft size={16} />← Industry
+            <ChevronLeft size={16} />
+            Industry
           </button>
-
-          {/* Overall progress */}
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.30)" }}>
+          <span className="wiz-s3-progress">
             {answeredCount} / {displayedCount} answered
-          </div>
-
-          {/* Choose add-ons */}
+          </span>
           <button
             type="button"
+            className="wiz-s3-continue"
             onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "16px 32px",
-              borderRadius: 12,
-              background: "transparent",
-              border: "2px solid rgba(79,138,255,0.64)",
-              color: "#93c5fd",
-              fontSize: 18,
-              fontWeight: 900,
-              cursor: "pointer",
-              boxShadow: "0 0 26px rgba(79,138,255,0.16)",
-              letterSpacing: "0.01em",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(56,189,248,0.80)";
-              e.currentTarget.style.boxShadow = "0 0 30px rgba(79,138,255,0.24)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(79,138,255,0.64)";
-              e.currentTarget.style.boxShadow = "0 0 22px rgba(79,138,255,0.14)";
-            }}
           >
             Choose add-ons
             <ChevronRight size={20} />
