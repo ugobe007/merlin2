@@ -131,6 +131,30 @@ export type IndustrySlug =
 export type TierLabel = "Starter" | "Recommended" | "Complete";
 export type EVChargerType = "l2" | "dcfc" | "hpc";
 
+/**
+ * Step 3 questionnaire detail level (March 2026).
+ * Lets the user choose how much they fill in before building a quote:
+ *   · streamline — accept smart defaults for everything (fastest)
+ *   · critical   — answer only the few inputs that most drive the quote
+ *   · all        — answer every question for the most accurate quote
+ * Hidden questions always keep their smart defaults so the quote still computes.
+ */
+export type Step3DetailLevel = "streamline" | "critical" | "all";
+
+/** Industry-specific load-profile metrics surfaced on Step 5 (StackQuote audit). */
+export interface DataCenterFacilityDetails {
+  industry: "data_center";
+  itLoadKW: number;
+  pueBand: number;
+  effectivePue: number;
+  coolingKW: number;
+  evaporativeCooling: boolean;
+  wueLitersPerKWh: number;
+  annualWaterGallons: number;
+}
+
+export type FacilityCalcDetails = DataCenterFacilityDetails | null;
+
 /** API fetch lifecycle — shared across all three intel calls */
 export type FetchStatus = "idle" | "fetching" | "ready" | "error";
 
@@ -470,6 +494,8 @@ export interface WizardState {
   // ── Step 3: Infrastructure Profile ──────────────────────────────────────
   // Written by Step 3. baseLoadKW is the Layer A power profile result.
   step3Answers: Record<string, unknown>;
+  step3DetailLevel: Step3DetailLevel; // streamline | critical | all (questionnaire depth)
+  facilityCalcDetails: FacilityCalcDetails; // industry-specific load breakdown for Step 5
   evChargers: { type: EVChargerType; count: number } | null;
   baseLoadKW: number; // calculateUseCasePower() avg load
   peakLoadKW: number; // calculateUseCasePower() peak (used for sizing)
@@ -560,6 +586,7 @@ export type WizardIntent =
   | { type: "SET_BILL_DATA"; data: ExtractedSpecsData }
   | { type: "CLEAR_BILL_DATA" }
   | { type: "SET_ANSWER"; key: string; value: unknown }
+  | { type: "SET_DETAIL_LEVEL"; level: Step3DetailLevel }
   | { type: "SET_EV_CHARGERS"; chargers: WizardState["evChargers"] }
   | { type: "SET_ADDON_PREFERENCE"; addon: "solar" | "ev" | "generator"; value: boolean }
   | {
@@ -582,6 +609,7 @@ export type WizardIntent =
       peakLoadKW: number;
       criticalLoadKW?: number; // For non-critical facilities (car wash, retail, office)
       evRevenuePerYear?: number;
+      facilityCalcDetails?: FacilityCalcDetails;
     }
   // Electrical panel
   | {
@@ -628,6 +656,8 @@ export function initialState(): WizardState {
     solarPhysicalCapKW: 0,
     criticalLoadPct: 0.4, // default: 40% (retail/general commercial)
     step3Answers: {},
+    step3DetailLevel: "streamline",
+    facilityCalcDetails: null,
     evChargers: null,
     baseLoadKW: 0,
     peakLoadKW: 0,
@@ -682,6 +712,7 @@ function emptyIntel(): LocationIntel {
 function resetEnergyProfileState(): Pick<
   WizardState,
   | "step3Answers"
+  | "facilityCalcDetails"
   | "evChargers"
   | "baseLoadKW"
   | "peakLoadKW"
@@ -704,6 +735,7 @@ function resetEnergyProfileState(): Pick<
 > {
   return {
     step3Answers: {},
+    facilityCalcDetails: null,
     evChargers: null,
     baseLoadKW: 0,
     peakLoadKW: 0,
@@ -853,6 +885,9 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
         step3Answers: { ...state.step3Answers, [intent.key]: intent.value },
       };
 
+    case "SET_DETAIL_LEVEL":
+      return { ...state, step3DetailLevel: intent.level };
+
     case "SET_EV_CHARGERS":
       return { ...state, evChargers: intent.chargers };
 
@@ -877,6 +912,10 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
         peakLoadKW: intent.peakLoadKW,
         criticalLoadKW: intent.criticalLoadKW ?? state.peakLoadKW, // Default to full load if no critical load
         evRevenuePerYear: intent.evRevenuePerYear ?? state.evRevenuePerYear,
+        facilityCalcDetails:
+          intent.facilityCalcDetails !== undefined
+            ? intent.facilityCalcDetails
+            : state.facilityCalcDetails,
       };
 
     case "SET_PANEL_INFO":
@@ -1019,6 +1058,7 @@ export interface WizardActions {
   setIndustry: (slug: IndustrySlug) => void;
   // Step 3
   setAnswer: (key: string, value: unknown) => void;
+  setDetailLevel: (level: Step3DetailLevel) => void;
   setAddonPreference: (addon: "solar" | "ev" | "generator", value: boolean) => void;
   setAddonConfig: (
     config: Partial<{

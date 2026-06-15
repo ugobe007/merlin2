@@ -172,6 +172,8 @@ function makeEVState(overrides: Partial<WizardState> = {}): WizardState {
       generatorNeed: "partial",
       step3_5Visited: true,
     },
+    step3DetailLevel: "streamline",
+    facilityCalcDetails: null,
     evChargers: null,
     baseLoadKW: 38,
     peakLoadKW: 95,

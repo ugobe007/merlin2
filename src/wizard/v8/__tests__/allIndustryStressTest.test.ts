@@ -632,6 +632,8 @@ function makeState(
       primaryBESSApplication: profile.bessApp,
       step3_5Visited: true,
     },
+    step3DetailLevel: "streamline",
+    facilityCalcDetails: null,
     evChargers: null,
     baseLoadKW,
     peakLoadKW,

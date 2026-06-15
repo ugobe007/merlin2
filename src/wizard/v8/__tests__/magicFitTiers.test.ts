@@ -75,6 +75,8 @@ function createTestState(overrides: Partial<WizardState> = {}): WizardState {
       primaryBESSApplication: "peak_shaving",
       generatorNeed: "none",
     },
+    step3DetailLevel: "streamline",
+    facilityCalcDetails: null,
 
     // Addon Config (Step 3.5) - not configured yet
     solarKW: 0,

@@ -54,6 +54,8 @@ import {
 import { getLastSelectedPanelSync } from "@/services/solarPanelSelectionService";
 import { getCriticalLoadWithSource } from "@/services/benchmarkSources";
 import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
+import { DC_LOAD_V1_SSOT } from "@/wizard/v7/calculators/registry";
+import type { FacilityCalcDetails } from "./wizardState";
 import { buildTiers } from "./step4Logic";
 import type { LocationData } from "./wizardState";
 import { trackWizardEvent } from "@/services/analyticsService";
@@ -985,6 +987,45 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
     devLog("[useWizardV8] Running power calculation for:", slug, "with answers:", answers);
 
+    // Data center: use dc_load_v1 contract (PUE band, evaporative cooling, WUE).
+    if (slug === "data_center") {
+      try {
+        const dcResult = DC_LOAD_V1_SSOT.compute(answers as Record<string, unknown>);
+        const dcDetails = dcResult.validation?.details?.data_center as
+          | Record<string, unknown>
+          | undefined;
+        const coolingKW = Number(dcResult.validation?.kWContributors?.cooling ?? 0);
+
+        let facilityCalcDetails: FacilityCalcDetails = null;
+        if (dcDetails) {
+          facilityCalcDetails = {
+            industry: "data_center",
+            itLoadKW: Math.round(Number(dcResult.validation?.kWContributors?.itLoad ?? 0)),
+            pueBand: Number(dcDetails.pue ?? 0),
+            effectivePue: Number(dcDetails.effectivePue ?? 0),
+            coolingKW: Math.round(coolingKW),
+            evaporativeCooling: Boolean(dcDetails.evaporativeCooling),
+            wueLitersPerKWh: Number(dcDetails.wueLitersPerKWh ?? 0),
+            annualWaterGallons: Number(dcDetails.annualWaterGallons ?? 0),
+          };
+        }
+
+        if (dcResult.peakLoadKW > 0) {
+          dispatch({
+            type: "SET_BASE_LOAD",
+            baseLoadKW: dcResult.baseLoadKW,
+            peakLoadKW: dcResult.peakLoadKW,
+            facilityCalcDetails,
+          });
+        }
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.error("[useWizardV8] Data center power calculation failed:", err);
+        }
+      }
+      return;
+    }
+
     // Convert underscore slug (V8 type) → hyphen slug (SSOT function convention)
     const ssotSlug = slug.replace(/_/g, "-");
 
@@ -1019,6 +1060,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
           type: "SET_BASE_LOAD",
           baseLoadKW: Math.round(baseKW),
           peakLoadKW: Math.round(peakKW),
+          facilityCalcDetails: null,
           // criticalLoadKW: result.criticalLoadKW, // TODO: Re-enable when PowerCalculationResult includes this
         });
       } else {
@@ -1255,6 +1297,10 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
 
   const setAnswer = useCallback((key: string, value: unknown) => {
     dispatch({ type: "SET_ANSWER", key, value });
+  }, []);
+
+  const setDetailLevel = useCallback((level: import("./wizardState").Step3DetailLevel) => {
+    dispatch({ type: "SET_DETAIL_LEVEL", level });
   }, []);
 
   const setAddonPreference = useCallback((addon: "solar" | "ev" | "generator", value: boolean) => {
@@ -1548,6 +1594,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       hydrateHeroIntake,
       setIndustry,
       setAnswer,
+      setDetailLevel,
       setAddonPreference,
       setAddonConfig,
       setEVChargers,
@@ -1574,6 +1621,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
       hydrateHeroIntake,
       setIndustry,
       setAnswer,
+      setDetailLevel,
       setAddonPreference,
       setAddonConfig,
       setEVChargers,

@@ -91,6 +91,8 @@ function makeState(overrides: Partial<WizardState> = {}): WizardState {
       primaryBESSApplication: "peak_shaving",
       step3_5Visited: true,
     },
+    step3DetailLevel: "streamline",
+    facilityCalcDetails: null,
     evChargers: null,
     baseLoadKW: 150,
     peakLoadKW: 250,
