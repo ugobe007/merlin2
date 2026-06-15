@@ -1,0 +1,307 @@
+/* Wizard steps 3–6 — stroke-only panels (matches admin-supabase / Step 5) */
+
+.wiz-root {
+  font-family: var(--font-sans, "Inter", -apple-system, BlinkMacSystemFont, sans-serif);
+}
+
+.wiz-stroke {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.wiz-stroke-accent {
+  background: transparent;
+  border: 1px solid rgba(99, 120, 255, 0.22);
+  border-radius: 12px;
+}
+
+.wiz-section-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.85);
+}
+
+.wiz-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(62, 207, 142, 0.28);
+  border-radius: 10px;
+  background: transparent;
+  font-size: 0.8125rem;
+  color: rgba(203, 213, 225, 0.82);
+  line-height: 1.45;
+}
+
+.wiz-note strong {
+  color: #3ecf8e;
+  font-weight: 700;
+}
+
+.wiz-btn-skip {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(167, 139, 250, 0.55);
+  background: transparent;
+  color: #a78bfa;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.wiz-btn-skip:hover {
+  border-color: rgba(56, 189, 248, 0.65);
+  color: #38bdf8;
+}
+
+.wiz-optional-link {
+  display: block;
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(148, 163, 184, 0.75);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.wiz-optional-link:hover {
+  border-color: rgba(62, 207, 142, 0.35);
+  color: rgba(203, 213, 225, 0.9);
+}
+
+.wiz-toolbar {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+@media (min-width: 720px) {
+  .wiz-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.wiz-toolbar-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wiz-pill-row {
+  display: grid;
+  gap: 6px;
+}
+
+.wiz-pill-row.cols-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.wiz-pill-row.cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.wiz-pill {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.wiz-pill:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.wiz-pill.active {
+  border-color: rgba(99, 120, 255, 0.5);
+  background: rgba(99, 120, 255, 0.06);
+}
+
+.wiz-pill-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: rgba(248, 250, 252, 0.9);
+  margin-bottom: 2px;
+}
+
+.wiz-pill-sub {
+  font-size: 0.625rem;
+  color: rgba(148, 163, 184, 0.65);
+  line-height: 1.35;
+}
+
+.wiz-step-header {
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(99, 120, 255, 0.2);
+  border-radius: 12px;
+  background: transparent;
+}
+
+.wiz-step-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(125, 211, 252, 0.9);
+  margin-bottom: 6px;
+}
+
+.wiz-step-title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.wiz-step-desc {
+  margin: 8px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: rgba(203, 213, 225, 0.72);
+  max-width: 40rem;
+}
+
+.wiz-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: transparent;
+  overflow: hidden;
+}
+
+.wiz-kpi-cell {
+  padding: 10px 12px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+}
+
+.wiz-kpi-cell:last-child {
+  border-right: none;
+}
+
+.wiz-kpi-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.55);
+  margin-bottom: 4px;
+}
+
+.wiz-kpi-value {
+  font-size: 1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #f1f5f9;
+}
+
+.wiz-kpi-value.positive {
+  color: #3ecf8e;
+}
+
+.wiz-kpi-value.negative {
+  color: #f87171;
+}
+
+.wiz-strategy-pills {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wiz-strategy-pill {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.wiz-strategy-pill.active {
+  border-color: rgba(79, 138, 255, 0.55);
+  background: rgba(79, 138, 255, 0.06);
+}
+
+.wiz-strategy-pill-label {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin-bottom: 3px;
+}
+
+.wiz-strategy-pill-sub {
+  font-size: 0.6875rem;
+  color: rgba(148, 163, 184, 0.7);
+  line-height: 1.4;
+}
+
+.wiz-hero-stroke {
+  border: 1px solid rgba(62, 207, 142, 0.35);
+  border-radius: 12px;
+  background: transparent;
+  padding: 1.5rem;
+}
+
+.wiz-collapse-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 0;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+}
+
+.wiz-cta-primary {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(79, 138, 255, 0.55);
+  background: transparent;
+  color: #93c5fd;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.wiz-cta-primary:hover {
+  border-color: rgba(56, 189, 248, 0.7);
+  color: #e0f2fe;
+}

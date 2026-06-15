@@ -284,6 +284,7 @@ export default function Step5V8({ state, actions }: Props) {
   const [installers, setInstallers] = useState<RecommendedInstaller[]>([]);
   const [loadingInstallers, setLoadingInstallers] = useState(false);
   const [showTechSpecs, setShowTechSpecs] = useState(false);
+  const [pathForwardOpen, setPathForwardOpen] = useState(false);
   const [expandedFinancingId, setExpandedFinancingId] = useState<string | null>(null);
 
   // ── LEAD CAPTURE GATE ────────────────────────────────────────────
@@ -710,7 +711,7 @@ export default function Step5V8({ state, actions }: Props) {
 
   return (
     <div
-      className="max-w-5xl mx-auto space-y-5 p-4"
+      className="wiz-root max-w-5xl mx-auto space-y-5 p-4"
       style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}
     >
       {/* ================================================================
@@ -718,7 +719,8 @@ export default function Step5V8({ state, actions }: Props) {
       ================================================================ */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5 mb-1.5">
+          <div className="wiz-step-eyebrow mb-1.5">Step 6 of 6 · Your quote</div>
+          <div className="flex items-center gap-2.5 mb-1">
             <span className="text-[10px] font-bold tracking-[0.18em] text-slate-500 uppercase">
               Quote Ref:
             </span>
@@ -907,353 +909,330 @@ export default function Step5V8({ state, actions }: Props) {
           HERO SAVINGS — Big number, compelling
       ================================================================ */}
       {tier.annualSavings > 0 && (
-        <div
-          className="relative rounded-xl overflow-hidden"
-          style={{
-            boxShadow:
-              "0 0 0 1px rgba(52,211,153,0.14), 0 0 50px rgba(52,211,153,0.12), 0 8px 32px rgba(0,0,0,0.35)",
-          }}
-        >
-          <div className="absolute inset-0" style={{ background: "rgba(52,211,153,0.025)" }} />
+        <div className="wiz-hero-stroke text-center">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400/80 mb-2">
+            Projected Annual Savings
+          </div>
+          <div className="text-5xl md:text-6xl font-bold text-[#3ECF8E] leading-none">
+            {/* Hero number: energy-only savings when EV is present — honest baseline */}
+            {(tier.evRevenuePerYear ?? 0) > 500
+              ? fmt$(tier.annualSavings - (tier.evRevenuePerYear ?? 0), countryCode)
+              : fmt$(tier.annualSavings, countryCode)}
+          </div>
+          <div className="text-lg text-slate-400 mt-1.5">
+            {(tier.evRevenuePerYear ?? 0) > 500 ? "per year — energy savings" : "per year"}
+          </div>
 
-          <div
-            className="relative p-6 rounded-xl"
-            style={{
-              border: "2px solid rgba(52,211,153,0.40)",
-              background: "rgba(52,211,153,0.03)",
-            }}
-          >
-            <div className="text-center">
-              <div
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-3"
-                style={{
-                  background: "rgba(62,207,142,0.10)",
-                  border: "1px solid rgba(62,207,142,0.28)",
-                }}
-              >
-                <span className="text-[#3ECF8E] font-semibold text-xs uppercase tracking-wider">
-                  Projected Annual Savings
+          {/* ── Two-business-case callout when EV revenue is present ─── */}
+          {(tier.evRevenuePerYear ?? 0) > 500 && (
+            <div className="mt-4 w-full max-w-md mx-auto rounded-xl border border-blue-500/20 bg-blue-950/20 px-4 py-3 text-left space-y-2">
+              {/* Business Case A — Energy */}
+              <div className="flex justify-between items-center text-sm font-semibold border-b border-white/10 pb-2">
+                <span className="text-emerald-300">Business Case A — Energy Savings</span>
+                <span className="text-emerald-400">
+                  {fmt$(tier.annualSavings - (tier.evRevenuePerYear ?? 0), countryCode)}/yr
                 </span>
               </div>
-              <div className="text-5xl md:text-6xl font-bold text-[#3ECF8E] leading-none">
-                {/* Hero number: energy-only savings when EV is present — honest baseline */}
-                {(tier.evRevenuePerYear ?? 0) > 500
-                  ? fmt$(tier.annualSavings - (tier.evRevenuePerYear ?? 0), countryCode)
-                  : fmt$(tier.annualSavings, countryCode)}
+              <div className="flex justify-between text-xs text-slate-400 pl-2">
+                <span>Demand charge reduction</span>
+                <span className="text-slate-300">
+                  {fmt$(tier.demandChargeSavings ?? 0, countryCode)}/yr
+                </span>
               </div>
-              <div className="text-lg text-slate-400 mt-1.5">
-                {(tier.evRevenuePerYear ?? 0) > 500 ? "per year — energy savings" : "per year"}
-              </div>
+              {(tier.solarKW ?? 0) > 0 && (
+                <div className="flex justify-between text-xs text-slate-400 pl-2">
+                  <span>Solar generation offset</span>
+                  <span className="text-slate-300">
+                    {fmt$(
+                      tier.annualSavings -
+                        (tier.evRevenuePerYear ?? 0) -
+                        (tier.demandChargeSavings ?? 0),
+                      countryCode
+                    )}
+                    /yr
+                  </span>
+                </div>
+              )}
 
-              {/* ── Two-business-case callout when EV revenue is present ─── */}
-              {(tier.evRevenuePerYear ?? 0) > 500 && (
-                <div className="mt-4 w-full max-w-md mx-auto rounded-xl border border-blue-500/20 bg-blue-950/20 px-4 py-3 text-left space-y-2">
-                  {/* Business Case A — Energy */}
-                  <div className="flex justify-between items-center text-sm font-semibold border-b border-white/10 pb-2">
-                    <span className="text-emerald-300">Business Case A — Energy Savings</span>
-                    <span className="text-emerald-400">
-                      {fmt$(tier.annualSavings - (tier.evRevenuePerYear ?? 0), countryCode)}/yr
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-400 pl-2">
-                    <span>Demand charge reduction</span>
-                    <span className="text-slate-300">
-                      {fmt$(tier.demandChargeSavings ?? 0, countryCode)}/yr
-                    </span>
-                  </div>
-                  {(tier.solarKW ?? 0) > 0 && (
-                    <div className="flex justify-between text-xs text-slate-400 pl-2">
-                      <span>Solar generation offset</span>
+              {/* Business Case B — EV */}
+              <div className="flex justify-between items-center text-sm font-semibold border-t border-white/10 pt-2 mt-1">
+                <span className="text-blue-300">Business Case B — EV Revenue*</span>
+                <span className="text-blue-400">
+                  {fmt$(tier.evRevenuePerYear!, countryCode)}/yr
+                </span>
+              </div>
+              {/* DCFC operating cost breakdown — shown when fast chargers are present */}
+              {(tier.dcfcPeakKW ?? 0) > 0 && (
+                <div className="rounded bg-slate-900/50 px-3 py-2 space-y-1 ml-2">
+                  {(tier.dcfcGrossRevenue ?? 0) > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-400">
+                        Gross ({tier.dcfcSessionsPerDay ?? 3} sessions/charger/day × 300 days)
+                      </span>
                       <span className="text-slate-300">
-                        {fmt$(
-                          tier.annualSavings -
-                            (tier.evRevenuePerYear ?? 0) -
-                            (tier.demandChargeSavings ?? 0),
-                          countryCode
-                        )}
-                        /yr
+                        +{fmt$(tier.dcfcGrossRevenue!, countryCode)}
                       </span>
                     </div>
                   )}
-
-                  {/* Business Case B — EV */}
-                  <div className="flex justify-between items-center text-sm font-semibold border-t border-white/10 pt-2 mt-1">
-                    <span className="text-blue-300">Business Case B — EV Revenue*</span>
-                    <span className="text-blue-400">
-                      {fmt$(tier.evRevenuePerYear!, countryCode)}/yr
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Electricity cost</span>
+                    <span className="text-orange-400/80">
+                      −
+                      {fmt$(
+                        (tier.dcfcGrossRevenue ?? 0) -
+                          (tier.evRevenuePerYear! +
+                            (tier.dcfcDemandPenalty ?? 0) +
+                            (tier.dcfcNetworkFees ?? 0) +
+                            (tier.dcfcMaintenanceCost ?? 0) +
+                            (tier.dcfcCCFees ?? 0)),
+                        countryCode
+                      )}
                     </span>
                   </div>
-                  {/* DCFC operating cost breakdown — shown when fast chargers are present */}
-                  {(tier.dcfcPeakKW ?? 0) > 0 && (
-                    <div className="rounded bg-slate-900/50 px-3 py-2 space-y-1 ml-2">
-                      {(tier.dcfcGrossRevenue ?? 0) > 0 && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">
-                            Gross ({tier.dcfcSessionsPerDay ?? 3} sessions/charger/day × 300 days)
-                          </span>
-                          <span className="text-slate-300">
-                            +{fmt$(tier.dcfcGrossRevenue!, countryCode)}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-500">Electricity cost</span>
-                        <span className="text-orange-400/80">
-                          −
-                          {fmt$(
-                            (tier.dcfcGrossRevenue ?? 0) -
-                              (tier.evRevenuePerYear! +
-                                (tier.dcfcDemandPenalty ?? 0) +
-                                (tier.dcfcNetworkFees ?? 0) +
-                                (tier.dcfcMaintenanceCost ?? 0) +
-                                (tier.dcfcCCFees ?? 0)),
-                            countryCode
-                          )}
-                        </span>
-                      </div>
-                      {(tier.dcfcNetworkFees ?? 0) > 0 && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-500">Network/software fee (15%)</span>
-                          <span className="text-orange-400/80">
-                            −{fmt$(tier.dcfcNetworkFees!, countryCode)}
-                          </span>
-                        </div>
-                      )}
-                      {(tier.dcfcCCFees ?? 0) > 0 && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-500">CC processing (3.5%)</span>
-                          <span className="text-orange-400/80">
-                            −{fmt$(tier.dcfcCCFees!, countryCode)}
-                          </span>
-                        </div>
-                      )}
-                      {(tier.dcfcMaintenanceCost ?? 0) > 0 && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-500">Maintenance ($1K/charger/yr)</span>
-                          <span className="text-orange-400/80">
-                            −{fmt$(tier.dcfcMaintenanceCost!, countryCode)}
-                          </span>
-                        </div>
-                      )}
-                      {(tier.dcfcDemandPenalty ?? 0) > 0 && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-500">
-                            DCFC demand spike ({tier.dcfcPeakKW} kW, {tier.dcfcBessOffsetPct ?? 0}%
-                            BESS-offset)
-                          </span>
-                          <span className="text-orange-400">
-                            −{fmt$(tier.dcfcDemandPenalty!, countryCode)}
-                          </span>
-                        </div>
-                      )}
+                  {(tier.dcfcNetworkFees ?? 0) > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500">Network/software fee (15%)</span>
+                      <span className="text-orange-400/80">
+                        −{fmt$(tier.dcfcNetworkFees!, countryCode)}
+                      </span>
                     </div>
                   )}
-                  {tier.paybackYearsEnergyOnly != null && (
-                    <div className="border-t border-white/10 pt-2 mt-1 space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Energy-only payback (Case A)</span>
-                        <span className="text-emerald-400 font-semibold">
-                          {tier.paybackYearsEnergyOnly.toFixed(1)} yrs
-                        </span>
-                      </div>
-                      {tier.paybackYearsEnergyOnly > tier.paybackYears + 0.5 && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-500">Combined payback (A+B)</span>
-                          <span className="text-blue-400 font-semibold">
-                            {tier.paybackYears.toFixed(1)} yrs
-                          </span>
-                        </div>
-                      )}
+                  {(tier.dcfcCCFees ?? 0) > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500">CC processing (3.5%)</span>
+                      <span className="text-orange-400/80">
+                        −{fmt$(tier.dcfcCCFees!, countryCode)}
+                      </span>
                     </div>
                   )}
-                  <p className="text-[9px] text-slate-600 leading-tight pt-1">
-                    *EV revenue is net of all operating costs shown above. Evaluate independently
-                    from energy savings — utilization is site-dependent and may be lower in early
-                    deployment years.
-                  </p>
-                </div>
-              )}
-
-              {/* ── Demand charge callout (no EV) ─────────────────────────── */}
-              {(tier.evRevenuePerYear ?? 0) <= 500 && (tier.demandChargeSavings ?? 0) > 1000 && (
-                <div className="mt-3 text-sm text-slate-400">
-                  <span className="text-emerald-400 font-medium">
-                    {fmt$(tier.demandChargeSavings!, countryCode)}/yr
-                  </span>{" "}
-                  from demand charge reduction
-                </div>
-              )}
-
-              {/* ROI snapshot below hero */}
-              <div className="mt-5 inline-flex flex-wrap items-center justify-center gap-4 px-5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                <TrendingUp className="w-4 h-4 text-[#3ECF8E]" />
-                <span className="text-sm text-slate-300">
-                  Payback in{" "}
-                  {(tier.evRevenuePerYear ?? 0) > 500 && tier.paybackYearsEnergyOnly != null ? (
-                    <>
-                      <strong className="text-[#3ECF8E]">
-                        {tier.paybackYearsEnergyOnly.toFixed(1)} years
-                      </strong>
-                      <span className="text-xs text-slate-500 ml-1">(energy-only)</span>
-                      {tier.paybackYearsEnergyOnly > tier.paybackYears + 0.5 && (
-                        <span className="text-xs text-blue-400 ml-1.5">
-                          · {tier.paybackYears.toFixed(1)} yr with EV
-                        </span>
-                      )}
-                    </>
-                  ) : dcFin ? (
-                    <>
-                      <strong className="text-[#3ECF8E]">
-                        {Math.round(tier.paybackYears)} years
-                      </strong>
-                      <span className="text-xs text-slate-500 ml-1">(energy package)</span>
-                      {dcFin.paybackYearsTotal > tier.paybackYears + 1 && (
-                        <span className="text-xs text-amber-400/90 ml-1.5">
-                          · {Math.round(dcFin.paybackYearsTotal)} yr total project
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <strong className="text-[#3ECF8E]">
-                      {Math.round(tier.paybackYears)} years
-                    </strong>
+                  {(tier.dcfcMaintenanceCost ?? 0) > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500">Maintenance ($1K/charger/yr)</span>
+                      <span className="text-orange-400/80">
+                        −{fmt$(tier.dcfcMaintenanceCost!, countryCode)}
+                      </span>
+                    </div>
                   )}
-                </span>
-                <span className="text-slate-600">|</span>
-                <span className="text-sm text-slate-300">
-                  10yr ROI{" "}
-                  <strong className={tier.roi10Year >= 0 ? "text-[#3ECF8E]" : "text-red-400"}>
-                    {tier.roi10Year.toFixed(0)}%
+                  {(tier.dcfcDemandPenalty ?? 0) > 0 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500">
+                        DCFC demand spike ({tier.dcfcPeakKW} kW, {tier.dcfcBessOffsetPct ?? 0}%
+                        BESS-offset)
+                      </span>
+                      <span className="text-orange-400">
+                        −{fmt$(tier.dcfcDemandPenalty!, countryCode)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+              {tier.paybackYearsEnergyOnly != null && (
+                <div className="border-t border-white/10 pt-2 mt-1 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-slate-400">Energy-only payback (Case A)</span>
+                    <span className="text-emerald-400 font-semibold">
+                      {tier.paybackYearsEnergyOnly.toFixed(1)} yrs
+                    </span>
+                  </div>
+                  {tier.paybackYearsEnergyOnly > tier.paybackYears + 0.5 && (
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500">Combined payback (A+B)</span>
+                      <span className="text-blue-400 font-semibold">
+                        {tier.paybackYears.toFixed(1)} yrs
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+              <p className="text-[9px] text-slate-600 leading-tight pt-1">
+                *EV revenue is net of all operating costs shown above. Evaluate independently from
+                energy savings — utilization is site-dependent and may be lower in early deployment
+                years.
+              </p>
+            </div>
+          )}
+
+          {/* ── Demand charge callout (no EV) ─────────────────────────── */}
+          {(tier.evRevenuePerYear ?? 0) <= 500 && (tier.demandChargeSavings ?? 0) > 1000 && (
+            <div className="mt-3 text-sm text-slate-400">
+              <span className="text-emerald-400 font-medium">
+                {fmt$(tier.demandChargeSavings!, countryCode)}/yr
+              </span>{" "}
+              from demand charge reduction
+            </div>
+          )}
+
+          {/* ROI snapshot below hero */}
+          <div className="mt-5 inline-flex flex-wrap items-center justify-center gap-4 px-5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <TrendingUp className="w-4 h-4 text-[#3ECF8E]" />
+            <span className="text-sm text-slate-300">
+              Payback in{" "}
+              {(tier.evRevenuePerYear ?? 0) > 500 && tier.paybackYearsEnergyOnly != null ? (
+                <>
+                  <strong className="text-[#3ECF8E]">
+                    {tier.paybackYearsEnergyOnly.toFixed(1)} years
                   </strong>
-                  {dcFin && dcFin.roi10YearTotal !== tier.roi10Year && (
-                    <span className="text-xs text-slate-500 ml-1">
-                      ({dcFin.roi10YearTotal >= 0 ? "+" : ""}
-                      {dcFin.roi10YearTotal.toFixed(0)}% total)
+                  <span className="text-xs text-slate-500 ml-1">(energy-only)</span>
+                  {tier.paybackYearsEnergyOnly > tier.paybackYears + 0.5 && (
+                    <span className="text-xs text-blue-400 ml-1.5">
+                      · {tier.paybackYears.toFixed(1)} yr with EV
                     </span>
                   )}
+                </>
+              ) : dcFin ? (
+                <>
+                  <strong className="text-[#3ECF8E]">{Math.round(tier.paybackYears)} years</strong>
+                  <span className="text-xs text-slate-500 ml-1">(energy package)</span>
+                  {dcFin.paybackYearsTotal > tier.paybackYears + 1 && (
+                    <span className="text-xs text-amber-400/90 ml-1.5">
+                      · {Math.round(dcFin.paybackYearsTotal)} yr total project
+                    </span>
+                  )}
+                </>
+              ) : (
+                <strong className="text-[#3ECF8E]">{Math.round(tier.paybackYears)} years</strong>
+              )}
+            </span>
+            <span className="text-slate-600">|</span>
+            <span className="text-sm text-slate-300">
+              10yr ROI{" "}
+              <strong className={tier.roi10Year >= 0 ? "text-[#3ECF8E]" : "text-red-400"}>
+                {tier.roi10Year.toFixed(0)}%
+              </strong>
+              {dcFin && dcFin.roi10YearTotal !== tier.roi10Year && (
+                <span className="text-xs text-slate-500 ml-1">
+                  ({dcFin.roi10YearTotal >= 0 ? "+" : ""}
+                  {dcFin.roi10YearTotal.toFixed(0)}% total)
                 </span>
-              </div>
-            </div>
+              )}
+            </span>
           </div>
         </div>
       )}
 
       {/* ================================================================
-          YOUR NEXT STEPS — Build Your Energy Stack
+          YOUR NEXT STEPS — collapsible
       ================================================================ */}
-      <div style={{ marginTop: 2 }}>
-        {/* Header — compact inline */}
-        <div className="flex items-center gap-2 mb-2.5">
-          <ClipboardList className="w-3.5 h-3.5" style={{ color: "#9b6dff" }} />
-          <p
-            className="text-[10px] font-bold tracking-[0.16em] uppercase"
-            style={{ color: "#9b6dff" }}
-          >
-            Your Path Forward
-          </p>
-          <span className="text-xs text-slate-500 truncate">
-            Here's how to build your energy stack
-          </span>
-        </div>
+      <div className="wiz-stroke" style={{ padding: "0 14px" }}>
+        <button
+          type="button"
+          className="wiz-collapse-trigger"
+          onClick={() => setPathForwardOpen((o) => !o)}
+          style={{ borderTop: "none" }}
+        >
+          <div className="flex items-center gap-2">
+            <ClipboardList className="w-3.5 h-3.5 text-violet-400" />
+            <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-violet-300">
+              Your Path Forward
+            </span>
+            <span className="text-xs text-slate-500">Export · Finance · Install · RFP</span>
+          </div>
+          {pathForwardOpen ? (
+            <ChevronUp className="w-4 h-4 text-slate-500" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-slate-500" />
+          )}
+        </button>
 
-        {/* Inline numbered steps — Supabase-style, no padding */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-          {[
-            {
-              n: 1,
-              color: "#4f8aff",
-              title: "Save your quote",
-              desc: "Export as PDF, Word, or Excel to share with your team or lender.",
-              cta: "Go to Export",
-              arrow: "\u2193",
-              onClick: () =>
-                document
-                  .getElementById("step5-export-section")
-                  ?.scrollIntoView({ behavior: "smooth", block: "start" }),
-            },
-            {
-              n: 2,
-              color: "#34d399",
-              title: "Review financing options",
-              desc: "Compare C-PACE, PACE, SBA 7(a), and equipment financing programs matched to your project.",
-              cta: "See Financing",
-              arrow: "\u2193",
-              onClick: () =>
-                document
-                  .getElementById("step5-financing-section")
-                  ?.scrollIntoView({ behavior: "smooth", block: "start" }),
-            },
-            {
-              n: 3,
-              color: "#f59e0b",
-              title: "Find a certified installer",
-              desc: "Merlin matched installers in your area who specialize in commercial energy storage.",
-              cta: "View Installers",
-              arrow: "\u2193",
-              onClick: () =>
-                document
-                  .getElementById("step5-installers-section")
-                  ?.scrollIntoView({ behavior: "smooth", block: "start" }),
-            },
-            {
-              n: 4,
-              color: "#9b6dff",
-              title: "Get your full engineering package",
-              desc: "ProStack\u2122 adds custom equipment sizing, DCF/IRR modeling, and bank-ready documentation.",
-              cta: "Upgrade to ProStack\u2122",
-              arrow: "\u2192",
-              onClick: openProQuotePage,
-            },
-          ].map((s) => (
-            <div
-              key={s.n}
-              style={{
-                display: "flex",
-                alignItems: "baseline",
-                gap: 10,
-                padding: "7px 0",
-                borderBottom: "1px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <span
+        {pathForwardOpen && (
+          <div style={{ paddingBottom: 12 }}>
+            {[
+              {
+                n: 1,
+                color: "#4f8aff",
+                title: "Save your quote",
+                desc: "Export as PDF, Word, or Excel to share with your team or lender.",
+                cta: "Go to Export",
+                arrow: "\u2193",
+                onClick: () =>
+                  document
+                    .getElementById("step5-export-section")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+              },
+              {
+                n: 2,
+                color: "#34d399",
+                title: "Review financing options",
+                desc: "Compare C-PACE, PACE, SBA 7(a), and equipment financing programs matched to your project.",
+                cta: "See Financing",
+                arrow: "\u2193",
+                onClick: () =>
+                  document
+                    .getElementById("step5-financing-section")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+              },
+              {
+                n: 3,
+                color: "#f59e0b",
+                title: "Find a certified installer",
+                desc: "Merlin matched installers in your area who specialize in commercial energy storage.",
+                cta: "View Installers",
+                arrow: "\u2193",
+                onClick: () =>
+                  document
+                    .getElementById("step5-installers-section")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+              },
+              {
+                n: 4,
+                color: "#9b6dff",
+                title: "Get your full engineering package",
+                desc: "ProStack\u2122 adds custom equipment sizing, DCF/IRR modeling, and bank-ready documentation.",
+                cta: "Upgrade to ProStack\u2122",
+                arrow: "\u2192",
+                onClick: openProQuotePage,
+              },
+            ].map((s) => (
+              <div
+                key={s.n}
                 style={{
-                  color: s.color,
-                  fontWeight: 800,
-                  fontSize: 12,
-                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-                  fontVariantNumeric: "tabular-nums",
-                  flexShrink: 0,
-                  minWidth: 12,
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: 10,
+                  padding: "7px 0",
+                  borderBottom: "1px solid rgba(255,255,255,0.07)",
                 }}
               >
-                {s.n}
-              </span>
-              <p className="flex-1 min-w-0 text-[13px] leading-snug">
-                <span className="font-semibold text-white">{s.title}</span>
-                <span className="text-slate-500">
-                  {" \u2014 "}
-                  {s.desc}
+                <span
+                  style={{
+                    color: s.color,
+                    fontWeight: 800,
+                    fontSize: 12,
+                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                    fontVariantNumeric: "tabular-nums",
+                    flexShrink: 0,
+                    minWidth: 12,
+                  }}
+                >
+                  {s.n}
                 </span>
-              </p>
-              <button
-                onClick={s.onClick}
-                style={{
-                  flexShrink: 0,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: s.color,
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {s.cta} <span style={{ fontSize: 13 }}>{s.arrow}</span>
-              </button>
-            </div>
-          ))}
-        </div>
+                <p className="flex-1 min-w-0 text-[13px] leading-snug">
+                  <span className="font-semibold text-white">{s.title}</span>
+                  <span className="text-slate-500">
+                    {" \u2014 "}
+                    {s.desc}
+                  </span>
+                </p>
+                <button
+                  onClick={s.onClick}
+                  style={{
+                    flexShrink: 0,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: s.color,
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {s.cta} <span style={{ fontSize: 13 }}>{s.arrow}</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ================================================================

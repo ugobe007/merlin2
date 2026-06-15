@@ -411,7 +411,7 @@ function AcceptButton({
 }
 
 // ── Summary Pill ──────────────────────────────────────────────────────────────
-function SummaryPill({
+function _SummaryPill({
   icon,
   label,
   value,
@@ -508,258 +508,35 @@ function ConfigSummaryBar({
   roi10YrK: number;
   demandCharge: number;
 }) {
-  const demandAnnual =
-    demandCharge > 0 && peakLoadKW > 0 ? Math.round(peakLoadKW * demandCharge * 12) : 0;
+  void city;
+  void industry;
+  void peakLoadKW;
+  void solarKW;
+  void solarSavingsK;
+  void genKW;
+  void genSavingsK;
+  void evPorts;
+  void evRevenueK;
+  void solarFeasible;
+  void roi10YrK;
+  void demandCharge;
 
   return (
-    <div
-      style={{
-        background:
-          "linear-gradient(135deg, rgba(15,23,42,0.94), rgba(12,18,35,0.88) 52%, rgba(19,14,37,0.92))",
-        border: "1px solid rgba(99,120,255,0.28)",
-        borderRadius: 16,
-        padding: "18px 20px",
-        boxShadow: "0 20px 48px rgba(2,6,23,0.26), inset 0 1px 0 rgba(255,255,255,0.04)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 18,
-          marginBottom: 16,
-        }}
-      >
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 900,
-              color: "#38bdf8",
-              textTransform: "uppercase",
-              letterSpacing: "0.12em",
-              marginBottom: 8,
-            }}
-          >
-            Live Estimate
-          </div>
-          <h2
-            style={{
-              fontSize: 22,
-              fontWeight: 900,
-              margin: 0,
-              lineHeight: 1.08,
-              letterSpacing: "-0.85px",
-              background: "linear-gradient(90deg, #9b6dff 0%, #4f8aff 48%, #38bdf8 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            Review your energy stack
-          </h2>
-          <div
-            style={{ fontSize: 13, color: "rgba(203,213,225,0.68)", marginTop: 7, lineHeight: 1.5 }}
-          >
-            {city}
-            {industry ? ` • ${industry}` : ""}
-            {peakLoadKW > 0 ? ` • ${peakLoadKW.toLocaleString()} kW peak` : ""}
-          </div>
-        </div>
-        <div style={{ textAlign: "right", flexShrink: 0 }}>
-          <div>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 800,
-                color: "rgba(148,163,184,0.62)",
-                letterSpacing: "0.09em",
-                textTransform: "uppercase",
-                marginBottom: 4,
-              }}
-            >
-              Add-ons Investment
-            </div>
-            <div
-              style={{
-                fontSize: 24,
-                fontWeight: 900,
-                color: "#f8fafc",
-                letterSpacing: "-0.7px",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              ${totalInvestmentK.toLocaleString()}K
-            </div>
-            <div style={{ fontSize: 10, color: "rgba(148,163,184,0.52)", marginTop: 3 }}>
-              BESS priced in Energy Stack
-            </div>
-          </div>
+    <div className="wiz-kpi-strip" style={{ marginTop: 4 }}>
+      <div className="wiz-kpi-cell">
+        <div className="wiz-kpi-label">Est. annual savings</div>
+        <div className={`wiz-kpi-value${annualSavingsK > 0 ? " positive" : ""}`}>
+          {annualSavingsK > 0 ? `$${annualSavingsK.toLocaleString()}K/yr` : "—"}
         </div>
       </div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-        {solarFeasible && solarKW > 0 && (
-          <SummaryPill
-            icon="⭐"
-            label="Solar"
-            value={`${Math.round(solarKW).toLocaleString()} kW`}
-            savingsK={solarSavingsK}
-            color="#fbbf24"
-          />
-        )}
-        {genKW > 0 && (
-          <SummaryPill
-            icon="🔥"
-            label="Generator"
-            value={`${Math.round(genKW).toLocaleString()} kW`}
-            savingsK={genSavingsK}
-            color="#fb923c"
-          />
-        )}
-        {evPorts > 0 && (
-          <SummaryPill
-            icon="⚡"
-            label="EV Charging"
-            value={`${evPorts} port${evPorts !== 1 ? "s" : ""}`}
-            savingsK={evRevenueK}
-            color="#38bdf8"
-          />
-        )}
+      <div className="wiz-kpi-cell">
+        <div className="wiz-kpi-label">Add-on payback</div>
+        <div className="wiz-kpi-value">{paybackYears !== "—" ? `${paybackYears} yrs` : "—"}</div>
       </div>
-
-      {/* ── Live ROI Strip ── */}
-      {annualSavingsK > 0 && (
-        <div
-          style={{
-            marginTop: 12,
-            padding: "10px 12px",
-            borderRadius: 9,
-            background: "rgba(62,207,142,0.07)",
-            border: "1px solid rgba(62,207,142,0.18)",
-            display: "flex",
-            alignItems: "center",
-            gap: 0,
-          }}
-        >
-          <div style={{ fontSize: 14, marginRight: 8, flexShrink: 0 }}>🧙</div>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#3ECF8E",
-              textTransform: "uppercase",
-              letterSpacing: "0.07em",
-              marginRight: 10,
-              flexShrink: 0,
-            }}
-          >
-            Merlin ROI
-          </div>
-          <div style={{ display: "flex", gap: 14, flex: 1, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-              <span
-                style={{
-                  fontSize: 10,
-                  color: "rgba(148,163,184,0.5)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                Annual Savings
-              </span>
-              <span
-                style={{
-                  fontSize: 16,
-                  fontWeight: 800,
-                  color: "#3ECF8E",
-                  fontVariantNumeric: "tabular-nums",
-                  lineHeight: 1.2,
-                }}
-              >
-                ${annualSavingsK.toLocaleString()}K/yr
-              </span>
-            </div>
-            <div
-              style={{
-                width: 1,
-                background: "rgba(255,255,255,0.07)",
-                alignSelf: "stretch",
-              }}
-            />
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-              <span
-                style={{
-                  fontSize: 10,
-                  color: "rgba(148,163,184,0.5)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                Payback
-              </span>
-              <span
-                style={{
-                  fontSize: 16,
-                  fontWeight: 800,
-                  color: "#f1f5f9",
-                  fontVariantNumeric: "tabular-nums",
-                  lineHeight: 1.2,
-                }}
-              >
-                {paybackYears} yrs
-              </span>
-            </div>
-            <div
-              style={{
-                width: 1,
-                background: "rgba(255,255,255,0.07)",
-                alignSelf: "stretch",
-              }}
-            />
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-              <span
-                style={{
-                  fontSize: 10,
-                  color: "rgba(148,163,184,0.5)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                10-yr Value
-              </span>
-              <span
-                style={{
-                  fontSize: 16,
-                  fontWeight: 800,
-                  color: roi10YrK > 0 ? "#3ECF8E" : "#f87171",
-                  fontVariantNumeric: "tabular-nums",
-                  lineHeight: 1.2,
-                }}
-              >
-                {roi10YrK >= 0 ? "+" : ""}${Math.abs(roi10YrK).toLocaleString()}K
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-      {demandAnnual > 0 && (
-        <div
-          style={{
-            marginTop: 10,
-            borderRadius: 11,
-            background: "rgba(56,189,248,0.06)",
-            border: "1px solid rgba(56,189,248,0.18)",
-            padding: "10px 12px",
-            fontSize: 12,
-            color: "rgba(203,213,225,0.78)",
-            lineHeight: 1.5,
-          }}
-        >
-          <strong style={{ color: "#38bdf8" }}>Demand charge:</strong> Your utility charges $
-          {demandCharge.toFixed(2)}/kW. At your {peakLoadKW.toLocaleString()} kW peak, that is ~$
-          {demandAnnual.toLocaleString()}/yr before BESS peak shaving.
-        </div>
-      )}
+      <div className="wiz-kpi-cell">
+        <div className="wiz-kpi-label">Add-on investment</div>
+        <div className="wiz-kpi-value">${totalInvestmentK.toLocaleString()}K</div>
+      </div>
     </div>
   );
 }
@@ -2640,7 +2417,7 @@ type RoiHint = {
   onAction?: () => void;
 };
 
-function RoiIntelBanner({
+function _RoiIntelBanner({
   peakSunHours,
   utilityRate,
   hasTOU,
@@ -3086,97 +2863,22 @@ export default function Step3_5V8({ state, actions }: Props) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* ── Guided header — frames the step & points to the CTA ── */}
-      <div
-        style={{
-          borderRadius: 16,
-          padding: "20px 22px",
-          background:
-            "linear-gradient(135deg, rgba(155,109,255,0.10), rgba(79,138,255,0.07) 55%, rgba(56,189,248,0.06))",
-          border: "1px solid rgba(99,120,255,0.26)",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 900,
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: "#7dd3fc",
-            marginBottom: 8,
-          }}
-        >
-          ⚡ Energy Stack · Step 4 of 6
-        </div>
-        <h1
-          style={{
-            margin: 0,
-            fontSize: 24,
-            fontWeight: 900,
-            color: "#f8fafc",
-            letterSpacing: "-0.5px",
-            lineHeight: 1.15,
-          }}
-        >
-          Build your energy stack{city && city !== "Your Facility" ? `, ${city}` : ""}
+    <div className="wiz-root" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="wiz-step-header">
+        <div className="wiz-step-eyebrow">Step 4 of 6 · Configure add-ons</div>
+        <h1 className="wiz-step-title">
+          Optional boosters{city && city !== "Your Facility" ? ` — ${city}` : ""}
         </h1>
-        <p
-          style={{
-            margin: "9px 0 0",
-            fontSize: 13.5,
-            lineHeight: 1.55,
-            color: "rgba(203,213,225,0.82)",
-            maxWidth: 640,
-          }}
-        >
-          Battery storage is your foundation — it's already included. Add any of the optional
-          boosters below to increase your ROI, then build your system.
+        <p className="wiz-step-desc">
+          Battery storage is already in your stack. Add solar, EV charging, or backup power — each
+          optional and adjustable below.
         </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
-          {[
-            { icon: "⭐", label: "Solar", tone: "#fbbf24" },
-            { icon: "⚡", label: "EV Charging", tone: "#38bdf8" },
-            { icon: "🔥", label: "Backup Power", tone: "#fb923c" },
-          ].map((b) => (
-            <span
-              key={b.label}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "5px 11px",
-                borderRadius: 999,
-                fontSize: 12,
-                fontWeight: 700,
-                color: b.tone,
-                background: `${b.tone}14`,
-                border: `1px solid ${b.tone}33`,
-              }}
-            >
-              {b.icon} {b.label}
-            </span>
-          ))}
-        </div>
       </div>
 
-      {/* ── Section label — the decisions ── */}
-      <div
-        style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 2, flexWrap: "wrap" }}
-      >
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 900,
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: "rgba(167,139,250,0.95)",
-          }}
-        >
-          Choose your add-ons
-        </span>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+        <span className="wiz-section-label">Choose your add-ons</span>
         <span style={{ fontSize: 12, color: "rgba(148,163,184,0.62)" }}>
-          Each one is optional — adjust the size and watch your ROI update below.
+          Adjust size — full financials come in the next step.
         </span>
       </div>
 
@@ -3416,52 +3118,20 @@ export default function Step3_5V8({ state, actions }: Props) {
         demandCharge={state.intel?.demandCharge ?? 0}
       />
 
-      {/* ── Primary CTA — the single, unmistakable decision point ── */}
       <div style={{ marginTop: 4 }}>
-        <button
-          type="button"
-          onClick={handleContinue}
-          style={{
-            width: "100%",
-            padding: "18px 24px",
-            borderRadius: 14,
-            border: "none",
-            cursor: "pointer",
-            background: "linear-gradient(90deg, #9b6dff 0%, #4f8aff 52%, #38bdf8 100%)",
-            color: "#0a0e27",
-            fontSize: 17,
-            fontWeight: 900,
-            letterSpacing: "0.01em",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 10,
-            boxShadow: "0 12px 32px rgba(79,138,255,0.35)",
-            transition: "transform 0.12s ease, box-shadow 0.12s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.boxShadow = "0 16px 40px rgba(79,138,255,0.48)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 12px 32px rgba(79,138,255,0.35)";
-          }}
-        >
-          ⚡ Build My Energy Stack →
+        <button type="button" className="wiz-cta-primary" onClick={handleContinue}>
+          Continue to Energy Stack →
         </button>
-        <div
+        <p
           style={{
+            marginTop: 8,
             textAlign: "center",
-            marginTop: 9,
-            fontSize: 12.5,
-            color: "rgba(148,163,184,0.78)",
+            fontSize: 11,
+            color: "rgba(148,163,184,0.55)",
           }}
         >
-          MagicFit sizes your battery + add-ons into{" "}
-          <strong style={{ color: "rgba(226,232,240,0.92)" }}>3 quote options</strong> — no
-          commitment.
-        </div>
+          BESS sizing and three quote tiers in the next step
+        </p>
       </div>
     </div>
   );
