@@ -25,7 +25,11 @@
 
 import { describe, it, expect } from "vitest";
 import type { WizardState } from "../wizardState";
-import { buildStep4AddonCommit } from "../addonSizing";
+import {
+  buildStep4AddonCommit,
+  computeStep35PreviewFinancials,
+  fmtAddonMoneyK,
+} from "../addonSizing";
 
 /**
  * Helper: Create minimal state for Step 3.5 testing
@@ -651,5 +655,56 @@ describe("buildStep4AddonCommit", () => {
     const commit = buildStep4AddonCommit(state);
     expect(commit.generatorKW).toBe(0);
     expect(commit.linearGeneratorKW).toBe(0);
+  });
+});
+
+describe("computeStep35PreviewFinancials", () => {
+  it("energy payback excludes multi-million generator capex", () => {
+    const result = computeStep35PreviewFinancials({
+      solarKW: 192,
+      solarEffectiveMaxKW: 240,
+      wantsGenerator: true,
+      fuelType: "natural-gas",
+      generatorKW: 3000,
+      linearGeneratorKW: 0,
+      genRecKW: 3000,
+      linearGenRecKW: 40000,
+      peakLoadKW: 2719,
+      level2: 0,
+      dcfc: 0,
+      hpc: 0,
+      peakSunHours: 5.5,
+      utilityRate: 0.14,
+    });
+    expect(result.energySavingsK).toBeGreaterThan(30);
+    expect(result.resilienceInvestK).toBeGreaterThan(1000);
+    expect(Number(result.paybackYears)).toBeLessThan(20);
+    expect(Number(result.paybackYears)).toBeGreaterThan(3);
+  });
+
+  it("caps solar kW to effective site max for investment", () => {
+    const result = computeStep35PreviewFinancials({
+      solarKW: 18000,
+      solarEffectiveMaxKW: 240,
+      wantsGenerator: false,
+      fuelType: "natural-gas",
+      generatorKW: 0,
+      linearGeneratorKW: 0,
+      genRecKW: 0,
+      linearGenRecKW: 0,
+      peakLoadKW: 2719,
+      level2: 0,
+      dcfc: 0,
+      hpc: 0,
+      peakSunHours: 5.5,
+      utilityRate: 0.14,
+    });
+    expect(result.solarKW).toBe(240);
+    expect(result.energyInvestK).toBeLessThan(500);
+  });
+
+  it("formats millions without double K suffix", () => {
+    expect(fmtAddonMoneyK(25541)).toBe("$25.5M");
+    expect(fmtAddonMoneyK(269)).toBe("$269K");
   });
 });

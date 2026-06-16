@@ -350,6 +350,14 @@
   color: #f87171;
 }
 
+.wiz-kpi-sub {
+  margin-top: 4px;
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.35;
+}
+
 .wiz-strategy-pills {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

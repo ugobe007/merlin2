@@ -409,3 +409,99 @@ export function buildStep4AddonCommit(state: WizardState): {
     hpcChargers: state.wantsEVCharging ? state.hpcChargers : 0,
   };
 }
+
+/** Format thousands-of-dollars for add-on KPI display */
+export function fmtAddonMoneyK(thousands: number): string {
+  if (!Number.isFinite(thousands) || thousands <= 0) return "—";
+  if (thousands >= 1000) return `$${(thousands / 1000).toFixed(1)}M`;
+  return `$${Math.round(thousands).toLocaleString()}K`;
+}
+
+export type Step35PreviewInputs = {
+  solarKW: number;
+  solarEffectiveMaxKW: number;
+  wantsGenerator: boolean;
+  fuelType: string;
+  generatorKW: number;
+  linearGeneratorKW: number;
+  genRecKW: number;
+  linearGenRecKW: number;
+  peakLoadKW: number;
+  level2: number;
+  dcfc: number;
+  hpc: number;
+  peakSunHours: number;
+  utilityRate: number;
+};
+
+/**
+ * Step 4 add-on preview financials — energy payback excludes generator capex
+ * (generator savings are not monetized in pricingServiceV45).
+ */
+export function computeStep35PreviewFinancials(input: Step35PreviewInputs) {
+  const genMaxKW = input.peakLoadKW > 0 ? Math.round(input.peakLoadKW * 2) : 2000;
+
+  const solarKW =
+    input.solarEffectiveMaxKW > 0
+      ? Math.min(input.solarKW, input.solarEffectiveMaxKW)
+      : input.solarKW;
+
+  let liveGenKW = 0;
+  let liveLinearGenKW = 0;
+  if (input.wantsGenerator) {
+    if (input.fuelType === "linear") {
+      liveLinearGenKW = Math.min(
+        input.linearGeneratorKW > 0 ? input.linearGeneratorKW : input.linearGenRecKW,
+        genMaxKW
+      );
+    } else {
+      liveGenKW = Math.min(input.generatorKW > 0 ? input.generatorKW : input.genRecKW, genMaxKW);
+    }
+  }
+
+  const solarSavingsK = Math.round(
+    (solarKW * input.peakSunHours * 365 * 0.77 * input.utilityRate) / 1000
+  );
+  const genSavingsK = 0;
+  const evRevenueK = Math.round(
+    (input.level2 * 1350 + input.dcfc * 18000 + input.hpc * 60000) / 1000
+  );
+
+  const genCostPerKW = input.fuelType === "diesel" ? 690 : 500;
+  const linearGenCostPerKW = 550;
+
+  const solarInvestK = Math.round((solarKW * 1400) / 1000);
+  const evInvestK = Math.round(
+    (input.level2 * 9000 + input.dcfc * 55000 + input.hpc * 130000) / 1000
+  );
+  const genInvestK = Math.round((liveGenKW * genCostPerKW) / 1000);
+  const linearGenInvestK = Math.round((liveLinearGenKW * linearGenCostPerKW) / 1000);
+  const resilienceInvestK = genInvestK + linearGenInvestK;
+  const energyInvestK = solarInvestK + evInvestK;
+  const totalInvestmentK = energyInvestK + resilienceInvestK;
+
+  const energySavingsK = solarSavingsK + evRevenueK;
+  const annualSavingsK = energySavingsK + genSavingsK;
+
+  let paybackYears = "—";
+  if (energySavingsK > 0 && energyInvestK > 0) {
+    const yrs = energyInvestK / energySavingsK;
+    paybackYears = yrs > 50 ? "—" : yrs.toFixed(1);
+  }
+
+  return {
+    solarKW,
+    liveGenKW,
+    liveLinearGenKW,
+    solarSavingsK,
+    genSavingsK,
+    evRevenueK,
+    energyInvestK,
+    resilienceInvestK,
+    totalInvestmentK,
+    annualSavingsK,
+    energySavingsK,
+    paybackYears,
+    roi10YrK: annualSavingsK * 10 - totalInvestmentK,
+  };
+}

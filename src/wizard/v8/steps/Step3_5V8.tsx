@@ -19,6 +19,8 @@ import {
   industryPanelTier,
   industryPanelTierReason,
   buildStep4AddonCommit,
+  computeStep35PreviewFinancials,
+  fmtAddonMoneyK,
 } from "../addonSizing";
 import {
   getFacilityConstraints,
@@ -477,66 +479,40 @@ function _SummaryPill({
 
 // ── Config Summary Bar ────────────────────────────────────────────────────────
 function ConfigSummaryBar({
-  city,
-  industry,
-  peakLoadKW,
-  totalInvestmentK,
-  solarKW,
-  solarSavingsK,
-  genKW,
-  genSavingsK,
-  evPorts,
-  evRevenueK,
-  solarFeasible,
-  annualSavingsK,
+  energySavingsK,
   paybackYears,
-  roi10YrK,
-  demandCharge,
+  energyInvestK,
+  resilienceInvestK,
 }: {
-  city: string;
-  industry: string;
-  peakLoadKW: number;
-  totalInvestmentK: number;
-  solarKW: number;
-  solarSavingsK: number;
-  genKW: number;
-  genSavingsK: number;
-  evPorts: number;
-  evRevenueK: number;
-  solarFeasible: boolean;
-  annualSavingsK: number;
+  energySavingsK: number;
   paybackYears: string;
-  roi10YrK: number;
-  demandCharge: number;
+  energyInvestK: number;
+  resilienceInvestK: number;
 }) {
-  void city;
-  void industry;
-  void peakLoadKW;
-  void solarKW;
-  void solarSavingsK;
-  void genKW;
-  void genSavingsK;
-  void evPorts;
-  void evRevenueK;
-  void solarFeasible;
-  void roi10YrK;
-  void demandCharge;
-
   return (
     <div className="wiz-kpi-strip" style={{ marginTop: 4 }}>
       <div className="wiz-kpi-cell">
         <div className="wiz-kpi-label">Est. annual savings</div>
-        <div className={`wiz-kpi-value${annualSavingsK > 0 ? " positive" : ""}`}>
-          {annualSavingsK > 0 ? `$${annualSavingsK.toLocaleString()}K/yr` : "—"}
+        <div className={`wiz-kpi-value${energySavingsK > 0 ? " positive" : ""}`}>
+          {energySavingsK > 0 ? `${fmtAddonMoneyK(energySavingsK)}/yr` : "—"}
         </div>
+        <div className="wiz-kpi-sub">Solar + EV revenue</div>
       </div>
       <div className="wiz-kpi-cell">
-        <div className="wiz-kpi-label">Add-on payback</div>
+        <div className="wiz-kpi-label">Energy payback</div>
         <div className="wiz-kpi-value">{paybackYears !== "—" ? `${paybackYears} yrs` : "—"}</div>
+        <div className="wiz-kpi-sub">Excludes generator capex</div>
       </div>
       <div className="wiz-kpi-cell">
         <div className="wiz-kpi-label">Add-on investment</div>
-        <div className="wiz-kpi-value">${totalInvestmentK.toLocaleString()}K</div>
+        <div className="wiz-kpi-value">{fmtAddonMoneyK(energyInvestK + resilienceInvestK)}</div>
+        {resilienceInvestK > 0 ? (
+          <div className="wiz-kpi-sub">
+            {fmtAddonMoneyK(energyInvestK)} energy + {fmtAddonMoneyK(resilienceInvestK)} resilience
+          </div>
+        ) : (
+          <div className="wiz-kpi-sub">Solar + EV equipment</div>
+        )}
       </div>
     </div>
   );
@@ -2481,7 +2457,7 @@ export default function Step3_5V8({ state, actions }: Props) {
   const handleRemoveGenerator = () => {
     setWantsGenerator(false);
     actions.setAddonPreference("generator", false);
-    actions.setAddonConfig({ generatorKW: 0 });
+    actions.setAddonConfig({ generatorKW: 0, linearGeneratorKW: 0 });
   };
   const handleAddEV = () => {
     setWantsEV(true);
@@ -2501,10 +2477,13 @@ export default function Step3_5V8({ state, actions }: Props) {
   };
 
   // Linear generator sizing — sized to output above base load so net BESS charging occurs
-  const linearGenRecKW =
-    state.baseLoadKW > 0
-      ? Math.max(10, Math.round(state.baseLoadKW * 1.2))
-      : Math.max(50, Math.round(state.peakLoadKW * 0.3));
+  const linearGenRecKW = (() => {
+    const peakCap = state.peakLoadKW > 0 ? estimateGenKW("critical", state) : 0;
+    const fromBase = state.baseLoadKW > 0 ? Math.max(10, Math.round(state.baseLoadKW * 1.2)) : 0;
+    // Guard: baseload sizing must not dwarf facility peak (common DC profile mismatch)
+    if (peakCap > 0 && fromBase > peakCap * 2) return peakCap;
+    return fromBase || peakCap || Math.max(50, Math.round(state.peakLoadKW * 0.3));
+  })();
   const linearGenMaxKW = Math.max(250, linearGenRecKW * 2);
   const linearGenMinKW = 10;
 
@@ -2591,49 +2570,27 @@ export default function Step3_5V8({ state, actions }: Props) {
   };
 
   const liveSolarKW = state.solarKW > 0 ? state.solarKW : solarFeasible ? solarRecKW : 0;
-  const liveGenKW =
-    wantsGenerator && fuelType !== "linear"
-      ? state.generatorKW > 0
-        ? state.generatorKW
-        : genRecKW
-      : 0;
-  const liveLinearGenKW =
-    wantsGenerator && fuelType === "linear"
-      ? (state.linearGeneratorKW ?? 0) > 0
-        ? (state.linearGeneratorKW ?? 0)
-        : linearGenRecKW
-      : 0;
-  const liveL2 = state.level2Chargers || 0;
-  const liveDcfc = state.dcfcChargers || 0;
-  const liveHpc = state.hpcChargers || 0;
-  const totalPorts = liveL2 + liveDcfc + liveHpc;
-
-  // NREL methodology: kW × PSH × 365 × PR(0.77) × rate — matches pricingServiceV45
-  const solarSavingsK = Math.round((liveSolarKW * peakSunHours * 365 * 0.77 * utilityRate) / 1000);
-  // Generator backup value is qualitative (avoided downtime) — not monetized per pricingServiceV45
-  const genSavingsK = 0;
-  // DOE/EVI benchmarks: L2=$1,350/yr, DCFC=$18,000/yr, HPC=$60,000/yr — matches pricingServiceV45
-  const evRevenueK = Math.round((liveL2 * 1350 + liveDcfc * 18000 + liveHpc * 60000) / 1000);
-  const genCostPerKW = fuelType === "diesel" ? 690 : 500;
-  const linearGenCostPerKW = 550; // Mainspring-class linear generator: ~$550/kW installed
-  const totalInvestmentK =
-    Math.round((liveSolarKW * 1400) / 1000) +
-    Math.round((liveGenKW * genCostPerKW) / 1000) +
-    Math.round((liveLinearGenKW * linearGenCostPerKW) / 1000) +
-    Math.round((liveL2 * 9000 + liveDcfc * 55000 + liveHpc * 130000) / 1000);
-  const annualSavingsK = solarSavingsK + genSavingsK + evRevenueK;
-  const paybackYears =
-    annualSavingsK > 0 && totalInvestmentK > 0
-      ? (totalInvestmentK / annualSavingsK).toFixed(1)
-      : "—";
-  const roi10YrK = annualSavingsK * 10 - totalInvestmentK;
+  const { energySavingsK, paybackYears, energyInvestK, resilienceInvestK } =
+    computeStep35PreviewFinancials({
+      solarKW: liveSolarKW,
+      solarEffectiveMaxKW,
+      wantsGenerator,
+      fuelType,
+      generatorKW: state.generatorKW,
+      linearGeneratorKW: state.linearGeneratorKW ?? 0,
+      genRecKW,
+      linearGenRecKW,
+      peakLoadKW: state.peakLoadKW,
+      level2: state.level2Chargers || 0,
+      dcfc: state.dcfcChargers || 0,
+      hpc: state.hpcChargers || 0,
+      peakSunHours,
+      utilityRate,
+    });
 
   const city =
     state.location?.city ??
     (state.locationRaw ? state.locationRaw.split(",")[0].trim() : "Your Facility");
-  const industryDisplay = state.industry
-    ? state.industry.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-    : "";
   const handleContinue = () => {
     actions.setAddonConfig(buildStep4AddonCommit(state));
     actions.setAnswer("step3_5Visited", true);
@@ -2781,21 +2738,10 @@ export default function Step3_5V8({ state, actions }: Props) {
 
       {/* ── Review recap — live estimate of the configured stack ── */}
       <ConfigSummaryBar
-        city={city}
-        industry={industryDisplay}
-        peakLoadKW={state.peakLoadKW}
-        totalInvestmentK={totalInvestmentK}
-        solarKW={liveSolarKW}
-        solarSavingsK={solarSavingsK}
-        genKW={liveGenKW}
-        genSavingsK={genSavingsK}
-        evPorts={totalPorts}
-        evRevenueK={evRevenueK}
-        solarFeasible={solarFeasible}
-        annualSavingsK={annualSavingsK}
+        energySavingsK={energySavingsK}
         paybackYears={paybackYears}
-        roi10YrK={roi10YrK}
-        demandCharge={state.intel?.demandCharge ?? 0}
+        energyInvestK={energyInvestK}
+        resilienceInvestK={resilienceInvestK}
       />
 
       <div style={{ marginTop: 4 }}>
