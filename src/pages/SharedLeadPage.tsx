@@ -342,14 +342,14 @@ export default function SharedLeadPage() {
             <span className="text-[#3ECF8E] font-semibold">Interested in this lead?</span>
           </div>
           <p className="text-slate-400 text-sm">
-            Log in to the Merlin Vendor Portal to access your matched leads, submit pricing, and
-            respond to RFQs.
+            Create a free vendor account to unlock all active leads, get matched to new ones daily,
+            and submit pricing directly to buyers.
           </p>
           <a
-            href="/vendor-portal"
+            href="/vendor-leads"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#3ECF8E] hover:bg-emerald-400 text-black font-semibold text-sm transition-all"
           >
-            Go to Vendor Portal
+            Get more leads like this
             <ChevronRight className="w-4 h-4" />
           </a>
         </div>
