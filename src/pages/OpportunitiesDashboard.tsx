@@ -10,20 +10,24 @@ import {
   CheckCircle,
   Archive,
   TrendingUp,
-  Play,
   Sparkles,
   Zap,
   AlertTriangle,
   ChevronDown,
   ChevronUp,
   Loader2,
+  Send,
+  Sun,
+  Battery,
+  Cpu,
+  RefreshCw,
+  Share2,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { runOpportunityScraper } from "../api/opportunityScraper";
 import { assessOpportunity, type OppAssessment } from "../services/opportunityAssessmentService";
 import type {
   Opportunity,
-  OpportunityFilter,
   OpportunityStatus,
   OpportunitySignal,
   IndustryType,
@@ -483,9 +487,99 @@ function AssessmentPanel({ opp }: AssessmentPanelProps) {
   );
 }
 
+// ─── Category helpers (mirrors vendorLeadMatchService logic) ──────────────────
+
+type OppCategory = "bess" | "solar" | "generator" | "other";
+
+function classifyOpp(opp: Opportunity): OppCategory {
+  const sigs = opp.signals as string[];
+  const d = (opp.description ?? "").toLowerCase();
+  const isBESS =
+    sigs.some((s) =>
+      [
+        "bess_procurement",
+        "energy_project",
+        "microgrid_procurement",
+        "virtual_power_plant",
+      ].includes(s)
+    ) || /battery.storage|energy.storage|\bbess\b|megapack|peak.shav/i.test(d);
+  const isSolar =
+    sigs.some((s) => ["solar_procurement", "c_and_i_solar"].includes(s)) ||
+    /\bsolar\b|photovoltaic|\bpv\b/i.test(d);
+  const isGen =
+    sigs.includes("generator_procurement") ||
+    /\bgenerator\b|genset|backup.power|standby.power/i.test(d);
+  if (isBESS && isSolar) return "bess"; // BESS takes priority
+  if (isBESS) return "bess";
+  if (isSolar) return "solar";
+  if (isGen) return "generator";
+  return "other";
+}
+
+const CATEGORY_CONFIG: Record<
+  OppCategory,
+  { label: string; icon: React.ReactNode; chipBg: string; chipText: string; tabActive: string }
+> = {
+  bess: {
+    label: "BESS",
+    icon: <Battery className="w-3.5 h-3.5" />,
+    chipBg: "bg-blue-500/15 border-blue-500/30",
+    chipText: "text-blue-300",
+    tabActive: "border-blue-400 text-blue-300",
+  },
+  solar: {
+    label: "Solar",
+    icon: <Sun className="w-3.5 h-3.5" />,
+    chipBg: "bg-yellow-500/15 border-yellow-500/30",
+    chipText: "text-yellow-300",
+    tabActive: "border-yellow-400 text-yellow-300",
+  },
+  generator: {
+    label: "Generator",
+    icon: <Cpu className="w-3.5 h-3.5" />,
+    chipBg: "bg-purple-500/15 border-purple-500/30",
+    chipText: "text-purple-300",
+    tabActive: "border-purple-400 text-purple-300",
+  },
+  other: {
+    label: "Other",
+    icon: <TrendingUp className="w-3.5 h-3.5" />,
+    chipBg: "bg-slate-500/15 border-slate-500/30",
+    chipText: "text-slate-400",
+    tabActive: "border-slate-400 text-slate-300",
+  },
+};
+
+// Color for confidence score badge
+function scoreColor(n: number) {
+  if (n >= 70) return "text-emerald-400 bg-emerald-950/50 border-emerald-700/40";
+  if (n >= 50) return "text-amber-400 bg-amber-950/50 border-amber-700/40";
+  return "text-slate-400 bg-slate-800/50 border-slate-700/40";
+}
+
+// Signal pill color by type
+function signalPillStyle(sig: string): string {
+  if (
+    ["bess_procurement", "energy_project", "microgrid_procurement", "virtual_power_plant"].includes(
+      sig
+    )
+  )
+    return "bg-blue-500/10 text-blue-300 border-blue-500/20";
+  if (["solar_procurement", "c_and_i_solar"].includes(sig))
+    return "bg-yellow-500/10 text-yellow-300 border-yellow-500/20";
+  if (["generator_procurement"].includes(sig))
+    return "bg-purple-500/10 text-purple-300 border-purple-500/20";
+  if (["rfq", "interconnection_application", "permit_filed", "procurement_awarded"].includes(sig))
+    return "bg-emerald-500/10 text-emerald-300 border-emerald-500/20";
+  if (["funding", "construction", "expansion", "new_opening"].includes(sig))
+    return "bg-slate-500/10 text-slate-400 border-slate-500/20";
+  return "bg-slate-800/50 text-slate-400 border-slate-700/30";
+}
+
+const VENDOR_PORTAL_URL = "https://merlinenergy.net/vendor-portal";
+
 export function OpportunitiesDashboard() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [filteredOpportunities, setFilteredOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOpp, setSelectedOpp] = useState<Opportunity | null>(null);
   const [scraping, setScraping] = useState(false);
@@ -493,63 +587,28 @@ export function OpportunitiesDashboard() {
   const [matchResult, setMatchResult] = useState<{ newLeads: number; scanned: number } | null>(
     null
   );
+  const [pushing, setPushing] = useState<string | null>(null); // opportunity id being pushed
 
-  // Filters
-  const [filter, setFilter] = useState<OpportunityFilter>({
-    status: ["new"],
-    minConfidence: 30,
-  });
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryTab, setCategoryTab] = useState<OppCategory | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<string>("new");
+  const [copied, setCopied] = useState(false);
 
-  // Load opportunities
   useEffect(() => {
-    loadOpportunities();
+    void loadOpportunities();
   }, []);
 
-  // Apply filters
-  useEffect(() => {
-    let filtered = [...opportunities];
-
-    // Status filter
-    if (filter.status && filter.status.length > 0) {
-      filtered = filtered.filter((opp) => filter.status!.includes(opp.status));
-    }
-
-    // Confidence filter
-    if (filter.minConfidence) {
-      filtered = filtered.filter((opp) => opp.confidence_score >= filter.minConfidence!);
-    }
-
-    // Industry filter
-    if (filter.industry && filter.industry.length > 0) {
-      filtered = filtered.filter((opp) => opp.industry && filter.industry!.includes(opp.industry));
-    }
-
-    // Search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (opp) =>
-          opp.company_name.toLowerCase().includes(query) ||
-          opp.description.toLowerCase().includes(query)
-      );
-    }
-
-    setFilteredOpportunities(filtered);
-  }, [opportunities, filter, searchQuery]);
-
   async function loadOpportunities() {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from("opportunities")
         .select("*")
         .order("confidence_score", { ascending: false });
-
       if (error) throw error;
-
-      setOpportunities(data || []);
-    } catch (error) {
-      console.error("Error loading opportunities:", error);
+      setOpportunities(data ?? []);
+    } catch (e) {
+      console.error("Load error:", e);
     } finally {
       setLoading(false);
     }
@@ -562,13 +621,12 @@ export function OpportunitiesDashboard() {
       if (result.success) {
         await loadOpportunities();
         alert(
-          `✅ Scraper complete!\n\nFound: ${result.data?.total_found || 0} opportunities\nNew: ${result.data?.new_opportunities || 0}\nDuplicates: ${result.data?.duplicates_skipped || 0}`
+          `✅ Scraper complete!\n\nFound: ${result.data?.total_found ?? 0}\nNew: ${result.data?.new_opportunities ?? 0}\nDuplicates skipped: ${result.data?.duplicates_skipped ?? 0}`
         );
       } else {
         alert(`❌ Scraper failed: ${result.error}`);
       }
-    } catch (error) {
-      console.error("Scraper error:", error);
+    } catch (_e) {
       alert("❌ Failed to run scraper");
     } finally {
       setScraping(false);
@@ -589,412 +647,491 @@ export function OpportunitiesDashboard() {
         const s = data.summary;
         setMatchResult({ newLeads: s?.newLeads ?? 0, scanned: s?.scanned ?? 0 });
         alert(
-          `✅ Lead routing complete!\n\nScanned: ${s?.scanned ?? "—"} opportunities\nQualified: ${s?.qualified ?? "—"}\nNew vendor leads created: ${s?.newLeads ?? "—"}\n\nVendors can now see leads at /vendor-portal → Leads tab.`
+          `✅ Lead routing complete!\n\nScanned: ${s?.scanned ?? "—"}\nQualified: ${s?.qualified ?? "—"}\nNew vendor leads: ${s?.newLeads ?? "—"}\n\nVendors see their leads at:\n${VENDOR_PORTAL_URL}`
         );
       } else {
         alert(`❌ Matcher failed: ${data.error ?? data.message}`);
       }
-    } catch (err) {
-      console.error("Matcher error:", err);
+    } catch {
       alert("❌ Failed to run lead matcher");
     } finally {
       setMatching(false);
     }
   }
 
-  async function updateStatus(oppId: string, newStatus: OpportunityStatus) {
+  // Manually push ONE opportunity to all matching vendors
+  async function pushOneToVendors(opp: Opportunity, e: React.MouseEvent) {
+    e.stopPropagation();
+    setPushing(opp.id);
     try {
-      const updates: Partial<Opportunity> = {
-        status: newStatus,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (newStatus === "contacted") {
-        updates.contacted_at = new Date().toISOString();
-      }
-
-      const { error } = await supabase.from("opportunities").update(updates).eq("id", oppId);
-
-      if (error) throw error;
-
-      // Update local state
-      setOpportunities((prev) =>
-        prev.map((opp) => (opp.id === oppId ? { ...opp, ...updates } : opp))
+      const res = await fetch("/api/leads/run-matcher", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rerun: true, opportunityId: opp.id }),
+      });
+      const data = await res.json();
+      const sent = data.summary?.newLeads ?? 0;
+      alert(
+        sent > 0
+          ? `✅ Pushed "${opp.company_name}" to ${sent} vendor${sent !== 1 ? "s" : ""}.\n\nVendors see it at:\n${VENDOR_PORTAL_URL}`
+          : `ℹ️ No vendors matched this lead (score below threshold or already routed).`
       );
-
-      if (selectedOpp?.id === oppId) {
-        setSelectedOpp({ ...selectedOpp, ...updates });
-      }
-    } catch (error) {
-      console.error("Error updating status:", error);
+    } catch {
+      alert("❌ Push failed");
+    } finally {
+      setPushing(null);
     }
   }
 
-  function getConfidenceColor(score: number) {
-    if (score >= 70) return "text-emerald-400 bg-emerald-950/30 border-emerald-500/30";
-    if (score >= 50) return "text-yellow-400 bg-yellow-950/30 border-yellow-500/30";
-    return "text-slate-400 bg-slate-950/30 border-slate-500/30";
+  function copyPortalLink() {
+    void navigator.clipboard.writeText(VENDOR_PORTAL_URL);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
-  function getConfidenceLabel(score: number) {
-    if (score >= 70) return "High";
-    if (score >= 50) return "Medium";
-    return "Low";
+  async function updateStatus(oppId: string, newStatus: OpportunityStatus) {
+    const updates: Partial<Opportunity> = {
+      status: newStatus,
+      updated_at: new Date().toISOString(),
+      ...(newStatus === "contacted" ? { contacted_at: new Date().toISOString() } : {}),
+    };
+    const { error } = await supabase.from("opportunities").update(updates).eq("id", oppId);
+    if (!error) {
+      setOpportunities((prev) => prev.map((o) => (o.id === oppId ? { ...o, ...updates } : o)));
+      if (selectedOpp?.id === oppId) setSelectedOpp({ ...selectedOpp, ...updates });
+    }
   }
+
+  // ── Filter ──
+  const filtered = opportunities.filter((opp) => {
+    if (statusFilter && statusFilter !== "all" && opp.status !== statusFilter) return false;
+    if (categoryTab !== "all" && classifyOpp(opp) !== categoryTab) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!opp.company_name.toLowerCase().includes(q) && !opp.description.toLowerCase().includes(q))
+        return false;
+    }
+    return true;
+  });
+
+  // Category counts
+  const counts: Record<OppCategory | "all", number> = {
+    all: opportunities.length,
+    bess: opportunities.filter((o) => classifyOpp(o) === "bess").length,
+    solar: opportunities.filter((o) => classifyOpp(o) === "solar").length,
+    generator: opportunities.filter((o) => classifyOpp(o) === "generator").length,
+    other: opportunities.filter((o) => classifyOpp(o) === "other").length,
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-slate-400">Loading opportunities...</div>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-emerald-950/20 to-slate-950 p-6">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
-              Opportunity Dashboard
-            </h1>
+    <div className="min-h-screen bg-[#0f1117] text-white">
+      {/* ── Header ── */}
+      <div className="border-b border-white/[0.06] bg-[#13151c] px-6 py-5">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Lead Opportunities</h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              {opportunities.length} scraped articles · {counts.bess} BESS · {counts.solar} Solar ·{" "}
+              {counts.generator} Generator
+            </p>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Copy vendor portal link */}
+            <button
+              onClick={copyPortalLink}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 text-sm font-medium transition-all"
+              title={`Copy vendor portal link: ${VENDOR_PORTAL_URL}`}
+            >
+              {copied ? (
+                <CheckCircle className="w-4 h-4 text-emerald-400" />
+              ) : (
+                <Share2 className="w-4 h-4" />
+              )}
+              {copied ? "Copied!" : "Copy Vendor Portal Link"}
+            </button>
+
+            {/* Run scraper */}
             <button
               onClick={runScraper}
               disabled={scraping || matching}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:text-slate-400 text-white rounded-lg transition-colors font-semibold"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-white text-sm font-medium transition-all"
             >
-              <Play className="w-4 h-4" />
-              {scraping ? "Scraping..." : "Run Scraper"}
+              {scraping ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4" />
+              )}
+              {scraping ? "Scraping…" : "Run Scraper"}
             </button>
+
+            {/* Route all to vendors */}
             <button
               onClick={routeToVendors}
               disabled={matching || scraping}
-              title="Score unmatched opportunities and create vendor_leads rows for qualified procurement articles"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-400 text-white rounded-lg transition-colors font-semibold"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#3ECF8E] hover:bg-emerald-400 disabled:opacity-40 text-black text-sm font-semibold transition-all"
+              title="Score all unmatched opportunities and push qualified leads to vendor inboxes"
             >
-              <Zap className="w-4 h-4" />
+              {matching ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
               {matching
                 ? "Routing…"
                 : matchResult
                   ? `Route to Vendors (${matchResult.newLeads} sent)`
-                  : "Route to Vendors"}
-            </button>
-            <button
-              onClick={loadOpportunities}
-              className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-400 hover:bg-emerald-500/30 transition-colors"
-            >
-              Refresh
+                  : "Route All to Vendors"}
             </button>
           </div>
         </div>
-        <p className="text-slate-400">
-          Business leads discovered by Merlin&apos;s opportunity scraper
-        </p>
       </div>
 
-      {/* Stats */}
-      <div className="max-w-7xl mx-auto grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4">
-          <div className="text-2xl font-bold text-white">{opportunities.length}</div>
-          <div className="text-sm text-slate-400">Total Opportunities</div>
-        </div>
-        <div className="bg-emerald-900/30 backdrop-blur-sm border border-emerald-700/50 rounded-xl p-4">
-          <div className="text-2xl font-bold text-emerald-400">
-            {opportunities.filter((o) => o.status === "new").length}
-          </div>
-          <div className="text-sm text-slate-400">New</div>
-        </div>
-        <div className="bg-blue-900/30 backdrop-blur-sm border border-blue-700/50 rounded-xl p-4">
-          <div className="text-2xl font-bold text-blue-400">
-            {opportunities.filter((o) => o.status === "contacted").length}
-          </div>
-          <div className="text-sm text-slate-400">Contacted</div>
-        </div>
-        <div className="bg-purple-900/30 backdrop-blur-sm border border-purple-700/50 rounded-xl p-4">
-          <div className="text-2xl font-bold text-purple-400">
-            {opportunities.filter((o) => o.confidence_score >= 70).length}
-          </div>
-          <div className="text-sm text-slate-400">High Confidence</div>
-        </div>
-      </div>
+      {/* ── Category tab bar + filters ── */}
+      <div className="border-b border-white/[0.06] bg-[#13151c] px-6">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Category tabs */}
+          <nav className="flex gap-1">
+            {(["all", "bess", "solar", "generator", "other"] as const).map((cat) => {
+              const isActive = categoryTab === cat;
+              const cfg = cat === "all" ? null : CATEGORY_CONFIG[cat];
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setCategoryTab(cat)}
+                  className={`flex items-center gap-1.5 px-4 py-3 border-b-2 text-sm font-medium transition-colors ${
+                    isActive
+                      ? cat === "all"
+                        ? "border-[#3ECF8E] text-[#3ECF8E]"
+                        : `${cfg!.tabActive} border-current`
+                      : "border-transparent text-slate-500 hover:text-slate-300"
+                  }`}
+                >
+                  {cfg?.icon}
+                  {cat === "all" ? "All" : cfg!.label}
+                  <span
+                    className={`text-xs px-1.5 py-0.5 rounded-full ${isActive ? "bg-white/10" : "bg-white/[0.04]"}`}
+                  >
+                    {counts[cat]}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
 
-      {/* Filters */}
-      <div className="max-w-7xl mx-auto bg-slate-900/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 mb-6">
-        <div className="grid grid-cols-3 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search companies..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
-
-          {/* Status filter */}
-          <div>
+          {/* Search + status filter */}
+          <div className="flex items-center gap-2 py-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 pr-3 py-1.5 w-44 bg-white/[0.05] border border-white/[0.08] rounded-lg text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50"
+              />
+            </div>
             <select
-              value={filter.status?.[0] || ""}
-              onChange={(e) =>
-                setFilter({
-                  ...filter,
-                  status: e.target.value ? [e.target.value as OpportunityStatus] : undefined,
-                })
-              }
-              className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-1.5 bg-white/[0.05] border border-white/[0.08] rounded-lg text-sm text-slate-300 focus:outline-none"
             >
-              <option value="">All Status</option>
+              <option value="all">All Status</option>
               <option value="new">New</option>
               <option value="contacted">Contacted</option>
               <option value="qualified">Qualified</option>
               <option value="archived">Archived</option>
             </select>
           </div>
-
-          {/* Confidence filter */}
-          <div>
-            <select
-              value={filter.minConfidence || 0}
-              onChange={(e) => setFilter({ ...filter, minConfidence: parseInt(e.target.value) })}
-              className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <option value="0">All Confidence</option>
-              <option value="70">High (70+)</option>
-              <option value="50">Medium (50+)</option>
-              <option value="30">Low (30+)</option>
-            </select>
-          </div>
         </div>
       </div>
 
-      {/* Opportunities Table */}
-      <div className="max-w-7xl mx-auto bg-slate-900/50 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-800/50 border-b border-slate-700">
-              <tr>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-emerald-400">
-                  Confidence
-                </th>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-emerald-400">
-                  Company
-                </th>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-emerald-400">
-                  Industry
-                </th>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-emerald-400">
-                  Signals
-                </th>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-emerald-400">
-                  Status
-                </th>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-emerald-400">Date</th>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-emerald-400">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {filteredOpportunities.map((opp) => (
-                <tr
+      {/* ── Cards grid ── */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        {filtered.length === 0 ? (
+          <div className="text-center py-20 text-slate-500">
+            No opportunities match the current filters.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3">
+            {filtered.map((opp) => {
+              const cat = classifyOpp(opp);
+              const cfg = CATEGORY_CONFIG[cat];
+              const isPushing = pushing === opp.id;
+              return (
+                <div
                   key={opp.id}
-                  className="hover:bg-slate-800/30 cursor-pointer transition-colors"
+                  className="group rounded-xl border border-white/[0.06] bg-[rgba(255,255,255,0.025)] hover:bg-[rgba(255,255,255,0.04)] hover:border-white/[0.1] transition-all cursor-pointer"
                   onClick={() => setSelectedOpp(opp)}
                 >
-                  <td className="px-4 py-3">
+                  <div className="flex items-start gap-4 px-5 py-4">
+                    {/* Score badge */}
                     <div
-                      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full border text-xs font-medium ${getConfidenceColor(opp.confidence_score)}`}
+                      className={`shrink-0 mt-0.5 px-2.5 py-1 rounded-lg border text-sm font-bold ${scoreColor(opp.confidence_score)}`}
                     >
-                      <TrendingUp className="w-3 h-3" />
                       {opp.confidence_score}
                     </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="text-white font-medium">{opp.company_name}</div>
-                    <div className="text-xs text-slate-400 line-clamp-1">{opp.description}</div>
-                  </td>
-                  <td className="px-4 py-3">
-                    {opp.industry && (
-                      <div className="text-sm text-slate-300">{INDUSTRY_LABELS[opp.industry]}</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {opp.signals.slice(0, 2).map((signal: string) => (
+
+                    {/* Main content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        {/* Category chip */}
                         <span
-                          key={signal}
-                          className="text-xs px-2 py-0.5 bg-emerald-950/50 border border-emerald-800/30 rounded text-emerald-300"
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${cfg.chipBg} ${cfg.chipText}`}
                         >
-                          {signalLabel(signal).split(" ")[0]}
+                          {cfg.icon}
+                          {cfg.label}
                         </span>
-                      ))}
-                      {opp.signals.length > 2 && (
-                        <span className="text-xs text-slate-400">+{opp.signals.length - 2}</span>
-                      )}
+
+                        {/* Company */}
+                        <span className="text-white font-semibold text-sm truncate max-w-xs">
+                          {opp.company_name}
+                        </span>
+
+                        {/* Industry */}
+                        {opp.industry && (
+                          <span className="text-xs text-slate-500">
+                            {INDUSTRY_LABELS[opp.industry] ?? opp.industry}
+                          </span>
+                        )}
+
+                        {/* Status pill */}
+                        <span
+                          className={`ml-auto text-xs px-2 py-0.5 rounded-full border ${
+                            opp.status === "new"
+                              ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                              : opp.status === "contacted"
+                                ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                : opp.status === "qualified"
+                                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                  : "bg-slate-800 text-slate-500 border-slate-700"
+                          }`}
+                        >
+                          {opp.status}
+                        </span>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-sm text-slate-400 line-clamp-2 mb-2">{opp.description}</p>
+
+                      {/* Signal pills */}
+                      <div className="flex flex-wrap gap-1">
+                        {(opp.signals as string[]).slice(0, 5).map((sig) => (
+                          <span
+                            key={sig}
+                            className={`px-2 py-0.5 rounded-md text-[11px] font-medium border ${signalPillStyle(sig)}`}
+                          >
+                            {signalLabel(sig)}
+                          </span>
+                        ))}
+                        {opp.signals.length > 5 && (
+                          <span className="text-[11px] text-slate-600 px-1">
+                            +{opp.signals.length - 5}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        opp.status === "new"
-                          ? "bg-blue-950/50 text-blue-400 border border-blue-800/30"
-                          : opp.status === "contacted"
-                            ? "bg-yellow-950/50 text-yellow-400 border border-yellow-800/30"
-                            : opp.status === "qualified"
-                              ? "bg-emerald-950/50 text-emerald-400 border border-emerald-800/30"
-                              : "bg-slate-950/50 text-slate-400 border border-slate-800/30"
-                      }`}
+
+                    {/* Action buttons */}
+                    <div
+                      className="shrink-0 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      {opp.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-slate-400">
-                    {new Date(opp.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
+                      {/* Push this lead to vendors */}
+                      <button
+                        onClick={(e) => void pushOneToVendors(opp, e)}
+                        disabled={isPushing}
+                        title="Push this lead to all matching vendors"
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#3ECF8E]/10 hover:bg-[#3ECF8E]/20 text-[#3ECF8E] border border-[#3ECF8E]/20 text-xs font-semibold transition-all disabled:opacity-50"
+                      >
+                        {isPushing ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Send className="w-3 h-3" />
+                        )}
+                        Push to Vendors
+                      </button>
+
+                      {/* Open source */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           window.open(opp.source_url, "_blank");
                         }}
-                        className="p-1.5 hover:bg-slate-700/50 rounded transition-colors"
-                        title="View source"
+                        title="Open source article"
+                        className="p-1.5 rounded-lg hover:bg-white/[0.08] text-slate-500 hover:text-slate-300 transition-all"
                       >
-                        <ExternalLink className="w-4 h-4 text-slate-400" />
+                        <ExternalLink className="w-4 h-4" />
+                      </button>
+
+                      {/* Archive */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void updateStatus(opp.id, "archived");
+                        }}
+                        title="Archive"
+                        className="p-1.5 rounded-lg hover:bg-white/[0.08] text-slate-600 hover:text-slate-400 transition-all"
+                      >
+                        <Archive className="w-4 h-4" />
                       </button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
 
-          {filteredOpportunities.length === 0 && (
-            <div className="text-center py-12 text-slate-400">
-              No opportunities found matching your filters
-            </div>
-          )}
-        </div>
+                    {/* Date */}
+                    <div className="shrink-0 text-xs text-slate-600 mt-1">
+                      {new Date(opp.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Detail Modal */}
+      {/* ── Detail slide-over ── */}
       {selectedOpp && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-6"
           onClick={() => setSelectedOpp(null)}
         >
           <div
-            className="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-[#13151c] border border-white/[0.08] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="p-6 border-b border-slate-800">
-              <div className="flex items-start justify-between mb-4">
+            {/* Modal header */}
+            <div className="p-6 border-b border-white/[0.06]">
+              <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">{selectedOpp.company_name}</h2>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full border text-xs font-medium ${getConfidenceColor(selectedOpp.confidence_score)}`}
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    {(() => {
+                      const cat = classifyOpp(selectedOpp);
+                      const cfg = CATEGORY_CONFIG[cat];
+                      return (
+                        <span
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${cfg.chipBg} ${cfg.chipText}`}
+                        >
+                          {cfg.icon} {cfg.label}
+                        </span>
+                      );
+                    })()}
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full border text-xs font-bold ${scoreColor(selectedOpp.confidence_score)}`}
                     >
-                      <TrendingUp className="w-3 h-3" />
-                      {getConfidenceLabel(selectedOpp.confidence_score)} (
-                      {selectedOpp.confidence_score})
-                    </div>
+                      Score {selectedOpp.confidence_score}
+                    </span>
                     {selectedOpp.industry && (
-                      <span className="text-sm text-slate-300">
-                        {INDUSTRY_LABELS[selectedOpp.industry]}
+                      <span className="text-xs text-slate-500">
+                        {INDUSTRY_LABELS[selectedOpp.industry] ?? selectedOpp.industry}
                       </span>
                     )}
                   </div>
+                  <h2 className="text-xl font-bold text-white">{selectedOpp.company_name}</h2>
                 </div>
                 <button
                   onClick={() => setSelectedOpp(null)}
-                  className="text-slate-400 hover:text-white"
+                  className="text-slate-500 hover:text-white text-xl leading-none"
                 >
-                  ✕
+                  ×
                 </button>
               </div>
-
-              {/* Signals */}
-              <div className="flex flex-wrap gap-2">
-                {selectedOpp.signals.map((signal: string) => (
+              <div className="flex flex-wrap gap-1.5">
+                {(selectedOpp.signals as string[]).map((sig) => (
                   <span
-                    key={signal}
-                    className="text-sm px-3 py-1 bg-emerald-950/50 border border-emerald-800/30 rounded-full text-emerald-300"
+                    key={sig}
+                    className={`px-2 py-0.5 rounded-md text-xs font-medium border ${signalPillStyle(sig)}`}
                   >
-                    {signalLabel(signal)}
+                    {signalLabel(sig)}
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Modal Body */}
+            {/* Body */}
             <div className="p-6 space-y-4">
               <div>
-                <div className="text-sm text-emerald-400 font-semibold mb-1">Description</div>
-                <p className="text-slate-300">{selectedOpp.description}</p>
+                <div className="text-xs text-slate-500 uppercase tracking-wide mb-1">
+                  Description
+                </div>
+                <p className="text-slate-300 text-sm leading-relaxed">{selectedOpp.description}</p>
               </div>
 
               <div>
-                <div className="text-sm text-emerald-400 font-semibold mb-1">Source</div>
+                <div className="text-xs text-slate-500 uppercase tracking-wide mb-1">Source</div>
                 <a
                   href={selectedOpp.source_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  className="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-sm"
                 >
-                  {selectedOpp.source_name}
+                  {selectedOpp.source_name ?? "View Article"}
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
 
-              {/* ── Opportunity Assessment ── */}
               <AssessmentPanel opp={selectedOpp} />
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-emerald-400 font-semibold mb-1">Status</div>
-                  <div className="text-slate-300">{selectedOpp.status}</div>
+                  <div className="text-xs text-slate-500 uppercase tracking-wide mb-1">Status</div>
+                  <div className="text-slate-300 text-sm">{selectedOpp.status}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-emerald-400 font-semibold mb-1">Discovered</div>
-                  <div className="text-slate-300">
+                  <div className="text-xs text-slate-500 uppercase tracking-wide mb-1">
+                    Discovered
+                  </div>
+                  <div className="text-slate-300 text-sm">
                     {new Date(selectedOpp.created_at).toLocaleDateString()}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Modal Actions */}
-            <div className="p-6 border-t border-slate-800 flex gap-3">
+            {/* Modal actions */}
+            <div className="p-5 border-t border-white/[0.06] flex gap-2 flex-wrap">
               <button
-                onClick={() => updateStatus(selectedOpp.id, "contacted")}
+                onClick={() =>
+                  void pushOneToVendors(selectedOpp, {
+                    stopPropagation: () => {},
+                  } as React.MouseEvent)
+                }
+                disabled={pushing === selectedOpp.id}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#3ECF8E]/10 hover:bg-[#3ECF8E]/20 text-[#3ECF8E] border border-[#3ECF8E]/20 text-sm font-semibold transition-all"
+              >
+                {pushing === selectedOpp.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                Push to Vendors
+              </button>
+              <button
+                onClick={() => void updateStatus(selectedOpp.id, "contacted")}
                 disabled={selectedOpp.status === "contacted"}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-400 hover:bg-emerald-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-sm font-semibold transition-all disabled:opacity-40"
               >
                 <CheckCircle className="w-4 h-4" />
                 Mark Contacted
               </button>
               <button
-                onClick={() => updateStatus(selectedOpp.id, "qualified")}
+                onClick={() => void updateStatus(selectedOpp.id, "qualified")}
                 disabled={selectedOpp.status === "qualified"}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-lg text-purple-400 hover:bg-purple-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 text-sm font-semibold transition-all disabled:opacity-40"
               >
                 <TrendingUp className="w-4 h-4" />
                 Mark Qualified
               </button>
               <button
-                onClick={() => updateStatus(selectedOpp.id, "archived")}
-                className="px-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-slate-400 hover:bg-slate-700 transition-colors"
+                onClick={() => void updateStatus(selectedOpp.id, "archived")}
+                className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-400 border border-slate-700 transition-all ml-auto"
               >
                 <Archive className="w-4 h-4" />
               </button>
