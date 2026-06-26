@@ -190,45 +190,93 @@ export function scoreOpportunity(
 ): LeadScore {
   const descLower = (description ?? "").toLowerCase();
 
+  // ── Live text-based anchor detection ────────────────────────────────────────
+  // Scoring must NOT rely solely on stored signals because existing DB rows were
+  // scraped before Phase 2/3/4 keywords were added. We detect procurement intent
+  // directly from description text so stale signals can't create false negatives
+  // OR false positives.
+
+  const textHasBESS = /battery.storage|energy.storage|\bbess\b|megapack|powerwall|peak.shav/i.test(
+    descLower
+  );
+
+  const textHasBESSProcurement =
+    textHasBESS &&
+    /\brfp\b|\brfq\b|rfps|rfqs|procurement|solicitation|\bbid\b|\baward\b|request.for.proposal/i.test(
+      descLower
+    );
+
+  // Solar: "solar" within 100 chars of a procurement keyword (either order)
+  const textHasSolarProcurement =
+    /solar.{0,100}(?:rfp|rfq|procurement|\bppa\b|install|\bbid\b|award|contract)|(?:rfp|rfq|procurement|\bppa\b|\bbid\b|award|contract).{0,100}solar/i.test(
+      descLower
+    );
+
+  const textHasGenerator =
+    /\bgenerator\b|genset|standby.power|backup.power|diesel.gen|emergency.power|critical.load|\bups\b.*power/i.test(
+      descLower
+    );
+
+  // Supplement stored signals with live detections (handles stale DB rows)
+  const effectiveSignals = new Set(signals);
+  if (textHasBESSProcurement) effectiveSignals.add("bess_procurement" as OpportunitySignal);
+  if (textHasSolarProcurement) effectiveSignals.add("solar_procurement" as OpportunitySignal);
+  if (textHasGenerator) effectiveSignals.add("generator_procurement" as OpportunitySignal);
+  const sigs = Array.from(effectiveSignals) as OpportunitySignal[];
+
   // BESS score
   let bess = 0;
-  for (const sig of signals) bess += BESS_SIGNAL_SCORES[sig] ?? 0;
+  for (const sig of sigs) bess += BESS_SIGNAL_SCORES[sig] ?? 0;
   if (industry) bess += BESS_INDUSTRY_BONUS[industry] ?? 0;
-  // Keyword boost from description
-  if (/\bbess\b|battery.storage|energy.storage|megapack|powerwall|peak.shav/i.test(descLower))
-    bess += 12;
+  if (textHasBESS) bess += 12;
   if (/\bkwh\b|\bmwh\b|storage.capacity|c-rate/i.test(descLower)) bess += 8;
-  // BESS co-occurrence bonuses
-  if (signals.includes("microgrid_procurement") && signals.includes("bess_procurement")) bess += 14;
-  if (signals.includes("virtual_power_plant") && signals.includes("bess_procurement")) bess += 12;
-  if (signals.includes("c_and_i_solar") && signals.includes("bess_procurement")) bess += 10;
-  if (signals.includes("permit_filed") && signals.includes("construction")) bess += 8;
-  if (signals.includes("interconnection_application") && industry) bess += 10;
+  // Co-occurrence bonuses (use effective sigs)
+  if (sigs.includes("microgrid_procurement") && sigs.includes("bess_procurement")) bess += 14;
+  if (sigs.includes("virtual_power_plant") && sigs.includes("bess_procurement")) bess += 12;
+  if (sigs.includes("c_and_i_solar") && sigs.includes("bess_procurement")) bess += 10;
+  if (sigs.includes("permit_filed") && sigs.includes("construction")) bess += 8;
+  if (sigs.includes("interconnection_application") && industry) bess += 10;
 
   // Solar score
   let solar = 0;
-  for (const sig of signals) solar += SOLAR_SIGNAL_SCORES[sig] ?? 0;
+  for (const sig of sigs) solar += SOLAR_SIGNAL_SCORES[sig] ?? 0;
   if (industry) solar += SOLAR_INDUSTRY_BONUS[industry] ?? 0;
   if (/\bsolar\b|photovoltaic|\bpv\b|rooftop.solar|solar.panel/i.test(descLower)) solar += 12;
   if (/\bkwp\b|\bmwp\b|\bppa\b|power.purchase.agreement/i.test(descLower)) solar += 8;
-  // Solar co-occurrence bonuses
-  if (signals.includes("c_and_i_solar") && signals.includes("solar_procurement")) solar += 10;
-  if (signals.includes("c_and_i_solar") && signals.includes("sustainability_initiative"))
-    solar += 8;
-  if (signals.includes("microgrid_procurement") && signals.includes("solar_procurement"))
-    solar += 8;
+  if (sigs.includes("c_and_i_solar") && sigs.includes("solar_procurement")) solar += 10;
+  if (sigs.includes("c_and_i_solar") && sigs.includes("sustainability_initiative")) solar += 8;
+  if (sigs.includes("microgrid_procurement") && sigs.includes("solar_procurement")) solar += 8;
 
   // Generator score
   let generator = 0;
-  for (const sig of signals) generator += GENERATOR_SIGNAL_SCORES[sig] ?? 0;
+  for (const sig of sigs) generator += GENERATOR_SIGNAL_SCORES[sig] ?? 0;
   if (industry) generator += GENERATOR_INDUSTRY_BONUS[industry] ?? 0;
-  if (/generator|standby.power|backup.power|diesel|genset|cummins|caterpillar/i.test(descLower))
-    generator += 14;
+  if (textHasGenerator) generator += 14;
   if (/\bkva\b|\bkw.generator|emergency.power|critical.load/i.test(descLower)) generator += 8;
-  // Generator co-occurrence bonuses
-  if (signals.includes("microgrid_procurement") && signals.includes("generator_procurement"))
+  if (sigs.includes("microgrid_procurement") && sigs.includes("generator_procurement"))
     generator += 12;
-  if (signals.includes("permit_filed") && signals.includes("construction")) generator += 8;
+  if (sigs.includes("permit_filed") && sigs.includes("construction")) generator += 8;
+
+  // ── Anchor guards ────────────────────────────────────────────────────────────
+  // A category scores ZERO unless there is direct evidence of procurement or
+  // relevant technology in the article. This eliminates crane factories,
+  // logistics warehouse expansions, and general sustainability news.
+
+  const hasBESSAnchor =
+    sigs.includes("bess_procurement") ||
+    sigs.includes("interconnection_application") ||
+    sigs.includes("microgrid_procurement") ||
+    sigs.includes("virtual_power_plant") ||
+    textHasBESS; // article must at least mention BESS/battery storage
+
+  const hasSolarAnchor =
+    sigs.includes("solar_procurement") || sigs.includes("c_and_i_solar") || textHasSolarProcurement; // solar keyword near procurement keyword
+
+  const hasGeneratorAnchor = sigs.includes("generator_procurement") || textHasGenerator; // article must mention generator/backup power
+
+  if (!hasBESSAnchor) bess = 0;
+  if (!hasSolarAnchor) solar = 0;
+  if (!hasGeneratorAnchor) generator = 0;
 
   // Cap at 100
   bess = Math.min(bess, 100);
@@ -415,7 +463,7 @@ export async function runLeadMatching(
     limit?: number; // max opportunities to process (default 500)
   } = {}
 ): Promise<LeadMatchResult> {
-  const { resendApiKey = "", minScore = 50, rerun = false, dryRun = false, limit = 500 } = opts;
+  const { resendApiKey = "", minScore = 65, rerun = false, dryRun = false, limit = 500 } = opts;
 
   const result: LeadMatchResult = {
     opportunitiesScanned: 0,
