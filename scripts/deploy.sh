@@ -19,9 +19,19 @@ if [ ! -f .env ]; then
 fi
 
 # Extract a value from .env by key (handles long single-line values like JWTs)
+# The || true prevents set -o pipefail from exiting when grep finds no match.
 env_val() {
-  grep "^${1}=" .env | head -1 | cut -d= -f2-
+  grep "^${1}=" .env 2>/dev/null | head -1 | cut -d= -f2- || true
 }
+
+# Ensure fly CLI is on PATH (installed to ~/.fly/bin on macOS)
+export PATH="$PATH:$HOME/.fly/bin"
+
+FLY="$(command -v fly 2>/dev/null || true)"
+if [ -z "$FLY" ]; then
+  echo "❌ fly CLI not found. Install from https://fly.io/docs/hands-on/install-flyctl/"
+  exit 1
+fi
 
 BUILD_KEYS=(
   VITE_SUPABASE_URL
