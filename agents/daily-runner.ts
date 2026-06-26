@@ -25,6 +25,7 @@ import { generateUsageReport, saveUsageReport } from './usage-analytics.ts';
 import { generateNewsletter, saveNewsletter, sendNewsletter } from './newsletter-generator.ts';
 import { runBugDetection, saveBugReport } from './bug-detector.ts';
 import { runDailyDeal } from './daily-deal.ts';
+import { runLeadMatcher } from './lead-matcher.ts';
 import 'dotenv/config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -228,10 +229,29 @@ async function runDailyAgent(): Promise<AgentRunResult> {
     }
   }
 
-  // Step 4: Newsletter Generation
+  // Step 4: Lead Matching & Vendor Routing
+  // Scores all unmatched opportunities for BESS / solar / generator fit,
+  // routes qualified leads to approved vendors, and sends email/webhook notifications.
+  const { step: leadMatchStep, result: leadMatchResult } = await runStep(
+    '4. Lead Matching & Vendor Routing',
+    () => runLeadMatcher()
+  );
+  steps.push(leadMatchStep);
+
+  if (leadMatchResult?.result) {
+    const lm = leadMatchResult.result;
+    if (lm.notificationErrors > 0) {
+      console.warn(`  ⚠️  ${lm.notificationErrors} lead notification(s) failed`);
+    }
+    if (lm.leadsCreated > 0) {
+      console.log(`  📬 ${lm.leadsCreated} new vendor leads routed — BESS:${lm.byCategory.bess} Solar:${lm.byCategory.solar} Gen:${lm.byCategory.generator}`);
+    }
+  }
+
+  // Step 5 (was 4): Newsletter Generation
   if (healthResult && usageResult24h) {
     const { step: newsletterStep, result: newsletterResult } = await runStep(
-      '4. Newsletter Generation',
+      '5. Newsletter Generation',
       () => generateNewsletter(healthResult, usageResult24h!)
     );
     steps.push(newsletterStep);
@@ -243,30 +263,31 @@ async function runDailyAgent(): Promise<AgentRunResult> {
       const founderEmail = process.env.FOUNDER_EMAIL ?? 'robert@merlinpro.energy';
       if (founderEmail && process.env.RESEND_API_KEY) {
         const { step: sendStep } = await runStep(
-          '5. Send Newsletter to Founder',
+          '6. Send Newsletter to Founder',
           () => sendNewsletter(newsletterResult, founderEmail).then(() => { /* void */ })
         );
         steps.push(sendStep);
       } else {
-        steps.push({ name: '5. Send Newsletter to Founder', status: 'skipped', durationMs: 0, output: 'Email credentials not configured' });
+        steps.push({ name: '6. Send Newsletter to Founder', status: 'skipped', durationMs: 0, output: 'Email credentials not configured' });
         console.log('  ⏭ Newsletter send skipped — set FOUNDER_EMAIL + RESEND_API_KEY');
       }
     }
   } else {
-    steps.push({ name: '4. Newsletter Generation', status: 'skipped', durationMs: 0, output: 'Skipped — health or usage data unavailable' });
+    steps.push({ name: '5. Newsletter Generation', status: 'skipped', durationMs: 0, output: 'Skipped — health or usage data unavailable' });
   }
 
-  // Step 6: Daily Deal — rotating industry quote posted to Discord
+  // Step 7: Daily Deal — rotating industry quote posted to Discord
   const { step: dealStep } = await runStep(
-    '6. Daily Deal (Discord)',
+    '7. Daily Deal (Discord)',
     () => runDailyDeal().then(() => { /* void */ })
   );
   steps.push(dealStep);
 
-  // Step 7: Generate Daily Summary Report
+  // Step 8: Generate Daily Summary Report
   const { step: summaryStep } = await runStep(
-    '7. Save Daily Summary',
+    '8. Save Daily Summary',
     async () => {
+      const leadsRouted = (leadMatchResult?.result?.leadsCreated ?? 0);
       const summary = {
         runId,
         date: new Date().toISOString().split('T')[0],
@@ -275,6 +296,8 @@ async function runDailyAgent(): Promise<AgentRunResult> {
         quotesGenerated24h: usageResult24h?.quotes.total ?? 0,
         leadsGenerated24h: usageResult24h?.leads.total ?? 0,
         leadRevenue24h: usageResult24h?.leads.estimatedRevenue ?? 0,
+        vendorLeadsRouted: leadsRouted,
+        vendorLeadsByCategory: leadMatchResult?.result?.byCategory ?? {},
         kpiStatus: usageResult24h?.kpiStatus ?? [],
         actionItems: healthResult?.actionItems ?? [],
         criticalAlerts,

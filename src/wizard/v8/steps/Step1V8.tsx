@@ -450,21 +450,44 @@ export function Step1V8({ state, actions }: Step1Props) {
     }
   };
 
+  // ── Manual entry: "my business isn't listed" escape hatch ──────────────────
+  // Commits the typed name exactly as entered, bypassing Google Places matching
+  // so a custom/unlisted business is never overwritten by the closest match.
+  const handleUseTypedBusiness = () => {
+    if (!businessName.trim()) {
+      setBusinessError("Enter your business name to continue.");
+      return;
+    }
+    if (!locationConfirmed) {
+      setBusinessError("Confirm your location first.");
+      return;
+    }
+    setBusinessError(null);
+    setGoogleError(null);
+    setSelectedSuggestion(null);
+    setBusinessSuggestions([]);
+    sessionTokenRef.current = null;
+    commitBusinessPreview(buildPreviewBusiness());
+  };
+
   const handleConfirmBusiness = () => {
     // Validation: Must have location confirmed first
     if (!locationConfirmed) {
+      setIsConfirmingBusiness(false);
       setBusinessError("Please confirm your ZIP code location first.");
       return;
     }
 
     // Validation: Must have business name
     if (!activeBusiness || !activeBusiness.name) {
+      setIsConfirmingBusiness(false);
       setBusinessError("Please enter your business name.");
       return;
     }
 
     // Validation: Must select grid reliability
     if (!state.gridReliability) {
+      setIsConfirmingBusiness(false);
       setBusinessError("Please select your grid reliability.");
       return;
     }
@@ -1332,6 +1355,26 @@ export function Step1V8({ state, actions }: Step1Props) {
                       )}
                     </button>
                   ))}
+
+                  {/* ── Not listed? Use the typed name exactly as entered ── */}
+                  <button
+                    type="button"
+                    onClick={handleUseTypedBusiness}
+                    style={{
+                      width: "100%",
+                      padding: "11px 14px",
+                      border: "none",
+                      borderTop: "1px solid rgba(99,120,255,0.18)",
+                      background: "rgba(155,109,255,0.06)",
+                      color: T.accent,
+                      textAlign: "left",
+                      cursor: "pointer",
+                      fontSize: 12.5,
+                      fontWeight: 700,
+                    }}
+                  >
+                    ✎ Don't see it? Use “{businessName.trim()}” as entered →
+                  </button>
                 </div>
               )}
 
@@ -1370,8 +1413,8 @@ export function Step1V8({ state, actions }: Step1Props) {
                   {isSuggestionsLoading
                     ? "Searching Google Places..."
                     : businessSuggestions.length > 0
-                      ? "Select a Google match for the richest business card, or continue with your typed entry."
-                      : "No Google match required. Merlin can continue with the typed business."}
+                      ? "Select a Google match for the richest business card, or use your typed entry below."
+                      : "Don’t see your business? No problem — add it manually below."}
                 </div>
               )}
 
@@ -1399,6 +1442,35 @@ export function Step1V8({ state, actions }: Step1Props) {
                   ? "Building business card..."
                   : "Continue to business confirmation"}
               </button>
+
+              {/* ── Manual entry button — shown when no Google match is available ── */}
+              {businessName.trim() &&
+                !selectedSuggestion &&
+                !isResolvingBusiness &&
+                !isSuggestionsLoading &&
+                businessSuggestions.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={handleUseTypedBusiness}
+                    style={{
+                      width: "100%",
+                      height: 44,
+                      borderRadius: 11,
+                      border: "1px dashed rgba(155,109,255,0.45)",
+                      background: "transparent",
+                      color: T.accent,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      padding: "0 12px",
+                    }}
+                  >
+                    ✎ Add “{businessName.trim()}” as my business
+                  </button>
+                )}
             </div>
           </div>
         )}

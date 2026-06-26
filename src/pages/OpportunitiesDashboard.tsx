@@ -12,13 +12,27 @@ import {
   TrendingUp,
   Play,
   Sparkles,
+  Zap,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { runOpportunityScraper } from "../api/opportunityScraper";
-import type { Opportunity, OpportunityFilter, OpportunityStatus } from "../types/opportunity";
+import { assessOpportunity, type OppAssessment } from "../services/opportunityAssessmentService";
+import type {
+  Opportunity,
+  OpportunityFilter,
+  OpportunityStatus,
+  OpportunitySignal,
+  IndustryType,
+} from "../types/opportunity";
 
-// Signal display names
+// ─── Signal display labels ────────────────────────────────────────────────────
+
 const SIGNAL_LABELS: Record<string, string> = {
+  // Original
   construction: "🏗️ Construction",
   expansion: "📈 Expansion",
   new_opening: "🆕 New Opening",
@@ -29,25 +43,445 @@ const SIGNAL_LABELS: Record<string, string> = {
   facility_upgrade: "🔧 Facility Upgrade",
   rfq: "📄 RFQ/RFP",
   energy_project: "🔋 Energy Project",
-  high_utility_exposure: "💸 High Utility Exposure",
+  high_utility_exposure: "💸 High Utility Cost",
+  // Phase 2
+  bess_procurement: "🔋 BESS Procurement",
+  solar_procurement: "☀️ Solar Procurement",
+  generator_procurement: "⚙️ Generator Procurement",
+  // Phase 3
+  permit_filed: "📋 Permit Filed",
+  interconnection_application: "🔌 Grid Interconnection",
+  // Phase 4
+  microgrid_procurement: "⚡ Microgrid RFP",
+  virtual_power_plant: "🌐 VPP/Demand Response",
+  c_and_i_solar: "☀️ C&I Solar",
 };
 
 function signalLabel(signal: string): string {
   return SIGNAL_LABELS[signal] || signal.replace(/_/g, " ");
 }
 
-// Industry display names
+// ─── Industry display labels ──────────────────────────────────────────────────
+
 const INDUSTRY_LABELS: Record<string, string> = {
   data_center: "🖥️ Data Center",
   manufacturing: "🏭 Manufacturing",
   logistics: "📦 Logistics",
   hospitality: "🏨 Hospitality",
   healthcare: "🏥 Healthcare",
+  hospital: "🏥 Hospital",
   retail: "🛍️ Retail",
   education: "🎓 Education",
   automotive: "🚗 Automotive",
+  cold_storage: "🧊 Cold Storage",
+  car_wash: "🚿 Car Wash",
+  truck_stop: "🚛 Truck Stop",
+  agricultural: "🌾 Agricultural",
+  gym: "🏋️ Gym / Fitness",
+  energy: "⚡ Energy / Utility",
+  government: "🏛️ Government",
   other: "Other",
 };
+
+// ─── Assessment display helpers ───────────────────────────────────────────────
+
+const BESS_TYPE_LABELS: Record<string, string> = {
+  peak_shaving: "Peak Shaving",
+  backup_power: "Backup / UPS",
+  microgrid_anchor: "Microgrid Anchor",
+  arbitrage: "Energy Arbitrage",
+  demand_response: "VPP / Demand Response",
+  solar_storage: "Solar + Storage",
+  ev_load_management: "EV Load Management",
+  unknown: "General BESS",
+};
+
+const GRID_DRIVER_LABELS: Record<string, string> = {
+  high_demand_charges: "💸 High Demand Charges",
+  unreliable_grid: "⚡ Unreliable Grid",
+  grid_too_expensive: "💰 Grid Too Expensive",
+  grid_expansion_needed: "🔌 Grid Expansion Needed",
+  decarbonization_mandate: "🌱 Decarbonization Mandate",
+  backup_resilience: "🛡️ Backup / Resilience",
+  interconnection_constraint: "🔌 Interconnection Constraint",
+  rate_arbitrage_opportunity: "📈 Rate Arbitrage Opportunity",
+  unknown: "General Grid Driver",
+};
+
+const CO_EQUIP_LABELS: Record<string, string> = {
+  solar_pv: "☀️ Solar PV",
+  wind: "🌀 Wind",
+  generator_backup: "⚙️ Generator",
+  ev_chargers: "🔌 EV Chargers",
+  ems_controls: "🧠 EMS / Controls",
+  transformer_upgrade: "🔧 Transformer Upgrade",
+  microgrid_controller: "⚡ Microgrid Controller",
+  weather_monitoring: "🌤️ Weather Monitoring",
+};
+
+const ALT_POWER_LABELS: Record<string, string> = {
+  solar: "☀️ Solar PV",
+  wind: "🌀 Wind",
+  generator: "⚙️ Generator",
+  geothermal: "🌋 Geothermal",
+  nuclear_smr: "⚛️ Nuclear SMR",
+  fuel_cell: "💧 Fuel Cell",
+  hydro: "💧 Hydro",
+};
+
+const URGENCY_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  hot: { label: "🔥 Hot Lead", color: "text-red-400", bg: "bg-red-950/40 border-red-700/40" },
+  warm: {
+    label: "🟡 Warm Lead",
+    color: "text-yellow-400",
+    bg: "bg-yellow-950/40 border-yellow-700/40",
+  },
+  cool: { label: "🔵 Cool Lead", color: "text-blue-400", bg: "bg-blue-950/40 border-blue-700/40" },
+};
+
+// ─── Assessment Panel component ───────────────────────────────────────────────
+
+interface AssessmentPanelProps {
+  opp: Opportunity;
+}
+
+function AssessmentPanel({ opp }: AssessmentPanelProps) {
+  const [assessment, setAssessment] = useState<OppAssessment | null>(
+    (opp.opportunity_assessment as OppAssessment | null) ?? null
+  );
+  const [loading, setLoading] = useState(false);
+  const [useGPT, setUseGPT] = useState(false);
+  const [expanded, setExpanded] = useState(!!assessment);
+
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY ?? "";
+
+  async function generate() {
+    setLoading(true);
+    try {
+      const result = await assessOpportunity({
+        companyName: opp.company_name,
+        description: opp.description,
+        signals: opp.signals as OpportunitySignal[],
+        industry: opp.industry as IndustryType | null,
+        bessScore: 0,
+        solarScore: 0,
+        generatorScore: 0,
+        useGPT: useGPT && !!apiKey,
+        apiKey,
+      });
+      setAssessment(result);
+      setExpanded(true);
+      // Persist to DB
+      await supabase
+        .from("opportunities")
+        .update({ opportunity_assessment: result })
+        .eq("id", opp.id);
+    } catch (e) {
+      console.error("Assessment failed:", e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (!assessment) {
+    return (
+      <div className="rounded-xl border border-slate-700/50 bg-slate-800/30 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-emerald-400" />
+            <span className="text-sm font-semibold text-emerald-400">Opportunity Assessment</span>
+          </div>
+          {apiKey && (
+            <label className="flex items-center gap-1.5 text-xs text-slate-400 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useGPT}
+                onChange={(e) => setUseGPT(e.target.checked)}
+                className="rounded"
+              />
+              GPT-4 enrichment
+            </label>
+          )}
+        </div>
+        <button
+          onClick={generate}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 text-white text-sm font-semibold transition-colors"
+        >
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Sparkles className="w-4 h-4" />
+          )}
+          {loading ? "Analyzing..." : "Generate Assessment"}
+        </button>
+      </div>
+    );
+  }
+
+  const urgency = URGENCY_CONFIG[assessment.urgency_tier];
+
+  return (
+    <div className="rounded-xl border border-slate-700/50 bg-slate-800/20 overflow-hidden">
+      {/* Header */}
+      <button
+        className="w-full flex items-center justify-between p-4 hover:bg-slate-700/20 transition-colors"
+        onClick={() => setExpanded((e) => !e)}
+      >
+        <div className="flex items-center gap-3">
+          <Zap className="w-4 h-4 text-emerald-400" />
+          <span className="text-sm font-semibold text-emerald-400">Opportunity Assessment</span>
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full border font-medium ${urgency.bg} ${urgency.color}`}
+          >
+            {urgency.label}
+          </span>
+          {assessment.gpt_enriched && (
+            <span className="text-xs px-2 py-0.5 rounded-full border border-purple-700/40 bg-purple-950/40 text-purple-400">
+              ✨ GPT-4
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              generate();
+            }}
+            disabled={loading}
+            className="text-xs text-slate-500 hover:text-slate-300 px-2 py-0.5 rounded border border-slate-700 transition-colors"
+          >
+            {loading ? "..." : "Re-assess"}
+          </button>
+          {expanded ? (
+            <ChevronUp className="w-4 h-4 text-slate-400" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-slate-400" />
+          )}
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="p-4 pt-0 space-y-4 border-t border-slate-700/50">
+          {/* Size + BESS types */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-lg bg-slate-900/50 p-3">
+              <div className="text-xs text-slate-400 mb-1">BESS Application</div>
+              <div className="flex flex-wrap gap-1">
+                {assessment.bess_types.map((t) => (
+                  <span
+                    key={t}
+                    className={`text-xs px-2 py-0.5 rounded-full border ${
+                      t === assessment.primary_bess_type
+                        ? "bg-emerald-950/50 border-emerald-700/50 text-emerald-300 font-semibold"
+                        : "bg-slate-800 border-slate-700 text-slate-300"
+                    }`}
+                  >
+                    {BESS_TYPE_LABELS[t] ?? t}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-lg bg-slate-900/50 p-3">
+              <div className="text-xs text-slate-400 mb-1">Est. System Size</div>
+              <div className="text-white font-semibold text-sm">
+                {assessment.size_estimate.minKwh.toLocaleString()}–
+                {assessment.size_estimate.maxKwh.toLocaleString()} kWh
+              </div>
+              <div className="text-slate-400 text-xs">
+                {assessment.size_estimate.minKw.toLocaleString()}–
+                {assessment.size_estimate.maxKw.toLocaleString()} kW
+                {" · "}
+                <span
+                  className={`${
+                    assessment.size_estimate.confidence === "high"
+                      ? "text-emerald-400"
+                      : assessment.size_estimate.confidence === "medium"
+                        ? "text-yellow-400"
+                        : "text-slate-500"
+                  }`}
+                >
+                  {assessment.size_estimate.confidence} confidence
+                </span>
+              </div>
+              <div className="text-slate-500 text-[10px] mt-1 italic">
+                {assessment.size_estimate.basis}
+              </div>
+            </div>
+          </div>
+
+          {/* Technology fit bar chart */}
+          <div className="rounded-lg bg-slate-900/50 p-3">
+            <div className="text-xs text-slate-400 mb-2">Technology Fit</div>
+            <div className="space-y-1.5">
+              {(
+                [
+                  {
+                    label: "BESS",
+                    value: assessment.technology_fit.bess,
+                    icon: "🔋",
+                    color: "bg-emerald-500",
+                  },
+                  {
+                    label: "Solar",
+                    value: assessment.technology_fit.solar,
+                    icon: "☀️",
+                    color: "bg-yellow-500",
+                  },
+                  {
+                    label: "Generator",
+                    value: assessment.technology_fit.generator,
+                    icon: "⚙️",
+                    color: "bg-orange-500",
+                  },
+                  {
+                    label: "Microgrid",
+                    value: assessment.technology_fit.microgrid,
+                    icon: "⚡",
+                    color: "bg-blue-500",
+                  },
+                  {
+                    label: "EV Charging",
+                    value: assessment.technology_fit.ev_charging,
+                    icon: "🔌",
+                    color: "bg-purple-500",
+                  },
+                ] as const
+              )
+                .filter((t) => t.value > 15)
+                .map(({ label, value, icon, color }) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <span className="text-xs w-20 text-slate-300">
+                      {icon} {label}
+                    </span>
+                    <div className="flex-1 bg-slate-700/50 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${color} transition-all`}
+                        style={{ width: `${value}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-slate-400 w-8 text-right">{value}</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          {/* Grid drivers */}
+          <div className="rounded-lg bg-slate-900/50 p-3">
+            <div className="text-xs text-slate-400 mb-2">Grid & Economic Drivers</div>
+            <div className="flex flex-wrap gap-1.5">
+              {assessment.grid_drivers
+                .filter((d) => d !== "unknown")
+                .map((d) => (
+                  <span
+                    key={d}
+                    className="text-xs px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300"
+                  >
+                    {GRID_DRIVER_LABELS[d] ?? d}
+                  </span>
+                ))}
+            </div>
+          </div>
+
+          {/* Co-equipment + Alternative power side by side */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-lg bg-slate-900/50 p-3">
+              <div className="text-xs text-slate-400 mb-2">Co-Equipment Needed</div>
+              <div className="space-y-1">
+                {assessment.co_equipment.map((e) => (
+                  <div key={e} className="text-xs text-slate-300">
+                    {CO_EQUIP_LABELS[e] ?? e}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-lg bg-slate-900/50 p-3">
+              <div className="text-xs text-slate-400 mb-2">Alternative Power Sources</div>
+              <div className="space-y-1">
+                {assessment.alternative_power.map((p) => (
+                  <div key={p} className="text-xs text-slate-300">
+                    {ALT_POWER_LABELS[p] ?? p}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Flags */}
+          {(assessment.is_rfp_rfq ||
+            assessment.is_federal ||
+            assessment.is_funded ||
+            assessment.has_interconnection) && (
+            <div className="flex flex-wrap gap-2">
+              {assessment.is_rfp_rfq && (
+                <span className="text-xs px-2 py-1 rounded-full bg-red-950/40 border border-red-700/40 text-red-300">
+                  📄 Active RFP/RFQ
+                </span>
+              )}
+              {assessment.is_federal && (
+                <span className="text-xs px-2 py-1 rounded-full bg-blue-950/40 border border-blue-700/40 text-blue-300">
+                  🏛️ Federal Contract
+                </span>
+              )}
+              {assessment.is_funded && (
+                <span className="text-xs px-2 py-1 rounded-full bg-emerald-950/40 border border-emerald-700/40 text-emerald-300">
+                  💰 Funding Confirmed
+                </span>
+              )}
+              {assessment.has_interconnection && (
+                <span className="text-xs px-2 py-1 rounded-full bg-purple-950/40 border border-purple-700/40 text-purple-300">
+                  🔌 Interconnection Filed
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* GPT narrative fields */}
+          {assessment.gpt_enriched && assessment.gpt_bess_narrative && (
+            <div className="rounded-lg bg-purple-950/20 border border-purple-700/30 p-3 space-y-2">
+              <div className="text-xs font-semibold text-purple-400">✨ AI Analysis</div>
+              {assessment.gpt_bess_narrative && (
+                <p className="text-xs text-slate-300">{assessment.gpt_bess_narrative}</p>
+              )}
+              {assessment.gpt_grid_situation && (
+                <p className="text-xs text-slate-300">{assessment.gpt_grid_situation}</p>
+              )}
+              {assessment.gpt_urgency && (
+                <p className="text-xs text-slate-400 italic">{assessment.gpt_urgency}</p>
+              )}
+              {assessment.gpt_red_flags && assessment.gpt_red_flags.length > 0 && (
+                <div className="flex items-start gap-1.5">
+                  <AlertTriangle className="w-3 h-3 text-yellow-400 mt-0.5 shrink-0" />
+                  <div className="text-xs text-yellow-300">
+                    {assessment.gpt_red_flags.join(" · ")}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Talking points */}
+          <div className="rounded-lg bg-slate-900/50 p-3">
+            <div className="text-xs text-slate-400 mb-2">Sales Talking Points</div>
+            <ul className="space-y-2">
+              {assessment.talking_points.map((pt, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-slate-300">
+                  <span className="text-emerald-500 font-bold mt-0.5 shrink-0">→</span>
+                  <span>{pt}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="text-[10px] text-slate-600">
+            Assessed {new Date(assessment.assessed_at).toLocaleString()} · v
+            {assessment.assessment_version}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function OpportunitiesDashboard() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
@@ -478,6 +912,9 @@ export function OpportunitiesDashboard() {
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
+
+              {/* ── Opportunity Assessment ── */}
+              <AssessmentPanel opp={selectedOpp} />
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
