@@ -22,6 +22,7 @@ import {
   Cpu,
   RefreshCw,
   Share2,
+  Copy,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { runOpportunityScraper } from "../api/opportunityScraper";
