@@ -14,7 +14,18 @@ export type OpportunitySignal =
   | "facility_upgrade"
   | "rfq"
   | "energy_project"
-  | "high_utility_exposure";
+  | "high_utility_exposure"
+  // Equipment-specific procurement signals (Phase 2)
+  | "bess_procurement"
+  | "solar_procurement"
+  | "generator_procurement"
+  // Phase 3 — permit + interconnection signals
+  | "permit_filed"
+  | "interconnection_application"
+  // Phase 4 — BESS co-sell + advanced procurement signals
+  | "microgrid_procurement"
+  | "virtual_power_plant"
+  | "c_and_i_solar";
 
 export type OpportunityStatus = "new" | "contacted" | "qualified" | "archived";
 
@@ -27,6 +38,15 @@ export type IndustryType =
   | "retail"
   | "education"
   | "automotive"
+  // Extended verticals (Phase 2)
+  | "cold_storage"
+  | "car_wash"
+  | "truck_stop"
+  | "hospital"
+  | "agricultural"
+  | "gym"
+  | "energy"
+  | "government"
   | "other";
 
 export interface Opportunity {
@@ -44,6 +64,7 @@ export interface Opportunity {
   updated_at: string;
   contacted_at?: string;
   notes?: string;
+  opportunity_assessment?: import("../services/opportunityAssessmentService").OppAssessment | null;
 }
 
 export interface LeadSource {

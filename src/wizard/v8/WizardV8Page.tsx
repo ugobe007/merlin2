@@ -698,20 +698,25 @@ export default function WizardV8Page() {
       return;
     }
 
-    if (
-      step === 1 &&
-      state.business?.detectedIndustry &&
-      (state.business.confidence ?? 0) >= 0.75
-    ) {
+    if (step === 1) {
+      // Always preload Step2 + Step3 unconditionally — these are the two guaranteed
+      // next destinations and must be warm before the user clicks Confirm.
+      // Previously gated on detectedIndustry confidence ≥ 0.75, which caused a
+      // full lazy-load stall for the majority of users on every Confirm click.
       void loadStep2V8();
       void loadStep3V8();
-      void loadStep35V8();
-      void loadStep4V8();
+
+      // Aggressively preload further steps only when industry is already confirmed
+      if (state.business?.detectedIndustry && (state.business.confidence ?? 0) >= 0.75) {
+        void loadStep35V8();
+        void loadStep4V8();
+      }
       return;
     }
 
     if (step === 2) {
       void loadStep3V8();
+      void loadStep35V8();
       return;
     }
 
