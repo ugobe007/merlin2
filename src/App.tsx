@@ -54,6 +54,7 @@ const UploadQuotePage = lazy(() => import("./pages/UploadQuotePage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage"));
 const SharedLeadPage = lazy(() => import("./pages/SharedLeadPage"));
+const VendorLeadsMarketingPage = lazy(() => import("./pages/VendorLeadsMarketingPage"));
 const OutboundCampaignPage = lazy(() => import("./pages/OutboundCampaignPage"));
 import { trackPageView } from "./services/analyticsService";
 import { syncApprovedVendorProducts } from "./services/vendorPricingIntegrationService";
@@ -490,6 +491,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <SharedLeadPage />
+      </Suspense>
+    );
+  }
+
+  // Access via /vendor-leads - Public vendor marketing page (no login required)
+  if (pathname === "/vendor-leads") {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <VendorLeadsMarketingPage />
       </Suspense>
     );
   }
