@@ -53,6 +53,7 @@ const BuildRFPPage = lazy(() => import("./pages/BuildRFPPage"));
 const UploadQuotePage = lazy(() => import("./pages/UploadQuotePage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const SharedQuotePage = lazy(() => import("./pages/SharedQuotePage"));
+const SharedLeadPage = lazy(() => import("./pages/SharedLeadPage"));
 const OutboundCampaignPage = lazy(() => import("./pages/OutboundCampaignPage"));
 import { trackPageView } from "./services/analyticsService";
 import { syncApprovedVendorProducts } from "./services/vendorPricingIntegrationService";
@@ -480,6 +481,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <WizardVNextPage />
+      </Suspense>
+    );
+  }
+
+  // Access via /lead/:id - Shared lead viewer (public, no login required)
+  if (pathname.startsWith("/lead/")) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <SharedLeadPage />
       </Suspense>
     );
   }

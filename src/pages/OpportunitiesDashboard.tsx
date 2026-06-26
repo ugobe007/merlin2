@@ -593,6 +593,7 @@ export function OpportunitiesDashboard() {
   const [categoryTab, setCategoryTab] = useState<OppCategory | "all">("all");
   const [statusFilter, setStatusFilter] = useState<string>("new");
   const [copied, setCopied] = useState(false);
+  const [copiedLeadId, setCopiedLeadId] = useState<string | null>(null);
 
   useEffect(() => {
     void loadOpportunities();
@@ -687,6 +688,14 @@ export function OpportunitiesDashboard() {
     void navigator.clipboard.writeText(VENDOR_PORTAL_URL);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function copyLeadLink(oppId: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    const url = `${window.location.origin}/lead/${oppId}`;
+    void navigator.clipboard.writeText(url);
+    setCopiedLeadId(oppId);
+    setTimeout(() => setCopiedLeadId(null), 2000);
   }
 
   async function updateStatus(oppId: string, newStatus: OpportunityStatus) {
@@ -945,6 +954,20 @@ export function OpportunitiesDashboard() {
                       className="shrink-0 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={(e) => e.stopPropagation()}
                     >
+                      {/* Copy shareable link */}
+                      <button
+                        onClick={(e) => copyLeadLink(opp.id, e)}
+                        title="Copy shareable link (no login required)"
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-slate-400 hover:text-slate-200 border border-white/[0.08] text-xs font-medium transition-all"
+                      >
+                        {copiedLeadId === opp.id ? (
+                          <CheckCircle className="w-3 h-3 text-emerald-400" />
+                        ) : (
+                          <Copy className="w-3 h-3" />
+                        )}
+                        {copiedLeadId === opp.id ? "Copied!" : "Copy Link"}
+                      </button>
+
                       {/* Push this lead to vendors */}
                       <button
                         onClick={(e) => void pushOneToVendors(opp, e)}
@@ -1097,6 +1120,18 @@ export function OpportunitiesDashboard() {
 
             {/* Modal actions */}
             <div className="p-5 border-t border-white/[0.06] flex gap-2 flex-wrap">
+              {/* Copy shareable link */}
+              <button
+                onClick={(e) => copyLeadLink(selectedOpp.id, e)}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-slate-300 border border-white/[0.08] text-sm font-medium transition-all"
+              >
+                {copiedLeadId === selectedOpp.id ? (
+                  <CheckCircle className="w-4 h-4 text-emerald-400" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+                {copiedLeadId === selectedOpp.id ? "Link Copied!" : "Copy Share Link"}
+              </button>
               <button
                 onClick={() =>
                   void pushOneToVendors(selectedOpp, {
