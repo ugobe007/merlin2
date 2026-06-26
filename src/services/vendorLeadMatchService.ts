@@ -220,11 +220,30 @@ export function scoreOpportunity(
       descLower
     );
 
+  // Completion text detection — already-deployed projects should not be routed as hot leads
+  const textIsCompletion =
+    /\b(?:commercial\s+operation|enters?\s+commercial|comes?\s+online|came\s+online|goes?\s+live|went\s+live|now\s+operational|has\s+been\s+(?:installed|deployed|commissioned|completed|energized)|already\s+(?:installed|operational|complete)|installation\s+(?:complete|finished))\b/i.test(
+      descLower
+    );
+
   // Supplement stored signals with live detections (handles stale DB rows)
   const effectiveSignals = new Set(signals);
   if (textHasBESSProcurement) effectiveSignals.add("bess_procurement" as OpportunitySignal);
   if (textHasSolarProcurement) effectiveSignals.add("solar_procurement" as OpportunitySignal);
   if (textHasGenerator) effectiveSignals.add("generator_procurement" as OpportunitySignal);
+
+  // "energy storage" + energy_project signal = BESS project (energy storage IS BESS).
+  // Promote to bess_procurement so it qualifies for vendor routing.
+  // Exception: don't promote completion articles (project already done).
+  if (
+    textHasBESS &&
+    !textIsCompletion &&
+    (signals.includes("energy_project") ||
+      signals.includes("procurement_awarded") ||
+      signals.includes("funding"))
+  ) {
+    effectiveSignals.add("bess_procurement" as OpportunitySignal);
+  }
   const sigs = Array.from(effectiveSignals) as OpportunitySignal[];
 
   // BESS score
@@ -280,6 +299,14 @@ export function scoreOpportunity(
   if (!hasBESSAnchor) bess = 0;
   if (!hasSolarAnchor) solar = 0;
   if (!hasGeneratorAnchor) generator = 0;
+
+  // Completion penalty: already-deployed projects are market intelligence,
+  // not active procurement leads. Halve scores so they only qualify if very strong.
+  if (textIsCompletion) {
+    bess = Math.floor(bess * 0.45);
+    solar = Math.floor(solar * 0.45);
+    generator = Math.floor(generator * 0.45);
+  }
 
   // Cap at 100
   bess = Math.min(bess, 100);
