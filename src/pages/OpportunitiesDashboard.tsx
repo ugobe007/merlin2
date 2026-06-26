@@ -489,6 +489,10 @@ export function OpportunitiesDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedOpp, setSelectedOpp] = useState<Opportunity | null>(null);
   const [scraping, setScraping] = useState(false);
+  const [matching, setMatching] = useState(false);
+  const [matchResult, setMatchResult] = useState<{ newLeads: number; scanned: number } | null>(
+    null
+  );
 
   // Filters
   const [filter, setFilter] = useState<OpportunityFilter>({
@@ -571,6 +575,33 @@ export function OpportunitiesDashboard() {
     }
   }
 
+  async function routeToVendors() {
+    setMatching(true);
+    setMatchResult(null);
+    try {
+      const res = await fetch("/api/leads/run-matcher", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rerun: false }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const s = data.summary;
+        setMatchResult({ newLeads: s?.newLeads ?? 0, scanned: s?.scanned ?? 0 });
+        alert(
+          `✅ Lead routing complete!\n\nScanned: ${s?.scanned ?? "—"} opportunities\nQualified: ${s?.qualified ?? "—"}\nNew vendor leads created: ${s?.newLeads ?? "—"}\n\nVendors can now see leads at /vendor-portal → Leads tab.`
+        );
+      } else {
+        alert(`❌ Matcher failed: ${data.error ?? data.message}`);
+      }
+    } catch (err) {
+      console.error("Matcher error:", err);
+      alert("❌ Failed to run lead matcher");
+    } finally {
+      setMatching(false);
+    }
+  }
+
   async function updateStatus(oppId: string, newStatus: OpportunityStatus) {
     try {
       const updates: Partial<Opportunity> = {
@@ -635,11 +666,24 @@ export function OpportunitiesDashboard() {
           <div className="flex gap-2">
             <button
               onClick={runScraper}
-              disabled={scraping}
+              disabled={scraping || matching}
               className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:text-slate-400 text-white rounded-lg transition-colors font-semibold"
             >
               <Play className="w-4 h-4" />
               {scraping ? "Scraping..." : "Run Scraper"}
+            </button>
+            <button
+              onClick={routeToVendors}
+              disabled={matching || scraping}
+              title="Score unmatched opportunities and create vendor_leads rows for qualified procurement articles"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-400 text-white rounded-lg transition-colors font-semibold"
+            >
+              <Zap className="w-4 h-4" />
+              {matching
+                ? "Routing…"
+                : matchResult
+                  ? `Route to Vendors (${matchResult.newLeads} sent)`
+                  : "Route to Vendors"}
             </button>
             <button
               onClick={loadOpportunities}
