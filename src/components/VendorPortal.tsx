@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Loader2,
   Home,
+  Target,
 } from "lucide-react";
 import merlinIcon from "@/assets/images/new_small_profile_.png";
 import {
@@ -30,10 +31,11 @@ import VendorSubmitPricingTab from "./vendor/tabs/VendorSubmitPricingTab";
 import VendorRFQsTab from "./vendor/tabs/VendorRFQsTab";
 import VendorBuildQuoteTab from "./vendor/tabs/VendorBuildQuoteTab";
 import VendorProfileTab from "./vendor/tabs/VendorProfileTab";
+import VendorLeadsTab from "./vendor/tabs/VendorLeadsTab";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ActiveTab = "dashboard" | "submit-pricing" | "rfqs" | "build-quote" | "profile";
+type ActiveTab = "dashboard" | "submit-pricing" | "rfqs" | "build-quote" | "profile" | "leads";
 
 interface PricingForm {
   product_category: "battery" | "inverter" | "ems" | "bos" | "container";
@@ -311,6 +313,7 @@ const VendorPortal: React.FC = () => {
     { id: "dashboard", label: "Dashboard", icon: TrendingUp },
     { id: "submit-pricing", label: "Submit Pricing", icon: DollarSign },
     { id: "rfqs", label: "Active RFQs", icon: FileText },
+    { id: "leads", label: "Leads", icon: Target },
     { id: "build-quote", label: "Build a Quote", icon: Calculator },
     { id: "profile", label: "Profile", icon: Building2 },
   ] as const;
@@ -399,6 +402,7 @@ const VendorPortal: React.FC = () => {
           />
         )}
         {activeTab === "rfqs" && <VendorRFQsTab openRFQs={openRFQs} />}
+        {activeTab === "leads" && <VendorLeadsTab />}
         {activeTab === "build-quote" && <VendorBuildQuoteTab />}
         {activeTab === "profile" && currentVendor && (
           <VendorProfileTab currentVendor={currentVendor} />
