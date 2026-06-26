@@ -49,7 +49,7 @@ if (!RESEND_API_KEY) {
 const args = process.argv.slice(2);
 const rerun    = args.includes('--rerun');
 const dryRun   = args.includes('--dry-run');
-const minScore = parseInt(args.find(a => a.startsWith('--min-score='))?.split('=')[1] ?? '50', 10);
+const minScore = parseInt(args.find(a => a.startsWith('--min-score='))?.split('=')[1] ?? '65', 10);
 const limit    = parseInt(args.find(a => a.startsWith('--limit='))?.split('=')[1] ?? '500', 10);
 
 // ─── Main ──────────────────────────────────────────────────────────────────────
