@@ -25,6 +25,13 @@ import {
   isValidCompanyName as utilIsValidCompanyName,
   scoreCompanyName,
 } from "../utils/companyNameExtraction";
+import {
+  normalizeText,
+  articleFingerprint,
+  jaccardSimilarity,
+  checkDisqualifiers,
+} from "../utils/leadNLP";
+import { qualifyLead } from "./leadQualificationEngine";
 
 // ─── RSS feed sources ──────────────────────────────────────────────────────────
 
@@ -157,6 +164,79 @@ const NEWS_SOURCES = [
     name: "Google News — Virtual Power Plant Demand Response",
     url: "https://news.google.com/rss/search?q=(%22virtual+power+plant%22+OR+%22VPP%22+OR+%22demand+response%22+OR+%22grid+services%22)+(%22commercial%22+OR+%22industrial%22+OR+%22battery+storage%22+OR+%22enrollment%22)&hl=en-US&gl=US&ceid=US:en",
   },
+
+  // ── Phase 5: High-signal industry publications ──
+  {
+    name: "Utility Dive",
+    url: "https://www.utilitydive.com/feeds/news/",
+  },
+  {
+    name: "pv magazine USA",
+    url: "https://pv-magazine-usa.com/feed/",
+  },
+  {
+    name: "PV Tech",
+    url: "https://www.pvtech.org/feed/",
+  },
+  {
+    name: "Electrek",
+    url: "https://electrek.co/feed/",
+  },
+  {
+    name: "Renewable Energy World",
+    url: "https://www.renewableenergyworld.com/feed/",
+  },
+  {
+    name: "Environment + Energy Leader",
+    url: "https://www.environmentalleader.com/feed/",
+  },
+
+  // ── Phase 5: Precision procurement-intent Google News queries ──
+  {
+    // Active RFP / solicitation issuance — highest precision signal
+    name: "Google News — RFP Issued Battery Energy Storage",
+    url: "https://news.google.com/rss/search?q=(%22issues+rfp%22+OR+%22issued+rfp%22+OR+%22releases+rfp%22+OR+%22released+rfp%22+OR+%22publishes+rfp%22+OR+%22published+rfp%22)+(%22battery+storage%22+OR+%22energy+storage%22+OR+%22bess%22+OR+%22solar%22+OR+%22microgrid%22)&hl=en-US&gl=US&ceid=US:en",
+  },
+  {
+    // Seeking / inviting / soliciting bids
+    name: "Google News — Seeking Bids Proposals Energy Solar Storage",
+    url: "https://news.google.com/rss/search?q=(%22seeking+bids%22+OR+%22seeking+proposals%22+OR+%22inviting+bids%22+OR+%22soliciting+bids%22+OR+%22invites+proposals%22+OR+%22solicitation+for%22)+(%22solar%22+OR+%22battery+storage%22+OR+%22energy+storage%22+OR+%22generator%22+OR+%22microgrid%22+OR+%22backup+power%22)&hl=en-US&gl=US&ceid=US:en",
+  },
+  {
+    // Critical facilities (hospitals, data centers, cold storage) seeking backup power
+    name: "Google News — Critical Facility Backup Power Procurement",
+    url: "https://news.google.com/rss/search?q=(%22hospital%22+OR+%22data+center%22+OR+%22cold+storage%22+OR+%22manufacturing+plant%22+OR+%22warehouse%22)+(%22backup+power%22+OR+%22energy+storage%22+OR+%22uninterruptible+power%22+OR+%22microgrid%22+OR+%22generator%22)+(%22rfp%22+OR+%22procurement%22+OR+%22contract%22+OR+%22solicitation%22)&hl=en-US&gl=US&ceid=US:en",
+  },
+  {
+    // Demand charge reduction leading to BESS procurement
+    name: "Google News — Demand Charge Battery Storage Contract",
+    url: "https://news.google.com/rss/search?q=(%22demand+charge%22+OR+%22peak+demand+reduction%22+OR+%22demand+charges%22)+(%22battery+storage%22+OR+%22energy+storage%22+OR+%22storage+system%22+OR+%22bess%22)+(%22install%22+OR+%22deploy%22+OR+%22contract%22+OR+%22procurement%22+OR+%22procure%22)&hl=en-US&gl=US&ceid=US:en",
+  },
+  {
+    // Utility/coop issuing storage or solar procurement
+    name: "Google News — Utility Storage Solar Solicitation",
+    url: "https://news.google.com/rss/search?q=(%22utility%22+OR+%22electric+cooperative%22+OR+%22grid+operator%22+OR+%22power+company%22+OR+%22electric+company%22)+(%22solicitation%22+OR+%22issues+rfp%22+OR+%22competitive+procurement%22+OR+%22competitive+bid%22)+(%22storage%22+OR+%22battery%22+OR+%22solar%22+OR+%22renewable%22)&hl=en-US&gl=US&ceid=US:en",
+  },
+  {
+    // Corporate PPAs — commercial and industrial buyers locking in solar/storage
+    name: "Google News — Corporate PPA Power Purchase Agreement",
+    url: "https://news.google.com/rss/search?q=(%22power+purchase+agreement%22+OR+%22corporate+ppa%22+OR+%22long-term+energy+contract%22+OR+%22clean+energy+ppa%22)+(%22solar%22+OR+%22battery+storage%22+OR+%22storage%22)+(%22commercial%22+OR+%22industrial%22+OR+%22corporate%22+OR+%22manufacturer%22+OR+%22company%22)&hl=en-US&gl=US&ceid=US:en",
+  },
+  {
+    // EPC contract awards = active project = equipment vendors needed now
+    name: "Google News — EPC Contract Energy Storage Solar Awarded",
+    url: "https://news.google.com/rss/search?q=(%22epc+contract%22+OR+%22epc+award%22+OR+%22engineering+procurement+construction%22+OR+%22epc+contractor+selected%22+OR+%22epc+firm+selected%22)+(%22energy+storage%22+OR+%22solar%22+OR+%22battery%22+OR+%22microgrid%22+OR+%22bess%22)&hl=en-US&gl=US&ceid=US:en",
+  },
+  {
+    // Federal / DoD / VA energy resilience projects
+    name: "Google News — Federal Military Energy Resilience Contract",
+    url: "https://news.google.com/rss/search?q=(%22military+installation%22+OR+%22federal+facility%22+OR+%22department+of+defense%22+OR+%22dod%22+OR+%22va+medical+center%22+OR+%22veterans+affairs%22)+(%22microgrid%22+OR+%22energy+storage%22+OR+%22solar%22+OR+%22resilience%22+OR+%22backup+power%22)+(%22contract%22+OR+%22award%22+OR+%22project%22)&hl=en-US&gl=US&ceid=US:en",
+  },
+  {
+    // School district, university campus solar + storage
+    name: "Google News — School University Campus Solar Storage",
+    url: "https://news.google.com/rss/search?q=(%22school+district%22+OR+%22university%22+OR+%22college%22+OR+%22campus%22)+(%22solar%22+OR+%22energy+storage%22+OR+%22battery%22+OR+%22microgrid%22+OR+%22renewable+energy%22)+(%22rfp%22+OR+%22procurement%22+OR+%22contract%22+OR+%22approved%22+OR+%22awarded%22)&hl=en-US&gl=US&ceid=US:en",
+  },
 ];
 
 // ─── Signal keyword sets (Phase 2: 5 new signals added) ──────────────────────
@@ -258,18 +338,11 @@ const SIGNAL_KEYWORDS: Record<OpportunitySignal, string[]> = {
 
   // ── Phase 2: Equipment-specific procurement signals ──
   bess_procurement: [
+    // Direct procurement noun phrases
     "battery storage procurement",
     "bess procurement",
     "energy storage rfp",
     "battery storage rfq",
-    "rfp for battery storage",
-    "rfq for battery storage",
-    "rfp for energy storage",
-    "rfq for energy storage",
-    "procure battery storage",
-    "procure energy storage",
-    "battery storage bid",
-    "issues rfp for",
     "bess rfp",
     "bess rfq",
     "battery storage contract",
@@ -288,6 +361,30 @@ const SIGNAL_KEYWORDS: Record<OpportunitySignal, string[]> = {
     "battery storage deployment",
     "energy storage solicitation",
     "storage capacity procurement",
+    // Reversed / verb-first phrase variants
+    "rfp for battery storage",
+    "rfp for energy storage",
+    "rfq for battery storage",
+    "rfq for energy storage",
+    "procure battery storage",
+    "procure energy storage",
+    "procuring battery storage",
+    "procuring energy storage",
+    "battery storage bid",
+    "issues rfp for battery",
+    "issued rfp for energy storage",
+    "seeking bids for battery",
+    "seeking proposals for energy storage",
+    "invites bids for energy storage",
+    "soliciting battery storage",
+    "solicitation for battery storage",
+    "tender for battery storage",
+    "tender for energy storage",
+    // Adjectival + procurement combos
+    "large-scale battery procurement",
+    "grid-scale storage procurement",
+    "utility-scale battery contract",
+    "commercial-scale energy storage",
   ],
   solar_procurement: [
     "solar procurement",
@@ -307,6 +404,23 @@ const SIGNAL_KEYWORDS: Record<OpportunitySignal, string[]> = {
     "solar contractor award",
     "mw solar",
     "kw solar installation",
+    // Reversed / verb-first variants
+    "rfp for solar",
+    "rfq for solar",
+    "solar solicitation",
+    "procure solar",
+    "procuring solar",
+    "seeking solar proposals",
+    "seeking solar bids",
+    "invites bids for solar",
+    "soliciting solar contractors",
+    "commercial solar procurement",
+    "industrial solar procurement",
+    "solar project solicitation",
+    "tender for solar",
+    "corporate solar contract",
+    "issues rfp for solar",
+    "released rfp for solar",
   ],
   generator_procurement: [
     "generator procurement",
@@ -325,6 +439,18 @@ const SIGNAL_KEYWORDS: Record<OpportunitySignal, string[]> = {
     "cummins contract",
     "caterpillar generator",
     "kohler generator",
+    // Reversed / verb-first variants
+    "rfp for generator",
+    "rfq for generator",
+    "generator solicitation",
+    "procure generator",
+    "procuring generators",
+    "backup generator procurement",
+    "emergency power solicitation",
+    "generator epc",
+    "issues rfp for backup power",
+    "seeking backup power contractor",
+    "standby power rfp",
   ],
 
   // ── Phase 3: Permit + interconnection signals ──
@@ -352,6 +478,33 @@ const SIGNAL_KEYWORDS: Record<OpportunitySignal, string[]> = {
     "utility interconnection",
     "distribution interconnection",
     "transmission interconnection",
+  ],
+
+  // ── Phase 5 signal: contract award = active market ──
+  procurement_awarded: [
+    "awarded contract for battery",
+    "awarded contract for solar",
+    "awarded contract for energy storage",
+    "contract awarded for bess",
+    "contract award energy storage",
+    "wins contract for battery",
+    "wins contract for solar",
+    "selected as contractor for energy storage",
+    "selected epc for solar",
+    "selected integrator for battery",
+    "project award battery storage",
+    "project award solar",
+    "awarded epc contract",
+    "epc award battery",
+    "epc award solar",
+    "energy storage project award",
+    "solar project award",
+    "battery storage project award",
+    "selected to build battery storage",
+    "selected to install solar",
+    "contract to supply battery storage",
+    "contract to supply solar",
+    "supply contract energy storage",
   ],
 
   // ── Phase 4: BESS co-sell + advanced procurement signals ──
@@ -515,13 +668,17 @@ const SIGNAL_BASE_SCORES: Partial<Record<OpportunitySignal, number>> = {
   solar_procurement: 45,
   generator_procurement: 45,
   rfq: 35,
+  procurement_awarded: 30, // contract award = active market, co-vendor opportunity
   // Strong indirect signals
   energy_project: 25,
   interconnection_application: 22,
+  microgrid_procurement: 22,
   permit_filed: 18,
   high_utility_exposure: 16,
   energy_upgrade: 14,
-  construction: 12,
+  c_and_i_solar: 12,
+  virtual_power_plant: 12,
+  construction: 10,
   facility_upgrade: 10,
   new_opening: 10,
   expansion: 8,
@@ -656,12 +813,25 @@ function extractCompanyName(title: string, description: string): string {
   return "Unknown Company";
 }
 
-/** Detect all matching signals in article text */
+/** Detect all matching signals in article text using normalized matching */
 function detectSignals(text: string): OpportunitySignal[] {
   const lowerText = text.toLowerCase();
-  return (Object.entries(SIGNAL_KEYWORDS) as [OpportunitySignal, string[]][])
-    .filter(([, keywords]) => keywords.some((kw) => lowerText.includes(kw)))
+  const normText = normalizeText(text);
+
+  const found = (Object.entries(SIGNAL_KEYWORDS) as [OpportunitySignal, string[]][])
+    .filter(([, keywords]) => {
+      return keywords.some((kw) => {
+        // Try exact lowercase match first (fast path)
+        if (lowerText.includes(kw)) return true;
+        // Try normalized match (catches stemmed/hyphen variants)
+        const normKw = normalizeText(kw);
+        if (normText.includes(normKw)) return true;
+        return false;
+      });
+    })
     .map(([sig]) => sig);
+
+  return found;
 }
 
 /** Detect industry from article text — returns first match by priority order */
@@ -748,7 +918,10 @@ function calculateConfidence(signals: OpportunitySignal[], industry?: IndustryTy
 export async function scrapeOpportunities(): Promise<ScraperResult> {
   const allOpportunities: Opportunity[] = [];
   const seenUrls = new Set<string>();
+  const seenFingerprints = new Set<string>();
+  const seenTitles: string[] = []; // for Jaccard cross-source dedup
   let duplicates = 0;
+  let junk = 0;
 
   console.log("🔍 Starting opportunity scraper...");
 
@@ -758,12 +931,34 @@ export async function scrapeOpportunities(): Promise<ScraperResult> {
     const articles = await parseRSSFeed(source.url);
 
     for (const article of articles) {
-      // Skip duplicates
+      // Skip URL duplicates
       if (seenUrls.has(article.link)) {
         duplicates++;
         continue;
       }
       seenUrls.add(article.link);
+
+      // Hard disqualifier pre-check (residential, financial news, etc.)
+      const preCheck = checkDisqualifiers(`${article.title} ${article.description}`);
+      if (preCheck.disqualified) {
+        junk++;
+        continue;
+      }
+
+      // Title-fingerprint dedup: same story from multiple sources
+      const fp = articleFingerprint(article.title);
+      if (seenFingerprints.has(fp)) {
+        duplicates++;
+        continue;
+      }
+      // Jaccard dedup: near-identical titles (score > 0.6)
+      const isDupTitle = seenTitles.some((t) => jaccardSimilarity(t, article.title) > 0.6);
+      if (isDupTitle) {
+        duplicates++;
+        continue;
+      }
+      seenFingerprints.add(fp);
+      seenTitles.push(article.title);
 
       // Combine title and description for analysis
       const fullText = `${article.title} ${article.description}`;
@@ -795,9 +990,33 @@ export async function scrapeOpportunities(): Promise<ScraperResult> {
         continue;
       }
 
-      // Calculate confidence (factoring in name quality)
+      // Qualification gate — drop junk unless it has a strong procurement signal
+      const qualification = qualifyLead(article.title, article.description, signals);
+      const hasStrongProcurementSignal = signals.some((s) =>
+        [
+          "bess_procurement",
+          "solar_procurement",
+          "generator_procurement",
+          "rfq",
+          "microgrid_procurement",
+          "procurement_awarded",
+        ].includes(s)
+      );
+      if (qualification.tier === "junk" && !hasStrongProcurementSignal) {
+        junk++;
+        continue;
+      }
+
+      // Calculate confidence: blend signal-based score with qualification score
       const baseConfidence = calculateConfidence(signals, industry);
-      const confidence = Math.round(baseConfidence * 0.8 + nameQuality * 0.2);
+      // Qualification contributes 35% — rewards articles with buyer+action+equipment context
+      const qualBlend = Math.round(baseConfidence * 0.65 + qualification.score * 0.35);
+      // Hot articles get a +8 bonus; cold get -10 penalty
+      const qualAdjust = qualification.tier === "hot" ? 8 : qualification.tier === "cold" ? -10 : 0;
+      const confidence = Math.min(
+        100,
+        Math.round(qualBlend * 0.8 + nameQuality * 0.2) + qualAdjust
+      );
 
       // Create opportunity
       const opportunity: Opportunity = {
@@ -822,7 +1041,8 @@ export async function scrapeOpportunities(): Promise<ScraperResult> {
   allOpportunities.sort((a, b) => b.confidence_score - a.confidence_score);
 
   console.log(
-    `✅ Scraping complete: ${allOpportunities.length} opportunities found (${duplicates} duplicates skipped)`
+    `✅ Scraping complete: ${allOpportunities.length} opportunities found ` +
+      `(${duplicates} duplicates, ${junk} junk filtered)`
   );
 
   return {
