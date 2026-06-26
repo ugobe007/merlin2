@@ -1,37 +1,59 @@
 #!/bin/bash
-# Deploy to Fly.io with VITE_ build secrets sourced from .env
-# Usage: bash scripts/deploy.sh
-set -e
+# Deploy merlin2 to Fly.io
+# =============================================================================
+# Fly's Depot remote builder does NOT honour [build.secrets] in fly.toml.
+# Build secrets must be passed explicitly via --build-secret flags.
+# This script reads them from .env and passes them directly.
+#
+# Usage:
+#   bash scripts/deploy.sh    # standard deploy
+#   npm run deploy            # same via npm
+# =============================================================================
+set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-# Helper: extract a value from .env by key name (handles long single-line values)
+if [ ! -f .env ]; then
+  echo "❌ .env not found. Copy .env.example and fill in values."
+  exit 1
+fi
+
+# Extract a value from .env by key (handles long single-line values like JWTs)
 env_val() {
   grep "^${1}=" .env | head -1 | cut -d= -f2-
 }
 
-VITE_SUPABASE_URL=$(env_val VITE_SUPABASE_URL)
-VITE_SUPABASE_ANON_KEY=$(env_val VITE_SUPABASE_ANON_KEY)
-VITE_OPENAI_API_KEY=$(env_val VITE_OPENAI_API_KEY)
-VITE_ENABLE_AI_ANALYSIS=$(env_val VITE_ENABLE_AI_ANALYSIS)
-VITE_GOOGLE_MAPS_API_KEY=$(env_val VITE_GOOGLE_MAPS_API_KEY)
-VITE_NREL_API_KEY=$(env_val VITE_NREL_API_KEY)
-VITE_VISUAL_CROSSING_API_KEY=$(env_val VITE_VISUAL_CROSSING_API_KEY)
-VITE_RESEND_API_KEY=$(env_val VITE_RESEND_API_KEY)
+BUILD_KEYS=(
+  VITE_SUPABASE_URL
+  VITE_SUPABASE_ANON_KEY
+  VITE_OPENAI_API_KEY
+  VITE_ENABLE_AI_ANALYSIS
+  VITE_GOOGLE_MAPS_API_KEY
+  VITE_NREL_API_KEY
+  VITE_VISUAL_CROSSING_API_KEY
+  VITE_RESEND_API_KEY
+)
 
-echo "🚀 Deploying merlin2 with explicit build secrets..."
-echo "   VITE_SUPABASE_URL  = $VITE_SUPABASE_URL"
-echo "   VITE_SUPABASE_ANON_KEY = ${VITE_SUPABASE_ANON_KEY:0:30}..."
+echo "📦 Reading build secrets from .env..."
+SECRET_FLAGS=()
+for KEY in "${BUILD_KEYS[@]}"; do
+  VAL=$(env_val "$KEY")
+  if [ -n "$VAL" ]; then
+    SECRET_FLAGS+=(--build-secret "${KEY}=${VAL}")
+    echo "  ✅ ${KEY}"
+  else
+    echo "  ⚠️  ${KEY} not found — passing 'placeholder'"
+    SECRET_FLAGS+=(--build-secret "${KEY}=placeholder")
+  fi
+done
 
-fly deploy -a merlin2 \
-  --build-secret "VITE_SUPABASE_URL=${VITE_SUPABASE_URL}" \
-  --build-secret "VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}" \
-  --build-secret "VITE_OPENAI_API_KEY=${VITE_OPENAI_API_KEY}" \
-  --build-secret "VITE_ENABLE_AI_ANALYSIS=${VITE_ENABLE_AI_ANALYSIS}" \
-  --build-secret "VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}" \
-  --build-secret "VITE_NREL_API_KEY=${VITE_NREL_API_KEY}" \
-  --build-secret "VITE_VISUAL_CROSSING_API_KEY=${VITE_VISUAL_CROSSING_API_KEY}" \
-  --build-secret "VITE_RESEND_API_KEY=${VITE_RESEND_API_KEY}" \
-  --build-arg "CACHEBUST=$(date +%s)"
+CACHEBUST=$(date +%s)
+echo ""
+echo "🚀 Deploying merlin2 to Fly.io (remote-only, cache bust: ${CACHEBUST})..."
 
-echo "✅ Deploy complete — check https://merlinenergy.net"
+fly deploy -a merlin2 --remote-only \
+  "${SECRET_FLAGS[@]}" \
+  --build-arg "CACHEBUST=${CACHEBUST}"
+
+echo ""
+echo "✅ Deploy complete → https://merlinenergy.net"

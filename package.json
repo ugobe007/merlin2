@@ -13,6 +13,7 @@
     "build": "tsc -b && vite build",
     "build:analyze": "vite build --mode analyze",
     "build:prod": "vite build --mode production",
+    "deploy": "bash scripts/deploy.sh",
     "type-check": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "quote:diag": "npx vite-node scripts/quote-diag.ts",
