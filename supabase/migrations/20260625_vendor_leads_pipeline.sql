@@ -110,17 +110,20 @@ ALTER TABLE vendor_leads        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE vendor_lead_events  ENABLE ROW LEVEL SECURITY;
 
 -- Vendors see own leads
+DROP POLICY IF EXISTS vendor_leads_vendor_read ON vendor_leads;
 CREATE POLICY vendor_leads_vendor_read ON vendor_leads
   FOR SELECT
   USING (vendor_id = auth.uid());
 
 -- Vendors can update status / notes on their own leads
+DROP POLICY IF EXISTS vendor_leads_vendor_update ON vendor_leads;
 CREATE POLICY vendor_leads_vendor_update ON vendor_leads
   FOR UPDATE
   USING (vendor_id = auth.uid())
   WITH CHECK (vendor_id = auth.uid());
 
 -- Vendors see own lead events
+DROP POLICY IF EXISTS vendor_lead_events_vendor_read ON vendor_lead_events;
 CREATE POLICY vendor_lead_events_vendor_read ON vendor_lead_events
   FOR SELECT
   USING (lead_id IN (SELECT id FROM vendor_leads WHERE vendor_id = auth.uid()));
