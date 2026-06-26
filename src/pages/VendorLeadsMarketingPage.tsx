@@ -499,7 +499,7 @@ export default function VendorLeadsMarketingPage() {
   return (
     <div className="min-h-screen bg-[#0f1117] text-white">
       {/* ── Nav ── */}
-      <div className="border-b border-white/[0.06] bg-[#13151c]/90 backdrop-blur-sm sticky top-0 z-30 px-6 py-4">
+      <div className="border-b border-white/[0.06] bg-[#13151c]/90 backdrop-blur-sm sticky top-0 z-30 px-6 py-2.5">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <a href="https://merlinenergy.net" className="flex items-center gap-2.5">
             <img src={merlinIcon} alt="Merlin" className="w-8 h-8 rounded-lg" />
@@ -525,26 +525,24 @@ export default function VendorLeadsMarketingPage() {
       </div>
 
       {/* ── Hero ── */}
-      <div className="max-w-6xl mx-auto px-6 pt-16 pb-10 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#3ECF8E]/25 bg-[#3ECF8E]/[0.07] text-[#3ECF8E] text-sm font-medium mb-6">
-          <Zap className="w-3.5 h-3.5" />
+      <div className="max-w-6xl mx-auto px-6 pt-8 pb-5 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#3ECF8E]/25 bg-[#3ECF8E]/[0.07] text-[#3ECF8E] text-xs font-medium mb-3">
+          <Zap className="w-3 h-3" />
           Live procurement leads — updated daily
         </div>
 
-        <h1 className="text-5xl font-bold leading-tight mb-4">
-          Real leads for energy
-          <br />
-          <span className="text-[#3ECF8E]">storage & solar vendors</span>
+        <h1 className="text-3xl font-bold leading-snug mb-2">
+          Real energy procurement leads —{" "}
+          <span className="text-[#3ECF8E]">for BESS, solar & generator vendors</span>
         </h1>
 
-        <p className="text-slate-400 text-lg max-w-2xl mx-auto mb-8">
-          Merlin's AI scrapes 43 news sources and government procurement feeds daily to surface
-          companies actively seeking BESS, solar, and generator equipment — before they post on your
-          radar.
+        <p className="text-slate-400 text-sm max-w-xl mx-auto mb-5">
+          Merlin's AI scrapes 43 sources daily to surface companies actively buying — before they
+          hit your competitors' radar.
         </p>
 
         {/* Stats row */}
-        <div className="flex items-center justify-center gap-8 mb-10 flex-wrap">
+        <div className="flex items-center justify-center gap-6 mb-5 flex-wrap">
           {[
             {
               icon: <Battery className="w-4 h-4 text-blue-400" />,
@@ -577,16 +575,16 @@ export default function VendorLeadsMarketingPage() {
 
         <button
           onClick={scrollToSignup}
-          className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-[#3ECF8E] hover:bg-emerald-400 text-black text-base font-bold transition-all shadow-lg shadow-emerald-500/20"
+          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#3ECF8E] hover:bg-emerald-400 text-black text-sm font-bold transition-all shadow-md shadow-emerald-500/20"
         >
-          Unlock All Leads Free <ArrowRight className="w-5 h-5" />
+          Unlock All Leads Free <ArrowRight className="w-4 h-4" />
         </button>
-        <p className="text-xs text-slate-600 mt-3">No credit card · Approved within 24 hours</p>
+        <p className="text-xs text-slate-600 mt-2">No credit card · Approved within 24 hours</p>
       </div>
 
       {/* ── Lead cards ── */}
-      <div className="max-w-6xl mx-auto px-6 pb-4">
-        <div className="flex items-center justify-between mb-6">
+      <div className="max-w-6xl mx-auto px-6 pb-2">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-white">
             Latest Procurement Leads
             <span className="ml-2 text-sm font-normal text-slate-500">
@@ -649,7 +647,7 @@ export default function VendorLeadsMarketingPage() {
       </div>
 
       {/* ── Value props ── */}
-      <div className="max-w-6xl mx-auto px-6 py-16">
+      <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
@@ -683,9 +681,9 @@ export default function VendorLeadsMarketingPage() {
       </div>
 
       {/* ── Signup section ── */}
-      <div ref={signupRef} className="max-w-2xl mx-auto px-6 pb-20" id="signup">
+      <div ref={signupRef} className="max-w-2xl mx-auto px-6 pb-10" id="signup">
         {signupDone ? (
-          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.06] p-10 text-center">
+          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.06] p-7 text-center">
             <CheckCircle className="w-14 h-14 text-[#3ECF8E] mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-white mb-2">You're in the queue!</h2>
             <p className="text-slate-400 text-sm max-w-sm mx-auto mb-6">
@@ -700,7 +698,7 @@ export default function VendorLeadsMarketingPage() {
             </a>
           </div>
         ) : (
-          <div className="rounded-2xl border border-white/[0.08] bg-[#13151c] p-8">
+          <div className="rounded-2xl border border-white/[0.08] bg-[#13151c] p-6">
             {/* Header */}
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-[#3ECF8E]/10 flex items-center justify-center">
