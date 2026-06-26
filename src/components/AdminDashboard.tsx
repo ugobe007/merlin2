@@ -28,7 +28,6 @@ import SystemHealthDashboard from "./admin/SystemHealthDashboard";
 import MarketIntelligenceDashboard from "./admin/MarketIntelligenceDashboard";
 // premiumConfigurationService imports moved to tab components
 import merlinImage from "@/assets/images/new_profile_merlin.png";
-import { supabaseAdmin } from "@/lib/supabase";
 // import MigrationManager from './admin/MigrationManager'; // Temporarily disabled
 import AdminWorkflowsTab from "./admin/tabs/AdminWorkflowsTab";
 import AdminHealthTab from "./admin/tabs/AdminHealthTab";
@@ -172,47 +171,34 @@ const AdminDashboard: React.FC = () => {
     async function fetchStats() {
       setStatsLoading(true);
       try {
-        // Total user counts by plan
-        const { data: users } = await supabaseAdmin
-          .from("user_profiles")
-          .select("plan", { count: "exact" });
-        const allUsers = users ?? [];
-        const totalUsers = allUsers.length;
-        const freeUsers = allUsers.filter((u) => !u.plan || u.plan === "free").length;
-        const semiPremiumUsers = allUsers.filter((u) => u.plan === "semi_premium").length;
-        const premiumUsers = allUsers.filter((u) => u.plan === "premium").length;
-
-        // Quotes generated today (matches_used increments per quote)
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const { count: quotesToday } = await supabaseAdmin
-          .from("user_profiles")
-          .select("*", { count: "exact", head: true })
-          .gte("updated_at", todayStart.toISOString());
-
-        // Monthly revenue from user_subscriptions
-        const monthStart = new Date();
-        monthStart.setDate(1);
-        monthStart.setHours(0, 0, 0, 0);
-        const { data: subs } = await supabaseAdmin
-          .from("user_subscriptions")
-          .select("tier, status")
-          .eq("status", "active");
-        const activeSubs = subs ?? [];
-        // Rough revenue estimate: premium=$199/mo, semi_premium=$49/mo
-        const monthlyRevenue =
-          activeSubs.filter((s) => s.tier === "premium").length * 199 +
-          activeSubs.filter((s) => s.tier === "semi_premium").length * 49;
-
+        // Server-side endpoint — uses service-role key, bypasses RLS
+        const res = await fetch("/api/admin/stats");
+        if (!res.ok) throw new Error(`Admin stats failed: ${res.status}`);
+        const json = (await res.json()) as {
+          success: boolean;
+          stats: {
+            totalUsers: number;
+            freeUsers: number;
+            paidUsers: number;
+            tierBreakdown: Record<string, number>;
+            quotesGeneratedToday: number;
+            totalQuotes: number;
+            qualifiedLeads: number;
+            monthlyRevenue: number;
+            activePaidSubs: number;
+          };
+        };
+        if (!json.success) throw new Error("Admin stats returned success:false");
+        const s = json.stats;
         setStats((prev) => ({
           ...prev,
-          totalUsers,
-          freeUsers,
-          semiPremiumUsers,
-          premiumUsers,
-          quotesGeneratedToday: quotesToday ?? 0,
-          activeSessions: activeSubs.length, // active paid subs as proxy
-          monthlyRevenue,
+          totalUsers: s.totalUsers,
+          freeUsers: s.freeUsers,
+          semiPremiumUsers: s.tierBreakdown["semi_premium"] ?? s.tierBreakdown["starter"] ?? 0,
+          premiumUsers: s.tierBreakdown["premium"] ?? s.tierBreakdown["business"] ?? 0,
+          quotesGeneratedToday: s.quotesGeneratedToday,
+          activeSessions: s.activePaidSubs,
+          monthlyRevenue: s.monthlyRevenue,
         }));
       } catch (e) {
         console.error("Failed to fetch admin stats", e);
