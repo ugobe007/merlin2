@@ -12,18 +12,13 @@ primary_region = 'lax'
 [build]
   dockerfile = "Dockerfile"
 
-  # Maps Fly app secrets (stored via `fly secrets set`) to Docker BuildKit
-  # secret IDs for the remote builder. This is the correct mechanism for
-  # --remote-only builds. Do NOT duplicate these via --build-secret CLI flags.
-  [build.secrets]
-    VITE_SUPABASE_URL            = "VITE_SUPABASE_URL"
-    VITE_SUPABASE_ANON_KEY       = "VITE_SUPABASE_ANON_KEY"
-    VITE_RESEND_API_KEY          = "VITE_RESEND_API_KEY"
-    VITE_OPENAI_API_KEY          = "VITE_OPENAI_API_KEY"
-    VITE_ENABLE_AI_ANALYSIS      = "VITE_ENABLE_AI_ANALYSIS"
-    VITE_GOOGLE_MAPS_API_KEY     = "VITE_GOOGLE_MAPS_API_KEY"
-    VITE_NREL_API_KEY            = "VITE_NREL_API_KEY"
-    VITE_VISUAL_CROSSING_API_KEY = "VITE_VISUAL_CROSSING_API_KEY"
+  # NOTE: [build.secrets] is intentionally omitted.
+  # Depot (Fly's remote builder) does NOT forward fly app secrets to BuildKit
+  # via the [build.secrets] TOML mechanism. Build secrets must be passed
+  # explicitly via --build-secret CLI flags at deploy time.
+  #
+  # Use:  npm run deploy          (sources from .env, adds CACHEBUST)
+  #   or: bash scripts/deploy.sh  (same thing, directly)
 
 # Runtime environment — available to the Express server (port 3001) at run time.
 # Sensitive keys (GOOGLE_MAPS_API_KEY, STRIPE_SECRET_KEY, etc.) are managed via
