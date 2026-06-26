@@ -95,6 +95,7 @@ export interface LeadMatchResult {
 const BESS_SIGNAL_SCORES: Partial<Record<OpportunitySignal, number>> = {
   bess_procurement: 40,
   rfq: 30,
+  procurement_awarded: 22, // award = active market, co-vendor / expansion opp
   energy_project: 22,
   high_utility_exposure: 18,
   construction: 12,
@@ -130,7 +131,8 @@ const BESS_INDUSTRY_BONUS: Partial<Record<IndustryType, number>> = {
 
 const SOLAR_SIGNAL_SCORES: Partial<Record<OpportunitySignal, number>> = {
   solar_procurement: 40,
-  c_and_i_solar: 42, // most direct solar procurement signal
+  c_and_i_solar: 42,
+  procurement_awarded: 18,
   sustainability_initiative: 25,
   energy_project: 20,
   construction: 15,
@@ -158,6 +160,7 @@ const SOLAR_INDUSTRY_BONUS: Partial<Record<IndustryType, number>> = {
 
 const GENERATOR_SIGNAL_SCORES: Partial<Record<OpportunitySignal, number>> = {
   generator_procurement: 40,
+  procurement_awarded: 20,
   construction: 22,
   expansion: 18,
   new_opening: 15,

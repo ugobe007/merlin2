@@ -25,7 +25,9 @@ export type OpportunitySignal =
   // Phase 4 — BESS co-sell + advanced procurement signals
   | "microgrid_procurement"
   | "virtual_power_plant"
-  | "c_and_i_solar";
+  | "c_and_i_solar"
+  // Phase 5 — Contract award signal (active market indicator)
+  | "procurement_awarded";
 
 export type OpportunityStatus = "new" | "contacted" | "qualified" | "archived";
 
