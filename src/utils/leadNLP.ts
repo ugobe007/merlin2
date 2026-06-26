@@ -538,3 +538,285 @@ export function articleFingerprint(title: string): string {
     .slice(0, 8)
     .join("|");
 }
+
+// ─── Verb-signal extraction ───────────────────────────────────────────────────
+//
+// The verb is the semantic anchor of every sentence:
+//   subject [before verb] = WHO is acting (buyer or vendor?)
+//   verb phrase           = WHAT action (open procurement, award, future intent, completion?)
+//   object [after verb]   = WHAT equipment or deliverable
+//
+// We extract structured VerbSignal objects so the qualification engine can
+// score based on the full syntactic relationship, not just keyword presence.
+
+export type VerbSignalRole =
+  | "procurement_open" // active solicitation is open RIGHT NOW
+  | "procurement_awarded" // contract already given → market signal
+  | "funding_approved" // budget/grant secured → procurement is imminent
+  | "future_intent" // "will install" / "plans to procure"
+  | "completion" // "has been installed" → project is done
+  | "oem_announcement" // vendor product push — NOT a buyer
+  | "neutral";
+
+export interface VerbSignal {
+  role: VerbSignalRole;
+  tense: "present" | "past" | "future" | "perfect" | "progressive";
+  confidence: number; // 0.0–1.0 — how certain we are about the role
+  subjectWindow: string; // up to 80 chars BEFORE the verb match (who is acting)
+  objectWindow: string; // up to 150 chars AFTER the verb match (what they're doing it to)
+  verbPhrase: string; // the exact matched text
+}
+
+interface VerbPattern {
+  regex: RegExp;
+  role: VerbSignalRole;
+  tense: VerbSignal["tense"];
+  confidence: number;
+}
+
+// Ordered: highest confidence / most specific first
+const VERB_PATTERNS: VerbPattern[] = [
+  // ── PROCUREMENT_OPEN: present progressive — most certain, action is happening right now
+  {
+    regex:
+      /\b(is|are)\s+(seeking|soliciting|inviting|requesting)\s+(?:bids?|proposals?|quotations?|tenders?|rfqs?|contractors?|suppliers?|vendors?)/i,
+    role: "procurement_open",
+    tense: "progressive",
+    confidence: 0.98,
+  },
+  // ── PROCUREMENT_OPEN: issues/releases/publishes an RFP (present tense)
+  {
+    regex:
+      /\b(issues?|releasing?|releases?|publishing?|publishes?|opens?)\s+(?:an?\s+)?(?:rfp|rfq|solicitation|request\s+for\s+(?:proposal|quotation|quote)s?)/i,
+    role: "procurement_open",
+    tense: "present",
+    confidence: 0.97,
+  },
+  // ── PROCUREMENT_OPEN: issued/released/published (past — often still open)
+  {
+    regex:
+      /\b(issued|released|published|posted|opened)\s+(?:an?\s+)?(?:rfp|rfq|solicitation|request\s+for\s+(?:proposal|quotation|quote)s?)/i,
+    role: "procurement_open",
+    tense: "past",
+    confidence: 0.85,
+  },
+  // ── PROCUREMENT_OPEN: seeks / solicits (simple present)
+  {
+    regex: /\b(seeks?|solicits?)\s+(?:bids?|proposals?|quotations?|contractors?|suppliers?)/i,
+    role: "procurement_open",
+    tense: "present",
+    confidence: 0.9,
+  },
+  // ── PROCUREMENT_OPEN: invites bids/proposals
+  {
+    regex: /\binvites?\s+(?:bids?|proposals?|quotations?)\s+(?:for|to|from)/i,
+    role: "procurement_open",
+    tense: "present",
+    confidence: 0.9,
+  },
+  // ── PROCUREMENT_OPEN: responses/bids due (deadline language)
+  {
+    regex: /\b(?:responses?|bids?|proposals?|submissions?)\s+(?:are\s+)?due\b/i,
+    role: "procurement_open",
+    tense: "present",
+    confidence: 0.95,
+  },
+  // ── PROCUREMENT_OPEN: calling for bids/proposals
+  {
+    regex: /\bcalls?\s+for\s+(?:bids?|proposals?|tenders?|qualifications?)\b/i,
+    role: "procurement_open",
+    tense: "present",
+    confidence: 0.88,
+  },
+  // ── PROCUREMENT_OPEN: requesting proposals/quotations
+  {
+    regex: /\b(?:is\s+)?requesting\s+(?:proposals?|quotations?|bids?|qualifications?)\b/i,
+    role: "procurement_open",
+    tense: "present",
+    confidence: 0.88,
+  },
+  // ── PROCUREMENT_OPEN: has/have issued (perfect tense — recently issued, likely still open)
+  {
+    regex:
+      /\b(?:has|have)\s+issued\s+(?:an?\s+)?(?:rfp|rfq|solicitation|request\s+for\s+(?:proposal|quote))/i,
+    role: "procurement_open",
+    tense: "perfect",
+    confidence: 0.87,
+  },
+
+  // ── PROCUREMENT_AWARDED: passive award (X was awarded / has been awarded)
+  {
+    regex: /\b(?:was|were|has\s+been|have\s+been)\s+awarded\s+(?:to|a\s+contract|the\s+contract)/i,
+    role: "procurement_awarded",
+    tense: "past",
+    confidence: 0.85,
+  },
+  // ── PROCUREMENT_AWARDED: active award (X awards contract to Y)
+  {
+    regex: /\bawarded\s+(?:a\s+)?(?:contract|grant|project)\s+(?:to|for)\b/i,
+    role: "procurement_awarded",
+    tense: "past",
+    confidence: 0.88,
+  },
+  // ── PROCUREMENT_AWARDED: wins/won contract
+  {
+    regex: /\b(?:wins?|won)\s+(?:a\s+)?(?:contract|project|deal|bid|award)\b/i,
+    role: "procurement_awarded",
+    tense: "past",
+    confidence: 0.82,
+  },
+  // ── PROCUREMENT_AWARDED: selected as / to build
+  {
+    regex:
+      /\b(?:selects?|selected|chose|chosen)\s+.{0,60}(?:\bas\s+(?:the\s+)?(?:contractor|vendor|supplier|integrator|installer)|to\s+(?:build|install|deploy|supply))\b/i,
+    role: "procurement_awarded",
+    tense: "past",
+    confidence: 0.8,
+  },
+  // ── PROCUREMENT_AWARDED: signs PPA / energy contract
+  {
+    regex:
+      /\b(?:signs?|signed)\s+(?:a\s+)?(?:ppa|power\s+purchase\s+agreement|energy\s+contract|supply\s+contract|offtake\s+agreement)\b/i,
+    role: "procurement_awarded",
+    tense: "past",
+    confidence: 0.78,
+  },
+
+  // ── FUNDING_APPROVED: grant / budget approval → procurement is imminent
+  {
+    regex:
+      /\b(?:approves?|approved|authorizes?|authorized)\s+(?:\$[\d,.]+\s*(?:million|billion|M|B)\s+)?(?:funding|budget|grant|financing|loan)\s+(?:for|to)\b/i,
+    role: "funding_approved",
+    tense: "past",
+    confidence: 0.85,
+  },
+  {
+    regex:
+      /\b(?:secures?|secured|receives?|received)\s+(?:\$[\d,.]+\s*(?:million|billion|M|B)\s+)?(?:grant|loan|funding|financing|investment)\s+(?:for|to)\b/i,
+    role: "funding_approved",
+    tense: "past",
+    confidence: 0.8,
+  },
+  {
+    regex:
+      /\b(?:announces?|announced)\s+\$[\d,.]+\s*(?:million|billion|M|B)\s+(?:in\s+)?(?:funding|grant|investment|incentive)\b/i,
+    role: "funding_approved",
+    tense: "past",
+    confidence: 0.75,
+  },
+  // Breaks ground / starts construction = funded + procurement done for equipment
+  {
+    regex: /\bbreak(?:s|ing)?\s+ground\s+on\b/i,
+    role: "funding_approved",
+    tense: "present",
+    confidence: 0.72,
+  },
+
+  // ── FUTURE_INTENT: will / plans to (moderate, not yet active)
+  {
+    regex: /\bwill\s+(?:procure|install|deploy|build|purchase|acquire|implement|source)\b/i,
+    role: "future_intent",
+    tense: "future",
+    confidence: 0.7,
+  },
+  {
+    regex:
+      /\b(?:plans?\s+to|intends?\s+to|is\s+planning\s+to|aims?\s+to|expects?\s+to)\s+(?:procure|install|deploy|build|purchase|implement)\b/i,
+    role: "future_intent",
+    tense: "future",
+    confidence: 0.7,
+  },
+
+  // ── COMPLETION: project is already done → penalise (lower confidence in lead value)
+  {
+    regex:
+      /\b(?:has|have|had)\s+(?:been\s+)?(?:installed|deployed|completed|commissioned|energized|brought\s+online|come\s+online|gone\s+live)\b/i,
+    role: "completion",
+    tense: "perfect",
+    confidence: 0.9,
+  },
+  {
+    regex:
+      /\b(?:was|were)\s+(?:installed|deployed|completed|commissioned|energized|operational)\b/i,
+    role: "completion",
+    tense: "past",
+    confidence: 0.85,
+  },
+  {
+    regex: /\balready\s+(?:installed|deployed|operational|complete|energized|running|online)\b/i,
+    role: "completion",
+    tense: "past",
+    confidence: 0.92,
+  },
+  {
+    regex: /\binstallation\s+(?:is\s+)?(?:complete|completed|finished|done)\b/i,
+    role: "completion",
+    tense: "past",
+    confidence: 0.88,
+  },
+
+  // ── OEM_ANNOUNCEMENT: known vendor pushing product — subject is the seller, not the buyer
+  {
+    regex:
+      /\b(?:tesla|fluence|stem\s+inc|sungrow|catl|lg\s+energy|samsung\s+sdi|panasonic|enphase|solaredge|fronius|abb|siemens|ge\s+vernova|cummins|caterpillar|generac|aggreko|wärtsilä|wärtsilä|schneider)\s+(?:announces?|launches?|introduces?|unveils?|releases?|debuts?)\b/i,
+    role: "oem_announcement",
+    tense: "present",
+    confidence: 0.9,
+  },
+  {
+    regex:
+      /\b(?:launches?|introduces?|unveils?|debuts?)\s+(?:new|its|a|an)\s+(?:product|solution|platform|system|offering|battery|inverter|charger|line)\b/i,
+    role: "oem_announcement",
+    tense: "present",
+    confidence: 0.82,
+  },
+];
+
+/**
+ * Extract structured verb signals from article text.
+ *
+ * Each VerbSignal contains:
+ *   - role:          what kind of procurement action this verb encodes
+ *   - tense:         grammatical tense (affects confidence)
+ *   - confidence:    0–1 certainty of role classification
+ *   - subjectWindow: up to 80 chars before the verb → who is acting
+ *   - objectWindow:  up to 150 chars after the verb → what they're acting on
+ *   - verbPhrase:    the exact matched text for debugging
+ *
+ * Usage:
+ *   const signals = extractVerbSignals("CPS Energy issues RFP for 500MW battery storage");
+ *   // → [{role:"procurement_open", tense:"present", confidence:0.97,
+ *   //      subjectWindow:"CPS Energy", objectWindow:"for 500MW battery storage", ...}]
+ */
+export function extractVerbSignals(text: string): VerbSignal[] {
+  const signals: VerbSignal[] = [];
+
+  for (const { regex, role, tense, confidence } of VERB_PATTERNS) {
+    // Always use global flag for exec iteration
+    const gRegex = new RegExp(regex.source, "gi");
+    let match: RegExpExecArray | null;
+
+    while ((match = gRegex.exec(text)) !== null) {
+      const start = match.index;
+      const end = start + match[0].length;
+
+      signals.push({
+        role,
+        tense,
+        confidence,
+        subjectWindow: text.slice(Math.max(0, start - 80), start).trim(),
+        objectWindow: text.slice(end, Math.min(text.length, end + 150)).trim(),
+        verbPhrase: match[0],
+      });
+    }
+  }
+
+  // Remove duplicate matches where same verb was caught by multiple patterns
+  const seen = new Set<string>();
+  return signals.filter((s) => {
+    const key = `${Math.round(s.confidence * 10)}-${s.verbPhrase.slice(0, 30).toLowerCase()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}

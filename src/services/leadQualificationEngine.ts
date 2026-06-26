@@ -33,7 +33,9 @@ import {
   detectTemporalScore,
   proximityMatch,
   normalizeText,
+  extractVerbSignals,
 } from "../utils/leadNLP";
+import type { VerbSignal } from "../utils/leadNLP";
 import type { OpportunitySignal } from "../types/opportunity";
 
 // ─── Public types ─────────────────────────────────────────────────────────────
@@ -223,30 +225,115 @@ export function qualifyLead(
 
   result.dimensions.buyer = Math.max(0, Math.min(25, buyer));
 
-  // ── DIMENSION 2: ACTION (0–35) ──
-  let action = 0;
+  // ── DIMENSION 2: ACTION (0–35) — verb-anchored ──────────────────────────────
+  //
+  // The verb is the semantic anchor of the sentence.
+  // extractVerbSignals() identifies the procurement role carried by each verb:
+  //
+  //   procurement_open    → active solicitation open right now  → 35 pts (scaled by confidence)
+  //   procurement_awarded → contract already awarded            → 20 pts (market signal)
+  //   funding_approved    → budget/grant secured                → 18 pts (procurement imminent)
+  //   future_intent       → "will deploy" / "plans to"         → flat fallback (~10–22 pts)
+  //   completion          → already installed/deployed          → temporal penalty
+  //   oem_announcement    → vendor product push (not buyer)     → buyer penalty
+  //
+  // The subject window (text BEFORE the verb) is used to verb-confirm the buyer.
+  // Flat STRONG_ACTION / WEAK_ACTION patterns remain as structural fallback for
+  // articles where the verb signal is absent or ambiguous.
 
-  let strongActionFound = false;
-  for (const pattern of STRONG_ACTION) {
-    if (pattern.test(fullText)) {
-      strongActionFound = true;
-      action += 28;
-      result.reasons.push("strong procurement action detected");
-      break;
-    }
+  const verbSignals = extractVerbSignals(fullText);
+
+  // Reduce to best signal per role (highest confidence)
+  const bestByRole = new Map<string, VerbSignal>();
+  for (const vs of verbSignals) {
+    const cur = bestByRole.get(vs.role);
+    if (!cur || vs.confidence > cur.confidence) bestByRole.set(vs.role, vs);
   }
 
-  if (!strongActionFound) {
-    for (const pattern of WEAK_ACTION) {
+  const openSignal = bestByRole.get("procurement_open");
+  const awardedSignal = bestByRole.get("procurement_awarded");
+  const fundingSignal = bestByRole.get("funding_approved");
+  const futureSignal = bestByRole.get("future_intent");
+  const completionSignal = bestByRole.get("completion");
+  const oemVerbSignal = bestByRole.get("oem_announcement");
+
+  let action = 0;
+
+  const BUYER_SUBJECT_RE =
+    /\b(utility|cooperative|co-op|rural\s+electric|municipality|county|city|state|department|agency|district|school|university|hospital|manufacturer|developer|federal|military|campus|owner|operator|landlord)\b/i;
+
+  if (openSignal) {
+    // Scale to max 35 by verb-pattern confidence (0.97 conf → 34, 0.85 → 30)
+    action = Math.round(35 * openSignal.confidence);
+    result.reasons.push(`active procurement verb: "${openSignal.verbPhrase}"`);
+
+    // Subject window confirms buyer entity → promote buyer dimension
+    if (BUYER_SUBJECT_RE.test(openSignal.subjectWindow)) {
+      result.dimensions.buyer = Math.min(25, result.dimensions.buyer + 6);
+      result.reasons.push("buyer entity confirmed as verb subject");
+    }
+  } else if (awardedSignal) {
+    action = Math.round(20 * awardedSignal.confidence);
+    result.reasons.push(`contract awarded verb: "${awardedSignal.verbPhrase}"`);
+  } else if (fundingSignal) {
+    action = Math.round(18 * fundingSignal.confidence);
+    result.reasons.push(`funding secured verb: "${fundingSignal.verbPhrase}"`);
+  } else if (futureSignal) {
+    // Future intent — verb signal weak, lean on flat patterns for precision
+    let flatStrong = false;
+    for (const pattern of STRONG_ACTION) {
       if (pattern.test(fullText)) {
-        action += 12;
-        result.reasons.push("weak procurement action (future intent)");
+        action = 22;
+        flatStrong = true;
+        result.reasons.push("strong procurement action detected");
         break;
+      }
+    }
+    if (!flatStrong) {
+      for (const pattern of WEAK_ACTION) {
+        if (pattern.test(fullText)) {
+          action = 10;
+          result.reasons.push("future procurement intent");
+          break;
+        }
+      }
+    }
+  } else {
+    // No verb signal extracted → pure flat-pattern fallback
+    let flatStrong = false;
+    for (const pattern of STRONG_ACTION) {
+      if (pattern.test(fullText)) {
+        action = 22;
+        flatStrong = true;
+        result.reasons.push("strong procurement action detected");
+        break;
+      }
+    }
+    if (!flatStrong) {
+      for (const pattern of WEAK_ACTION) {
+        if (pattern.test(fullText)) {
+          action = 10;
+          result.reasons.push("weak procurement action");
+          break;
+        }
       }
     }
   }
 
-  // Proximity bonus: equipment AND procurement term within 250 chars → confirms co-occurrence
+  // OEM verb signal → reinforce buyer penalty (stacks with pattern check above)
+  if (oemVerbSignal && !openSignal && !awardedSignal) {
+    result.dimensions.buyer = Math.max(0, result.dimensions.buyer - 6);
+    result.disqualifiers.push(`OEM announcement verb: "${oemVerbSignal.verbPhrase}"`);
+  }
+
+  // Completion verb → temporal penalty (project already done = weak lead)
+  if (completionSignal) {
+    result.dimensions.timing = Math.max(0, result.dimensions.timing - 4);
+    result.disqualifiers.push(`completion verb: "${completionSignal.verbPhrase.slice(0, 50)}"`);
+  }
+
+  // Proximity bonus: equipment + procurement term co-occurring within 250 chars
+  // (stacks on top of verb-signal score — confirms the object window)
   const proximityPairs: Array<[string, string]> = [
     ["battery storage", "rfp"],
     ["battery storage", "procure"],
@@ -266,7 +353,7 @@ export function qualifyLead(
     if (proximityMatch(normText, a, b, 250)) {
       action = Math.min(35, action + 7);
       result.reasons.push(`${a} + ${b} proximity match`);
-      break; // one bonus is enough
+      break;
     }
   }
 
