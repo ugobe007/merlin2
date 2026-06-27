@@ -76,6 +76,14 @@ RUN npx esbuild agents/lead-matcher.ts \
     --packages=external \
     --outfile=dist-agents/lead-matcher.mjs
 
+RUN npx esbuild agents/growth-loop.ts \
+    --bundle \
+    --platform=node \
+    --target=node20 \
+    --format=esm \
+    --packages=external \
+    --outfile=dist-agents/growth-loop.mjs
+
 # Production stage - Multi-service (nginx + Node.js API)
 FROM node:20-alpine
 

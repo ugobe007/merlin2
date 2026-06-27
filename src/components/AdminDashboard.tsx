@@ -21,6 +21,7 @@ import {
   Gauge,
   // Wrench, // Unused
   Layers,
+  RefreshCw,
 } from "lucide-react";
 import { PricingAdminDashboard } from "./PricingAdminDashboard";
 import UseCaseConfigManager from "./admin/UseCaseConfigManager";
@@ -167,6 +168,12 @@ const AdminDashboard: React.FC = () => {
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
+  // Growth loop
+  const [growthRunning, setGrowthRunning] = useState(false);
+  const [growthBrief, setGrowthBrief] = useState<string | null>(null);
+  const [growthError, setGrowthError] = useState<string | null>(null);
+  const [growthLastRan, setGrowthLastRan] = useState<string | null>(null);
+
   useEffect(() => {
     async function fetchStats() {
       setStatsLoading(true);
@@ -208,6 +215,46 @@ const AdminDashboard: React.FC = () => {
     }
     fetchStats();
   }, []);
+
+  async function runGrowthLoop() {
+    setGrowthRunning(true);
+    setGrowthBrief(null);
+    setGrowthError(null);
+    try {
+      const res = await fetch("/api/admin/run-growth-loop", { method: "POST" });
+      const started = await res.json();
+      if (res.status === 409) { setGrowthError("Already running — check back in a few minutes."); return; }
+      if (!started.success) { setGrowthError(started.message); return; }
+      const machineId: string | null = started.machineId ?? null;
+      const headers: Record<string, string> = {};
+      if (machineId) headers["fly-force-instance-id"] = machineId;
+      // Poll until done (growth loop takes ~30s)
+      const deadline = Date.now() + 180_000;
+      while (Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 5_000));
+        const sr = await fetch("/api/admin/growth-loop-status", { headers });
+        const sd = await sr.json();
+        if (!sd.running && sd.success !== null) {
+          if (sd.success) {
+            // Fetch the latest brief from DB
+            const gr = await fetch("/api/admin/growth-reports?limit=1");
+            const gd = await gr.json();
+            const brief = gd.reports?.[0]?.growth_brief ?? "(no brief — check OpenAI key)";
+            setGrowthBrief(brief);
+            setGrowthLastRan(gd.reports?.[0]?.ran_at ?? new Date().toISOString());
+          } else {
+            setGrowthError(sd.error ?? "Growth loop failed");
+          }
+          return;
+        }
+      }
+      setGrowthError("Timed out waiting for growth loop");
+    } catch (e: unknown) {
+      setGrowthError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setGrowthRunning(false);
+    }
+  }
 
   // Navigation panels - organized by category
   const navigationPanels = [
@@ -553,6 +600,50 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="admin-kpi-label mt-1">Active Paid Subs</div>
               </div>
+            </div>
+
+            {/* ── GROWTH LOOP ────────────────────────────────────────── */}
+            <div className="admin-kpi-cell col-span-full p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="admin-section-label flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-[var(--intel)]" />
+                    AI Growth Loop
+                  </div>
+                  <div className="text-xs text-[var(--text-muted)] mt-0.5">
+                    Site health · Funnel audit · Market pulse · GPT-4o brief
+                    {growthLastRan && (
+                      <span className="ml-2 opacity-60">
+                        Last ran {new Date(growthLastRan).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void runGrowthLoop()}
+                  disabled={growthRunning}
+                  className="admin-action-link flex items-center gap-2 px-4 py-2 disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-4 h-4 ${growthRunning ? "animate-spin" : ""}`} />
+                  {growthRunning ? "Running…" : "Run Now"}
+                </button>
+              </div>
+              {growthError && (
+                <div className="text-xs text-red-400 bg-red-400/10 rounded px-3 py-2">
+                  ❌ {growthError}
+                </div>
+              )}
+              {growthBrief && (
+                <pre className="text-xs text-[var(--text-muted)] bg-black/30 rounded p-3 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">
+                  {growthBrief}
+                </pre>
+              )}
+              {!growthBrief && !growthError && !growthRunning && (
+                <div className="text-xs text-[var(--text-muted)] opacity-50">
+                  Hit "Run Now" to get a GPT-4o brief on site health, signup friction, and this week's energy market angles.
+                </div>
+              )}
             </div>
 
             <div>

@@ -132,16 +132,17 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
         throw new Error('Failed to create account');
       }
 
-      // Create or update user record in users table
+      // Create or update user record in user_profiles (canonical table).
+      // Previously wrote to a legacy `users` table; this aligns with authService.
       const { error: profileError } = await supabase
-        .from('users')
+        .from('user_profiles')
         .upsert({
           id: authData.user.id,
           email: formData.email,
           full_name: formData.name,
           company: formData.company,
-          tier: 'FREE', // Default tier
-          created_at: new Date().toISOString(),
+          tier: 'free',
+          updated_at: new Date().toISOString(),
         });
 
       if (profileError) {
