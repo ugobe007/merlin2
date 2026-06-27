@@ -20,6 +20,7 @@ import {
   importGooglePlacesLibrary,
   type BusinessSuggestion,
 } from "@/wizard/v8/services/googlePlacesService";
+import { useSiteCopy, SITE_COPY_DEFAULTS } from "@/hooks/useSiteCopy";
 
 const _MERLIN_ICON = "/merlin-icon.png";
 
@@ -145,17 +146,14 @@ const _telemetryRows: UseCase[] = [
   },
 ];
 
-const proofItems = ["Free & Instant", "No Utility Login Required", "CFO-Ready Report"];
+// proofItems and heroHeadlineAccents are now sourced from site_copy DB
+// (AI growth loop writes to them; SITE_COPY_DEFAULTS are the compiled fallback)
+const _DEFAULT_PROOF_ITEMS = JSON.parse(SITE_COPY_DEFAULTS.hero_proof_items) as string[];
+const _DEFAULT_ACCENTS     = JSON.parse(SITE_COPY_DEFAULTS.hero_accent_lines) as string[];
 
 const HERO_HEADLINE_ROTATION_MS = 15000;
 const HERO_INTAKE_STORAGE_KEY = "merlin_hero_intake_v1";
 const HERO_HEADLINE_TYPE_MS = 190;
-
-const heroHeadlineAccents = [
-  "Through Energy Stacking.",
-  "Into an Energy Strategy.",
-  "Before Utility Risk Hits Growth.",
-];
 
 const heroBusinessTypes: Array<{ label: string; slug: IndustrySlug }> = [
   { label: "Car wash", slug: "car_wash" },
@@ -1447,14 +1445,21 @@ function HeroIntakeCard() {
 }
 
 export default function HeroSection() {
+  const { copy } = useSiteCopy();
+  const heroAccents     = copy<string[]>('hero_accent_lines',    _DEFAULT_ACCENTS);
+  const proofItems      = copy<string[]>('hero_proof_items',     _DEFAULT_PROOF_ITEMS);
+  const headlinePrefix  = copy('hero_headline_prefix');
+  const heroBadge       = copy('hero_badge_text');
+  const heroSubtext     = copy('hero_subtext');
+
   const [activeAccentIndex, setActiveAccentIndex] = useState(0);
   const [typedAccent, setTypedAccent] = useState("");
 
-  const activeAccent = heroHeadlineAccents[activeAccentIndex];
+  const activeAccent = (heroAccents[activeAccentIndex] ?? heroAccents[0] ?? '');
 
   useEffect(() => {
     const rotationTimer = window.setInterval(() => {
-      setActiveAccentIndex((currentIndex) => (currentIndex + 1) % heroHeadlineAccents.length);
+      setActiveAccentIndex((currentIndex) => (currentIndex + 1) % heroAccents.length);
     }, HERO_HEADLINE_ROTATION_MS);
 
     return () => window.clearInterval(rotationTimer);
@@ -1487,7 +1492,7 @@ export default function HeroSection() {
       <div className="relative z-10 mx-auto grid w-full max-w-screen-2xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_0.74fr] lg:px-8 xl:px-12">
         <div className="max-w-3xl">
           <div className="mb-9 inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-purple-500/10 px-3 py-1.5 text-[12px] font-medium tracking-[0.12em] text-purple-400 shadow-[0_0_18px_rgba(168,85,247,0.18)]">
-            <Sparkles size={13} className="text-purple-400" /> Independent B2B Energy Intelligence
+            <Sparkles size={13} className="text-purple-400" /> {heroBadge || 'Independent B2B Energy Intelligence'}
           </div>
 
           <h1
@@ -1499,7 +1504,7 @@ export default function HeroSection() {
               textShadow: "0 1px 0 rgba(255,255,255,0.08), 0 14px 36px rgba(2,6,23,0.42)",
             }}
           >
-            <span className="inline-block">Reduce Utility Risk </span>
+            <span className="inline-block">{headlinePrefix || 'Reduce Utility Risk'} </span>
             <br />
             <span
               key={activeAccent}
@@ -1521,12 +1526,7 @@ export default function HeroSection() {
             className="mt-7 max-w-2xl text-lg leading-8 text-slate-400"
             style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif" }}
           >
-            Merlin compares utility power, storage, solar, generators, and flexible loads to
-            recommend the{" "}
-            <span className="bg-[linear-gradient(90deg,#3FE8FF_0%,#22D3EE_38%,#A855F7_78%,#C084FC_100%)] bg-clip-text font-semibold text-transparent">
-              right energy architecture
-            </span>{" "}
-            for your business.
+            {heroSubtext || 'Merlin compares utility power, storage, solar, generators, and flexible loads to recommend the right energy architecture for your business.'}
           </p>
 
           <div className="mt-7 flex flex-wrap gap-x-7 gap-y-3">

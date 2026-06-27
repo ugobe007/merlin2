@@ -168,4 +168,62 @@ router.get('/admin/growth-reports', async (req, res) => {
   }
 });
 
+// GET /api/admin/growth-actions — recent AI copy changes (for rollback UI)
+router.get('/admin/growth-actions', async (req, res) => {
+  try {
+    const sb = getServiceClient();
+    const limit = Math.min(Number(req.query.limit ?? 20), 100);
+    const { data, error } = await sb
+      .from('growth_actions')
+      .select('id, ran_at, copy_key, old_value, new_value, rationale, rolled_back')
+      .order('ran_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    res.json({ success: true, actions: data ?? [] });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/admin/rollback-copy — restore a single key to its previous value
+router.post('/admin/rollback-copy', async (req, res) => {
+  const { actionId, copyKey } = req.body ?? {};
+  if (!actionId || !copyKey) return res.status(400).json({ success: false, error: 'actionId and copyKey required' });
+  try {
+    const sb = getServiceClient();
+    // Fetch the action to get old_value
+    const { data: action, error: aErr } = await sb
+      .from('growth_actions').select('old_value, rolled_back').eq('id', actionId).maybeSingle();
+    if (aErr || !action) return res.status(404).json({ success: false, error: 'Action not found' });
+    if (action.rolled_back) return res.status(409).json({ success: false, error: 'Already rolled back' });
+
+    // Restore previous value (or delete row if there was no previous)
+    if (action.old_value != null) {
+      await sb.from('site_copy').update({
+        value: action.old_value, updated_by: 'human-rollback', updated_at: new Date().toISOString(),
+      }).eq('key', copyKey);
+    } else {
+      await sb.from('site_copy').delete().eq('key', copyKey);
+    }
+
+    // Mark action as rolled back
+    await sb.from('growth_actions').update({ rolled_back: true, rolled_back_at: new Date().toISOString() }).eq('id', actionId);
+    res.json({ success: true, restoredValue: action.old_value ?? '(deleted)' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/admin/site-copy — current live copy (for admin preview)
+router.get('/admin/site-copy', async (req, res) => {
+  try {
+    const sb = getServiceClient();
+    const { data, error } = await sb.from('site_copy').select('*').order('key');
+    if (error) throw error;
+    res.json({ success: true, copy: data ?? [] });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 export default router;
