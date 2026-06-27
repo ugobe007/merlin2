@@ -5,42 +5,63 @@ config({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
 const { extractCompanyName, isJunk } = await import('../server/services/opportunity-scraper.js');
 
+// ── SHOULD_BE_NULL: extractCompanyName must return null ─────────────────────
+// These are headlines where the "obvious noun phrase" is NOT a company name.
+// The verb-anchored inference engine should reject them at classifyAsOrg().
 const SHOULD_BE_NULL = [
+  // Industry shorthands / descriptor phrases
   ['Big Tech',                     'Big Tech companies face antitrust scrutiny'],
-  ["Massachusetts' 1.5-GW energy", "Massachusetts' 1.5-GW energy storage project moves forward"],
   ['Large-scale renewable energy',  'Large-scale renewable energy project starts construction'],
+  ['School-Based Solar Energy',     'School-Based Solar Energy program launches this fall'],
+  // Bare geographic names (no org suffix)
   ['Jamaica',                       'Jamaica expands its solar program'],
   ['Ontario',                       'Ontario announces new energy initiative'],
-  ['School-Based Solar Energy',     'School-Based Solar Energy program launches this fall'],
+  // Geographic possessive + category noun
+  ["Massachusetts' 1.5-GW energy", "Massachusetts' 1.5-GW energy storage project moves forward"],
+  ["Ohio's data center",            "Ohio's data center build announced by state"],
+  // Role/occupation nouns masquerading as company names
+  ['Medical device maker',          'Medical device maker expands campus in Indiana'],
+  // Directional + location + category
   ['East Alabama factory',          'East Alabama factory expansion creates 200 jobs'],
+  // National/generic sector activity
   ['U.S. Factory Activity',         'U.S. Factory Activity rises in May report'],
   ['US Manufacturing',              'US Manufacturing output drops for third month'],
-  ["Ohio's data center",            "Ohio's data center build announced by state"],
-  ['Medical device maker',          'Medical device maker expands campus in Indiana'],
+  ['Massachusetts Energy Storage',  'Massachusetts Energy Storage initiative advances'],
+  // Fragment — no clear subject before verb
   ['Hennessey Goes Big',            'Hennessey Goes Big with $15 million factory expansion'],
   ['Factory of factories',          "Factory of factories: China's manufacturers join wave"],
-  ['Massachusetts Energy Storage',  'Massachusetts Energy Storage initiative advances'],
-  ['Tesla prepares',                'Tesla prepares to expand Giga Texas with new production plant'],
-  ['Pine Island Google',            'Pine Island Google data center expansion approved'],
+  // Measurement-first headlines
   ['1.5-GW Battery Project',        '1.5-GW Battery Project awarded in Texas'],
 ];
 
+// ── SHOULD_PASS: extractCompanyName must return a non-null company name ─────
+// Note: the label shows the EXPECTED return value; actual string checked is r !== null.
 const SHOULD_PASS = [
-  ['Radius Logistics',          'Radius Logistics opens new warehouse in Texas'],
-  ['Radius Logistics (opening stripped)', 'Radius Logistics opening new facility in Texas'],
-  ['FuelCell Energy',           'FuelCell Energy announces new project in Connecticut'],
-  ['Georgia Power',             'Georgia Power utility expands grid infrastructure'],
-  ['Fluence Energy',            'Fluence Energy wins 200MW storage contract'],
-  ['Dominion Energy',           'Dominion Energy secures $500M in funding'],
-  ['FST Logistics',             "Ohio's FST Logistics to expand its distribution center"],
-  ['CATL',                      'CATL announces new battery gigafactory'],
-  ['Xcel Energy',               'Xcel Energy starts solar project in Colorado'],
-  ['Microsoft',                 'Microsoft opens new data center campus'],
-  ['Tesla',                     'Tesla expands Gigafactory production capacity'],
-  // Note: single-word companies like "Novva" pass via KNOWN_ENTITIES → scoreCompanyName=95 in scraper
+  // Standard "Company opens/launches/announces" headlines
+  ['Radius Logistics',                'Radius Logistics opens new warehouse in Texas'],
+  ['Radius Logistics (opening)',      'Radius Logistics opening new facility in Texas'],
+  ['FuelCell Energy',                 'FuelCell Energy announces new project in Connecticut'],
+  ['Fluence Energy',                  'Fluence Energy wins 200MW storage contract'],
+  ['Dominion Energy',                 'Dominion Energy secures $500M in funding'],
+  ['Xcel Energy',                     'Xcel Energy starts solar project in Colorado'],
+  ['Microsoft',                       'Microsoft opens new data center campus'],
+  ['Tesla',                           'Tesla expands Gigafactory production capacity'],
+  // Correctly strips geographic possessive prefix
+  ['FST Logistics (from Ohio\'s ...)', "Ohio's FST Logistics to expand its distribution center"],
+  // State + corporate suffix = valid company name
+  ['Georgia Power',                   'Georgia Power utility expands grid infrastructure'],
+  // Known single-word entities
+  ['CATL',                            'CATL announces new battery gigafactory'],
+  // New engine: properly separates subject from verb phrase
+  ['Tesla (from "Tesla prepares")',   'Tesla prepares to expand Giga Texas with new production plant'],
+  // Energy-domain org suffixes
+  ['Ameresco',                        'Ameresco selected for $40M solar project'],
+  ['Invenergy',                       'Invenergy secures financing for new wind farm'],
+  // New engine correctly strips geo prefix and finds the real company
+  ['Google (from "Pine Island Google")', 'Pine Island Google data center expansion approved'],
 ];
 
-console.log('\n── SHOULD BE NULL (junk) ──────────────────────────────────────');
+console.log('\n── SHOULD_BE_NULL (junk / not a company name) ─────────────────');
 let fail = 0;
 for (const [label, title] of SHOULD_BE_NULL) {
   const r = extractCompanyName(title, '');
@@ -49,7 +70,7 @@ for (const [label, title] of SHOULD_BE_NULL) {
   if (!ok) fail++;
 }
 
-console.log('\n── SHOULD PASS (valid companies) ──────────────────────────────');
+console.log('\n── SHOULD_PASS (valid company extracted) ───────────────────────');
 for (const [label, title] of SHOULD_PASS) {
   const r = extractCompanyName(title, '');
   const ok = r !== null;
@@ -60,4 +81,3 @@ for (const [label, title] of SHOULD_PASS) {
 const total = SHOULD_BE_NULL.length + SHOULD_PASS.length;
 console.log(`\nResult: ${total - fail}/${total} passed — ${fail} failure(s)\n`);
 process.exit(fail > 0 ? 1 : 0);
-// (test file)

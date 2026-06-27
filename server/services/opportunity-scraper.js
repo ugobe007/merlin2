@@ -130,16 +130,165 @@ function cleanGoogleNewsTitle(title = '') {
   return stripHtml(title).replace(/\s+-\s+[^-]+$/u, '').trim();
 }
 
-// ── Stage 2: Ontologies ─────────────────────────────────────────────────────
-const COMPANY_SUFFIXES = new Set([
-  'Inc', 'LLC', 'Ltd', 'Corp', 'Corporation', 'Company', 'Co', 'Group',
-  'Industries', 'International', 'Solutions', 'Services', 'Technologies',
-  'Tech', 'Energy', 'Power', 'Utilities', 'Utility', 'Solar', 'Battery',
-  'Storage', 'Logistics', 'Automotive', 'Manufacturing', 'Partners',
-  'Holdings', 'Ventures', 'Capital', 'Associates', 'Enterprises',
+// ═══════════════════════════════════════════════════════════════════════════
+// ONTOLOGICAL INFERENCE ENGINE v2
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// PHILOSOPHY: Headlines follow a Subject → VERB → Object sentence model.
+//   The VERB is the anchor point.  Everything BEFORE it = subject candidate.
+//   The subject must classify as a named ORG — not a GEO location, DESC
+//   phrase, or sentence fragment — before we accept it as a company name.
+//
+// ONTOLOGIES USED:
+//   VERB_BOUNDARY  — action verbs marking the subject / predicate split
+//   GEO_NAMES      — geographic names that cannot be company names alone
+//   DESC_ONTOLOGY  — descriptor / metric / category patterns (not an org)
+//   ORG_SUFFIX     — linguistic markers that positively identify an org
+//   KNOWN_ORGS     — curated set of validated company names
+//
+// INFERENCE FLOW  inferCompanyName(title):
+//   1. Find first verb → extract subject to the LEFT of it
+//   2. Strip geographic possessive prefix ("Ohio's X" → "X")
+//   3. classifyAsOrg(subject) — strict NER-like validation
+//   4. If strict pass fails, scan subject for embedded known org
+//   5. Fallback passes: possessive pattern, colon separator, word scan
+//
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── 2a. VERB ONTOLOGY ────────────────────────────────────────────────────────
+// The first verb that matches marks the predicate boundary.
+// "to <verb>" constructs are listed first so they beat bare verb matches
+// (regex returns the leftmost match, so "to expand" at pos 14 beats
+//  "expand" alone at pos 17).
+
+const VERB_BOUNDARY = new RegExp('\\b(?:' + [
+  // Infinitive constructs (leftmost priority)
+  'to\\s+(?:open|build|launch|expand|install|deploy|develop|construct|start|begin|invest|acquire)',
+  'will\\s+(?:open|build|launch|expand|install|deploy|develop|construct|start|invest)',
+  'is\\s+(?:set|ready|expected|planning|moving|opening|building|launching)',
+  // Procurement / contracting
+  'award(?:ed|s|ing)?', 'select(?:ed|s|ing)?', 'sign(?:ed|s|ing)?',
+  'approv(?:ed|es?|ing)', 'authoriz(?:ed|es?|ing)',
+  'procur(?:ed|es?|ing)', 'purchas(?:ed|es?|ing)', 'acquir(?:ed|es?|ing)',
+  'buy(?:s|ing)', 'order(?:ed|s|ing)?',
+  'solicit(?:ed|s|ing)?', 'tender(?:ed|s|ing)?', 'bid(?:s|ding)?',
+  // Construction / deployment
+  'breaks?\\s+ground', 'groundbreak(?:s|ing)?',
+  'inaugurat(?:ed|es?|ing)', 'commission(?:ed|s|ing)?',
+  'launch(?:ed|es?|ing)', 'open(?:ed|s|ing)',
+  'deploy(?:ed|s|ing)', 'install(?:ed|s|ing)',
+  'build(?:s|ing)', 'construct(?:ed|s|ing)',
+  'develop(?:ed|s|ing)', 'complet(?:ed|es?|ing)', 'deliver(?:ed|s|ing)',
+  'start(?:ed|s|ing)', 'begin(?:s|ning)',
+  // Announcement / planning
+  'announc(?:ed|es?|ing)', 'unveil(?:ed|s|ing)', 'reveal(?:ed|s|ing)',
+  'propos(?:ed|es?|ing)', 'plan(?:ned|s|ning)',
+  'seek(?:s|ing)', 'aim(?:s|ing)', 'fil(?:ed|es?|ing)', 'submit(?:s|ted|ting)',
+  // Expansion / growth
+  'expand(?:ed|s|ing)', 'grow(?:s|ing)', 'scal(?:ed|es?|ing)',
+  'doubl(?:ed|es?|ing)', 'tripl(?:ed|es?|ing)', 'add(?:s|ing)',
+  // Financial
+  'rais(?:ed|es?|ing)', 'secur(?:ed|es?|ing)', 'fund(?:s|ing)',
+  'invest(?:ed|s|ing)', 'receiv(?:ed|es?|ing)', 'win(?:s|ning)', 'clos(?:ed|es?|ing)',
+  // Action verbs that mark the predicate boundary even if not procurement
+  'goes', 'going', 'prepar(?:ed|es?|ing)', 'target(?:s|ing)',
+  'warn(?:s|ing)', 'fac(?:ed|es?|ing)', 'fight(?:s|ing)',
+  'mov(?:ed|es?|ing)', 'shift(?:s|ing)', 'turn(?:s|ing)',
+  'ey(?:es?|ing)', 'bet(?:s|ting)', 'hit(?:s|ting)',
+  'cut(?:s|ting)', 'drop(?:s|ping)', 'surg(?:es?|ing)', 'push(?:es?|ing)',
+  'rac(?:es?|ing)',
+].join('|') + ')\\b', 'i');
+
+// ── 2b. GEO ONTOLOGY ─────────────────────────────────────────────────────────
+// Named geographic entities.  A subject that IS ONLY a geo name → rejected.
+// Compounds with org suffixes ("Georgia Power") pass via ORG_SUFFIX check first.
+
+const GEO_NAMES = new Set([
+  // ─ US States ─
+  'alabama','alaska','arizona','arkansas','california','colorado',
+  'connecticut','delaware','florida','georgia','hawaii','idaho',
+  'illinois','indiana','iowa','kansas','kentucky','louisiana',
+  'maine','maryland','massachusetts','michigan','minnesota',
+  'mississippi','missouri','montana','nebraska','nevada',
+  'new hampshire','new jersey','new mexico','new york',
+  'north carolina','north dakota','ohio','oklahoma','oregon',
+  'pennsylvania','rhode island','south carolina','south dakota',
+  'tennessee','texas','utah','vermont','virginia',
+  'washington','west virginia','wisconsin','wyoming',
+  'carolina','dakota','hampshire','jersey',
+  // ─ Major US Cities ─
+  'new york city','los angeles','chicago','houston','phoenix',
+  'philadelphia','san antonio','san diego','dallas','san jose',
+  'austin','jacksonville','fort worth','columbus','charlotte',
+  'indianapolis','san francisco','seattle','denver','washington dc',
+  'nashville','oklahoma city','el paso','boston','portland',
+  'las vegas','memphis','louisville','baltimore','milwaukee',
+  'albuquerque','tucson','fresno','sacramento','mesa','kansas city',
+  'atlanta','omaha','colorado springs','raleigh','long beach',
+  'virginia beach','minneapolis','tampa','new orleans','honolulu',
+  'anaheim','lexington','stockton','corpus christi','riverside',
+  'detroit','cleveland','pittsburgh','miami','orlando',
+  // ─ Countries ─
+  'china','india','usa','uk','germany','france','italy','spain',
+  'japan','korea','australia','canada','mexico','brazil','russia',
+  'oman','uae','europe','africa','asia','middle east',
+  'philippines','indonesia','vietnam','thailand','malaysia','singapore',
+  'kuwait','qatar','bahrain','jordan','egypt','nigeria','ghana',
+  'pakistan','bangladesh','sri lanka','nepal','turkey','israel',
+  'sweden','norway','denmark','finland','netherlands','belgium',
+  'switzerland','austria','poland','czechia','portugal','greece',
+  'ireland','scotland','wales','england','new zealand','south africa',
+  'argentina','chile','colombia','peru','venezuela',
+  'saudi arabia','el salvador','costa rica',
+  // ─ Caribbean / Central America ─
+  'jamaica','trinidad','barbados','haiti','cuba','bahamas',
+  'panama','honduras','guatemala','nicaragua',
+  // ─ Canadian Provinces ─
+  'ontario','alberta','quebec','british columbia','manitoba',
+  'saskatchewan','nova scotia','new brunswick','newfoundland',
+  // ─ Geographic regions ─
+  'northeast','northwest','southeast','southwest','midwest',
+  'new england','great plains','gulf coast','pacific northwest',
+  'mountain west','deep south','sun belt',
+  // ─ Other commonly misextracted geo phrases ─
+  'pine island','pine ridge','pine valley',
 ]);
 
-const KNOWN_ENTITIES = new Set([
+// ── 2c. DESCRIPTOR ONTOLOGY ──────────────────────────────────────────────────
+// Patterns that classify a phrase as a description/metric/category, not an org.
+// NOTE: ORG_SUFFIX check runs BEFORE these to protect "National Battery Corp".
+
+const DESC_ONTOLOGY = [
+  // Scale / basis: "large-scale", "utility-scale", "school-based"
+  /^(?:large|small|medium|utility|grid|commercial|industrial|community|school|hospital|facility|residential|municipal|federal|national|state|local|regional|global)[-\s](?:scale|based|wide|grade|level|owned|operated|funded|led|sponsored)\b/i,
+  // "Big X" industry shorthands: "Big Tech", "Big Oil"
+  /^big\s+(?:tech|oil|gas|banks?|auto|pharma|energy|solar|retail|box|four|three|five)\b/i,
+  // National/US + generic sector noun
+  /^(?:u\.?s\.?|uk|eu|american|federal|national|global)\s+(?:factory|factories|manufacturing|energy|storage|solar|power|grid|market|activity|output|production|industry|sector|logistics|utility|utilities)\b/i,
+  // Embedded energy/power measurements: "1.5-GW", "200 MW"
+  /\b\d+(?:\.\d+)?[-\s]?(?:GW|MW|kW|KW|MWh|kWh|GWh|TWh)\b/i,
+  // Renewable adjective + energy noun
+  /^(?:renewable|clean|green|sustainable|offshore|onshore|distributed|grid-scale|utility-scale|community|rooftop|floating|agrivoltaic|bifacial)\s+(?:energy|power|solar|wind|battery|storage|hydrogen)\b/i,
+  // Category nouns as subject
+  /^(?:data\s*center|factory|factories|facility|facilities|plant|warehouse|campus|hospital|school|university|government|utility|utilities|public|private)\b/i,
+  // Construction / event / report nouns
+  /^(?:construction|groundbreaking|expansion|opening|development|initiative|program|project|activity|activities|sector|market|industry|output|report|analysis|update|alert|study|research|news|commentary)\b/i,
+  // Ends with role / occupation noun (not an org identifier)
+  /\b(?:makers?|providers?|developers?|operators?|players?|builders?|manufacturers?|owners?|investors?|policymakers?|stakeholders?|workforce|activity|activities|output)\s*$/i,
+  // Directional prefix + location + category noun
+  /^(?:east|west|north|south|central|greater|upper|lower|inner|outer)\s+[a-z]+\s+(?:factory|facility|campus|plant|center|area|region|county|district|zone|project|logistics)\b/i,
+];
+
+// ── 2d. ORG ONTOLOGY ─────────────────────────────────────────────────────────
+// Positive markers of a named organization.
+
+const ORG_SUFFIX = /\b(?:Inc\.?|LLC|Ltd\.?|Corp(?:oration)?\.?|Company|Co\.?|Group|Industries|International|Solutions|Services|Technologies|Tech|Energy|Power|Electric|Gas|Utilities?|Utility|Solar|Battery|Storage|Logistics|Automotive|Manufacturing|Partners|Holdings|Ventures|Capital|Associates|Enterprises|Systems|Networks|Innovation|Resources|Properties|Renewables?|Financial|Authority|Institute|Foundation|Works?|Dynamics|Infrastructure|Mobility)\b/i;
+
+// Short uppercase org tokens (would fail length check without special casing)
+const SHORT_KNOWN = new Set(['PECO', 'AES', 'ABB', 'GE', 'GM', 'IBM', 'CPS', 'Xcel', 'BYD', 'Eos', 'Stem', 'Amp', 'RWE']);
+
+// Curated known company names (no standard suffix required)
+const KNOWN_ORGS = new Set([
   'CATL', 'BYD', 'Tesla', 'Fluence', 'Sungrow', 'Huawei', 'Samsung SDI',
   'LG Energy', 'Origis Energy', 'Recurrent Energy', 'GridStor', 'Enel',
   'NextEra', 'AES', 'Orsted', 'ENGIE', 'Iberdrola', 'Eskom',
@@ -147,236 +296,309 @@ const KNOWN_ENTITIES = new Set([
   'National Grid', 'Avangrid', 'Exelon', 'Constellation', 'PECO',
   'Google', 'Amazon', 'Microsoft', 'Meta', 'Apple', 'Walmart',
   'Target', 'Home Depot', 'FedEx', 'UPS', 'Boeing', 'Ford', 'GM',
-  // Single-word energy/storage companies that pass the junk filter only via KNOWN_ENTITIES
   'Novva', 'Pivot', 'Crusoe', 'Lancium', 'Nautilus', 'Leviathan',
   'Enchanted', 'Powin', 'Eos', 'Stem', 'Convergent', 'Amp', 'Ameresco',
   'Greenbacker', 'Altus', 'Clearway', 'Invenergy', 'RWE', 'Ormat',
 ]);
 
-const TRAILING_NOISE = /\s+(?:open(?:ing)?s?|announc(?:ing|es?)|start(?:ing)?s?|expand(?:ing)?s?|builds?|building|acquires?|acquir(?:ing)?|launches?|launch(?:ing)?|plans?|seeks?|seeking|proposes?|vows?|brings?|inaugurates?|complet(?:ing|es?)|celebrat(?:ing|es?)|unveils?|selects?|awards?|breaks|signs?|closes?|reaches?|secures?|wins?|gets?|reveals?|receives?|prepares?|preparing|doubles?|doubling|goes|going|eyes?|eyeing|races?|racing|cuts?|drops?|rises?|falls?|surges?|pushes?|mulls?|targets?|weighs?|faces?|fights?|shifts?|moves?|turns?|joins?|enters?|exits?|names?|hires?|fires?|picks?|bids?|taps?|opening|initiative|program|activity|factory|project|to|in|for|by|at|of|the|a|an|and|or|is|are|has|have|was|were|will|set|said|plans?|said?)\s*$/i;
-// Keep TRAILING_VERBS as alias for isJunk checks
-const TRAILING_VERBS = TRAILING_NOISE;
+// Product/technology acronyms that look like company names but aren't
+const NOT_A_COMPANY_ACRONYM = new Set(['BESS', 'PV', 'EV', 'DER', 'VPP', 'BTM', 'FTM', 'ISO', 'RTO', 'PPA', 'REC', 'ITC', 'PTC', 'RFP', 'RFQ']);
 
-const GENERIC_DESCRIPTOR_PATTERN = /^(?:global|major|leading|top|large|small|a\s+|the\s+|local|regional|national|international)\s+(?:energy|solar|power|battery|utility|grid|firm|company|companies|provider|developer|operator|owner|investor|player|giant)\b/i;
+// ── 2e. CORE INFERENCE FUNCTIONS ─────────────────────────────────────────────
 
-const SHORT_KNOWN = new Set(['PECO', 'AES', 'ABB', 'GE', 'GM', 'IBM', 'CPS', 'Xcel', 'BYD', 'Eos', 'Stem', 'Amp', 'RWE']);
+/**
+ * Hard-reject patterns — always a descriptor even when an ORG_SUFFIX word
+ * appears inside the phrase.  These run BEFORE ORG_SUFFIX to prevent
+ * "1.5-GW Battery Project" or "Big Tech companies" from being accepted
+ * just because "Battery" / "Tech" are in the suffix list.
+ */
+function _isHardDescriptor(text) {
+  return (
+    // Starts with an energy/power measurement: "1.5-GW Battery", "200 MW Storage"
+    /^\d+(?:\.\d+)?[-\s]?(?:GW|MW|kW|KW|MWh|kWh|GWh|TWh)\b/i.test(text) ||
+    // "Big Tech / Big Oil / Big Auto" — industry category shorthands
+    /^big\s+(?:tech|oil|gas|banks?|auto|pharma|energy|solar|retail|box)\b/i.test(text) ||
+    // US/American + generic sector noun (e.g. "US Manufacturing output")
+    /^(?:u\.?s\.?|uk|eu|american)\s+(?:manufacturing|factory|factories|output|activity|market)\b/i.test(text) ||
+    // Scale/basis descriptors: "school-based", "large-scale", "utility-scale"
+    /^(?:large|small|medium|utility|grid|school|hospital|community|industrial|commercial)[-\s](?:scale|based)\b/i.test(text) ||
+    // Renewable adjective + category noun: "school-based solar energy program"
+    /^school[-\s]based\s+/i.test(text)
+  );
+}
 
-const JUNK_SINGLE_WORDS = new Set([
-  // Countries / territories
-  'china', 'india', 'usa', 'uk', 'germany', 'france', 'italy', 'spain',
-  'japan', 'korea', 'australia', 'canada', 'mexico', 'brazil', 'russia',
-  'oman', 'uae', 'saudiarabia', 'europe', 'africa', 'asia',
-  'philippines', 'indonesia', 'vietnam', 'thailand', 'malaysia', 'singapore',
-  'kuwait', 'qatar', 'bahrain', 'jordan', 'egypt', 'nigeria', 'ghana',
-  'pakistan', 'bangladesh', 'srilanka', 'nepal', 'turkey', 'israel',
-  'sweden', 'norway', 'denmark', 'finland', 'netherlands', 'belgium',
-  'switzerland', 'austria', 'poland', 'czechia', 'portugal', 'greece',
-  'ireland', 'scotland', 'wales', 'england', 'newzealand', 'southafrica',
-  'argentina', 'chile', 'colombia', 'peru', 'venezuela', 'ecuador',
-  // Caribbean / Central America
-  'jamaica', 'trinidad', 'barbados', 'haiti', 'cuba', 'bahamas',
-  'panama', 'costarica', 'honduras', 'guatemala', 'nicaragua', 'elsalvador',
-  // All 50 US States
-  'alabama', 'alaska', 'arizona', 'arkansas', 'california', 'colorado',
-  'connecticut', 'delaware', 'florida', 'georgia', 'hawaii', 'idaho',
-  'illinois', 'indiana', 'iowa', 'kansas', 'kentucky', 'louisiana',
-  'maine', 'maryland', 'massachusetts', 'michigan', 'minnesota',
-  'mississippi', 'missouri', 'montana', 'nebraska', 'nevada',
-  'ohio', 'oklahoma', 'oregon', 'pennsylvania', 'tennessee', 'texas',
-  'utah', 'vermont', 'virginia', 'carolina', 'washington', 'wisconsin',
-  'wyoming', 'dakota', 'hampshire', 'jersey', 'mexico', 'york',
-  // Canadian provinces
-  'ontario', 'alberta', 'quebec', 'manitoba', 'saskatchewan',
-  'brunswick', 'newfoundland', 'labrador', 'novascotia',
-  // Generic nouns / sentence starters
-  'commentary', 'construction', 'groundbreaking', 'expansion', 'opening',
-  'analysis', 'report', 'update', 'alert', 'study', 'research', 'news',
-  'factory', 'factories', 'facility', 'facilities', 'activity', 'activities',
-  'initiative', 'program', 'project', 'sector', 'market', 'industry',
-]);
+/**
+ * Strict NER-like classifier: is this EXACT phrase a named organization?
+ *
+ * Inference order (ACCEPT first, then REJECT):
+ *   1. Known org / short-known exact match → ACCEPT  (no further checks)
+ *   2. Hard-reject descriptors → REJECT  (measurement, "Big Tech", etc.;
+ *      run before ORG_SUFFIX so "1.5-GW Battery Project" is not accepted
+ *      just because "Battery" appears in the ORG_SUFFIX list)
+ *   3. Has ORG_SUFFIX marker → ACCEPT
+ *   4. Strip geo possessive prefix, recheck 1–3
+ *   5. Geographic entity → REJECT
+ *   6. Descriptor phrase (full DESC_ONTOLOGY) → REJECT
+ *   7. Starts lowercase / no uppercase → REJECT
+ *   8. Contains predicate-only verbs → REJECT
+ *   9. Modal verbs / article / pronoun openers → REJECT
+ *  10. 4+ words without org suffix → REJECT
+ *  11. 2–3 word proper noun with non-category last word → ACCEPT
+ *  12. Single word: camelCase brand or 2–5 char acronym → ACCEPT
+ *
+ * @param {string} phrase
+ * @returns {string|null}
+ */
+function classifyAsOrg(phrase) {
+  if (!phrase || typeof phrase !== 'string') return null;
+  let t = phrase.trim().replace(/[,;.]+$/, '').replace(/\s+/g, ' ').trim();
+  if (!t || t.length < 2) return null;
 
-// ── Stage 3: Logic Engine (raw candidate extraction) ────────────────────────
-function extractRawCandidate(title, description) {
-  const cleanedTitle = cleanGoogleNewsTitle(title);
-  const patterns = [
-    /^([^:]+?)\s+(?:opens?|announces?|starts?|expands?|celebrates?|builds?|building|acquires?|launches?|plans?|seeks?|seeking|reopens?|proposes?|vows?|issues?|brings?|inaugurates?)\s/i,
-    /^([^:]+?)\s+to\s+(?:open|build|expand|acquire|start|launch|invest|develop|meet|sign)\s/i,
-    /^([^:]+?)\s+(?:is|are)\s+(?:opening|building|expanding|acquiring|developing)\s/i,
-    /^([^:]+?)['\u2019]s\s+(?:new|latest|planned)\s/i,
-    /^([^:]+?)['\u2019]s\s+/i,
-    /^([^:\u2014\u2013-]+?)\s*[:\u2014\u2013-]\s/u,
-  ];
+  // 1. Known org — immediate accept (no further checks needed)
+  if (KNOWN_ORGS.has(t) || SHORT_KNOWN.has(t)) return t;
 
-  for (const text of [cleanedTitle, description]) {
-    if (!text) continue;
-    for (const pattern of patterns) {
-      const match = text.match(pattern);
-      if (!match) continue;
-      // Strip trailing verbs that slipped into the capture group
-      const stripped = match[1].replace(TRAILING_NOISE, '').trim();
-      return stripped || match[1].trim();
-    }
+  // 2. Hard-reject descriptors — these patterns ALWAYS indicate a descriptor
+  //    even if an org-suffix word appears later in the phrase.
+  //    Example: "1.5-GW Battery Project" has "Battery" (ORG_SUFFIX) but is
+  //    still a metric phrase, not a company name.
+  if (_isHardDescriptor(t)) return null;
+
+  // 3. ORG_SUFFIX match — accept as named org
+  //    (Runs before geo/desc checks to protect "Georgia Power", "National Battery Corp")
+  if (ORG_SUFFIX.test(t)) return t;
+
+  // 4. Strip geographic possessive prefix ("Ohio's FST Logistics" → "FST Logistics")
+  //    then recheck 1–3
+  const stripped = _stripGeoPossessive(t);
+  if (stripped !== t) {
+    t = stripped.trim();
+    if (!t || t.length < 2) return null;
+    if (KNOWN_ORGS.has(t) || SHORT_KNOWN.has(t)) return t;
+    if (_isHardDescriptor(t)) return null;
+    if (ORG_SUFFIX.test(t)) return t;
   }
 
-  // Fallback: first 1-3 words of title if they contain a known suffix or entity
-  const words = cleanedTitle.split(/\s+/);
-  // Require 2+ words for suffix match (prevents bare "Energy", "Solar", etc.)
-  for (let n = 3; n >= 2; n--) {
-    const candidate = words.slice(0, n).join(' ');
-    if (KNOWN_ENTITIES.has(candidate)) return candidate;
-    if ([...COMPANY_SUFFIXES].some((s) => candidate.endsWith(s))) return candidate;
+  // 5. Geographic entity → reject
+  if (_isGeoEntity(t)) return null;
+
+  // 6. Descriptor phrase (full DESC_ONTOLOGY) → reject
+  if (_isDescriptor(t)) return null;
+
+  // 7. No uppercase letter / starts lowercase → not a proper noun
+  if (!/[A-Z]/.test(t) || /^[a-z]/.test(t)) return null;
+
+  // 8. Contains predicate-only action verbs → sentence fragment, not a subject
+  if (/\b(?:goes|going|doubles|prepares?|targets?|warns?|fac(?:es?|ing)|fights?|surg(?:es?|ing)|rac(?:es?|ing)|cut(?:s|ting)|drop(?:s|ping)|ey(?:es?|ing)|bet(?:s|ting)|hit(?:s|ting)|makes?|gets?|takes?|puts?|sets?|keeps?|holds?|leads?|shows?|turns?|gives?|seeks?|needs?|rises?|falls?|push(?:es?|ing)|shift(?:s|ing)|fight(?:s|ing)|mov(?:es?|ing)|struggling|slashing|forcing|pledging|finding)\b/i.test(t)) return null;
+
+  // 9. Modal verbs / pronouns / articles → headline fragment
+  if (/\b(?:would|could|should|may|might|must|shall)\b/i.test(t)) return null;
+  if (/^(?:the|a|an|this|these|those|we|they|he|she|it|i|you|our|their)\b/i.test(t)) return null;
+
+  const words = t.split(/\s+/);
+  const wordCount = words.length;
+
+  // 10. 4+ words without ORG_SUFFIX → almost certainly a sentence fragment
+  if (wordCount >= 4) return null;
+
+  // 11. 2–3 word proper noun (Title Case, last word not a generic category noun)
+  if (wordCount >= 2 && /^[A-Z]/.test(t)) {
+    const lastWord = words[wordCount - 1];
+    const isCategoryNoun = /^(?:activity|activities|market|sector|industry|program|initiative|project|zone|area|region|county|district|report|update|news|analysis|study|alert|center|factory|facility|plant|campaign|committee|coalition|workforce|policymakers?|makers?|providers?|developers?|operators?|players?|builders?|manufacturers?|owners?|investors?|output|story|release)\s*$/i.test(lastWord);
+    if (!isCategoryNoun) return t;
+    return null;
   }
-  // Single-word only if it's a known proper entity (e.g. "Amazon", "Tesla")
-  if (words.length >= 1 && KNOWN_ENTITIES.has(words[0])) return words[0];
+
+  // 12. Single-word rules
+  if (wordCount === 1) {
+    if (NOT_A_COMPANY_ACRONYM.has(t.toUpperCase())) return null;
+    // camelCase brand name: "FluxPower", "NovaBMS"
+    if (/^[A-Z][a-z]+[A-Z]/.test(t) && t.length >= 5) return t;
+    // Short all-caps acronym: "PECO", "ABB", "AES" (already caught by SHORT_KNOWN above)
+    if (/^[A-Z]{2,5}$/.test(t)) return t;
+    return null;
+  }
 
   return null;
 }
 
-// ── Stage 4: Junk Filter ────────────────────────────────────────────────────
-export function isJunk(name) {
-  if (!name || typeof name !== 'string') return true;
-  const t = name.trim();
-  if (!t) return true;
-
-  if (t.length < 4 && !SHORT_KNOWN.has(t)) return true;
-  if (t.split(/\s+/).length > 7) return true;
-  if (/[<>{}[\]\\|@]/.test(t)) return true;
-  if (/https?:\/\//i.test(t)) return true;
-  if (/,/.test(t)) return true;
-  if (/^\d/.test(t)) return true;
-  if (!/[a-zA-Z]/.test(t)) return true;
-  if (t === t.toUpperCase() && t.length > 8 && !SHORT_KNOWN.has(t)) return true;
-  if (!/[A-Z]/.test(t)) return true;
-  if (GENERIC_DESCRIPTOR_PATTERN.test(t)) return true;
-  if (/^(?:we|they|he|she|it|our|their|his|her|its|i|you|your)\b/i.test(t)) return true;
-  if (/^(?:how|why|what|when|where|who|top|best|inside|even|bill|senate|house|republicans|lawmakers|white house|data center|going green)\s/i.test(t)) return true;
-  if (/\b(?:seeks?|seeking|requests?|denies?|says?|files?|halts?|rewrites?|pledges?|responds?|aims?|forces?|push|probe|protects?|proposes?|vows?|grew|grow|grown|selling)\b/i.test(t)) return true;
-  if (/\b(?:prepares?|preparing|doubles?|doubling|goes|going|bets?|betting|eyes?|eyeing|looks?|looking|races?|racing|turns?|turning|moves?|moving|shifts?|shifting|faces?|facing|fights?|fighting|cuts?|cutting|drops?|dropping|rises?|rising|falls?|falling|struggles?|struggling|surges?|surging|slashes?|slashing|trims?|trimming|boosts?|boosting|pushes?|pushing)\b/i.test(t)) return true;
-  if (/\b(?:alert|advocate|boom|companies|process|project|policymakers|lawmakers)\b/i.test(t)) return true;
-  if (/\b(?:developer|developers|provider|providers|player|operator|operators)\b/i.test(t)) return true;
-  if (/\b(?:completes|office|grew up|up here)\b/i.test(t)) return true;
-  // Catch "X Goes Big", "X Doubles Down", "X Takes On" style headline fragments
-  if (/^\S+\s+(?:goes|doubles|takes|makes|gets|puts|sets|hits|cuts|runs|pulls|rolls|rolls out|breaks|breaks out|brings|keeps|holds|leads|needs|shows|turns|gives|finds)\s/i.test(t)) return true;
-  if (TRAILING_NOISE.test(t)) return true;
-  // Single word: only allow if known entity or SHORT_KNOWN
-  if (t.split(/\s+/).length === 1 && !SHORT_KNOWN.has(t)) {
-    if (JUNK_SINGLE_WORDS.has(t.toLowerCase())) return true;
+/**
+ * Check if a phrase is a geographic entity.
+ * Compounds with org suffixes ("Georgia Power") pass — ORG_SUFFIX check in
+ * classifyAsOrg runs first and returns early before this is called.
+ */
+function _isGeoEntity(text) {
+  const lower = text.toLowerCase().replace(/[''\u2019]s?\s*$/, '').trim();
+  // Exact full-phrase match
+  if (GEO_NAMES.has(lower)) return true;
+  // "State/City of X"
+  if (/^(?:state|city|county|town|village|province|region|district)\s+of\s+/i.test(text)) return true;
+  // Single-word geo name
+  const words = text.split(/\s+/);
+  if (words.length === 1 && GEO_NAMES.has(lower)) return true;
+  // Multi-word phrase starting with a geo name (not guarded by org suffix)
+  if (words.length > 1 && !ORG_SUFFIX.test(text)) {
+    const lowerWords = lower.split(/\s+/);
+    for (let n = Math.min(lowerWords.length - 1, 3); n >= 1; n--) {
+      const prefix = lowerWords.slice(0, n).join(' ');
+      if (GEO_NAMES.has(prefix)) return true;
+    }
   }
-  // Modal verbs → headline fragment, not a company name
-  if (/\b(?:would|could|should|will|may|might|must|shall)\b/i.test(t)) return true;
-  // Headline-style verbs that signal the text is a sentence, not a company
-  if (/\b(?:sees|gaining|gaining from|surging|threatens|threaten|targets?|warns?|weighs?|mulls?|nears?|paves?|spurs?)\b/i.test(t)) return true;
-  // "and" joining two names → not a single company
-  if (/\s+and\s+/i.test(t)) return true;
-  // Starts with article/construction fragment words
-  if (/^(?:construction|groundbreaking|expansion|opening|massive|huge|enormous|record)\s/i.test(t)) return true;
-  if (/^new\s+/i.test(t) && !/\b(?:Energy|Power|Solar|Battery|Storage|Systems|Technologies|Tech|Industries|Group|Corp|Company|Co)\b/i.test(t)) return true;
-
-  // ── Extended junk rules ────────────────────────────────────────────────────
-  // Energy/power measurements embedded in name → descriptor, not company
-  if (/\b\d+(?:\.\d+)?[-\s]?(?:GW|MW|kW|KW|MWh|kWh|GWh|TWh)\b/i.test(t)) return true;
-
-  // "Big Tech", "Big Oil", "Big Auto" — industry shorthands, not companies
-  if (/^big\s+(?:tech|oil|banks?|auto|pharma|energy|solar|retail|box)\b/i.test(t)) return true;
-
-  // U.S./US/UK/EU + generic industry activity
-  if (/^(?:U\.?S\.?|UK|U\.?K\.?|EU|American|Federal|National)\s+(?:factory|factories|manufacturing|energy|storage|solar|power|grid|market|activity|output|production|industry|sector|logistics)\b/i.test(t)) return true;
-
-  // Scale / basis descriptors: "large-scale", "utility-scale", "school-based"
-  if (/^(?:large|small|medium|utility|grid|commercial|industrial|community|school|hospital|facility|residential)[-\s](?:scale|based|wide|grade|level)\b/i.test(t)) return true;
-
-  // Starts with a full US state name (state + space = geographic descriptor, not company)
-  // Exception: allow state + corporate suffix (e.g. "Georgia Power", "Nevada Energy Corp")
-  if (/^(?:Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New\s+Hampshire|New\s+Jersey|New\s+Mexico|New\s+York|North\s+(?:Carolina|Dakota)|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode\s+Island|South\s+(?:Carolina|Dakota)|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West\s+Virginia|Wisconsin|Wyoming)(?:'s?|\u2019s?)?\s+/i.test(t)) {
-    // Allow if the name ends in a real corporate suffix — e.g. "Georgia Power", "Nevada Energy Corp"
-    const stateWords = t.split(/\s+/);
-    const lastW = stateWords[stateWords.length - 1];
-    const isCorp = /^(?:Power|Energy|Electric|Gas|Utilities|Utility|Corp|Corporation|Inc|LLC|Ltd|Group|Industries|International|Solutions|Services|Technologies|Partners|Holdings|Enterprises)\.?$/i.test(lastW);
-    if (!isCorp) return true;
-  }
-
-  // Directional prefix + location + generic noun
-  if (/^(?:East|West|North|South|Central|Greater|Upper|Lower|Inner|Outer)\s+[A-Z][a-z]+\s+(?:factory|facility|campus|plant|center|area|region|county|district|zone|project|development|initiative|program|logistics)\b/i.test(t)) return true;
-
-  // Ends with occupation/activity nouns that signal a description, not a name
-  if (/\b(?:makers?|activity|activities|output|workforce|initiative|initiatives|policymakers?|stakeholders?)\s*$/i.test(t)) return true;
-
-  // Starts with "Factory", "Facility", "Manufacturing" — generic noun leads
-  if (/^(?:factory|factories|facility|facilities|manufacturing|warehouse|campus|plant)\b/i.test(t)) return true;
-
-  // Possessive state/province + generic descriptor: "Ohio's data center", "Ontario's energy"
-  if (/^[A-Z][a-z]+(?:'s|'s)\s+(?:data\s*center|factory|energy|storage|campus|facility|plant|project|utility|grid|market|battery|solar|power|construction|expansion|manufacturing|hospital|school|university|logistics|initiative|program)\b/i.test(t)) return true;
-
-  // "X's 1.5-GW something" or location possessive + number/measurement
-  if (/^[A-Z][a-z]+(?:'s|'s)\s+\d/i.test(t)) return true;
-  const words = t.split(/\s+/);
-  if (words.length >= 4) {
-    const lastWord = words[words.length - 1];
-    const CORP_SUFFIX_RE = /^(?:Inc|LLC|Ltd|Corp|Corporation|Company|Co|Group|Industries|International|Solutions|Services|Technologies|Tech|Energy|Power|Utilities|Utility|Solar|Battery|Storage|Logistics|Automotive|Manufacturing|Partners|Holdings|Ventures|Capital|Associates|Enterprises)\.?$/i;
-    if (!CORP_SUFFIX_RE.test(lastWord)) return true;
-  }
-
   return false;
 }
 
-// ── Stage 5: Quality Engine ──────────────────────────────────────────────────
+/** Check if a phrase is a descriptor (adjective, metric, category noun). */
+function _isDescriptor(text) {
+  return DESC_ONTOLOGY.some((p) => p.test(text));
+}
+
+/**
+ * Strip a geographic possessive prefix.
+ * "Ohio's FST Logistics" → "FST Logistics"
+ * "New York's ConEd" → "New York" is geo → "ConEd"
+ */
+function _stripGeoPossessive(text) {
+  const m = text.match(/^((?:[A-Z][a-zA-Z]+)(?:\s+[A-Z][a-zA-Z]+)?)['''\u2019]s?\s+(.+)/u);
+  if (!m) return text;
+  if (GEO_NAMES.has(m[1].toLowerCase())) return m[2].trim();
+  return text;
+}
+
+/**
+ * Scan a phrase for an embedded known org name.
+ * "Pine Island Google" → "Google" (length ≥ 4)
+ * Used ONLY in inferCompanyName, not in the strict classifyAsOrg.
+ */
+function _scanForKnownOrg(text) {
+  for (const k of KNOWN_ORGS) {
+    if (k.length >= 4 && text.includes(k)) return k;
+  }
+  for (const k of SHORT_KNOWN) {
+    if (text.split(/\s+/).includes(k)) return k;
+  }
+  return null;
+}
+
+// ── 2f. VERB-ANCHORED INFERENCE ENGINE ───────────────────────────────────────
+
+/**
+ * Infer a company name from a headline using ontological inference.
+ *
+ * Extraction passes (in order):
+ *   1. VERB BOUNDARY — find first action verb, take subject to the left
+ *      "Tesla announces new Gigafactory" → verb "announces" → subject "Tesla"
+ *   2. POSSESSIVE — "Company's new facility" → extract possessor
+ *   3. SEPARATOR  — "Company: headline" → extract before colon/dash
+ *   4. KNOWN SCAN — scan first 1-3 words for a known org name
+ *   5. DESCRIPTION fallback — repeat Pass 1 on description text
+ *
+ * Each pass tries classifyAsOrg() (strict), then _scanForKnownOrg() (lenient).
+ */
+function inferCompanyName(title, description) {
+  const text = cleanGoogleNewsTitle(title || '');
+
+  // ── Pass 1: Verb-boundary ─────────────────────────────────────────────────
+  const verbMatch = text.match(VERB_BOUNDARY);
+  if (verbMatch && verbMatch.index > 2) {
+    const raw = _cleanSubject(text.slice(0, verbMatch.index));
+    const stripped = _stripGeoPossessive(raw);
+    const classified = classifyAsOrg(stripped);
+    if (classified) return classified;
+    const scanned = _scanForKnownOrg(stripped);
+    if (scanned) return scanned;
+  }
+
+  // ── Pass 2: Possessive ────────────────────────────────────────────────────
+  const posMatch = text.match(/^(.+?)['''\u2019]s?\s+(?:new|latest|planned|first|second|\d|proposed|announced)\s/i);
+  if (posMatch) {
+    const stripped = _stripGeoPossessive(posMatch[1].trim());
+    const classified = classifyAsOrg(stripped);
+    if (classified) return classified;
+  }
+
+  // ── Pass 3: Separator ─────────────────────────────────────────────────────
+  const sepMatch = text.match(/^(.+?)\s*[:—–]\s/u);
+  if (sepMatch) {
+    const stripped = _stripGeoPossessive(sepMatch[1].trim());
+    const classified = classifyAsOrg(stripped);
+    if (classified) return classified;
+  }
+
+  // ── Pass 4: Known org in first 1-3 words ─────────────────────────────────
+  const words = text.split(/\s+/);
+  for (let n = 3; n >= 1; n--) {
+    const chunk = words.slice(0, n).join(' ');
+    if (KNOWN_ORGS.has(chunk) || SHORT_KNOWN.has(chunk)) return chunk;
+  }
+
+  // ── Pass 5: Retry on description text ────────────────────────────────────
+  if (description) {
+    const desc = stripHtml(description).slice(0, 200);
+    const dMatch = desc.match(VERB_BOUNDARY);
+    if (dMatch && dMatch.index > 2) {
+      const raw = _cleanSubject(desc.slice(0, dMatch.index));
+      const classified = classifyAsOrg(_stripGeoPossessive(raw));
+      if (classified) return classified;
+    }
+  }
+
+  return null;
+}
+
+/** Strip trailing prepositions / articles from an extracted subject. */
+function _cleanSubject(text) {
+  return text
+    .replace(/[,;.]+$/, '')
+    .replace(/\s+(?:to|of|in|for|at|by|on|the|a|an)\s*$/i, '')
+    .trim();
+}
+
+// ── 2g. QUALITY SCORER ───────────────────────────────────────────────────────
+
 function scoreCompanyName(name) {
-  if (isJunk(name)) return 0;
+  if (!name || typeof name !== 'string') return 0;
+  const t = name.trim();
+  if (!classifyAsOrg(t)) return 0;
+
+  if (KNOWN_ORGS.has(t) || SHORT_KNOWN.has(t)) return 95;
+
   let score = 40;
+  if (t.length >= 8 && t.length <= 50) score += 15;
 
-  if (KNOWN_ENTITIES.has(name)) return 95;
-
-  if (name.length >= 8 && name.length <= 50) score += 15;
-
-  const wordCount = name.split(/\s+/).length;
+  const wordCount = t.split(/\s+/).length;
   if (wordCount >= 2) score += 15;
   if (wordCount >= 3) score += 5;
 
-  if ([...COMPANY_SUFFIXES].some((s) => new RegExp(`\\b${s}\\b`, 'i').test(name))) score += 20;
-  if (/[A-Z]/.test(name) && /[a-z]/.test(name)) score += 10;
-  if (/\b(?:Energy|Power|Solar|Battery|Storage|Grid|Renewables|Utilities)\b/i.test(name)) score += 5;
+  if (ORG_SUFFIX.test(t)) score += 20;
+  if (/[A-Z]/.test(t) && /[a-z]/.test(t)) score += 10;
+  if (/\b(?:Energy|Power|Solar|Battery|Storage|Grid|Renewables?|Utilities?)\b/i.test(t)) score += 5;
 
   return Math.max(0, Math.min(100, score));
 }
 
-// ── Thin compatibility wrappers ──────────────────────────────────────────────
+// ── 2h. PUBLIC INTERFACE ─────────────────────────────────────────────────────
 
-// Strip possessive location prefix so "Ohio's FST Logistics" → "FST Logistics".
-// Only strips when the first word is a known US state, province, or country.
-const LOCATION_PREFIX_WORDS = new Set([
-  'alabama','alaska','arizona','arkansas','california','colorado','connecticut',
-  'delaware','florida','georgia','hawaii','idaho','illinois','indiana','iowa',
-  'kansas','kentucky','louisiana','maine','maryland','massachusetts','michigan',
-  'minnesota','mississippi','missouri','montana','nebraska','nevada','ohio',
-  'oklahoma','oregon','pennsylvania','tennessee','texas','utah','vermont',
-  'virginia','washington','wisconsin','wyoming','carolina','dakota','jersey',
-  'ontario','alberta','quebec','manitoba','saskatchewan','canada','ireland',
-  'scotland','england','wales','jamaica','china','india','australia','germany',
-]);
-
-function stripLocationPossessivePrefix(name) {
-  if (!name) return name;
-  const m = name.match(/^([A-Z][a-zA-Z]+)(?:'s?|\u2019s?)\s+(.+)/u);
-  if (!m) return name;
-  if (LOCATION_PREFIX_WORDS.has(m[1].toLowerCase())) return m[2].trim();
-  return name;
-}
-
-function cleanCompanyName(rawName) {
-  let candidate = (rawName || '').trim().replace(/\s+CEO$/i, '').replace(/^\W+|\W+$/g, '').replace(/\s+/g, ' ');
-  candidate = stripLocationPossessivePrefix(candidate);
-  return isJunk(candidate) ? null : candidate;
-}
-
+/** True if the name looks like it belongs to a real buyer entity. */
 function hasBuyerLikeName(companyName) {
   if (!companyName) return false;
-  if (KNOWN_ENTITIES.has(companyName)) return true;
-  return [...COMPANY_SUFFIXES].some((s) => new RegExp(`\\b${s}\\b`, 'i').test(companyName));
+  if (KNOWN_ORGS.has(companyName) || SHORT_KNOWN.has(companyName)) return true;
+  return ORG_SUFFIX.test(companyName);
 }
 
+/**
+ * Primary extraction entry point.
+ * Uses verb-anchored ontological inference to extract a company name.
+ */
 export function extractCompanyName(title, description) {
-  const raw = extractRawCandidate(title, description);
-  return cleanCompanyName(raw);
+  return inferCompanyName(title, description);
+}
+
+/**
+ * Returns true when the string is NOT a valid organization name.
+ * Powered by classifyAsOrg() — replaces the old ad-hoc rule list.
+ */
+export function isJunk(name) {
+  if (!name || typeof name !== 'string') return true;
+  return classifyAsOrg(name.trim()) === null;
 }
 
 function detectSignals(text) {
