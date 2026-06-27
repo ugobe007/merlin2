@@ -639,6 +639,23 @@ export function OpportunitiesDashboard() {
     }
   }
 
+  // Poll GET /api/leads/matcher-status until the job finishes (or times out).
+  // The POST endpoint now returns 202 immediately; results arrive via this poll.
+  async function pollMatcherStatus(maxMs = 600_000): Promise<{
+    success: boolean;
+    summary: { scanned: number; qualified: number; newLeads: number } | null;
+    error: string | null;
+  }> {
+    const deadline = Date.now() + maxMs;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 4_000));
+      const r = await fetch("/api/leads/matcher-status");
+      const d = await r.json();
+      if (!d.running) return d;
+    }
+    throw new Error("Timed out waiting for lead matcher (10 min)");
+  }
+
   async function routeToVendors() {
     setMatching(true);
     setMatchResult(null);
@@ -648,18 +665,28 @@ export function OpportunitiesDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rerun: false }),
       });
-      const data = await res.json();
-      if (data.success) {
-        const s = data.summary;
+      const started = await res.json();
+      if (res.status === 409) {
+        alert(`⚠️ Lead matcher is already running.\nStarted at: ${started.startedAt ?? "unknown"}`);
+        return;
+      }
+      if (!started.success) {
+        alert(`❌ Matcher failed to start: ${started.message}`);
+        return;
+      }
+      // Job is running in background — poll for completion
+      const result = await pollMatcherStatus();
+      if (result.success) {
+        const s = result.summary;
         setMatchResult({ newLeads: s?.newLeads ?? 0, scanned: s?.scanned ?? 0 });
         alert(
           `✅ Lead routing complete!\n\nScanned: ${s?.scanned ?? "—"}\nQualified: ${s?.qualified ?? "—"}\nNew vendor leads: ${s?.newLeads ?? "—"}\n\nVendors see their leads at:\n${VENDOR_PORTAL_URL}`
         );
       } else {
-        alert(`❌ Matcher failed: ${data.error ?? data.message}`);
+        alert(`❌ Matcher failed: ${result.error ?? "Unknown error"}`);
       }
-    } catch {
-      alert("❌ Failed to run lead matcher");
+    } catch (e: unknown) {
+      alert(`❌ Failed to run lead matcher: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setMatching(false);
     }
@@ -675,15 +702,24 @@ export function OpportunitiesDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rerun: true, opportunityId: opp.id }),
       });
-      const data = await res.json();
-      const sent = data.summary?.newLeads ?? 0;
+      const started = await res.json();
+      if (res.status === 409) {
+        alert(`⚠️ Lead matcher is already running — try again shortly.`);
+        return;
+      }
+      if (!started.success) {
+        alert(`❌ Push failed to start: ${started.message}`);
+        return;
+      }
+      const result = await pollMatcherStatus();
+      const sent = result.summary?.newLeads ?? 0;
       alert(
         sent > 0
           ? `✅ Pushed "${opp.company_name}" to ${sent} vendor${sent !== 1 ? "s" : ""}.\n\nVendors see it at:\n${VENDOR_PORTAL_URL}`
           : `ℹ️ No vendors matched this lead (score below threshold or already routed).`
       );
-    } catch {
-      alert("❌ Push failed");
+    } catch (e: unknown) {
+      alert(`❌ Push failed: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setPushing(null);
     }

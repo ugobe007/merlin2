@@ -76,15 +76,39 @@ router.post('/scraper/run', async (req, res) => {
   }
 });
 
+// ── In-memory job state for the lead matcher ──────────────────────────────────
+// Persists the last run result and tracks whether a run is in progress.
+// Resets on server restart (acceptable — short-lived state only).
+let _matcherJob = {
+  running:   false,
+  startedAt: null,
+  finishedAt: null,
+  success:   null,
+  summary:   null,
+  log:       null,
+  error:     null,
+};
+
 // ── POST /api/leads/run-matcher ───────────────────────────────────────────────
-// Runs the lead-matcher agent (agents/lead-matcher.ts) to score all unmatched
-// opportunities, create vendor_leads rows, and send vendor notifications.
+// Kicks off the lead-matcher agent in the background and returns 202 immediately.
+// The matcher can take several minutes for large opportunity sets — holding the
+// HTTP connection open causes proxy timeouts on Fly.io (default ~60 s).
 //
 // Body params (all optional):
 //   rerun    {boolean} – re-score already-matched opportunities
 //   minScore {number}  – qualification threshold (default 65)
 //   dryRun   {boolean} – score only, no writes (useful for previewing)
+//
+// Poll GET /api/leads/matcher-status for the result.
 router.post('/leads/run-matcher', async (req, res) => {
+  if (_matcherJob.running) {
+    return res.status(409).json({
+      success: false,
+      message: 'Lead matcher is already running',
+      startedAt: _matcherJob.startedAt,
+    });
+  }
+
   const { spawn } = await import('child_process');
   const { fileURLToPath } = await import('url');
   const { dirname, resolve } = await import('path');
@@ -92,41 +116,61 @@ router.post('/leads/run-matcher', async (req, res) => {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
   const args = ['agents/lead-matcher.mjs'];
-  if (req.body?.rerun)   args.push('--rerun');
-  if (req.body?.dryRun)  args.push('--dry-run');
+  if (req.body?.rerun)    args.push('--rerun');
+  if (req.body?.dryRun)   args.push('--dry-run');
   if (req.body?.minScore) args.push(`--min-score=${Number(req.body.minScore)}`);
 
+  _matcherJob = { running: true, startedAt: new Date().toISOString(),
+                  finishedAt: null, success: null, summary: null, log: null, error: null };
+
+  // Respond immediately — do not await the child process.
+  res.status(202).json({
+    success: true,
+    message: 'Lead matcher started — poll GET /api/leads/matcher-status for results',
+    startedAt: _matcherJob.startedAt,
+  });
+
+  // ── Background child process (no timeout — matcher can take several minutes) ─
   let stdout = '';
   let stderr = '';
 
   const child = spawn('node', args, {
     cwd: resolve(__dirname, '..'), // /app/server — agents/ is at server/agents/
     env: { ...process.env },
-    timeout: 120_000, // 2-minute cap
   });
 
   child.stdout.on('data', (chunk) => { stdout += chunk.toString(); });
   child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
 
   child.on('close', (code) => {
-    // Parse summary line from agent output: "Scanned N | M qualified | K new leads"
     const summaryMatch = stdout.match(/Scanned\s+(\d+).+?(\d+)\s+qualified.+?(\d+)\s+new\s+leads/i);
-    res.status(code === 0 ? 200 : 500).json({
-      success: code === 0,
-      message: code === 0 ? 'Lead matcher completed' : 'Lead matcher failed',
+    _matcherJob = {
+      running:    false,
+      startedAt:  _matcherJob.startedAt,
+      finishedAt: new Date().toISOString(),
+      success:    code === 0,
       summary: summaryMatch ? {
-        scanned:    Number(summaryMatch[1]),
-        qualified:  Number(summaryMatch[2]),
-        newLeads:   Number(summaryMatch[3]),
+        scanned:   Number(summaryMatch[1]),
+        qualified: Number(summaryMatch[2]),
+        newLeads:  Number(summaryMatch[3]),
       } : null,
-      log: stdout.slice(-3000), // last 3 KB of output
-      error: code !== 0 ? (stderr || 'Non-zero exit').slice(0, 500) : undefined,
-    });
+      log:   stdout.slice(-3000),
+      error: code !== 0 ? (stderr || `Non-zero exit: ${code}`).slice(0, 500) : null,
+    };
+    console.log(`[lead-matcher] finished code=${code} scanned=${_matcherJob.summary?.scanned ?? '?'} qualified=${_matcherJob.summary?.qualified ?? '?'} newLeads=${_matcherJob.summary?.newLeads ?? '?'}`);
   });
 
   child.on('error', (err) => {
-    res.status(500).json({ success: false, message: 'Failed to start lead matcher', error: err.message });
+    _matcherJob = { ..._matcherJob, running: false, finishedAt: new Date().toISOString(),
+                    success: false, error: err.message };
+    console.error('[lead-matcher] spawn error:', err.message);
   });
+});
+
+// ── GET /api/leads/matcher-status ─────────────────────────────────────────────
+// Returns the current or last-completed lead-matcher job state.
+router.get('/leads/matcher-status', (_req, res) => {
+  res.json(_matcherJob);
 });
 
 export default router;
