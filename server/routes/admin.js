@@ -36,24 +36,32 @@ router.get('/admin/stats', async (req, res) => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    const [usersRes, quotesTodayRes, totalQuotesRes, totalLeadsRes] = await Promise.all([
-      // All users with their tier
-      sb.from('user_profiles').select('tier'),
-      // Quotes created today
+    // Signups are split across two tables (legacy `users` + new `user_profiles`).
+    // We union them by email to deduplicate, using user_profiles as authoritative
+    // for tier, falling back to `users` for any email not yet in user_profiles.
+    const [profilesRes, legacyUsersRes, quotesTodayRes, totalQuotesRes, totalLeadsRes] = await Promise.all([
+      sb.from('user_profiles').select('email, tier'),
+      sb.from('users').select('email, tier'),
       sb
         .from('saved_quotes')
         .select('id', { count: 'exact', head: true })
         .gte('created_at', todayStart.toISOString()),
-      // Total quotes ever
       sb.from('saved_quotes').select('id', { count: 'exact', head: true }),
-      // Qualified leads (opportunities)
       sb
         .from('opportunities')
         .select('id', { count: 'exact', head: true })
         .eq('status', 'qualified'),
     ]);
 
-    const allUsers = usersRes.data ?? [];
+    // Merge: user_profiles wins on duplicates (keyed by email)
+    const emailMap = new Map();
+    for (const u of (legacyUsersRes.data ?? [])) {
+      emailMap.set((u.email ?? '').toLowerCase(), u);
+    }
+    for (const u of (profilesRes.data ?? [])) {
+      emailMap.set((u.email ?? '').toLowerCase(), u); // overwrite with authoritative row
+    }
+    const allUsers = [...emailMap.values()];
     const totalUsers = allUsers.length;
 
     // Count by tier (handle both 'FREE'/'free' and new tiers)
@@ -92,6 +100,70 @@ router.get('/admin/stats', async (req, res) => {
     });
   } catch (err) {
     console.error('[admin/stats]', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── In-memory growth loop job state (same fire-and-forget pattern as lead-matcher)
+let _growthJob = {
+  running: false, startedAt: null, finishedAt: null, success: null, error: null,
+};
+
+// POST /api/admin/run-growth-loop  — kick off the growth loop agent
+router.post('/admin/run-growth-loop', async (req, res) => {
+  if (_growthJob.running) {
+    return res.status(409).json({ success: false, message: 'Growth loop already running', startedAt: _growthJob.startedAt });
+  }
+
+  const { spawn } = await import('child_process');
+  const { fileURLToPath } = await import('url');
+  const { dirname, resolve } = await import('path');
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+
+  _growthJob = { running: true, startedAt: new Date().toISOString(), finishedAt: null, success: null, error: null };
+
+  res.status(202).json({
+    success: true,
+    message: 'Growth loop started — poll GET /api/admin/growth-loop-status',
+    startedAt: _growthJob.startedAt,
+    machineId: process.env.FLY_MACHINE_ID ?? null,
+  });
+
+  let stderr = '';
+  const child = spawn('node', ['agents/growth-loop.mjs'], {
+    cwd: resolve(__dirname, '..'),
+    env: { ...process.env },
+  });
+
+  child.stdout.on('data', (c) => process.stdout.write(c));
+  child.stderr.on('data', (c) => { stderr += c.toString(); process.stderr.write(c); });
+  child.on('close', (code) => {
+    _growthJob = { running: false, startedAt: _growthJob.startedAt,
+                   finishedAt: new Date().toISOString(), success: code === 0,
+                   error: code !== 0 ? stderr.slice(-300) : null };
+    console.log(`[growth-loop] finished code=${code}`);
+  });
+  child.on('error', (e) => {
+    _growthJob = { ..._growthJob, running: false, finishedAt: new Date().toISOString(), success: false, error: e.message };
+  });
+});
+
+// GET /api/admin/growth-loop-status
+router.get('/admin/growth-loop-status', (_req, res) => res.json(_growthJob));
+
+// GET /api/admin/growth-reports  — last N reports from DB
+router.get('/admin/growth-reports', async (req, res) => {
+  try {
+    const sb = getServiceClient();
+    const limit = Math.min(Number(req.query.limit ?? 10), 50);
+    const { data, error } = await sb
+      .from('growth_reports')
+      .select('id, ran_at, site_health_score, total_users, total_quotes, friction_signals, growth_brief')
+      .order('ran_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    res.json({ success: true, reports: data ?? [] });
+  } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
