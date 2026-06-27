@@ -17,7 +17,7 @@ import { config } from 'dotenv';
 config({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
 import { createClient } from '@supabase/supabase-js';
-const { isJunk, scoreCompanyName } = await import('../server/services/opportunity-scraper.js');
+const { isJunk, scoreCompanyName, normalizeCompanyName } = await import('../server/services/opportunity-scraper.js');
 
 const DRY_RUN = process.argv.includes('--dry-run');
 const PAGE = 500; // rows per fetch
@@ -64,8 +64,9 @@ const all = await fetchAll();
 console.log(`Fetched ${all.length} opportunity rows from DB.\n`);
 
 // Classify every row
-const junkRows     = [];   // will be soft-deleted
-const survivorRows = [];   // will be re-scored
+const junkRows     = [];   // will be archived
+const normRows     = [];   // company_name needs cleaning (geo strip / trailing verb)
+const survivorRows = [];   // already canonical, just re-score
 
 for (const row of all) {
   // Skip rows already archived / manually reviewed
@@ -73,32 +74,38 @@ for (const row of all) {
     continue;
   }
 
-  if (isJunk(row.company_name)) {
+  const canonical = normalizeCompanyName(row.company_name);
+  if (!canonical) {
     junkRows.push(row);
+  } else if (canonical !== row.company_name) {
+    normRows.push({ ...row, canonical });
+    // Use canonical name for scoring below
+    survivorRows.push({ ...row, company_name: canonical });
   } else {
     survivorRows.push(row);
   }
 }
 
 // ── Print sample junk ─────────────────────────────────────────────────────────
-console.log(`── JUNK (will be soft-deleted) ─── ${junkRows.length} rows`);
-const JUNK_SAMPLE = junkRows.slice(0, 30);
-JUNK_SAMPLE.forEach((r) =>
+console.log(`── JUNK (will be archived) ─── ${junkRows.length} rows`);
+junkRows.slice(0, 30).forEach((r) =>
   console.log(`  ❌ [${r.status.padEnd(10)}] ${JSON.stringify(r.company_name)}`)
 );
-if (junkRows.length > JUNK_SAMPLE.length)
-  console.log(`  … and ${junkRows.length - JUNK_SAMPLE.length} more`);
+if (junkRows.length > 30) console.log(`  … and ${junkRows.length - 30} more`);
+
+// ── Print name normalizations ─────────────────────────────────────────────────
+if (normRows.length > 0) {
+  console.log(`\n── NAME FIXES (company_name will be updated) ─── ${normRows.length} rows`);
+  normRows.forEach((r) =>
+    console.log(`  ✏️  ${JSON.stringify(r.company_name)} → ${JSON.stringify(r.canonical)}`)
+  );
+}
 
 // ── Compute re-scores for survivors ─────────────────────────────────────────
-// confidence_score was blended as: signal_conf * 0.8 + name_quality * 0.2
-// Back-calculate signal_conf from stored value, apply new name quality.
 const updates = [];
 let scoreChanges = { up: 0, down: 0, same: 0 };
 for (const row of survivorRows) {
   const newNameScore = scoreCompanyName(row.company_name);
-  // Reconstruct signal portion: prev = signal*0.8 + old_name*0.2
-  // We don't have old_name score, so approximate: signal ≈ (stored_score - 0) / 0.8
-  // Safe upper bound: cap at 100
   const signalPortion = Math.min(row.confidence_score / 0.8, 100);
   const newScore = Math.min(Math.round(signalPortion * 0.8 + newNameScore * 0.2), 100);
 
@@ -113,16 +120,12 @@ for (const row of survivorRows) {
 
 // ── Print survivor sample ────────────────────────────────────────────────────
 console.log(`\n── SURVIVORS (valid company names) ─── ${survivorRows.length} rows`);
-const SURV_SAMPLE = survivorRows.slice(0, 20);
-SURV_SAMPLE.forEach((r) => {
+survivorRows.slice(0, 20).forEach((r) => {
   const upd = updates.find((u) => u.id === r.id);
-  const scoreStr = upd
-    ? ` (score ${upd.old} → ${upd.new})`
-    : ` (score ${r.confidence_score} unchanged)`;
+  const scoreStr = upd ? ` (score ${upd.old} → ${upd.new})` : ` (score ${r.confidence_score} unchanged)`;
   console.log(`  ✅ ${JSON.stringify(r.company_name).padEnd(38)}${scoreStr}`);
 });
-if (survivorRows.length > SURV_SAMPLE.length)
-  console.log(`  … and ${survivorRows.length - SURV_SAMPLE.length} more`);
+if (survivorRows.length > 20) console.log(`  … and ${survivorRows.length - 20} more`);
 
 // ── Summary ─────────────────────────────────────────────────────────────────
 const total = all.length;
@@ -130,8 +133,9 @@ console.log(`\n${'─'.repeat(62)}`);
 console.log(` SUMMARY`);
 console.log(`${'─'.repeat(62)}`);
 console.log(`${fmt(total)}   total rows in DB`);
-console.log(`${fmt(junkRows.length)}   junk → status: archived  (${pct(junkRows.length, total)})`);
-console.log(`${fmt(survivorRows.length)}   survivors → keep     (${pct(survivorRows.length, total)})`);
+console.log(`${fmt(junkRows.length)}   junk → archived          (${pct(junkRows.length, total)})`);
+console.log(`${fmt(normRows.length)}   name fixes → updated     (${pct(normRows.length, total)})`);
+console.log(`${fmt(survivorRows.length)}   survivors → keep         (${pct(survivorRows.length, total)})`);
 console.log(`${fmt(updates.length)}   score updates needed`);
 console.log(`        ↑ improved: ${scoreChanges.up}  ↓ reduced: ${scoreChanges.down}  = same: ${scoreChanges.same}`);
 
@@ -145,38 +149,41 @@ if (DRY_RUN) {
 
 console.log(`\nApplying changes…`);
 
-// Soft-delete junk in batches of 100
+// Archive junk in batches of 100
 let deleted = 0;
 const JUNK_IDS = junkRows.map((r) => r.id);
 for (let i = 0; i < JUNK_IDS.length; i += 100) {
   const batch = JUNK_IDS.slice(i, i + 100);
+  const { error } = await sb.from('opportunities').update({ status: 'archived' }).in('id', batch);
+  if (error) { console.error('  ❌ archive error:', error.message); break; }
+  deleted += batch.length;
+  process.stdout.write(`\r  Archived ${deleted}/${JUNK_IDS.length} junk rows…`);
+}
+if (JUNK_IDS.length) console.log();
+
+// Fix company_name for normalization rows
+let fixed = 0;
+for (const r of normRows) {
   const { error } = await sb
     .from('opportunities')
-    .update({ status: 'archived' })
-    .in('id', batch);
-  if (error) { console.error('  ❌ junk-update error:', error.message); break; }
-  deleted += batch.length;
-  process.stdout.write(`\r  Marked ${deleted}/${JUNK_IDS.length} rows as rejected…`);
+    .update({ company_name: r.canonical })
+    .eq('id', r.id);
+  if (error) { console.error(`  ❌ name-fix error for id=${r.id}:`, error.message); continue; }
+  fixed++;
 }
-console.log();
+if (normRows.length) console.log(`  Fixed ${fixed}/${normRows.length} company names.`);
 
 // Update confidence scores for survivors that changed
 let scored = 0;
 for (const u of updates) {
-  const { error } = await sb
-    .from('opportunities')
-    .update({ confidence_score: u.new })
-    .eq('id', u.id);
+  const { error } = await sb.from('opportunities').update({ confidence_score: u.new }).eq('id', u.id);
   if (error) { console.error(`  ❌ score-update error for id=${u.id}:`, error.message); continue; }
   scored++;
-  if (scored % 50 === 0)
-    process.stdout.write(`\r  Re-scored ${scored}/${updates.length} rows…`);
 }
-if (updates.length) console.log(`\r  Re-scored ${scored}/${updates.length} rows.  `);
+if (updates.length) console.log(`  Re-scored ${scored}/${updates.length} rows.`);
 
-// ── Also clean up vendor_leads that reference junk opportunities ──────────────
+// Archive vendor_leads referencing junk opportunities
 if (JUNK_IDS.length > 0) {
-  console.log(`\n  Marking vendor_leads referencing junk opportunities…`);
   let vleads = 0;
   for (let i = 0; i < JUNK_IDS.length; i += 100) {
     const batch = JUNK_IDS.slice(i, i + 100);
@@ -186,7 +193,7 @@ if (JUNK_IDS.length > 0) {
       .in('opportunity_id', batch)
       .neq('status', 'archived')
       .select('id');
-    if (error) { console.error('  ❌ vendor_leads update error:', error.message); continue; }
+    if (error) { console.error('  ❌ vendor_leads error:', error.message); continue; }
     vleads += (data || []).length;
   }
   console.log(`  Archived ${vleads} vendor_lead(s) linked to junk opportunities.`);

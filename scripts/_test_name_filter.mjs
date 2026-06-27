@@ -3,7 +3,7 @@ import { dirname, join } from 'path';
 import { config } from 'dotenv';
 config({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
-const { extractCompanyName, isJunk } = await import('../server/services/opportunity-scraper.js');
+const { extractCompanyName, isJunk, normalizeCompanyName } = await import('../server/services/opportunity-scraper.js');
 
 // ── SHOULD_BE_NULL: extractCompanyName must return null ─────────────────────
 // These are headlines where the "obvious noun phrase" is NOT a company name.
@@ -81,4 +81,28 @@ for (const [label, title] of SHOULD_PASS) {
 
 const total = SHOULD_BE_NULL.length + SHOULD_PASS.length;
 console.log(`\nResult: ${total - fail}/${total} passed — ${fail} failure(s)\n`);
-process.exit(fail > 0 ? 1 : 0);
+
+// ── NORMALIZE: stored DB names that need cleaning ────────────────────────────
+// normalizeCompanyName(storedName) should return the canonical cleaned form.
+const NORMALIZE_CASES = [
+  // [storedDbName, expectedCanonical]
+  ['Powerbank Corporation Achieves',  'Powerbank Corporation'],
+  ["Ohio's FST Logistics",            'FST Logistics'],
+  ['Radius Logistics opening',        'Radius Logistics'],
+  ['REC Solar CEO announces',         'REC Solar'],
+  ['Crane Worldwide Logistics expands', 'Crane Worldwide Logistics'],
+  ['Duke Energy secures',             'Duke Energy'],
+];
+
+console.log('── NORMALIZE (stored name → canonical) ────────────────────────');
+let nfail = 0;
+for (const [stored, expected] of NORMALIZE_CASES) {
+  const r = normalizeCompanyName(stored);
+  const ok = r === expected;
+  console.log(`${ok ? '✅' : '❌'} [${stored}] → ${JSON.stringify(r)} (expected ${JSON.stringify(expected)})`);
+  if (!ok) nfail++;
+}
+const ntotal = NORMALIZE_CASES.length;
+console.log(`\nNormalize: ${ntotal - nfail}/${ntotal} passed — ${nfail} failure(s)\n`);
+
+process.exit((fail > 0 || nfail > 0) ? 1 : 0);
