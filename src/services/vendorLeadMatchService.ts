@@ -46,6 +46,7 @@ export interface VendorLead {
   bess_score: number;
   solar_score: number;
   generator_score: number;
+  overall_score?: number;
   lead_category: "bess" | "solar" | "generator" | "multi";
   signals: string[];
   industry?: string | null;
@@ -710,6 +711,7 @@ export async function runLeadMatching(
         bess_score: opp.score.bess,
         solar_score: opp.score.solar,
         generator_score: opp.score.generator,
+        overall_score: opp.score.overall,
         lead_category: (cat as VendorLead["lead_category"]) ?? "bess",
         signals: opp.signals ?? [],
         industry: opp.industry ?? null,

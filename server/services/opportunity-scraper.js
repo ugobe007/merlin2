@@ -149,7 +149,7 @@ const KNOWN_ENTITIES = new Set([
   'Target', 'Home Depot', 'FedEx', 'UPS', 'Boeing', 'Ford', 'GM',
 ]);
 
-const TRAILING_NOISE = /\s+(?:opens?|announces?|starts?|expands?|builds?|acquires?|launches?|plans?|seeks?|proposes?|vows?|brings?|inaugurates?|completes?|celebrates?|unveils?|selects?|awards?|breaks|signs?|closes?|reaches?|secures?|wins?|gets?|reveals?|receives?|to|in|for|by|at|of|the|a|an|and|or|is|are|has|have|was|were|will|set|said|plans?|said?)\s*$/i;
+const TRAILING_NOISE = /\s+(?:opens?|announces?|starts?|expands?|builds?|acquires?|launches?|plans?|seeks?|proposes?|vows?|brings?|inaugurates?|completes?|celebrates?|unveils?|selects?|awards?|breaks|signs?|closes?|reaches?|secures?|wins?|gets?|reveals?|receives?|prepares?|preparing|doubles?|doubling|goes|going|eyes?|eyeing|races?|racing|cuts?|drops?|rises?|falls?|surges?|pushes?|mulls?|targets?|weighs?|faces?|fights?|shifts?|moves?|turns?|joins?|enters?|exits?|names?|hires?|fires?|picks?|bids?|taps?|to|in|for|by|at|of|the|a|an|and|or|is|are|has|have|was|were|will|set|said|plans?|said?)\s*$/i;
 // Keep TRAILING_VERBS as alias for isJunk checks
 const TRAILING_VERBS = TRAILING_NOISE;
 
@@ -231,9 +231,12 @@ function isJunk(name) {
   if (/^(?:we|they|he|she|it|our|their|his|her|its|i|you|your)\b/i.test(t)) return true;
   if (/^(?:how|why|what|when|where|who|top|best|inside|even|bill|senate|house|republicans|lawmakers|white house|data center|going green)\s/i.test(t)) return true;
   if (/\b(?:seeks?|seeking|requests?|denies?|says?|files?|halts?|rewrites?|pledges?|responds?|aims?|forces?|push|probe|protects?|proposes?|vows?|grew|grow|grown|selling)\b/i.test(t)) return true;
+  if (/\b(?:prepares?|preparing|doubles?|doubling|goes|going|bets?|betting|eyes?|eyeing|looks?|looking|races?|racing|turns?|turning|moves?|moving|shifts?|shifting|faces?|facing|fights?|fighting|cuts?|cutting|drops?|dropping|rises?|rising|falls?|falling|struggles?|struggling|surges?|surging|slashes?|slashing|trims?|trimming|boosts?|boosting|pushes?|pushing)\b/i.test(t)) return true;
   if (/\b(?:alert|advocate|boom|companies|process|project|policymakers|lawmakers)\b/i.test(t)) return true;
   if (/\b(?:developer|developers|provider|providers|player|operator|operators)\b/i.test(t)) return true;
   if (/\b(?:completes|office|grew up|up here)\b/i.test(t)) return true;
+  // Catch "X Goes Big", "X Doubles Down", "X Takes On" style headline fragments
+  if (/^\S+\s+(?:goes|doubles|takes|makes|gets|puts|sets|hits|cuts|runs|pulls|rolls|rolls out|breaks|breaks out|brings|keeps|holds|leads|needs|shows|turns|gives|finds)\s/i.test(t)) return true;
   if (TRAILING_NOISE.test(t)) return true;
   // Single word: only allow if known entity or SHORT_KNOWN
   if (t.split(/\s+/).length === 1 && !SHORT_KNOWN.has(t)) {
