@@ -22,6 +22,7 @@ import {
   // Wrench, // Unused
   Layers,
   RefreshCw,
+  Lightbulb,
 } from "lucide-react";
 import { PricingAdminDashboard } from "./PricingAdminDashboard";
 import UseCaseConfigManager from "./admin/UseCaseConfigManager";
@@ -42,6 +43,7 @@ import AdminRealtimeTab from "./admin/tabs/AdminRealtimeTab";
 import AdminSettingsTab from "./admin/tabs/AdminSettingsTab";
 import AdminMarketingTab from "./admin/tabs/AdminMarketingTab";
 import AdminWhitepapersTab from "./admin/tabs/AdminWhitepapersTab";
+import AdminSuggestionsTab from "./admin/tabs/AdminSuggestionsTab";
 import MetaCalculationsPage from "@/pages/MetaCalculationsPage";
 import OpportunitiesDashboard from "@/pages/OpportunitiesDashboard";
 
@@ -95,6 +97,7 @@ const AdminDashboard: React.FC = () => {
     | "marketing"
     | "opportunities"
     | "whitepapers"
+    | "suggestions"
   >(
     (() => {
       const p = new URLSearchParams(window.location.search).get("tab");
@@ -120,6 +123,7 @@ const AdminDashboard: React.FC = () => {
         "marketing",
         "opportunities",
         "whitepapers",
+        "suggestions",
       ];
       return (p && valid.includes(p) ? p : "dashboard") as
         | "dashboard"
@@ -143,7 +147,8 @@ const AdminDashboard: React.FC = () => {
         | "aiData"
         | "marketing"
         | "opportunities"
-        | "whitepapers";
+        | "whitepapers"
+        | "suggestions";
     })()
   );
   // const [refreshInterval, setRefreshInterval] = useState<number>(30); // Unused
@@ -280,6 +285,13 @@ const AdminDashboard: React.FC = () => {
           label: "Analytics",
           icon: TrendingUp,
           description: "Business analytics and reports",
+        },
+        {
+          key: "suggestions",
+          label: "AI Suggestions",
+          icon: Lightbulb,
+          description: "Review AI-generated improvements",
+          highlight: true,
         },
       ],
     },
@@ -771,6 +783,12 @@ const AdminDashboard: React.FC = () => {
         {activeTab === "marketing" && <AdminMarketingTab />}
         {activeTab === "opportunities" && <OpportunitiesDashboard />}
         {activeTab === "whitepapers" && <AdminWhitepapersTab />}
+
+        {activeTab === "suggestions" && (
+          <div className="p-6">
+            <AdminSuggestionsTab />
+          </div>
+        )}
 
         {activeTab === "aiData" && (
           <div className="space-y-5">

@@ -226,4 +226,100 @@ router.get('/admin/site-copy', async (req, res) => {
   }
 });
 
+// GET /api/admin/growth-suggestions — list pending + recently reviewed suggestions
+router.get('/admin/growth-suggestions', async (req, res) => {
+  try {
+    const sb = getServiceClient();
+    const status = req.query.status ?? 'pending'; // pending | approved | rejected | all
+    let query = sb
+      .from('growth_suggestions')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(Number(req.query.limit ?? 50));
+    if (status !== 'all') query = query.eq('status', status);
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json({ success: true, suggestions: data ?? [] });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/admin/approve-suggestion — approve a suggestion (applies copy changes immediately)
+router.post('/admin/approve-suggestion', async (req, res) => {
+  const { id } = req.body ?? {};
+  if (!id) return res.status(400).json({ success: false, error: 'id required' });
+  try {
+    const sb = getServiceClient();
+    const { data: suggestion, error: sErr } = await sb
+      .from('growth_suggestions').select('*').eq('id', id).maybeSingle();
+    if (sErr || !suggestion) return res.status(404).json({ success: false, error: 'Suggestion not found' });
+    if (suggestion.status !== 'pending') {
+      return res.status(409).json({ success: false, error: `Already ${suggestion.status}` });
+    }
+
+    // For copy suggestions: apply the change to site_copy immediately
+    if (suggestion.type === 'copy' && suggestion.copy_key && suggestion.copy_value) {
+      const ALLOWED_KEYS = new Set([
+        'hero_headline_prefix','hero_accent_lines','hero_subtext','hero_badge_text',
+        'hero_proof_items','hero_cta_primary','hero_cta_secondary','modal_headline',
+        'modal_subtext','modal_cta_text','nav_cta_text',
+      ]);
+      if (!ALLOWED_KEYS.has(suggestion.copy_key)) {
+        return res.status(400).json({ success: false, error: 'Copy key not in allowlist' });
+      }
+      const { data: cur } = await sb
+        .from('site_copy').select('value').eq('key', suggestion.copy_key).maybeSingle();
+      const { error: uErr } = await sb.from('site_copy').upsert({
+        key:            suggestion.copy_key,
+        value:          suggestion.copy_value,
+        previous_value: cur?.value ?? null,
+        updated_at:     new Date().toISOString(),
+        updated_by:     'human-approved',
+        rationale:      suggestion.rationale,
+      });
+      if (uErr) throw uErr;
+      await sb.from('growth_actions').insert({
+        copy_key:  suggestion.copy_key,
+        old_value: cur?.value ?? null,
+        new_value: suggestion.copy_value,
+        rationale: suggestion.rationale,
+        report_id: suggestion.report_id ?? null,
+      });
+    }
+
+    await sb.from('growth_suggestions').update({
+      status:      suggestion.type === 'copy' ? 'applied' : 'approved',
+      reviewed_at: new Date().toISOString(),
+    }).eq('id', id);
+
+    res.json({ success: true, applied: suggestion.type === 'copy' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/admin/reject-suggestion
+router.post('/admin/reject-suggestion', async (req, res) => {
+  const { id, note } = req.body ?? {};
+  if (!id) return res.status(400).json({ success: false, error: 'id required' });
+  try {
+    const sb = getServiceClient();
+    const { data: suggestion, error: sErr } = await sb
+      .from('growth_suggestions').select('status').eq('id', id).maybeSingle();
+    if (sErr || !suggestion) return res.status(404).json({ success: false, error: 'Not found' });
+    if (suggestion.status !== 'pending') {
+      return res.status(409).json({ success: false, error: `Already ${suggestion.status}` });
+    }
+    await sb.from('growth_suggestions').update({
+      status:        'rejected',
+      reviewed_at:   new Date().toISOString(),
+      reviewed_note: note ?? null,
+    }).eq('id', id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 export default router;

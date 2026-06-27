@@ -22,7 +22,7 @@ import { createClient } from '@supabase/supabase-js';
 const BASE_URL    = process.env.MERLIN_BASE_URL  ?? 'https://merlin2.fly.dev';
 const SITE_URL    = process.env.MERLIN_SITE_URL  ?? 'https://merlinenergy.net';
 const OPENAI_KEY  = process.env.VITE_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY ?? '';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'robertchristopher@gmail.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'ugobe07@gmail.com';
 const RESEND_KEY  = process.env.RESEND_API_KEY ?? process.env.VITE_RESEND_API_KEY ?? '';
 
 const sb = createClient(
@@ -111,9 +111,30 @@ async function readCopy(): Promise<Record<string, string>> {
   return m;
 }
 
-// ── Module 5: GPT-4o decision engine ─────────────────────────────────────────
-interface CopyChange { key: string; value: string; rationale: string; }
-interface Decision   { brief: string; insights: string[]; changes: CopyChange[]; }
+// ── Module 5: GPT-4o suggestion engine ───────────────────────────────────────
+// Nothing is applied automatically. Everything goes into growth_suggestions
+// for human review. Admin approves → changes are applied. Admin rejects → logged.
+
+interface CopySuggestion {
+  key: string;        // must be in ALLOWED_KEYS
+  value: string;
+  rationale: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+interface GeneralSuggestion {
+  type: 'code' | 'design' | 'workflow' | 'ui' | 'optimization';
+  title: string;
+  description: string;   // specific, actionable, ready to implement
+  rationale: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+interface Decision {
+  brief:             string;
+  copy_suggestions:  CopySuggestion[];
+  other_suggestions: GeneralSuggestion[];
+}
 
 async function decide(
   health:    Awaited<ReturnType<typeof runHealth>>,
@@ -121,51 +142,81 @@ async function decide(
   headlines: string[],
   copy:      Record<string, string>,
 ): Promise<Decision | null> {
-  if (!OPENAI_KEY) { console.warn('[growth] No OPENAI_KEY — skipping AI decisions'); return null; }
+  if (!OPENAI_KEY) { console.warn('[growth] No OPENAI_KEY — skipping'); return null; }
 
-  const allowedList = [...ALLOWED_KEYS].join(', ');
-  const lines = [
-    'You are the autonomous growth engine for Merlin Energy.',
-    'Merlin is a B2B SaaS: instant CFO-ready BESS/solar quotes in 60 seconds, free, replacing $500/hr consultants.',
+  const allowedCopyKeys = [...ALLOWED_KEYS].join(', ');
+  const prompt = [
+    'You are the AI growth analyst for Merlin Energy.',
+    'Merlin is a B2B SaaS: instant CFO-ready BESS/solar quotes in 60 seconds, free, replacing $500/hr energy consultants.',
     'Target buyers: CFOs and Ops Directors at carwashes, warehouses, hotels, manufacturers feeling utility cost pain.',
     '',
-    '## Live Data',
-    `Site health: ${health.score}/100` + (health.failedRoutes.length ? ' BROKEN: ' + health.failedRoutes.map((x: { name: string }) => x.name).join(', ') : ''),
-    `Users: ${funnel.totalUsers} | Quotes: ${funnel.totalQuotes} | Leads: ${funnel.qualifiedLeads}`,
-    `Friction: ${funnel.friction.join('; ') || 'none'}`,
+    '## Live System Data',
+    `Site health: ${health.score}/100` + (health.failedRoutes.length ? ' | BROKEN: ' + health.failedRoutes.map((x: { name: string }) => x.name).join(', ') : ' | all routes OK'),
+    `Signup funnel: ${funnel.totalUsers} users | ${funnel.totalQuotes} quotes | ${funnel.qualifiedLeads} leads routed`,
+    `Friction: ${funnel.friction.join('; ') || 'none detected'}`,
     '',
-    '## Energy headlines today',
-    ...headlines.slice(0, 8).map(h => `- ${h}`),
+    '## Energy market headlines today',
+    ...headlines.slice(0, 10).map(h => `- ${h}`),
     '',
-    '## Current live copy',
-    ...Object.entries(copy).map(([k, v]) => `${k}: ${v.slice(0, 100)}`),
+    '## Current live copy on site',
+    ...Object.entries(copy).map(([k, v]) => `  ${k}: ${v.slice(0, 120)}`),
     '',
-    '## Instructions',
-    'Rewrite 2-5 copy keys to maximize signups. Rules:',
-    '- Tie copy to real market pain from the headlines above',
-    '- Every CTA must feel zero-risk (free, instant, no commitment)',
-    '- hero_accent_lines: JSON array of exactly 3 phrases (max 6 words) completing "Reduce Utility Risk ___"',
-    '- hero_proof_items: JSON array of exactly 3 short trust signals',
-    '- Only change keys where you have HIGH confidence it lifts conversions',
+    '## Your job: Generate suggestions across 5 categories',
     '',
-    `Allowed keys: ${allowedList}`,
+    '### 1. COPY SUGGESTIONS (2-4 items)',
+    'Rewrite copy keys to maximize signups from buyers feeling utility cost pain RIGHT NOW.',
+    '- Tie language directly to the market headlines above',
+    '- Every CTA must feel zero-risk (free, instant, no commitment, no credit card)',
+    '- hero_accent_lines = JSON array of exactly 3 phrases (max 6 words) completing "Reduce Utility Risk ___"',
+    '- hero_proof_items  = JSON array of exactly 3 short trust/social-proof signals',
+    `- Allowed copy keys: ${allowedCopyKeys}`,
     '',
-    'Return ONLY valid JSON:',
-    '{ "brief": "2-3 sentences on what you changed and why",',
-    '  "insights": ["insight 1", "insight 2"],',
-    '  "changes": [{"key": "hero_headline_prefix", "value": "...", "rationale": "..."}] }',
-  ];
+    '### 2. CODE SUGGESTIONS (1-2 items)',
+    'Specific bugs, performance issues, or missing features that hurt conversion.',
+    'Be technically precise: name the file, function, or component. No vague suggestions.',
+    '',
+    '### 3. DESIGN/UI SUGGESTIONS (1-2 items)',
+    'Specific page layout, visual hierarchy, or UX flow changes.',
+    'Reference which page/component and what exactly to change.',
+    '',
+    '### 4. WORKFLOW SUGGESTIONS (1-2 items)',
+    'Changes to how users move through the product (onboarding, quote flow, signup modal, etc).',
+    'Focus on removing friction from the path to getting a quote.',
+    '',
+    '### 5. OPTIMIZATION SUGGESTIONS (1-2 items)',
+    'SEO, page speed, email sequences, follow-up automation, etc.',
+    '',
+    'Priority guidance:',
+    '- high = directly blocks or severely hurts signups/revenue',
+    '- medium = meaningful improvement, do this week',
+    '- low = nice to have, do when time permits',
+    '',
+    'Return ONLY valid JSON matching this EXACT shape:',
+    '{',
+    '  "brief": "3-4 sentence summary of what Merlin most needs to fix today",',
+    '  "copy_suggestions": [',
+    '    {"key": "hero_headline_prefix", "value": "...", "rationale": "...", "priority": "high"}',
+    '  ],',
+    '  "other_suggestions": [',
+    '    {"type": "code", "title": "Short title", "description": "Specific actionable description", "rationale": "why this matters", "priority": "high"},',
+    '    {"type": "design", "title": "...", "description": "...", "rationale": "...", "priority": "medium"},',
+    '    {"type": "ui", "title": "...", "description": "...", "rationale": "...", "priority": "medium"},',
+    '    {"type": "workflow", "title": "...", "description": "...", "rationale": "...", "priority": "high"},',
+    '    {"type": "optimization", "title": "...", "description": "...", "rationale": "...", "priority": "low"}',
+    '  ]',
+    '}',
+  ].join('\n');
 
   const c = new AbortController();
-  const t = setTimeout(() => c.abort(), 45_000);
+  const t = setTimeout(() => c.abort(), 60_000);
   try {
     const r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${OPENAI_KEY}` },
       body: JSON.stringify({
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: lines.join('\n') }],
-        max_tokens: 1200, temperature: 0.75,
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 2000, temperature: 0.7,
         response_format: { type: 'json_object' },
       }),
       signal: c.signal,
@@ -177,63 +228,129 @@ async function decide(
   } catch (e) { clearTimeout(t); console.error('[gpt]', e); return null; }
 }
 
-// ── Module 6: Apply approved changes to DB ────────────────────────────────────
-async function applyChanges(changes: CopyChange[], reportId: string | null): Promise<CopyChange[]> {
-  const applied: CopyChange[] = [];
-  for (const ch of changes) {
-    if (!ALLOWED_KEYS.has(ch.key) || !ch.value?.trim()) {
-      console.warn(`[growth] blocked key: ${ch.key}`);
+// ── Module 6: Save suggestions to DB (NO auto-apply) ────────────────────────
+async function saveSuggestions(decision: Decision, reportId: string | null): Promise<number> {
+  const rows: object[] = [];
+
+  for (const s of decision.copy_suggestions ?? []) {
+    if (!ALLOWED_KEYS.has(s.key) || !s.value?.trim()) {
+      console.warn(`[growth] blocked copy key: ${s.key}`);
       continue;
     }
-    const { data: cur } = await sb.from('site_copy').select('value').eq('key', ch.key).maybeSingle();
-    const { error } = await sb.from('site_copy').upsert({
-      key: ch.key, value: ch.value,
-      previous_value: cur?.value ?? null,
-      updated_at: new Date().toISOString(),
-      updated_by: 'ai-growth-loop',
-      rationale: ch.rationale,
+    rows.push({
+      report_id:   reportId,
+      type:        'copy',
+      title:       `Update ${s.key}`,
+      description: s.value,
+      rationale:   s.rationale,
+      priority:    s.priority ?? 'medium',
+      status:      'pending',
+      copy_key:    s.key,
+      copy_value:  s.value,
     });
-    if (error) { console.error(`[growth] write ${ch.key}:`, error.message); continue; }
-    await sb.from('growth_actions').insert({
-      copy_key: ch.key, old_value: cur?.value ?? null,
-      new_value: ch.value, rationale: ch.rationale, report_id: reportId,
-    });
-    applied.push(ch);
-    console.log(`  OK ${ch.key} -> ${ch.value.slice(0, 65)}`);
   }
-  return applied;
+
+  for (const s of decision.other_suggestions ?? []) {
+    rows.push({
+      report_id:   reportId,
+      type:        s.type,
+      title:       s.title,
+      description: s.description,
+      rationale:   s.rationale,
+      priority:    s.priority ?? 'medium',
+      status:      'pending',
+      copy_key:    null,
+      copy_value:  null,
+    });
+  }
+
+  if (!rows.length) { console.log('[growth] no suggestions to save'); return 0; }
+  const { error } = await sb.from('growth_suggestions').insert(rows);
+  if (error) { console.error('[growth] saveSuggestions error:', error.message); return 0; }
+  console.log(`[growth] saved ${rows.length} suggestions (pending review)`);
+  return rows.length;
 }
 
-// ── Module 7: Friday digest email ─────────────────────────────────────────────
-async function sendDigest(
-  brief:   string,
-  applied: CopyChange[],
-  funnel:  Awaited<ReturnType<typeof runFunnel>>,
-  health:  Awaited<ReturnType<typeof runHealth>>,
+// ── Module 7: Daily email (every run) ─────────────────────────────────────────
+async function sendDailyEmail(
+  decision:      Decision,
+  suggestCount:  number,
+  funnel:        Awaited<ReturnType<typeof runFunnel>>,
+  health:        Awaited<ReturnType<typeof runHealth>>,
 ) {
-  if (!RESEND_KEY || new Date().getDay() !== 5) return; // Fridays only
-  const rows = applied.length
-    ? applied.map(c => `<li><b>${c.key}</b>: ${c.value.slice(0, 100)}<br><small>${c.rationale}</small></li>`).join('')
-    : '<li>No changes this week.</li>';
+  if (!RESEND_KEY) { console.warn('[growth] No RESEND_KEY — skipping email'); return; }
+
+  const priorityLabel = (p: string) =>
+    p === 'high' ? '🔴 HIGH' : p === 'medium' ? '🟡 MED' : '⚪ LOW';
+
+  const sectionHtml = (title: string, items: Array<{ title?: string; key?: string; value?: string; description: string; rationale: string; priority: string }>) => {
+    if (!items.length) return '';
+    return [
+      `<h3 style="margin:18px 0 8px;color:#1e293b;border-bottom:1px solid #e2e8f0;padding-bottom:4px">${title}</h3>`,
+      '<ul style="margin:0;padding:0 0 0 16px">',
+      ...items.map(i => [
+        `<li style="margin-bottom:10px">`,
+        `<span style="font-size:11px;font-weight:700;color:#64748b">${priorityLabel(i.priority)}</span> `,
+        `<b>${i.title ?? i.key}</b>`,
+        i.key ? `<br><code style="font-size:12px;background:#f1f5f9;padding:2px 4px">${i.key}: ${String(i.value ?? '').slice(0, 120)}</code>` : '',
+        `<br><span style="color:#475569">${i.description?.slice(0, 200) ?? ''}</span>`,
+        `<br><small style="color:#94a3b8">Rationale: ${i.rationale?.slice(0, 160) ?? ''}</small>`,
+        `</li>`,
+      ].join('')),
+      '</ul>',
+    ].join('');
+  };
+
+  const copyItems = (decision.copy_suggestions ?? []).map(s => ({
+    title: `Update ${s.key}`, key: s.key, value: s.value,
+    description: s.value.slice(0, 200), rationale: s.rationale, priority: s.priority,
+  }));
+  const codeItems    = (decision.other_suggestions ?? []).filter(s => s.type === 'code');
+  const designItems  = (decision.other_suggestions ?? []).filter(s => s.type === 'design' || s.type === 'ui');
+  const workflowItems= (decision.other_suggestions ?? []).filter(s => s.type === 'workflow');
+  const optItems     = (decision.other_suggestions ?? []).filter(s => s.type === 'optimization');
+
+  const adminUrl = `${SITE_URL}/admin?tab=suggestions`;
+  const dateStr  = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
   const html = [
-    '<h2>Merlin Weekly Growth Digest</h2>',
-    `<p>${brief}</p>`,
-    '<h3>Stats</h3><ul>',
-    `<li>Users: ${funnel.totalUsers}</li><li>Quotes: ${funnel.totalQuotes}</li>`,
-    `<li>Leads: ${funnel.qualifiedLeads}</li><li>Site health: ${health.score}/100</li>`,
-    `</ul><h3>Copy Changes</h3><ul>${rows}</ul>`,
-    `<p><a href="${SITE_URL}/admin">View admin dashboard</a></p>`,
+    '<div style="font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;color:#1e293b">',
+    `<div style="background:#0f172a;color:#fff;padding:24px 28px;border-radius:8px 8px 0 0">`,
+    `<h1 style="margin:0 0 4px;font-size:22px">🧠 Merlin Growth Suggestions</h1>`,
+    `<p style="margin:0;opacity:.7;font-size:14px">${dateStr}</p>`,
+    `</div>`,
+    `<div style="background:#f8fafc;padding:20px 28px;border:1px solid #e2e8f0">`,
+    `<p style="margin:0 0 8px;font-size:15px;color:#334155">${decision.brief}</p>`,
+    `<div style="display:flex;gap:12px;margin-top:12px">`,
+    `<span style="background:#eff6ff;color:#1d4ed8;padding:4px 10px;border-radius:20px;font-size:12px">👥 ${funnel.totalUsers} users</span>`,
+    `<span style="background:#eff6ff;color:#1d4ed8;padding:4px 10px;border-radius:20px;font-size:12px">📋 ${funnel.totalQuotes} quotes</span>`,
+    `<span style="background:${health.score >= 80 ? '#f0fdf4;color:#166534' : '#fef2f2;color:#991b1b'};padding:4px 10px;border-radius:20px;font-size:12px">🏥 Health: ${health.score}/100</span>`,
+    `<span style="background:#faf5ff;color:#6b21a8;padding:4px 10px;border-radius:20px;font-size:12px">💡 ${suggestCount} suggestions</span>`,
+    `</div></div>`,
+    `<div style="padding:20px 28px;border:1px solid #e2e8f0;border-top:none">`,
+    sectionHtml('✍️ Copy Changes', copyItems),
+    sectionHtml('💻 Code Improvements', codeItems),
+    sectionHtml('🎨 Design & UI', designItems),
+    sectionHtml('🔄 Workflow Changes', workflowItems),
+    sectionHtml('⚡ Optimizations', optItems),
+    `<div style="margin-top:24px;text-align:center">`,
+    `<a href="${adminUrl}" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px">`,
+    `Review &amp; Approve Suggestions →`,
+    `</a>`,
+    `<p style="margin:12px 0 0;font-size:12px;color:#94a3b8">None of these changes have been applied yet. You approve each one.</p>`,
+    `</div></div></div>`,
   ].join('');
+
   await safeFetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_KEY}` },
     body: JSON.stringify({
       from: 'Merlin Growth <growth@merlinenergy.net>',
       to: [ADMIN_EMAIL],
-      subject: `Merlin Weekly Growth - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+      subject: `🧠 ${suggestCount} Merlin Growth Suggestions — ${dateStr}`,
       html,
     }),
-  }, 15_000).then(r => console.log(r.ok ? '[growth] digest sent' : `[growth] digest failed: ${r.status}`));
+  }, 15_000).then(r => console.log(r.ok ? `[growth] email sent to ${ADMIN_EMAIL}` : `[growth] email failed: ${r.status}`));
 }
 
 // ── Main (exported so server/index.js can call it via cron) ───────────────────
@@ -247,8 +364,8 @@ export async function runGrowthLoop() {
   console.log(`Health: ${health.score}/100 | Users: ${funnel.totalUsers} | Headlines: ${headlines.length}`);
 
   const decision = await decide(health, funnel, headlines, copy);
-  let reportId: string | null = null;
-  let applied:  CopyChange[]  = [];
+  let reportId:    string | null = null;
+  let savedCount:  number        = 0;
 
   if (decision) {
     console.log(`\nBrief: ${decision.brief}`);
@@ -259,13 +376,13 @@ export async function runGrowthLoop() {
       market_headlines: headlines, growth_brief: decision.brief,
       raw: { health, funnel, decision },
     }).select('id').maybeSingle();
-    reportId = rr?.id ?? null;
-    applied  = await applyChanges(decision.changes, reportId);
-    await sendDigest(decision.brief, applied, funnel, health);
+    reportId   = rr?.id ?? null;
+    savedCount = await saveSuggestions(decision, reportId);
+    await sendDailyEmail(decision, savedCount, funnel, health);
   }
 
-  console.log(`\nGrowth loop complete - ${applied.length} changes applied\n`);
-  return { applied: applied.length, reportId, brief: decision?.brief ?? null };
+  console.log(`\nGrowth loop complete — ${savedCount} suggestions saved for review\n`);
+  return { savedCount, reportId, brief: decision?.brief ?? null };
 }
 
 // Allow direct execution: node agents/growth-loop.mjs
