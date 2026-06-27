@@ -27,7 +27,9 @@ export type OpportunitySignal =
   | "virtual_power_plant"
   | "c_and_i_solar"
   // Phase 5 — Contract award signal (active market indicator)
-  | "procurement_awarded";
+  | "procurement_awarded"
+  // Phase 5 — Power generation procurement (gas turbines, peakers, CHP, thermal)
+  | "power_generation";
 
 export type OpportunityStatus = "new" | "contacted" | "qualified" | "archived";
 
