@@ -86,7 +86,13 @@ export interface LeadMatchResult {
   notificationsSent: number;
   notificationErrors: number;
   byCategory: { bess: number; solar: number; generator: number; multi: number };
-  topLeads: Array<{ company: string; score: number; category: string; vendors: number }>;
+  topLeads: Array<{
+    id: string;
+    company: string;
+    score: number;
+    category: string;
+    vendors: number;
+  }>;
   errors: string[];
 }
 
@@ -599,11 +605,30 @@ export async function runLeadMatching(
     .sort((a, b) => b.score.overall - a.score.overall)
     .slice(0, 10)
     .map((l) => ({
+      id: l.id,
       company: l.company_name,
       score: l.score.overall,
       category: l.score.category,
       vendors: 0, // filled below
     }));
+
+  // Fill vendor counts from DB (pure read — runs in dry-run too so summary is accurate)
+  {
+    const topOppIds = result.topLeads.map((tl) => tl.id).filter(Boolean) as string[];
+    if (topOppIds.length > 0) {
+      const { data: vlCounts } = await supabase
+        .from("vendor_leads")
+        .select("opportunity_id")
+        .in("opportunity_id", topOppIds);
+      const countMap = new Map<string, number>();
+      for (const row of (vlCounts ?? []) as { opportunity_id: string }[]) {
+        countMap.set(row.opportunity_id, (countMap.get(row.opportunity_id) ?? 0) + 1);
+      }
+      for (const tl of result.topLeads) {
+        tl.vendors = countMap.get(tl.id) ?? 0;
+      }
+    }
+  }
 
   if (dryRun) {
     console.log("  [DRY RUN] Would write", scored.length, "leads");
@@ -687,15 +712,6 @@ export async function runLeadMatching(
     }
   }
 
-  // Update topLeads vendor count
-  for (const tl of result.topLeads) {
-    let count = 0;
-    for (const { leads } of vendorBatch.values()) {
-      if (leads.some((l) => l.company_name === tl.company)) count++;
-    }
-    tl.vendors = count;
-  }
-
   // ── 5. Send batched notifications ─────────────────────────────────────────
   for (const { vendor, leads } of vendorBatch.values()) {
     if (leads.length === 0) continue;
@@ -762,7 +778,14 @@ export async function runLeadMatching(
     }
 
     if (!notified) {
-      console.warn(`  ⚠️  No notification channel configured for vendor: ${vendor.company_name}`);
+      const contactEmail = vendor.notification_email ?? vendor.email;
+      if (!resendApiKey && contactEmail) {
+        console.warn(
+          `  ⚠️  Skipped email for ${vendor.company_name} (${contactEmail}) — RESEND_API_KEY not configured`
+        );
+      } else if (!contactEmail && !vendor.webhook_url) {
+        console.warn(`  ⚠️  No notification channel configured for vendor: ${vendor.company_name}`);
+      }
     }
   }
 
