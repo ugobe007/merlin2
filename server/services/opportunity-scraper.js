@@ -130,93 +130,171 @@ function cleanGoogleNewsTitle(title = '') {
   return stripHtml(title).replace(/\s+-\s+[^-]+$/u, '').trim();
 }
 
-function cleanCompanyName(rawName) {
-  if (!rawName || typeof rawName !== 'string') return null;
+// ── Stage 2: Ontologies ─────────────────────────────────────────────────────
+const COMPANY_SUFFIXES = new Set([
+  'Inc', 'LLC', 'Ltd', 'Corp', 'Corporation', 'Company', 'Co', 'Group',
+  'Industries', 'International', 'Solutions', 'Services', 'Technologies',
+  'Tech', 'Energy', 'Power', 'Utilities', 'Utility', 'Solar', 'Battery',
+  'Storage', 'Logistics', 'Automotive', 'Manufacturing', 'Partners',
+  'Holdings', 'Ventures', 'Capital', 'Associates', 'Enterprises',
+]);
 
-  const cleaned = rawName
-    .trim()
-    .replace(/\s+CEO$/i, '')
-    .replace(/^\W+|\W+$/g, '')
-    .replace(/\s+/g, ' ');
+const KNOWN_ENTITIES = new Set([
+  'CATL', 'BYD', 'Tesla', 'Fluence', 'Sungrow', 'Huawei', 'Samsung SDI',
+  'LG Energy', 'Origis Energy', 'Recurrent Energy', 'GridStor', 'Enel',
+  'NextEra', 'AES', 'Orsted', 'ENGIE', 'Iberdrola', 'Eskom',
+  'NYSERDA', 'Duke Energy', 'Xcel Energy', 'Dominion Energy', 'Entergy',
+  'National Grid', 'Avangrid', 'Exelon', 'Constellation', 'PECO',
+  'Google', 'Amazon', 'Microsoft', 'Meta', 'Apple', 'Walmart',
+  'Target', 'Home Depot', 'FedEx', 'UPS', 'Boeing', 'Ford', 'GM',
+]);
 
-  const knownShortNames = new Set(['PECO', 'AES', 'ABB', 'GE', 'GM', 'IBM', 'CPS', 'Xcel']);
-  if (cleaned.length < 5 && !knownShortNames.has(cleaned)) return null;
-  if (cleaned.includes(',')) return null;
-  if (/[<>{}[\]\\|@]/.test(cleaned)) return null;
-  if (/https?:\/\//i.test(cleaned)) return null;
-  if (/^\d/.test(cleaned) || /^\d+$/.test(cleaned)) return null;
-  if (!/[a-zA-Z]/.test(cleaned)) return null;
-  if (cleaned.split(/\s+/).length > 6) return null;
-  if (cleaned === cleaned.toUpperCase() && cleaned.length > 8) return null;
+const TRAILING_NOISE = /\s+(?:opens?|announces?|starts?|expands?|builds?|acquires?|launches?|plans?|seeks?|proposes?|vows?|brings?|inaugurates?|completes?|celebrates?|unveils?|selects?|awards?|breaks|signs?|closes?|reaches?|secures?|wins?|gets?|reveals?|receives?|to|in|for|by|at|of|the|a|an|and|or|is|are|has|have|was|were|will|set|said|plans?|said?)\s*$/i;
+// Keep TRAILING_VERBS as alias for isJunk checks
+const TRAILING_VERBS = TRAILING_NOISE;
 
-  const genericWords = new Set([
-    'new',
-    'data',
-    'green',
-    'first',
-    'how',
-    'building',
-    'opening',
-    'construction',
-    'expansion',
-    'announces',
-    'celebrates',
-    'acquires',
-    'starts',
-    'request',
-    'rfp',
-    'rfq',
-    'alert',
-  ]);
+const GENERIC_DESCRIPTOR_PATTERN = /^(?:global|major|leading|top|large|small|a\s+|the\s+|local|regional|national|international)\s+(?:energy|solar|power|battery|utility|grid|firm|company|companies|provider|developer|operator|owner|investor|player|giant)\b/i;
 
-  if (genericWords.has(cleaned.toLowerCase())) return null;
-  if (/^(how|why|what|when|where|who|top|best|inside|even|bill|senate|house|republicans|lawmakers|white house|data center|electricity costs|going green)\s+/i.test(cleaned)) return null;
-  if (/^new\s+/i.test(cleaned) && !/\b(Energy|Power|Solar|Battery|Storage|Systems|Technologies|Tech|Industries|Group|Corp|Company|Co)\b/i.test(cleaned)) return null;
-  if (/\s+(opens?|announces?|starts?|acquires?|expands?)$/i.test(cleaned)) return null;
-  if (/\b(seeks?|seeking|denies?|says?|files?|halts?|rewrites?|pledges?|responds?|aims?|forces?|push|probe|protects?|question|questions|selling|proposes?|vows?|issues?|expands?)\b/i.test(cleaned)) return null;
-  if (/\b(alert|advocate|boom|companies|process|project|policymakers|lawmakers)\b/i.test(cleaned)) return null;
+const SHORT_KNOWN = new Set(['PECO', 'AES', 'ABB', 'GE', 'GM', 'IBM', 'CPS', 'Xcel', 'BYD']);
 
-  return cleaned;
-}
+const JUNK_SINGLE_WORDS = new Set([
+  // Countries / territories
+  'china', 'india', 'usa', 'uk', 'germany', 'france', 'italy', 'spain',
+  'japan', 'korea', 'australia', 'canada', 'mexico', 'brazil', 'russia',
+  'oman', 'uae', 'saudiarabia', 'europe', 'africa', 'asia',
+  'philippines', 'indonesia', 'vietnam', 'thailand', 'malaysia', 'singapore',
+  'kuwait', 'qatar', 'bahrain', 'jordan', 'egypt', 'nigeria', 'ghana',
+  'pakistan', 'bangladesh', 'srilanka', 'nepal', 'turkey', 'israel',
+  'sweden', 'norway', 'denmark', 'finland', 'netherlands', 'belgium',
+  'switzerland', 'austria', 'poland', 'czechia', 'portugal', 'greece',
+  // US States
+  'ohio', 'texas', 'california', 'florida', 'nevada', 'arizona', 'georgia',
+  'virginia', 'carolina', 'michigan', 'illinois', 'indiana', 'kentucky',
+  // Generic nouns / sentence starters
+  'commentary', 'construction', 'groundbreaking', 'expansion', 'opening',
+  'analysis', 'report', 'update', 'alert', 'study', 'research', 'news',
+]);
 
-function hasBuyerLikeName(companyName) {
-  return /\b(Inc|LLC|Ltd|Corp|Corporation|Company|Co|Group|Industries|International|Solutions|Services|Technologies|Tech|Energy|Power|Utilities|Utility|Solar|Battery|Storage|Logistics|Automotive|Manufacturing|Microsoft|Amazon|Google|Meta|PECO|NYSERDA|Eskom|Xcel|Duke|CIE|Leeward)\b/i.test(companyName);
-}
-
-function extractCompanyName(title, description) {
+// ── Stage 3: Logic Engine (raw candidate extraction) ────────────────────────
+function extractRawCandidate(title, description) {
   const cleanedTitle = cleanGoogleNewsTitle(title);
   const patterns = [
-    /^([^:]+?)\s+(opens?|announces?|starts?|expands?|celebrates?|builds?|building|acquires?|launches?|plans?|seeks?|seeking|reopens?|proposes?|vows?|issues?)\s/i,
-    /^([^:]+?)\s+to\s+(open|build|expand|acquire|start|launch|invest|develop|meet|sign)\s/i,
-    /^([^:]+?)\s+(is|are)\s+(opening|building|expanding|acquiring|developing)\s/i,
-    /^([^:]+?)['’]s\s+(new|latest|planned)\s/i,
-    /^([^:]+?)['’]s\s+/i,
-    /^([^:—–-]+?)\s*[:—–-]\s/u,
+    /^([^:]+?)\s+(?:opens?|announces?|starts?|expands?|celebrates?|builds?|building|acquires?|launches?|plans?|seeks?|seeking|reopens?|proposes?|vows?|issues?|brings?|inaugurates?)\s/i,
+    /^([^:]+?)\s+to\s+(?:open|build|expand|acquire|start|launch|invest|develop|meet|sign)\s/i,
+    /^([^:]+?)\s+(?:is|are)\s+(?:opening|building|expanding|acquiring|developing)\s/i,
+    /^([^:]+?)['\u2019]s\s+(?:new|latest|planned)\s/i,
+    /^([^:]+?)['\u2019]s\s+/i,
+    /^([^:\u2014\u2013-]+?)\s*[:\u2014\u2013-]\s/u,
   ];
 
   for (const text of [cleanedTitle, description]) {
+    if (!text) continue;
     for (const pattern of patterns) {
       const match = text.match(pattern);
-      const candidate = cleanCompanyName(match?.[1]);
-      if (candidate) return candidate;
+      if (!match) continue;
+      // Strip trailing verbs that slipped into the capture group
+      const stripped = match[1].replace(TRAILING_NOISE, '').trim();
+      return stripped || match[1].trim();
     }
   }
 
-  const fallback = cleanCompanyName(cleanedTitle.split(/\s+/).slice(0, 3).join(' '));
-  if (/\b(Inc|LLC|Ltd|Corp|Corporation|Company|Co|Group|Industries|International|Solutions|Services|Technologies|Tech|Energy|Logistics|Automotive|Microsoft|Amazon|Google|Meta|PECO|NYSERDA|Eskom|Xcel|Duke)\b/i.test(fallback || '')) {
-    return fallback;
+  // Fallback: first 1-3 words of title if they contain a known suffix or entity
+  const words = cleanedTitle.split(/\s+/);
+  // Require 2+ words for suffix match (prevents bare "Energy", "Solar", etc.)
+  for (let n = 3; n >= 2; n--) {
+    const candidate = words.slice(0, n).join(' ');
+    if (KNOWN_ENTITIES.has(candidate)) return candidate;
+    if ([...COMPANY_SUFFIXES].some((s) => candidate.endsWith(s))) return candidate;
   }
+  // Single-word only if it's a known proper entity (e.g. "Amazon", "Tesla")
+  if (words.length >= 1 && KNOWN_ENTITIES.has(words[0])) return words[0];
 
   return null;
 }
 
+// ── Stage 4: Junk Filter ────────────────────────────────────────────────────
+function isJunk(name) {
+  if (!name || typeof name !== 'string') return true;
+  const t = name.trim();
+  if (!t) return true;
+
+  if (t.length < 4 && !SHORT_KNOWN.has(t)) return true;
+  if (t.split(/\s+/).length > 7) return true;
+  if (/[<>{}[\]\\|@]/.test(t)) return true;
+  if (/https?:\/\//i.test(t)) return true;
+  if (/,/.test(t)) return true;
+  if (/^\d/.test(t)) return true;
+  if (!/[a-zA-Z]/.test(t)) return true;
+  if (t === t.toUpperCase() && t.length > 8 && !SHORT_KNOWN.has(t)) return true;
+  if (!/[A-Z]/.test(t)) return true;
+  if (GENERIC_DESCRIPTOR_PATTERN.test(t)) return true;
+  if (/^(?:we|they|he|she|it|our|their|his|her|its|i|you|your)\b/i.test(t)) return true;
+  if (/^(?:how|why|what|when|where|who|top|best|inside|even|bill|senate|house|republicans|lawmakers|white house|data center|going green)\s/i.test(t)) return true;
+  if (/\b(?:seeks?|seeking|requests?|denies?|says?|files?|halts?|rewrites?|pledges?|responds?|aims?|forces?|push|probe|protects?|proposes?|vows?|grew|grow|grown|selling)\b/i.test(t)) return true;
+  if (/\b(?:alert|advocate|boom|companies|process|project|policymakers|lawmakers)\b/i.test(t)) return true;
+  if (/\b(?:developer|developers|provider|providers|player|operator|operators)\b/i.test(t)) return true;
+  if (/\b(?:completes|office|grew up|up here)\b/i.test(t)) return true;
+  if (TRAILING_NOISE.test(t)) return true;
+  // Single word: only allow if known entity or SHORT_KNOWN
+  if (t.split(/\s+/).length === 1 && !SHORT_KNOWN.has(t)) {
+    if (JUNK_SINGLE_WORDS.has(t.toLowerCase())) return true;
+  }
+  // Modal verbs → headline fragment, not a company name
+  if (/\b(?:would|could|should|will|may|might|must|shall)\b/i.test(t)) return true;
+  // Headline-style verbs that signal the text is a sentence, not a company
+  if (/\b(?:sees|gaining|gaining from|surging|threatens|threaten|targets?|warns?|weighs?|mulls?|nears?|paves?|spurs?)\b/i.test(t)) return true;
+  // "and" joining two names → not a single company
+  if (/\s+and\s+/i.test(t)) return true;
+  // Starts with article/construction fragment words
+  if (/^(?:construction|groundbreaking|expansion|opening|massive|huge|enormous|record)\s/i.test(t)) return true;
+  if (/^new\s+/i.test(t) && !/\b(?:Energy|Power|Solar|Battery|Storage|Systems|Technologies|Tech|Industries|Group|Corp|Company|Co)\b/i.test(t)) return true;
+
+  // Structural: 4+ word name not ending in a recognized corporate suffix → sentence fragment
+  const words = t.split(/\s+/);
+  if (words.length >= 4) {
+    const lastWord = words[words.length - 1];
+    const CORP_SUFFIX_RE = /^(?:Inc|LLC|Ltd|Corp|Corporation|Company|Co|Group|Industries|International|Solutions|Services|Technologies|Tech|Energy|Power|Utilities|Utility|Solar|Battery|Storage|Logistics|Automotive|Manufacturing|Partners|Holdings|Ventures|Capital|Associates|Enterprises)\.?$/i;
+    if (!CORP_SUFFIX_RE.test(lastWord)) return true;
+  }
+
+  return false;
+}
+
+// ── Stage 5: Quality Engine ──────────────────────────────────────────────────
 function scoreCompanyName(name) {
-  let score = 50;
-  if (name.length >= 10 && name.length <= 50) score += 20;
-  if (name.split(/\s+/).length >= 2) score += 15;
-  if (/\b(Inc|LLC|Ltd|Corp|Corporation|Company|Co|Group|Industries|International|Solutions|Services|Technologies|Tech|Energy|Logistics)\b/i.test(name)) score += 15;
+  if (isJunk(name)) return 0;
+  let score = 40;
+
+  if (KNOWN_ENTITIES.has(name)) return 95;
+
+  if (name.length >= 8 && name.length <= 50) score += 15;
+
+  const wordCount = name.split(/\s+/).length;
+  if (wordCount >= 2) score += 15;
+  if (wordCount >= 3) score += 5;
+
+  if ([...COMPANY_SUFFIXES].some((s) => new RegExp(`\\b${s}\\b`, 'i').test(name))) score += 20;
   if (/[A-Z]/.test(name) && /[a-z]/.test(name)) score += 10;
+  if (/\b(?:Energy|Power|Solar|Battery|Storage|Grid|Renewables|Utilities)\b/i.test(name)) score += 5;
+
   return Math.max(0, Math.min(100, score));
+}
+
+// ── Thin compatibility wrappers ──────────────────────────────────────────────
+function cleanCompanyName(rawName) {
+  const candidate = (rawName || '').trim().replace(/\s+CEO$/i, '').replace(/^\W+|\W+$/g, '').replace(/\s+/g, ' ');
+  return isJunk(candidate) ? null : candidate;
+}
+
+function hasBuyerLikeName(companyName) {
+  if (!companyName) return false;
+  if (KNOWN_ENTITIES.has(companyName)) return true;
+  return [...COMPANY_SUFFIXES].some((s) => new RegExp(`\\b${s}\\b`, 'i').test(companyName));
+}
+
+function extractCompanyName(title, description) {
+  const raw = extractRawCandidate(title, description);
+  return cleanCompanyName(raw);
 }
 
 function detectSignals(text) {
