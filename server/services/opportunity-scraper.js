@@ -147,15 +147,19 @@ const KNOWN_ENTITIES = new Set([
   'National Grid', 'Avangrid', 'Exelon', 'Constellation', 'PECO',
   'Google', 'Amazon', 'Microsoft', 'Meta', 'Apple', 'Walmart',
   'Target', 'Home Depot', 'FedEx', 'UPS', 'Boeing', 'Ford', 'GM',
+  // Single-word energy/storage companies that pass the junk filter only via KNOWN_ENTITIES
+  'Novva', 'Pivot', 'Crusoe', 'Lancium', 'Nautilus', 'Leviathan',
+  'Enchanted', 'Powin', 'Eos', 'Stem', 'Convergent', 'Amp', 'Ameresco',
+  'Greenbacker', 'Altus', 'Clearway', 'Invenergy', 'RWE', 'Ormat',
 ]);
 
-const TRAILING_NOISE = /\s+(?:opens?|announces?|starts?|expands?|builds?|acquires?|launches?|plans?|seeks?|proposes?|vows?|brings?|inaugurates?|completes?|celebrates?|unveils?|selects?|awards?|breaks|signs?|closes?|reaches?|secures?|wins?|gets?|reveals?|receives?|prepares?|preparing|doubles?|doubling|goes|going|eyes?|eyeing|races?|racing|cuts?|drops?|rises?|falls?|surges?|pushes?|mulls?|targets?|weighs?|faces?|fights?|shifts?|moves?|turns?|joins?|enters?|exits?|names?|hires?|fires?|picks?|bids?|taps?|to|in|for|by|at|of|the|a|an|and|or|is|are|has|have|was|were|will|set|said|plans?|said?)\s*$/i;
+const TRAILING_NOISE = /\s+(?:open(?:ing)?s?|announc(?:ing|es?)|start(?:ing)?s?|expand(?:ing)?s?|builds?|building|acquires?|acquir(?:ing)?|launches?|launch(?:ing)?|plans?|seeks?|seeking|proposes?|vows?|brings?|inaugurates?|complet(?:ing|es?)|celebrat(?:ing|es?)|unveils?|selects?|awards?|breaks|signs?|closes?|reaches?|secures?|wins?|gets?|reveals?|receives?|prepares?|preparing|doubles?|doubling|goes|going|eyes?|eyeing|races?|racing|cuts?|drops?|rises?|falls?|surges?|pushes?|mulls?|targets?|weighs?|faces?|fights?|shifts?|moves?|turns?|joins?|enters?|exits?|names?|hires?|fires?|picks?|bids?|taps?|opening|initiative|program|activity|factory|project|to|in|for|by|at|of|the|a|an|and|or|is|are|has|have|was|were|will|set|said|plans?|said?)\s*$/i;
 // Keep TRAILING_VERBS as alias for isJunk checks
 const TRAILING_VERBS = TRAILING_NOISE;
 
 const GENERIC_DESCRIPTOR_PATTERN = /^(?:global|major|leading|top|large|small|a\s+|the\s+|local|regional|national|international)\s+(?:energy|solar|power|battery|utility|grid|firm|company|companies|provider|developer|operator|owner|investor|player|giant)\b/i;
 
-const SHORT_KNOWN = new Set(['PECO', 'AES', 'ABB', 'GE', 'GM', 'IBM', 'CPS', 'Xcel', 'BYD']);
+const SHORT_KNOWN = new Set(['PECO', 'AES', 'ABB', 'GE', 'GM', 'IBM', 'CPS', 'Xcel', 'BYD', 'Eos', 'Stem', 'Amp', 'RWE']);
 
 const JUNK_SINGLE_WORDS = new Set([
   // Countries / territories
@@ -167,12 +171,28 @@ const JUNK_SINGLE_WORDS = new Set([
   'pakistan', 'bangladesh', 'srilanka', 'nepal', 'turkey', 'israel',
   'sweden', 'norway', 'denmark', 'finland', 'netherlands', 'belgium',
   'switzerland', 'austria', 'poland', 'czechia', 'portugal', 'greece',
-  // US States
-  'ohio', 'texas', 'california', 'florida', 'nevada', 'arizona', 'georgia',
-  'virginia', 'carolina', 'michigan', 'illinois', 'indiana', 'kentucky',
+  'ireland', 'scotland', 'wales', 'england', 'newzealand', 'southafrica',
+  'argentina', 'chile', 'colombia', 'peru', 'venezuela', 'ecuador',
+  // Caribbean / Central America
+  'jamaica', 'trinidad', 'barbados', 'haiti', 'cuba', 'bahamas',
+  'panama', 'costarica', 'honduras', 'guatemala', 'nicaragua', 'elsalvador',
+  // All 50 US States
+  'alabama', 'alaska', 'arizona', 'arkansas', 'california', 'colorado',
+  'connecticut', 'delaware', 'florida', 'georgia', 'hawaii', 'idaho',
+  'illinois', 'indiana', 'iowa', 'kansas', 'kentucky', 'louisiana',
+  'maine', 'maryland', 'massachusetts', 'michigan', 'minnesota',
+  'mississippi', 'missouri', 'montana', 'nebraska', 'nevada',
+  'ohio', 'oklahoma', 'oregon', 'pennsylvania', 'tennessee', 'texas',
+  'utah', 'vermont', 'virginia', 'carolina', 'washington', 'wisconsin',
+  'wyoming', 'dakota', 'hampshire', 'jersey', 'mexico', 'york',
+  // Canadian provinces
+  'ontario', 'alberta', 'quebec', 'manitoba', 'saskatchewan',
+  'brunswick', 'newfoundland', 'labrador', 'novascotia',
   // Generic nouns / sentence starters
   'commentary', 'construction', 'groundbreaking', 'expansion', 'opening',
   'analysis', 'report', 'update', 'alert', 'study', 'research', 'news',
+  'factory', 'factories', 'facility', 'facilities', 'activity', 'activities',
+  'initiative', 'program', 'project', 'sector', 'market', 'industry',
 ]);
 
 // ── Stage 3: Logic Engine (raw candidate extraction) ────────────────────────
@@ -213,7 +233,7 @@ function extractRawCandidate(title, description) {
 }
 
 // ── Stage 4: Junk Filter ────────────────────────────────────────────────────
-function isJunk(name) {
+export function isJunk(name) {
   if (!name || typeof name !== 'string') return true;
   const t = name.trim();
   if (!t) return true;
@@ -252,7 +272,43 @@ function isJunk(name) {
   if (/^(?:construction|groundbreaking|expansion|opening|massive|huge|enormous|record)\s/i.test(t)) return true;
   if (/^new\s+/i.test(t) && !/\b(?:Energy|Power|Solar|Battery|Storage|Systems|Technologies|Tech|Industries|Group|Corp|Company|Co)\b/i.test(t)) return true;
 
-  // Structural: 4+ word name not ending in a recognized corporate suffix → sentence fragment
+  // ── Extended junk rules ────────────────────────────────────────────────────
+  // Energy/power measurements embedded in name → descriptor, not company
+  if (/\b\d+(?:\.\d+)?[-\s]?(?:GW|MW|kW|KW|MWh|kWh|GWh|TWh)\b/i.test(t)) return true;
+
+  // "Big Tech", "Big Oil", "Big Auto" — industry shorthands, not companies
+  if (/^big\s+(?:tech|oil|banks?|auto|pharma|energy|solar|retail|box)\b/i.test(t)) return true;
+
+  // U.S./US/UK/EU + generic industry activity
+  if (/^(?:U\.?S\.?|UK|U\.?K\.?|EU|American|Federal|National)\s+(?:factory|factories|manufacturing|energy|storage|solar|power|grid|market|activity|output|production|industry|sector|logistics)\b/i.test(t)) return true;
+
+  // Scale / basis descriptors: "large-scale", "utility-scale", "school-based"
+  if (/^(?:large|small|medium|utility|grid|commercial|industrial|community|school|hospital|facility|residential)[-\s](?:scale|based|wide|grade|level)\b/i.test(t)) return true;
+
+  // Starts with a full US state name (state + space = geographic descriptor, not company)
+  // Exception: allow state + corporate suffix (e.g. "Georgia Power", "Nevada Energy Corp")
+  if (/^(?:Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New\s+Hampshire|New\s+Jersey|New\s+Mexico|New\s+York|North\s+(?:Carolina|Dakota)|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode\s+Island|South\s+(?:Carolina|Dakota)|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West\s+Virginia|Wisconsin|Wyoming)(?:'s?|\u2019s?)?\s+/i.test(t)) {
+    // Allow if the name ends in a real corporate suffix — e.g. "Georgia Power", "Nevada Energy Corp"
+    const stateWords = t.split(/\s+/);
+    const lastW = stateWords[stateWords.length - 1];
+    const isCorp = /^(?:Power|Energy|Electric|Gas|Utilities|Utility|Corp|Corporation|Inc|LLC|Ltd|Group|Industries|International|Solutions|Services|Technologies|Partners|Holdings|Enterprises)\.?$/i.test(lastW);
+    if (!isCorp) return true;
+  }
+
+  // Directional prefix + location + generic noun
+  if (/^(?:East|West|North|South|Central|Greater|Upper|Lower|Inner|Outer)\s+[A-Z][a-z]+\s+(?:factory|facility|campus|plant|center|area|region|county|district|zone|project|development|initiative|program|logistics)\b/i.test(t)) return true;
+
+  // Ends with occupation/activity nouns that signal a description, not a name
+  if (/\b(?:makers?|activity|activities|output|workforce|initiative|initiatives|policymakers?|stakeholders?)\s*$/i.test(t)) return true;
+
+  // Starts with "Factory", "Facility", "Manufacturing" — generic noun leads
+  if (/^(?:factory|factories|facility|facilities|manufacturing|warehouse|campus|plant)\b/i.test(t)) return true;
+
+  // Possessive state/province + generic descriptor: "Ohio's data center", "Ontario's energy"
+  if (/^[A-Z][a-z]+(?:'s|'s)\s+(?:data\s*center|factory|energy|storage|campus|facility|plant|project|utility|grid|market|battery|solar|power|construction|expansion|manufacturing|hospital|school|university|logistics|initiative|program)\b/i.test(t)) return true;
+
+  // "X's 1.5-GW something" or location possessive + number/measurement
+  if (/^[A-Z][a-z]+(?:'s|'s)\s+\d/i.test(t)) return true;
   const words = t.split(/\s+/);
   if (words.length >= 4) {
     const lastWord = words[words.length - 1];
@@ -284,8 +340,31 @@ function scoreCompanyName(name) {
 }
 
 // ── Thin compatibility wrappers ──────────────────────────────────────────────
+
+// Strip possessive location prefix so "Ohio's FST Logistics" → "FST Logistics".
+// Only strips when the first word is a known US state, province, or country.
+const LOCATION_PREFIX_WORDS = new Set([
+  'alabama','alaska','arizona','arkansas','california','colorado','connecticut',
+  'delaware','florida','georgia','hawaii','idaho','illinois','indiana','iowa',
+  'kansas','kentucky','louisiana','maine','maryland','massachusetts','michigan',
+  'minnesota','mississippi','missouri','montana','nebraska','nevada','ohio',
+  'oklahoma','oregon','pennsylvania','tennessee','texas','utah','vermont',
+  'virginia','washington','wisconsin','wyoming','carolina','dakota','jersey',
+  'ontario','alberta','quebec','manitoba','saskatchewan','canada','ireland',
+  'scotland','england','wales','jamaica','china','india','australia','germany',
+]);
+
+function stripLocationPossessivePrefix(name) {
+  if (!name) return name;
+  const m = name.match(/^([A-Z][a-zA-Z]+)(?:'s?|\u2019s?)\s+(.+)/u);
+  if (!m) return name;
+  if (LOCATION_PREFIX_WORDS.has(m[1].toLowerCase())) return m[2].trim();
+  return name;
+}
+
 function cleanCompanyName(rawName) {
-  const candidate = (rawName || '').trim().replace(/\s+CEO$/i, '').replace(/^\W+|\W+$/g, '').replace(/\s+/g, ' ');
+  let candidate = (rawName || '').trim().replace(/\s+CEO$/i, '').replace(/^\W+|\W+$/g, '').replace(/\s+/g, ' ');
+  candidate = stripLocationPossessivePrefix(candidate);
   return isJunk(candidate) ? null : candidate;
 }
 
@@ -295,7 +374,7 @@ function hasBuyerLikeName(companyName) {
   return [...COMPANY_SUFFIXES].some((s) => new RegExp(`\\b${s}\\b`, 'i').test(companyName));
 }
 
-function extractCompanyName(title, description) {
+export function extractCompanyName(title, description) {
   const raw = extractRawCandidate(title, description);
   return cleanCompanyName(raw);
 }
