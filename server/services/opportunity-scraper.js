@@ -284,6 +284,25 @@ const DESC_ONTOLOGY = [
 
 const ORG_SUFFIX = /\b(?:Inc\.?|LLC|Ltd\.?|Corp(?:oration)?\.?|Company|Co\.?|Group|Industries|International|Solutions|Services|Technologies|Tech|Energy|Power|Electric|Gas|Utilities?|Utility|Solar|Battery|Storage|Logistics|Automotive|Manufacturing|Partners|Holdings|Ventures|Capital|Associates|Enterprises|Systems|Networks|Innovation|Resources|Properties|Renewables?|Financial|Authority|Institute|Foundation|Works?|Dynamics|Infrastructure|Mobility)\b/i;
 
+// Per-word form of ORG_SUFFIX — used to find the rightmost suffix token in a phrase
+const _ORG_WORD_RE = /^(?:Inc\.?|LLC|Ltd\.?|Corp(?:oration)?\.?|Company|Co\.?|Group|Industries|International|Solutions|Services|Technologies|Tech|Energy|Power|Electric|Gas|Utilities?|Utility|Solar|Battery|Storage|Logistics|Automotive|Manufacturing|Partners|Holdings|Ventures|Capital|Associates|Enterprises|Systems|Networks|Innovation|Resources|Properties|Renewables?|Financial|Authority|Institute|Foundation|Works?|Dynamics|Infrastructure|Mobility)\.?$/i;
+
+/**
+ * Trim trailing words that follow the rightmost ORG_SUFFIX token.
+ * "Powerbank Corporation Achieves" → "Powerbank Corporation"
+ * "Radius Logistics opening"       → "Radius Logistics"
+ * "REC Solar CEO announces"         → "REC Solar"
+ */
+function _trimToOrgSuffix(text) {
+  const words = text.split(/\s+/);
+  for (let i = words.length - 1; i >= 0; i--) {
+    if (_ORG_WORD_RE.test(words[i])) {
+      return words.slice(0, i + 1).join(' ');
+    }
+  }
+  return text; // no suffix found, return as-is
+}
+
 // Short uppercase org tokens (would fail length check without special casing)
 const SHORT_KNOWN = new Set(['PECO', 'AES', 'ABB', 'GE', 'GM', 'IBM', 'CPS', 'Xcel', 'BYD', 'Eos', 'Stem', 'Amp', 'RWE']);
 
@@ -370,9 +389,11 @@ function classifyAsOrg(phrase) {
     if (_isHardDescriptor(t)) return null;
   }
 
-  // 4. ORG_SUFFIX match — accept as named org
+  // 4. ORG_SUFFIX match — accept as named org, trimmed to the suffix word
+  //    "Powerbank Corporation Achieves" → "Powerbank Corporation"
+  //    "Radius Logistics opening"       → "Radius Logistics"
   //    Protects "Georgia Power", "FST Logistics", "National Battery Corp"
-  if (ORG_SUFFIX.test(t)) return t;
+  if (ORG_SUFFIX.test(t)) return _trimToOrgSuffix(t);
 
   // 5. Geographic entity → reject
   if (_isGeoEntity(t)) return null;
@@ -598,6 +619,25 @@ export function extractCompanyName(title, description) {
 export function isJunk(name) {
   if (!name || typeof name !== 'string') return true;
   return classifyAsOrg(name.trim()) === null;
+}
+
+/**
+ * Normalize a stored company name to its canonical form.
+ * Strips geographic possessives ("Ohio's X" → "X") and trims trailing verbs
+ * after an org suffix ("Powerbank Corporation Achieves" → "Powerbank Corporation").
+ * Returns the cleaned name string, or null if the name is junk.
+ * Used by the cleanup script to repair existing DB values.
+ */
+export function normalizeCompanyName(name) {
+  if (!name || typeof name !== 'string') return null;
+  let t = name.trim().replace(/[,;.]+$/, '').replace(/\s+/g, ' ').trim();
+  // Strip geo possessive prefix ("Ohio's FST Logistics" → "FST Logistics")
+  const stripped = _stripGeoPossessive(t);
+  if (stripped !== t) t = stripped;
+  // Trim to org suffix if present ("Radius Logistics opening" → "Radius Logistics")
+  if (ORG_SUFFIX.test(t)) t = _trimToOrgSuffix(t);
+  // Validate through the full NER classifier
+  return classifyAsOrg(t);
 }
 
 function detectSignals(text) {
