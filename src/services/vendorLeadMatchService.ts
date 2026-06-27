@@ -205,9 +205,10 @@ export function scoreOpportunity(
   // directly from description text so stale signals can't create false negatives
   // OR false positives.
 
-  const textHasBESS = /battery.storage|energy.storage|\bbess\b|megapack|powerwall|peak.shav/i.test(
-    descLower
-  );
+  const textHasBESS =
+    /battery.storage|energy.storage|\bbess\b|megapack|powerwall|peak.shav|\bstorage\b.{0,30}\b(?:rfp|rfq|project)\b/i.test(
+      descLower
+    );
 
   const textHasBESSProcurement =
     textHasBESS &&
@@ -249,6 +250,36 @@ export function scoreOpportunity(
       signals.includes("funding"))
   ) {
     effectiveSignals.add("bess_procurement" as OpportunitySignal);
+  }
+
+  // ── Signal-based promotion ────────────────────────────────────────────────
+  // The scraper sets signals from article keyword detection — those signals ARE
+  // the evidence. Promote to procurement context even when the RSS description
+  // is too short to contain exact "battery storage" / "solar" text.
+  // Guard: skip completion articles (already-deployed = market intel, not lead).
+  if (!textIsCompletion) {
+    // RFQ + any energy signal = active energy-sector procurement
+    if (
+      signals.includes("rfq") &&
+      (signals.includes("energy_project") ||
+        signals.includes("sustainability_initiative") ||
+        signals.includes("high_utility_exposure"))
+    ) {
+      effectiveSignals.add("bess_procurement" as OpportunitySignal);
+    }
+    // High utility exposure + energy project = facility buyer seeking cost relief
+    if (signals.includes("high_utility_exposure") && signals.includes("energy_project")) {
+      effectiveSignals.add("bess_procurement" as OpportunitySignal);
+    }
+    // Description mentions "solar" + has any energy signal = solar project lead
+    if (
+      /\bsolar\b/i.test(descLower) &&
+      (signals.includes("energy_project") ||
+        signals.includes("rfq") ||
+        signals.includes("sustainability_initiative"))
+    ) {
+      effectiveSignals.add("solar_procurement" as OpportunitySignal);
+    }
   }
   const sigs = Array.from(effectiveSignals) as OpportunitySignal[];
 
@@ -418,6 +449,8 @@ async function sendLeadEmail(
 </html>`;
 
   try {
+    const fromAddress =
+      process.env.RESEND_FROM_EMAIL ?? "Merlin Energy Leads <leads@merlinenergy.net>";
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -425,14 +458,19 @@ async function sendLeadEmail(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Merlin Energy Leads <leads@merlinenergy.net>",
+        from: fromAddress,
         to: [recipientEmail],
         subject: `⚡ ${leads.length} New ${vendor.specialty.toUpperCase()} Lead${leads.length === 1 ? "" : "s"} — Merlin Energy`,
         html,
       }),
     });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      console.warn(`  ⚠ Resend error (${res.status}) to ${recipientEmail}:`, JSON.stringify(body));
+    }
     return res.ok;
-  } catch {
+  } catch (err) {
+    console.warn(`  ⚠ Resend network error to ${recipientEmail}:`, (err as Error).message);
     return false;
   }
 }

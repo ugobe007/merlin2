@@ -55,6 +55,7 @@ import { getLastSelectedPanelSync } from "@/services/solarPanelSelectionService"
 import { getCriticalLoadWithSource } from "@/services/benchmarkSources";
 import { calculateUseCasePower } from "@/services/useCasePowerCalculations";
 import { DC_LOAD_V1_SSOT } from "@/wizard/v7/calculators/registry";
+import type { CalcInputs } from "@/wizard/v7/calculators/contract";
 import type { FacilityCalcDetails } from "./wizardState";
 import { buildTiers } from "./step4Logic";
 import type { LocationData } from "./wizardState";
@@ -990,7 +991,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     // Data center: use dc_load_v1 contract (PUE band, evaporative cooling, WUE).
     if (slug === "data_center") {
       try {
-        const dcResult = DC_LOAD_V1_SSOT.compute(answers as Record<string, unknown>);
+        const dcResult = DC_LOAD_V1_SSOT.compute(answers as CalcInputs);
         const dcDetails = dcResult.validation?.details?.data_center as
           | Record<string, unknown>
           | undefined;
@@ -1010,11 +1011,11 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
           };
         }
 
-        if (dcResult.peakLoadKW > 0) {
+        if ((dcResult.peakLoadKW ?? 0) > 0) {
           dispatch({
             type: "SET_BASE_LOAD",
-            baseLoadKW: dcResult.baseLoadKW,
-            peakLoadKW: dcResult.peakLoadKW,
+            baseLoadKW: dcResult.baseLoadKW ?? 0,
+            peakLoadKW: dcResult.peakLoadKW ?? 0,
             facilityCalcDetails,
           });
         }
