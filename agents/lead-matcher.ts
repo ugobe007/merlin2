@@ -41,7 +41,8 @@ if (!isServiceRole) {
 }
 
 if (!RESEND_API_KEY) {
-  console.warn('⚠️  RESEND_API_KEY not set — lead emails will be skipped. Webhook notifications still active.');
+  console.warn('⚠️  RESEND_API_KEY not set — lead emails will be skipped.');
+  console.warn('   To enable: add RESEND_API_KEY=re_xxxx to .env (get key at https://resend.com)');
 }
 
 // ─── CLI flags ─────────────────────────────────────────────────────────────────
