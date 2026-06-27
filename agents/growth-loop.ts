@@ -1,40 +1,50 @@
 #!/usr/bin/env node
 /**
- * MERLIN GROWTH LOOP AGENT
- * ─────────────────────────────────────────────────────────────────────────────
- * Runs on a schedule (or on-demand via POST /api/admin/run-growth-loop).
+ * MERLIN AUTONOMOUS GROWTH LOOP
+ * -----------------------------------------------------------------------------
+ * Runs daily at 3am PT via node-cron in server/index.js.
+ * Also triggerable via POST /api/admin/run-growth-loop.
  *
- * Four modules, all writing results to Supabase `growth_reports` table:
+ * Pipeline:
+ *  1. Site health     - tests critical routes, scores 0-100
+ *  2. Funnel metrics  - users / quotes / leads + friction signals
+ *  3. Market pulse    - energy RSS headlines (Greentech, Electrek, Politico)
+ *  4. GPT-4o decision - returns structured JSON of copy changes to make
+ *  5. Executor        - writes changes to site_copy table, logs to growth_actions
+ *  6. Digest          - sends weekly email summary every Friday
  *
- *  1. SITE HEALTH   — tests every critical user flow, flags broken pages/APIs
- *  2. FUNNEL AUDIT  — reads signup + quote metrics, scores conversion health
- *  3. MARKET PULSE  — scrapes energy-sector headlines, extracts pain points
- *                     that map to Merlin capabilities → growth angles
- *  4. GROWTH BRIEF  — feeds all of the above to GPT-4o, gets back:
- *                     • top 3 actionable fixes this week
- *                     • 3 market angles to test in copy/outreach
- *                     • one headline A/B test suggestion
- *
- * Output: JSON written to stdout + Supabase growth_reports row.
+ * React reads from site_copy via useSiteCopy() hook - zero deploys needed.
+ * Every change logs previous_value so rollback is a single DB update.
  */
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 
-const BASE_URL = process.env.MERLIN_BASE_URL ?? 'https://merlin2.fly.dev';
-const OPENAI_KEY = process.env.VITE_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
+const BASE_URL    = process.env.MERLIN_BASE_URL  ?? 'https://merlin2.fly.dev';
+const SITE_URL    = process.env.MERLIN_SITE_URL  ?? 'https://merlinenergy.net';
+const OPENAI_KEY  = process.env.VITE_OPENAI_API_KEY ?? process.env.OPENAI_API_KEY ?? '';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'robertchristopher@gmail.com';
+const RESEND_KEY  = process.env.RESEND_API_KEY ?? process.env.VITE_RESEND_API_KEY ?? '';
 
-const supabase = createClient(
+const sb = createClient(
   process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '',
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
   { auth: { persistSession: false } }
 );
 
+// Keys the AI is permitted to write. Anything outside this list is blocked.
+const ALLOWED_KEYS = new Set([
+  'hero_headline_prefix', 'hero_accent_lines', 'hero_subtext',
+  'hero_badge_text', 'hero_proof_items', 'hero_cta_primary',
+  'hero_cta_secondary', 'modal_headline', 'modal_subtext',
+  'modal_cta_text', 'nav_cta_text',
+]);
+
 // ── helpers ───────────────────────────────────────────────────────────────────
-async function get(url: string, timeoutMs = 12_000) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+async function safeFetch(url: string, opts?: RequestInit, ms = 12_000) {
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), ms);
   try {
-    const r = await fetch(url, { signal: ctrl.signal });
+    const r = await fetch(url, { signal: c.signal, ...opts });
     clearTimeout(t);
     return { ok: r.ok, status: r.status, body: await r.text().catch(() => '') };
   } catch (e: unknown) {
@@ -43,224 +53,222 @@ async function get(url: string, timeoutMs = 12_000) {
   }
 }
 
-async function post(url: string, body: unknown, timeoutMs = 20_000) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), timeoutMs);
-  try {
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: ctrl.signal,
-    });
-    clearTimeout(t);
-    return { ok: r.ok, status: r.status, body: await r.text().catch(() => '') };
-  } catch (e: unknown) {
-    clearTimeout(t);
-    return { ok: false, status: 0, body: String(e) };
-  }
-}
-
-// ── MODULE 1: Site Health ─────────────────────────────────────────────────────
-async function runSiteHealth() {
-  console.log('\n🏥 MODULE 1: Site Health');
+// ── Module 1: Site Health ─────────────────────────────────────────────────────
+async function runHealth() {
   const checks = [
-    { name: 'homepage',        url: BASE_URL },
-    { name: 'pricing page',    url: `${BASE_URL}/pricing` },
-    { name: 'quote tool',      url: `${BASE_URL}/quote` },
-    { name: 'vendor portal',   url: `${BASE_URL}/vendor-portal` },
-    { name: 'health API',      url: `${BASE_URL}/api/health` },
+    { name: 'homepage',          url: SITE_URL },
+    { name: 'pricing',           url: `${SITE_URL}/pricing` },
+    { name: 'quote tool',        url: `${SITE_URL}/wizard` },
+    { name: 'health API',        url: `${BASE_URL}/api/health` },
     { name: 'opportunities API', url: `${BASE_URL}/api/opportunities?limit=1` },
   ];
-
-  const results = await Promise.all(
-    checks.map(async (c) => {
-      const r = await get(c.url);
-      const status = r.ok ? '✅' : '❌';
-      console.log(`  ${status} ${c.name.padEnd(22)} HTTP ${r.status}`);
-      return { ...c, ...r };
-    })
-  );
-
-  const failed = results.filter((r) => !r.ok);
+  const results = await Promise.all(checks.map(async c => ({ ...c, ...(await safeFetch(c.url)) })));
+  const failed  = results.filter(r => !r.ok);
   return {
-    totalChecks: results.length,
-    passed: results.filter((r) => r.ok).length,
-    failed: failed.length,
-    failedRoutes: failed.map((r) => ({ name: r.name, url: r.url, status: r.status })),
-    score: Math.round((results.filter((r) => r.ok).length / results.length) * 100),
+    score: Math.round((results.filter(r => r.ok).length / results.length) * 100),
+    failedRoutes: failed.map(r => ({ name: r.name, status: r.status })),
   };
 }
 
-// ── MODULE 2: Funnel Audit ────────────────────────────────────────────────────
-async function runFunnelAudit() {
-  console.log('\n📊 MODULE 2: Funnel Audit');
-  const r = await get(`${BASE_URL}/api/admin/stats`);
-  let stats: Record<string, unknown> = {};
-  try { stats = JSON.parse(r.body)?.stats ?? {}; } catch (_e) { /* non-JSON response */ }
-
-  const totalUsers    = (stats.totalUsers as number) ?? 0;
-  const totalQuotes   = (stats.totalQuotes as number) ?? 0;
-  const qualifiedLeads = (stats.qualifiedLeads as number) ?? 0;
-
-  // Rough funnel conversion
-  const quoteRate   = totalUsers > 0 ? ((totalQuotes / totalUsers) * 100).toFixed(1) : '—';
-  const leadRate    = totalQuotes > 0 ? ((qualifiedLeads / totalQuotes) * 100).toFixed(1) : '—';
-
-  console.log(`  Users:            ${totalUsers}`);
-  console.log(`  Quotes generated: ${totalQuotes}  (${quoteRate}% of users)`);
-  console.log(`  Qualified leads:  ${qualifiedLeads}  (${leadRate}% of quotes)`);
-
-  // Friction signals
+// ── Module 2: Funnel ──────────────────────────────────────────────────────────
+async function runFunnel() {
+  const r = await safeFetch(`${BASE_URL}/api/admin/stats`);
+  let s: Record<string, number> = {};
+  try { s = JSON.parse(r.body)?.stats ?? {}; } catch (_e) { /* ignore */ }
+  const totalUsers     = s.totalUsers     ?? 0;
+  const totalQuotes    = s.totalQuotes    ?? 0;
+  const qualifiedLeads = s.qualifiedLeads ?? 0;
   const friction: string[] = [];
-  if (totalUsers === 0)      friction.push('CRITICAL: zero users in DB — signup flow may be broken');
-  if (totalUsers > 0 && totalQuotes === 0) friction.push('Users signing up but not generating quotes — onboarding drop-off');
-  if (Number(quoteRate) < 20) friction.push('Quote conversion below 20% — consider removing friction from quote flow');
-  if (Number(leadRate) < 10)  friction.push('Low quote→lead rate — scoring threshold may be too high or ICP mismatch');
-
-  return { totalUsers, totalQuotes, qualifiedLeads, quoteRate, leadRate, frictionSignals: friction };
+  if (totalUsers === 0)                                         friction.push('CRITICAL: zero users - signup broken');
+  if (totalUsers > 5 && totalQuotes / totalUsers < 0.2)        friction.push('Quote conversion below 20%');
+  if (totalQuotes > 5 && qualifiedLeads / totalQuotes < 0.1)   friction.push('Lead rate below 10%');
+  return { totalUsers, totalQuotes, qualifiedLeads, friction };
 }
 
-// ── MODULE 3: Market Pulse ────────────────────────────────────────────────────
-const MARKET_FEEDS = [
-  'https://www.greentechmedia.com/rss/all',
-  'https://electrek.co/feed',
-  'https://www.pv-tech.org/feed',
-  'https://rss.politico.com/energy.xml',
-];
-
-async function runMarketPulse() {
-  console.log('\n🌍 MODULE 3: Market Pulse');
+// ── Module 3: Market Headlines ────────────────────────────────────────────────
+async function runMarket() {
+  const feeds = [
+    'https://www.greentechmedia.com/rss/all',
+    'https://electrek.co/feed',
+    'https://rss.politico.com/energy.xml',
+  ];
   const headlines: string[] = [];
-
-  await Promise.all(
-    MARKET_FEEDS.map(async (feed) => {
-      const r = await get(feed, 8_000);
-      if (!r.ok) return;
-      // Pull <title> tags from RSS (no XML parser needed)
-      const matches = r.body.matchAll(/<title><!\[CDATA\[([^\]]+)\]\]>|<title>([^<]+)<\/title>/g);
-      let count = 0;
-      for (const m of matches) {
-        const title = (m[1] || m[2] || '').trim();
-        if (title && title.length > 20 && count++ < 5) headlines.push(title);
-      }
-    })
-  );
-
-  console.log(`  Headlines fetched: ${headlines.length}`);
-  headlines.slice(0, 8).forEach((h) => console.log(`  • ${h.slice(0, 90)}`));
-
-  return { headlineCount: headlines.length, headlines: headlines.slice(0, 20) };
+  await Promise.all(feeds.map(async feed => {
+    const r = await safeFetch(feed, {}, 8_000);
+    if (!r.ok) return;
+    for (const m of r.body.matchAll(/<title>(?:<!\[CDATA\[)?([^\]<]{20,120})(?:\]\]>)?<\/title>/g)) {
+      if (headlines.length < 15) headlines.push((m[1] ?? '').trim());
+    }
+  }));
+  return headlines;
 }
 
-// ── MODULE 4: Growth Brief (GPT-4o) ─────────────────────────────────────────
-async function runGrowthBrief(siteHealth: ReturnType<typeof runSiteHealth> extends Promise<infer T> ? T : never,
-                               funnel: ReturnType<typeof runFunnelAudit> extends Promise<infer T> ? T : never,
-                               market: ReturnType<typeof runMarketPulse> extends Promise<infer T> ? T : never) {
-  console.log('\n🤖 MODULE 4: Growth Brief (GPT-4o)');
+// ── Module 4: Read current site copy from DB ──────────────────────────────────
+async function readCopy(): Promise<Record<string, string>> {
+  const { data } = await sb.from('site_copy').select('key, value');
+  const m: Record<string, string> = {};
+  for (const row of data ?? []) m[row.key] = row.value;
+  return m;
+}
 
-  if (!OPENAI_KEY) {
-    console.log('  ⚠️  No OPENAI_API_KEY — skipping AI brief');
-    return { skipped: true, reason: 'No OpenAI key' };
-  }
+// ── Module 5: GPT-4o decision engine ─────────────────────────────────────────
+interface CopyChange { key: string; value: string; rationale: string; }
+interface Decision   { brief: string; insights: string[]; changes: CopyChange[]; }
 
-  const prompt = `You are a growth advisor for Merlin Energy — a B2B SaaS platform that helps industrial and commercial businesses (carwashes, warehouses, food manufacturers, fleet operators) size, price, and procure Battery Energy Storage Systems (BESS) and solar.
+async function decide(
+  health:    Awaited<ReturnType<typeof runHealth>>,
+  funnel:    Awaited<ReturnType<typeof runFunnel>>,
+  headlines: string[],
+  copy:      Record<string, string>,
+): Promise<Decision | null> {
+  if (!OPENAI_KEY) { console.warn('[growth] No OPENAI_KEY — skipping AI decisions'); return null; }
 
-Merlin's value prop: instant AI-powered BESS/solar quotes, vendor matching, and project workflow — replacing expensive consultants.
+  const allowedList = [...ALLOWED_KEYS].join(', ');
+  const lines = [
+    'You are the autonomous growth engine for Merlin Energy.',
+    'Merlin is a B2B SaaS: instant CFO-ready BESS/solar quotes in 60 seconds, free, replacing $500/hr consultants.',
+    'Target buyers: CFOs and Ops Directors at carwashes, warehouses, hotels, manufacturers feeling utility cost pain.',
+    '',
+    '## Live Data',
+    `Site health: ${health.score}/100` + (health.failedRoutes.length ? ' BROKEN: ' + health.failedRoutes.map((x: { name: string }) => x.name).join(', ') : ''),
+    `Users: ${funnel.totalUsers} | Quotes: ${funnel.totalQuotes} | Leads: ${funnel.qualifiedLeads}`,
+    `Friction: ${funnel.friction.join('; ') || 'none'}`,
+    '',
+    '## Energy headlines today',
+    ...headlines.slice(0, 8).map(h => `- ${h}`),
+    '',
+    '## Current live copy',
+    ...Object.entries(copy).map(([k, v]) => `${k}: ${v.slice(0, 100)}`),
+    '',
+    '## Instructions',
+    'Rewrite 2-5 copy keys to maximize signups. Rules:',
+    '- Tie copy to real market pain from the headlines above',
+    '- Every CTA must feel zero-risk (free, instant, no commitment)',
+    '- hero_accent_lines: JSON array of exactly 3 phrases (max 6 words) completing "Reduce Utility Risk ___"',
+    '- hero_proof_items: JSON array of exactly 3 short trust signals',
+    '- Only change keys where you have HIGH confidence it lifts conversions',
+    '',
+    `Allowed keys: ${allowedList}`,
+    '',
+    'Return ONLY valid JSON:',
+    '{ "brief": "2-3 sentences on what you changed and why",',
+    '  "insights": ["insight 1", "insight 2"],',
+    '  "changes": [{"key": "hero_headline_prefix", "value": "...", "rationale": "..."}] }',
+  ];
 
-Here is today's system snapshot:
-
-## Site Health (score: ${siteHealth.score}/100)
-${siteHealth.failed > 0 ? `BROKEN ROUTES:\n${siteHealth.failedRoutes.map((r) => `- ${r.name}: HTTP ${r.status}`).join('\n')}` : 'All routes healthy.'}
-
-## Signup Funnel
-- Total users: ${funnel.totalUsers}
-- Quotes generated: ${funnel.totalQuotes} (${funnel.quoteRate}% of users)
-- Qualified leads routed to vendors: ${funnel.qualifiedLeads}
-- Friction signals: ${funnel.frictionSignals.join('; ') || 'none'}
-
-## Market Headlines (past 24h)
-${market.headlines.slice(0, 10).map((h) => `- ${h}`).join('\n')}
-
-Give me a tight growth brief:
-
-1. TOP 3 FIXES THIS WEEK — specific, technical, ordered by user-acquisition impact
-2. 3 MARKET ANGLES — pain points from the headlines above that Merlin should be messaging right now (with example copy hook)
-3. ONE HEADLINE A/B TEST — current hero headline vs. a sharper alternative to test
-
-Be direct. No fluff. Max 400 words total.`;
-
-  const r = await post('https://api.openai.com/v1/chat/completions', {
-    model: 'gpt-4o',
-    messages: [{ role: 'user', content: prompt }],
-    max_tokens: 600,
-    temperature: 0.7,
-  }, 30_000);
-
-  if (!r.ok) {
-    console.log(`  ❌ OpenAI error: ${r.status}`);
-    return { skipped: true, reason: `OpenAI HTTP ${r.status}` };
-  }
-
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), 45_000);
   try {
-    const json = JSON.parse(r.body);
-    const brief = json.choices?.[0]?.message?.content ?? '';
-    console.log('\n' + brief);
-    return { brief };
-  } catch {
-    return { skipped: true, reason: 'Failed to parse OpenAI response' };
+    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${OPENAI_KEY}` },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: lines.join('\n') }],
+        max_tokens: 1200, temperature: 0.75,
+        response_format: { type: 'json_object' },
+      }),
+      signal: c.signal,
+    });
+    clearTimeout(t);
+    if (!r.ok) { console.error('[gpt] HTTP', r.status); return null; }
+    const j = await r.json() as { choices?: Array<{ message?: { content?: string } }> };
+    return JSON.parse(j.choices?.[0]?.message?.content ?? 'null') as Decision;
+  } catch (e) { clearTimeout(t); console.error('[gpt]', e); return null; }
+}
+
+// ── Module 6: Apply approved changes to DB ────────────────────────────────────
+async function applyChanges(changes: CopyChange[], reportId: string | null): Promise<CopyChange[]> {
+  const applied: CopyChange[] = [];
+  for (const ch of changes) {
+    if (!ALLOWED_KEYS.has(ch.key) || !ch.value?.trim()) {
+      console.warn(`[growth] blocked key: ${ch.key}`);
+      continue;
+    }
+    const { data: cur } = await sb.from('site_copy').select('value').eq('key', ch.key).maybeSingle();
+    const { error } = await sb.from('site_copy').upsert({
+      key: ch.key, value: ch.value,
+      previous_value: cur?.value ?? null,
+      updated_at: new Date().toISOString(),
+      updated_by: 'ai-growth-loop',
+      rationale: ch.rationale,
+    });
+    if (error) { console.error(`[growth] write ${ch.key}:`, error.message); continue; }
+    await sb.from('growth_actions').insert({
+      copy_key: ch.key, old_value: cur?.value ?? null,
+      new_value: ch.value, rationale: ch.rationale, report_id: reportId,
+    });
+    applied.push(ch);
+    console.log(`  OK ${ch.key} -> ${ch.value.slice(0, 65)}`);
   }
+  return applied;
 }
 
-// ── MAIN ─────────────────────────────────────────────────────────────────────
-async function main() {
+// ── Module 7: Friday digest email ─────────────────────────────────────────────
+async function sendDigest(
+  brief:   string,
+  applied: CopyChange[],
+  funnel:  Awaited<ReturnType<typeof runFunnel>>,
+  health:  Awaited<ReturnType<typeof runHealth>>,
+) {
+  if (!RESEND_KEY || new Date().getDay() !== 5) return; // Fridays only
+  const rows = applied.length
+    ? applied.map(c => `<li><b>${c.key}</b>: ${c.value.slice(0, 100)}<br><small>${c.rationale}</small></li>`).join('')
+    : '<li>No changes this week.</li>';
+  const html = [
+    '<h2>Merlin Weekly Growth Digest</h2>',
+    `<p>${brief}</p>`,
+    '<h3>Stats</h3><ul>',
+    `<li>Users: ${funnel.totalUsers}</li><li>Quotes: ${funnel.totalQuotes}</li>`,
+    `<li>Leads: ${funnel.qualifiedLeads}</li><li>Site health: ${health.score}/100</li>`,
+    `</ul><h3>Copy Changes</h3><ul>${rows}</ul>`,
+    `<p><a href="${SITE_URL}/admin">View admin dashboard</a></p>`,
+  ].join('');
+  await safeFetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_KEY}` },
+    body: JSON.stringify({
+      from: 'Merlin Growth <growth@merlinenergy.net>',
+      to: [ADMIN_EMAIL],
+      subject: `Merlin Weekly Growth - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+      html,
+    }),
+  }, 15_000).then(r => console.log(r.ok ? '[growth] digest sent' : `[growth] digest failed: ${r.status}`));
+}
+
+// ── Main (exported so server/index.js can call it via cron) ───────────────────
+export async function runGrowthLoop() {
   const startedAt = new Date().toISOString();
-  console.log('═'.repeat(60));
-  console.log('🚀 MERLIN GROWTH LOOP');
-  console.log(`   ${startedAt}`);
-  console.log('═'.repeat(60));
+  console.log('\n' + '='.repeat(56) + '\n MERLIN GROWTH LOOP  ' + startedAt + '\n' + '='.repeat(56));
 
-  const [siteHealth, funnel, market] = await Promise.all([
-    runSiteHealth(),
-    runFunnelAudit(),
-    runMarketPulse(),
+  const [health, funnel, headlines, copy] = await Promise.all([
+    runHealth(), runFunnel(), runMarket(), readCopy(),
   ]);
+  console.log(`Health: ${health.score}/100 | Users: ${funnel.totalUsers} | Headlines: ${headlines.length}`);
 
-  const growthBrief = await runGrowthBrief(siteHealth, funnel, market);
+  const decision = await decide(health, funnel, headlines, copy);
+  let reportId: string | null = null;
+  let applied:  CopyChange[]  = [];
 
-  const report = {
-    ran_at: startedAt,
-    site_health: siteHealth,
-    funnel,
-    market_pulse: { headlineCount: market.headlineCount, headlines: market.headlines },
-    growth_brief: growthBrief,
-  };
+  if (decision) {
+    console.log(`\nBrief: ${decision.brief}`);
+    const { data: rr } = await sb.from('growth_reports').insert({
+      ran_at: startedAt, site_health_score: health.score,
+      failed_routes: health.failedRoutes, total_users: funnel.totalUsers,
+      total_quotes: funnel.totalQuotes, friction_signals: funnel.friction,
+      market_headlines: headlines, growth_brief: decision.brief,
+      raw: { health, funnel, decision },
+    }).select('id').maybeSingle();
+    reportId = rr?.id ?? null;
+    applied  = await applyChanges(decision.changes, reportId);
+    await sendDigest(decision.brief, applied, funnel, health);
+  }
 
-  // Persist to Supabase
-  const { error } = await supabase.from('growth_reports').insert({
-    ran_at: startedAt,
-    site_health_score: siteHealth.score,
-    failed_routes: siteHealth.failedRoutes,
-    total_users: funnel.totalUsers,
-    total_quotes: funnel.totalQuotes,
-    friction_signals: funnel.frictionSignals,
-    market_headlines: market.headlines,
-    growth_brief: (growthBrief as { brief?: string }).brief ?? null,
-    raw: report,
-  });
-
-  if (error) console.warn('[growth-loop] DB write error:', error.message);
-  else console.log('\n✅ Report saved to growth_reports');
-
-  console.log('\n' + '═'.repeat(60));
-  console.log('📋 SUMMARY');
-  console.log(`  Site health:    ${siteHealth.score}/100 (${siteHealth.failed} failed)`);
-  console.log(`  Users:          ${funnel.totalUsers}`);
-  console.log(`  Quotes:         ${funnel.totalQuotes}`);
-  console.log(`  Headlines:      ${market.headlineCount}`);
-  console.log('═'.repeat(60));
-
-  process.exit(0);
+  console.log(`\nGrowth loop complete - ${applied.length} changes applied\n`);
+  return { applied: applied.length, reportId, brief: decision?.brief ?? null };
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+// Allow direct execution: node agents/growth-loop.mjs
+if (process.argv[1]?.match(/growth-loop\.(mjs|ts)$/)) {
+  runGrowthLoop().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); });
+}

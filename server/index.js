@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import cron from 'node-cron';
 import placesRouter from './routes/places.js';
 import locationRouter from './routes/location.js';
 import templatesRouter from './routes/templates.js';
@@ -103,6 +104,36 @@ if (process.env.VERCEL !== '1') {
     console.log(`📋 Template endpoints: http://localhost:${PORT}/api/templates`);
     console.log(`📊 Telemetry endpoints: http://localhost:${PORT}/api/telemetry`);
     console.log(`🤝 Partner API: http://localhost:${PORT}/api/partner/v1/health`);
+
+    // ── AI Growth Loop — daily at 3am Pacific (11am UTC) ────────────────────
+    // Only run on the primary Fly machine to avoid duplicate runs.
+    // Uses node-cron (bundled in server/node_modules).
+    // The agent: analyses site health + funnel + market → writes copy to site_copy table.
+    const isPrimaryMachine =
+      !process.env.FLY_MACHINE_ID ||                     // local dev
+      process.env.FLY_MACHINE_ID === process.env.FLY_PRIMARY_MACHINE_ID || // explicit primary
+      process.env.GROWTH_LOOP_ENABLED === 'true';        // override flag
+
+    if (isPrimaryMachine) {
+      cron.schedule('0 11 * * *', async () => {  // 11:00 UTC = 3:00am PT (PDT)
+        console.log('[cron] Starting daily growth loop...');
+        try {
+          const { spawn } = await import('child_process');
+          const child = spawn('node', ['agents/growth-loop.mjs'], {
+            cwd: __dirname,
+            env: { ...process.env },
+            stdio: 'inherit',
+          });
+          child.on('close', (code) => console.log(`[cron] Growth loop exited code=${code}`));
+          child.on('error', (e) => console.error('[cron] Growth loop spawn error:', e.message));
+        } catch (e) {
+          console.error('[cron] Growth loop failed to start:', e);
+        }
+      }, { timezone: 'UTC' });
+      console.log('🤖 Growth loop scheduled: daily at 03:00 PT (11:00 UTC)');
+    } else {
+      console.log('ℹ️  Growth loop cron skipped on secondary machine');
+    }
   });
 }
 
