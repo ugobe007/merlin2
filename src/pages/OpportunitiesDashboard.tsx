@@ -640,18 +640,26 @@ export function OpportunitiesDashboard() {
   }
 
   // Poll GET /api/leads/matcher-status until the job finishes (or times out).
-  // The POST endpoint now returns 202 immediately; results arrive via this poll.
-  async function pollMatcherStatus(maxMs = 600_000): Promise<{
+  // machineId pins all polls to the same Fly.io VM that started the job so
+  // in-memory _matcherJob state is always consistent (avoids cross-machine miss).
+  async function pollMatcherStatus(
+    machineId: string | null,
+    maxMs = 600_000
+  ): Promise<{
     success: boolean;
     summary: { scanned: number; qualified: number; newLeads: number } | null;
     error: string | null;
+    log: string | null;
   }> {
     const deadline = Date.now() + maxMs;
+    const headers: Record<string, string> = {};
+    if (machineId) headers["fly-force-instance-id"] = machineId;
     while (Date.now() < deadline) {
       await new Promise((r) => setTimeout(r, 4_000));
-      const r = await fetch("/api/leads/matcher-status");
+      const r = await fetch("/api/leads/matcher-status", { headers });
       const d = await r.json();
-      if (!d.running) return d;
+      // success:null means job hasn't completed yet (initial state); keep polling
+      if (!d.running && d.success !== null) return d;
     }
     throw new Error("Timed out waiting for lead matcher (10 min)");
   }
@@ -675,7 +683,7 @@ export function OpportunitiesDashboard() {
         return;
       }
       // Job is running in background — poll for completion
-      const result = await pollMatcherStatus();
+      const result = await pollMatcherStatus(started.machineId ?? null);
       if (result.success) {
         const s = result.summary;
         setMatchResult({ newLeads: s?.newLeads ?? 0, scanned: s?.scanned ?? 0 });
@@ -683,7 +691,8 @@ export function OpportunitiesDashboard() {
           `✅ Lead routing complete!\n\nScanned: ${s?.scanned ?? "—"}\nQualified: ${s?.qualified ?? "—"}\nNew vendor leads: ${s?.newLeads ?? "—"}\n\nVendors see their leads at:\n${VENDOR_PORTAL_URL}`
         );
       } else {
-        alert(`❌ Matcher failed: ${result.error ?? "Unknown error"}`);
+        const detail = result.error ?? result.log?.slice(-300) ?? "Unknown error";
+        alert(`❌ Matcher failed:\n\n${detail}`);
       }
     } catch (e: unknown) {
       alert(`❌ Failed to run lead matcher: ${e instanceof Error ? e.message : String(e)}`);
@@ -711,7 +720,7 @@ export function OpportunitiesDashboard() {
         alert(`❌ Push failed to start: ${started.message}`);
         return;
       }
-      const result = await pollMatcherStatus();
+      const result = await pollMatcherStatus(started.machineId ?? null);
       const sent = result.summary?.newLeads ?? 0;
       alert(
         sent > 0
