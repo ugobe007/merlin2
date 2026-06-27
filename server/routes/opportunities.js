@@ -90,9 +90,8 @@ router.post('/leads/run-matcher', async (req, res) => {
   const { dirname, resolve } = await import('path');
 
   const __dirname = dirname(fileURLToPath(import.meta.url));
-  const projectRoot = resolve(__dirname, '../..');
 
-  const args = ['tsx', 'agents/lead-matcher.ts'];
+  const args = ['agents/lead-matcher.mjs'];
   if (req.body?.rerun)   args.push('--rerun');
   if (req.body?.dryRun)  args.push('--dry-run');
   if (req.body?.minScore) args.push(`--min-score=${Number(req.body.minScore)}`);
@@ -100,8 +99,8 @@ router.post('/leads/run-matcher', async (req, res) => {
   let stdout = '';
   let stderr = '';
 
-  const child = spawn('npx', args, {
-    cwd: projectRoot,
+  const child = spawn('node', args, {
+    cwd: resolve(__dirname, '..'), // /app/server — agents/ is at server/agents/
     env: { ...process.env },
     timeout: 120_000, // 2-minute cap
   });
