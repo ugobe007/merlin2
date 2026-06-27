@@ -64,13 +64,16 @@ RUN --mount=type=secret,id=VITE_SUPABASE_URL \
     '
 
 # Pre-compile TypeScript agents to self-contained JS bundles.
-# This runs in the builder (which has tsx + esbuild) so the production image
-# never needs tsx, TypeScript, or the src/ directory.
+# --packages=external keeps all node_modules as runtime imports so Node.js
+# handles CJS/ESM interop natively (avoids "Dynamic require of 'fs'" from dotenv).
+# The packages needed at runtime (dotenv, @supabase/supabase-js, resend, etc.)
+# are all present in /app/server/node_modules from the server npm ci step.
 RUN npx esbuild agents/lead-matcher.ts \
     --bundle \
     --platform=node \
     --target=node20 \
     --format=esm \
+    --packages=external \
     --outfile=dist-agents/lead-matcher.mjs
 
 # Production stage - Multi-service (nginx + Node.js API)
