@@ -63,6 +63,16 @@ RUN --mount=type=secret,id=VITE_SUPABASE_URL \
       npm run build:prod; \
     '
 
+# Pre-compile TypeScript agents to self-contained JS bundles.
+# This runs in the builder (which has tsx + esbuild) so the production image
+# never needs tsx, TypeScript, or the src/ directory.
+RUN npx esbuild agents/lead-matcher.ts \
+    --bundle \
+    --platform=node \
+    --target=node20 \
+    --format=esm \
+    --outfile=dist-agents/lead-matcher.mjs
+
 # Production stage - Multi-service (nginx + Node.js API)
 FROM node:20-alpine
 
@@ -80,6 +90,9 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy server code
 COPY server/ /app/server/
+
+# Copy pre-compiled agent bundles (built in the builder stage — no tsx required)
+COPY --from=builder /app/dist-agents /app/server/agents/
 
 # Install server dependencies separately (express, nodemailer, dotenv are NOT in
 # the root package.json — they live only in server/package.json)
