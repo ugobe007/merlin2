@@ -559,6 +559,50 @@ const SIGNAL_KEYWORDS: Record<OpportunitySignal, string[]> = {
     "commercial rooftop pv",
     "net metering commercial",
   ],
+  // ── Phase 5: Power generation procurement ──
+  power_generation: [
+    "gas turbine procurement",
+    "gas turbine rfp",
+    "gas turbine contract",
+    "gas turbine award",
+    "peaker plant",
+    "peaking plant",
+    "combustion turbine",
+    "combined cycle gas turbine",
+    "ccgt procurement",
+    "ccgt project",
+    "ocgt procurement",
+    "simple cycle plant",
+    "natural gas plant procurement",
+    "gas-fired power plant",
+    "gas power plant",
+    "power plant procurement",
+    "power plant rfp",
+    "power plant rfq",
+    "power plant contract",
+    "generation capacity procurement",
+    "new generation capacity",
+    "capacity addition",
+    "thermal power procurement",
+    "combined heat and power",
+    "chp project",
+    "chp procurement",
+    "cogeneration project",
+    "cogeneration procurement",
+    "district energy procurement",
+    "distributed generation procurement",
+    "gas engine procurement",
+    "reciprocating engine",
+    "power generation rfp",
+    "power generation rfq",
+    "power generation contract",
+    "utility scale generation",
+    "electric generation project",
+    "generation project award",
+    "issues rfp for power",
+    "seeking power generation",
+    "turbine installation",
+  ],
 };
 
 // ─── Industry keyword detection (Phase 2: 8 new verticals) ───────────────────
@@ -667,6 +711,7 @@ const SIGNAL_BASE_SCORES: Partial<Record<OpportunitySignal, number>> = {
   bess_procurement: 45,
   solar_procurement: 45,
   generator_procurement: 45,
+  power_generation: 42,
   rfq: 35,
   procurement_awarded: 30, // contract award = active market, co-vendor opportunity
   // Strong indirect signals
@@ -891,6 +936,8 @@ function calculateConfidence(signals: OpportunitySignal[], industry?: IndustryTy
   if (signals.includes("solar_procurement") && signals.includes("sustainability_initiative"))
     score += 8;
   if (signals.includes("generator_procurement") && signals.includes("construction")) score += 8;
+  if (signals.includes("power_generation") && signals.includes("rfq")) score += 10;
+  if (signals.includes("power_generation") && signals.includes("procurement_awarded")) score += 8;
   if (signals.includes("rfq") && signals.includes("energy_project")) score += 10;
   if (signals.includes("interconnection_application")) score += 8;
   if (signals.includes("permit_filed") && signals.includes("construction")) score += 6;

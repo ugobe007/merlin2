@@ -72,6 +72,8 @@ const SIGNAL_LABELS: Record<string, string> = {
   permit_filed: "Permit Filed",
   construction: "Construction",
   expansion: "Expansion",
+  procurement_awarded: "Contract Awarded",
+  power_generation: "Power Generation",
 };
 
 const INDUSTRY_LABELS: Record<string, string> = {

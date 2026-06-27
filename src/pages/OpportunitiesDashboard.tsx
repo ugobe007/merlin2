@@ -60,6 +60,9 @@ const SIGNAL_LABELS: Record<string, string> = {
   microgrid_procurement: "⚡ Microgrid RFP",
   virtual_power_plant: "🌐 VPP/Demand Response",
   c_and_i_solar: "☀️ C&I Solar",
+  // Phase 5
+  procurement_awarded: "🏆 Contract Awarded",
+  power_generation: "🏭 Power Generation",
 };
 
 function signalLabel(signal: string): string {
@@ -509,7 +512,8 @@ function classifyOpp(opp: Opportunity): OppCategory {
     /\bsolar\b|photovoltaic|\bpv\b/i.test(d);
   const isGen =
     sigs.includes("generator_procurement") ||
-    /\bgenerator\b|genset|backup.power|standby.power/i.test(d);
+    sigs.includes("power_generation") ||
+    /\bgenerator\b|genset|backup.power|standby.power|gas.turbine|peaker|cogenerat|\bchp\b/i.test(d);
   if (isBESS && isSolar) return "bess"; // BESS takes priority
   if (isBESS) return "bess";
   if (isSolar) return "solar";
