@@ -27,8 +27,7 @@ const SHOULD_BE_NULL = [
   ['U.S. Factory Activity',         'U.S. Factory Activity rises in May report'],
   ['US Manufacturing',              'US Manufacturing output drops for third month'],
   ['Massachusetts Energy Storage',  'Massachusetts Energy Storage initiative advances'],
-  // Fragment — no clear subject before verb
-  ['Hennessey Goes Big',            'Hennessey Goes Big with $15 million factory expansion'],
+  // Factory of factories — no clear company subject
   ['Factory of factories',          "Factory of factories: China's manufacturers join wave"],
   // Measurement-first headlines
   ['1.5-GW Battery Project',        '1.5-GW Battery Project awarded in Texas'],
@@ -57,7 +56,9 @@ const SHOULD_PASS = [
   // Energy-domain org suffixes
   ['Ameresco',                        'Ameresco selected for $40M solar project'],
   ['Invenergy',                       'Invenergy secures financing for new wind farm'],
-  // New engine correctly strips geo prefix and finds the real company
+  // New engine correctly extracts subject from verb-anchored headline
+  ['Hennessey (from "Goes Big" title)', 'Hennessey Goes Big with $15 million factory expansion'],
+  // Geographic + known brand (returns "Google", tested separately below)
   ['Google (from "Pine Island Google")', 'Pine Island Google data center expansion approved'],
 ];
 

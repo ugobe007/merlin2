@@ -357,26 +357,22 @@ function classifyAsOrg(phrase) {
   // 1. Known org — immediate accept (no further checks needed)
   if (KNOWN_ORGS.has(t) || SHORT_KNOWN.has(t)) return t;
 
-  // 2. Hard-reject descriptors — these patterns ALWAYS indicate a descriptor
-  //    even if an org-suffix word appears later in the phrase.
-  //    Example: "1.5-GW Battery Project" has "Battery" (ORG_SUFFIX) but is
-  //    still a metric phrase, not a company name.
+  // 2. Hard-reject descriptors — always a descriptor even if an ORG_SUFFIX word appears.
   if (_isHardDescriptor(t)) return null;
 
-  // 3. ORG_SUFFIX match — accept as named org
-  //    (Runs before geo/desc checks to protect "Georgia Power", "National Battery Corp")
-  if (ORG_SUFFIX.test(t)) return t;
-
-  // 4. Strip geographic possessive prefix ("Ohio's FST Logistics" → "FST Logistics")
-  //    then recheck 1–3
+  // 3. Strip geographic possessive prefix BEFORE ORG_SUFFIX
+  //    so "Ohio's FST Logistics" → "FST Logistics", not "Ohio's FST Logistics"
   const stripped = _stripGeoPossessive(t);
   if (stripped !== t) {
     t = stripped.trim();
     if (!t || t.length < 2) return null;
     if (KNOWN_ORGS.has(t) || SHORT_KNOWN.has(t)) return t;
     if (_isHardDescriptor(t)) return null;
-    if (ORG_SUFFIX.test(t)) return t;
   }
+
+  // 4. ORG_SUFFIX match — accept as named org
+  //    Protects "Georgia Power", "FST Logistics", "National Battery Corp"
+  if (ORG_SUFFIX.test(t)) return t;
 
   // 5. Geographic entity → reject
   if (_isGeoEntity(t)) return null;
@@ -388,7 +384,7 @@ function classifyAsOrg(phrase) {
   if (!/[A-Z]/.test(t) || /^[a-z]/.test(t)) return null;
 
   // 8. Contains predicate-only action verbs → sentence fragment, not a subject
-  if (/\b(?:goes|going|doubles|prepares?|targets?|warns?|fac(?:es?|ing)|fights?|surg(?:es?|ing)|rac(?:es?|ing)|cut(?:s|ting)|drop(?:s|ping)|ey(?:es?|ing)|bet(?:s|ting)|hit(?:s|ting)|makes?|gets?|takes?|puts?|sets?|keeps?|holds?|leads?|shows?|turns?|gives?|seeks?|needs?|rises?|falls?|push(?:es?|ing)|shift(?:s|ing)|fight(?:s|ing)|mov(?:es?|ing)|struggling|slashing|forcing|pledging|finding)\b/i.test(t)) return null;
+  if (/\b(?:goes|going|rolls?|rolling|doubles|prepares?|targets?|warns?|fac(?:es?|ing)|fights?|surg(?:es?|ing)|rac(?:es?|ing)|cut(?:s|ting)|drop(?:s|ping)|ey(?:es?|ing)|bet(?:s|ting)|hit(?:s|ting)|makes?|gets?|takes?|puts?|sets?|keeps?|holds?|leads?|shows?|turns?|gives?|seeks?|needs?|rises?|falls?|push(?:es?|ing)|shift(?:s|ing)|fight(?:s|ing)|mov(?:es?|ing)|struggling|slashing|forcing|pledging|finding)\b/i.test(t)) return null;
 
   // 9. Modal verbs / pronouns / articles → headline fragment
   if (/\b(?:would|could|should|may|might|must|shall)\b/i.test(t)) return null;
@@ -408,13 +404,16 @@ function classifyAsOrg(phrase) {
     return null;
   }
 
-  // 12. Single-word rules
+  // 12. Single-word rules (geo + desc already filtered above)
   if (wordCount === 1) {
     if (NOT_A_COMPANY_ACRONYM.has(t.toUpperCase())) return null;
-    // camelCase brand name: "FluxPower", "NovaBMS"
-    if (/^[A-Z][a-z]+[A-Z]/.test(t) && t.length >= 5) return t;
-    // Short all-caps acronym: "PECO", "ABB", "AES" (already caught by SHORT_KNOWN above)
-    if (/^[A-Z]{2,5}$/.test(t)) return t;
+    // All-caps acronym 2-8 chars: "PECO", "ABB", "AES", "NYCEDC", "ENGIE"
+    if (/^[A-Z]{2,8}$/.test(t)) return t;
+    // camelCase or alphanumeric brand: "FluxPower", "L3Harris", "NovaBMS"
+    if (/^[A-Z][a-zA-Z0-9]*[A-Z]/.test(t) && t.length >= 4) return t;
+    // Title Case proper noun (3+ chars): "Toyota", "Enbridge", "Maersk", "Hadrian"
+    // Geographic and descriptor filters above already rejected geo/category nouns.
+    if (/^[A-Z][a-z]{2,}$/.test(t)) return t;
     return null;
   }
 
@@ -554,7 +553,7 @@ function _cleanSubject(text) {
 
 // ── 2g. QUALITY SCORER ───────────────────────────────────────────────────────
 
-function scoreCompanyName(name) {
+export function scoreCompanyName(name) {
   if (!name || typeof name !== 'string') return 0;
   const t = name.trim();
   if (!classifyAsOrg(t)) return 0;
