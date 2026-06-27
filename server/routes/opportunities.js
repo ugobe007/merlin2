@@ -124,10 +124,13 @@ router.post('/leads/run-matcher', async (req, res) => {
                   finishedAt: null, success: null, summary: null, log: null, error: null };
 
   // Respond immediately — do not await the child process.
+  // Include machineId so the client can pin all /matcher-status polls to THIS
+  // machine via the fly-force-instance-id header (avoids cross-machine memory mismatch).
   res.status(202).json({
     success: true,
     message: 'Lead matcher started — poll GET /api/leads/matcher-status for results',
     startedAt: _matcherJob.startedAt,
+    machineId: process.env.FLY_MACHINE_ID ?? null,
   });
 
   // ── Background child process (no timeout — matcher can take several minutes) ─
