@@ -281,7 +281,7 @@ router.post('/admin/approve-suggestion', async (req, res) => {
       const ALLOWED_KEYS = new Set([
         'hero_headline_prefix','hero_accent_lines','hero_subtext','hero_badge_text',
         'hero_proof_items','hero_cta_primary','hero_cta_secondary','modal_headline',
-        'modal_subtext','modal_cta_text','nav_cta_text',
+        'modal_subtext','modal_cta_text','modal_social_proof','nav_cta_text',
       ]);
       if (!ALLOWED_KEYS.has(suggestion.copy_key)) {
         return res.status(400).json({ success: false, error: 'Copy key not in allowlist' });
