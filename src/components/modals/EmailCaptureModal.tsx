@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { X, Mail, User, Building2, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
+import { useSiteCopy } from '../../hooks/useSiteCopy';
 
 interface EmailCaptureModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
   onSuccess,
   quoteData
 }) => {
+  const { copy } = useSiteCopy();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -190,9 +192,9 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 rounded-t-2xl flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold text-white">Download Your Quote</h2>
+              <h2 className="text-2xl font-bold text-white">{copy('modal_headline') || 'Get Your Free Energy Report'}</h2>
               <p className="text-blue-100 text-sm mt-1">
-                Create your free account to continue
+                {copy('modal_subtext') || 'Create your free account — takes 30 seconds'}
               </p>
             </div>
             <button
@@ -300,7 +302,7 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
                     </>
                   ) : (
                     <>
-                      Create Account & Download
+                      {copy('modal_cta_text') || 'Create Account & Download'}
                     </>
                   )}
                 </button>
@@ -308,11 +310,11 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
             )}
           </div>
 
-          {/* Footer */}
+          {/* Footer — social proof written by AI growth loop */}
           {!success && (
             <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 rounded-b-2xl">
-              <p className="text-xs text-center text-gray-600">
-                Already have an account? You'll be able to save this quote to your portfolio.
+              <p className="text-xs text-center text-gray-500 font-medium">
+                {copy('modal_social_proof') || 'Free forever · No credit card · No spam'}
               </p>
             </div>
           )}

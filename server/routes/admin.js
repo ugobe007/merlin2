@@ -39,7 +39,13 @@ router.get('/admin/stats', async (req, res) => {
     // Signups are split across two tables (legacy `users` + new `user_profiles`).
     // We union them by email to deduplicate, using user_profiles as authoritative
     // for tier, falling back to `users` for any email not yet in user_profiles.
-    const [profilesRes, legacyUsersRes, quotesTodayRes, totalQuotesRes, totalLeadsRes] = await Promise.all([
+    const weekStart = new Date(todayStart);
+    weekStart.setDate(weekStart.getDate() - 7);
+    const prevWeekStart = new Date(weekStart);
+    prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+
+    const [profilesRes, legacyUsersRes, quotesTodayRes, totalQuotesRes, totalLeadsRes,
+           signupsTodayRes, signupsWeekRes, signupsPrevWeekRes] = await Promise.all([
       sb.from('user_profiles').select('email, tier'),
       sb.from('users').select('email, tier'),
       sb
@@ -51,6 +57,14 @@ router.get('/admin/stats', async (req, res) => {
         .from('opportunities')
         .select('id', { count: 'exact', head: true })
         .eq('status', 'qualified'),
+      // Signup velocity — used by AI growth loop
+      sb.from('user_profiles').select('id', { count: 'exact', head: true })
+        .gte('created_at', todayStart.toISOString()),
+      sb.from('user_profiles').select('id', { count: 'exact', head: true })
+        .gte('created_at', weekStart.toISOString()),
+      sb.from('user_profiles').select('id', { count: 'exact', head: true })
+        .gte('created_at', prevWeekStart.toISOString())
+        .lt('created_at', weekStart.toISOString()),
     ]);
 
     // Merge: user_profiles wins on duplicates (keyed by email)
@@ -96,6 +110,10 @@ router.get('/admin/stats', async (req, res) => {
         qualifiedLeads: totalLeadsRes.count ?? 0,
         monthlyRevenue,
         activePaidSubs: paidUsers.length,
+        // Signup velocity — consumed by AI growth loop & admin dashboard
+        signupsToday:    signupsTodayRes.count    ?? 0,
+        signupsThisWeek: signupsWeekRes.count     ?? 0,
+        signupsPrevWeek: signupsPrevWeekRes.count ?? 0,
       },
     });
   } catch (err) {
