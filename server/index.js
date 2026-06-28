@@ -15,6 +15,7 @@ import partnerApiRouter from './routes/partner-api.js';
 import wizardWorkflowRouter from './routes/wizard-workflow.js';
 import opportunitiesRouter from './routes/opportunities.js';
 import adminRouter from './routes/admin.js';
+import marketNewsRouter from './routes/market-news.js';
 
 // Load environment variables from server/.env, then root .env for local scripts
 const __filename = fileURLToPath(import.meta.url);
@@ -54,6 +55,7 @@ app.use('/api/wizard', wizardWorkflowRouter);
 app.use('/api', opportunitiesRouter);
 app.use('/api', adminRouter);
 app.use('/api', demoRouter);
+app.use('/api', marketNewsRouter);
 
 // Health check — used by smoke tests and uptime monitors
 app.get('/api/health', async (req, res) => {

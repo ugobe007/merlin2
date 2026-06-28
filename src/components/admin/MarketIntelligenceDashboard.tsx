@@ -64,31 +64,14 @@ function timeAgo(iso: string) {
 interface Headline { title: string; source: string; url: string; date: string; }
 
 async function fetchHeadlines(): Promise<Headline[]> {
-  const feeds = [
-    { url: "https://electrek.co/feed", source: "Electrek" },
-    { url: "https://www.greentechmedia.com/rss/all", source: "Wood Mackenzie" },
-    { url: "https://rss.politico.com/energy.xml", source: "Politico Energy" },
-  ];
-  const items: Headline[] = [];
-  await Promise.all(
-    feeds.map(async ({ url, source }) => {
-      try {
-        const r = await fetch(
-          `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-          { signal: AbortSignal.timeout(8000) }
-        );
-        if (!r.ok) return;
-        const xml = await r.text();
-        const titles = [...xml.matchAll(/<item[^>]*>[\s\S]*?<title[^>]*>(?:<!\[CDATA\[)?([^\]<]{15,120})(?:\]\]>)?<\/title>/g)].slice(0, 4);
-        const links = [...xml.matchAll(/<link>([^<]+)<\/link>/g)];
-        const dates = [...xml.matchAll(/<pubDate>([^<]+)<\/pubDate>/g)];
-        titles.forEach((m, i) =>
-          items.push({ title: m[1].trim(), source, url: links[i + 1]?.[1] ?? "#", date: dates[i]?.[1] ?? "" })
-        );
-      } catch { /* ignore feed errors */ }
-    })
-  );
-  return items.slice(0, 12);
+  try {
+    const r = await fetch("/api/market/news", { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) return [];
+    const json = await r.json() as { headlines?: Headline[] };
+    return json.headlines ?? [];
+  } catch {
+    return [];
+  }
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
