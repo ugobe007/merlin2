@@ -571,9 +571,11 @@ function analyzeEmergingOpportunities(
       }
     });
 
+    const readableName = topic.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     opportunities.push({
-      opportunity: topic.charAt(0).toUpperCase() + topic.slice(1),
-      description: `Growing interest in ${topic} based on ${count} mentions`,
+      opportunity: readableName,
+      description: `${readableName} is an emerging segment with ${count} project mentions in the last 90 days, indicating rising procurement activity.`,
+
       industries: Array.from(industries),
       marketSize: count > 50 ? "large" : count > 20 ? "medium" : "small",
       growthRate: count * 10, // Simplified
