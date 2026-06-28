@@ -31,12 +31,15 @@ const sb = createClient(
   { auth: { persistSession: false } }
 );
 
-// Keys the AI is permitted to write. Anything outside this list is blocked.
 const ALLOWED_KEYS = new Set([
+  // Hero section
   'hero_headline_prefix', 'hero_accent_lines', 'hero_subtext',
   'hero_badge_text', 'hero_proof_items', 'hero_cta_primary',
-  'hero_cta_secondary', 'modal_headline', 'modal_subtext',
-  'modal_cta_text', 'nav_cta_text',
+  'hero_cta_secondary',
+  // Sign-up modal — ALL four keys render live in the EmailCaptureModal form
+  'modal_headline', 'modal_subtext', 'modal_cta_text', 'modal_social_proof',
+  // Nav
+  'nav_cta_text',
 ]);
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -75,14 +78,23 @@ async function runFunnel() {
   const r = await safeFetch(`${BASE_URL}/api/admin/stats`);
   let s: Record<string, number> = {};
   try { s = JSON.parse(r.body)?.stats ?? {}; } catch (_e) { /* ignore */ }
-  const totalUsers     = s.totalUsers     ?? 0;
-  const totalQuotes    = s.totalQuotes    ?? 0;
-  const qualifiedLeads = s.qualifiedLeads ?? 0;
+  const totalUsers      = s.totalUsers      ?? 0;
+  const totalQuotes     = s.totalQuotes     ?? 0;
+  const qualifiedLeads  = s.qualifiedLeads  ?? 0;
+  const signupsToday    = s.signupsToday    ?? 0;
+  const signupsThisWeek = s.signupsThisWeek ?? 0;
+  const signupsPrevWeek = s.signupsPrevWeek ?? 0;
+  const dailyAvgThisWeek = signupsThisWeek > 0 ? (signupsThisWeek / 7).toFixed(1) : '0';
+  const weekTrend = signupsPrevWeek > 0
+    ? ((signupsThisWeek - signupsPrevWeek) / signupsPrevWeek * 100).toFixed(0)
+    : null;
   const friction: string[] = [];
-  if (totalUsers === 0)                                         friction.push('CRITICAL: zero users - signup broken');
-  if (totalUsers > 5 && totalQuotes / totalUsers < 0.2)        friction.push('Quote conversion below 20%');
-  if (totalQuotes > 5 && qualifiedLeads / totalQuotes < 0.1)   friction.push('Lead rate below 10%');
-  return { totalUsers, totalQuotes, qualifiedLeads, friction };
+  if (totalUsers === 0)                                              friction.push('CRITICAL: zero total users — signup may be broken');
+  if (signupsToday === 0 && new Date().getUTCHours() >= 14)         friction.push('ZERO signups today (past 7am PT) — modal or CTA likely broken');
+  if (weekTrend !== null && Number(weekTrend) < -20)                friction.push(`Sign-up velocity DOWN ${Math.abs(Number(weekTrend))}% vs last week`);
+  if (totalUsers > 5 && totalQuotes / totalUsers < 0.2)             friction.push('Quote conversion below 20% — wizard or CTA has friction');
+  if (totalQuotes > 5 && qualifiedLeads / totalQuotes < 0.1)        friction.push('Lead qualification rate below 10%');
+  return { totalUsers, totalQuotes, qualifiedLeads, signupsToday, signupsThisWeek, signupsPrevWeek, dailyAvgThisWeek, weekTrend, friction };
 }
 
 // ── Module 3: Market Headlines ────────────────────────────────────────────────
@@ -145,63 +157,114 @@ async function decide(
   if (!OPENAI_KEY) { console.warn('[growth] No OPENAI_KEY — skipping'); return null; }
 
   const allowedCopyKeys = [...ALLOWED_KEYS].join(', ');
+  const signupTrendLine = funnel.weekTrend !== null
+    ? `${Number(funnel.weekTrend) >= 0 ? '▲' : '▼'} ${Math.abs(Number(funnel.weekTrend))}% vs prior week`
+    : 'no prior-week baseline yet';
+
   const prompt = [
-    'You are the AI growth analyst for Merlin Energy.',
-    'Merlin is a B2B SaaS: instant CFO-ready BESS/solar quotes in 60 seconds, free, replacing $500/hr energy consultants.',
-    'Target buyers: CFOs and Ops Directors at carwashes, warehouses, hotels, manufacturers feeling utility cost pain.',
+    '# MERLIN ENERGY — DAILY AI GROWTH ANALYST',
     '',
-    '## Live System Data',
-    `Site health: ${health.score}/100` + (health.failedRoutes.length ? ' | BROKEN: ' + health.failedRoutes.map((x: { name: string }) => x.name).join(', ') : ' | all routes OK'),
-    `Signup funnel: ${funnel.totalUsers} users | ${funnel.totalQuotes} quotes | ${funnel.qualifiedLeads} leads routed`,
-    `Friction: ${funnel.friction.join('; ') || 'none detected'}`,
+    'You are the growth AI for Merlin Energy, a B2B SaaS that delivers instant',
+    'CFO-ready BESS/solar energy quotes in 60 seconds — free, replacing $500/hr consultants.',
+    'Target buyer: CFO or Ops Director at a carwash, warehouse, hotel, or manufacturer',
+    'who is furious about rising utility bills and has no fast way to evaluate storage/solar.',
     '',
-    '## Energy market headlines today',
-    ...headlines.slice(0, 10).map(h => `- ${h}`),
+    '## ★ YOUR ONE JOB: INCREASE SIGN-UPS PER DAY ★',
+    'Every suggestion must answer: does this move a visitor to "signed up" faster?',
+    'If it doesn\'t serve that goal, skip it.',
     '',
-    '## Current live copy on site',
-    ...Object.entries(copy).map(([k, v]) => `  ${k}: ${v.slice(0, 120)}`),
+    '## LIVE SIGNUP METRICS (your primary KPIs)',
+    `  Signups today:         ${funnel.signupsToday}`,
+    `  Signups this week:     ${funnel.signupsThisWeek}  (daily avg: ${funnel.dailyAvgThisWeek}/day)`,
+    `  Signups prior week:    ${funnel.signupsPrevWeek}  trend: ${signupTrendLine}`,
+    `  Total users all-time:  ${funnel.totalUsers}`,
+    `  Total quotes run:      ${funnel.totalQuotes}`,
+    `  Qualified leads:       ${funnel.qualifiedLeads}`,
+    funnel.totalQuotes > 0
+      ? `  Quote→Signup rate:     ${((funnel.totalUsers / funnel.totalQuotes) * 100).toFixed(1)}%`
+      : '  Quote→Signup rate:     N/A (no quotes yet)',
     '',
-    '## Your job: Generate suggestions across 5 categories',
+    '## FRICTION SIGNALS',
+    funnel.friction.length ? funnel.friction.map(f => `  ⚠ ${f}`).join('\n') : '  None detected',
     '',
-    '### 1. COPY SUGGESTIONS (2-4 items)',
-    'Rewrite copy keys to maximize signups from buyers feeling utility cost pain RIGHT NOW.',
-    '- Tie language directly to the market headlines above',
-    '- Every CTA must feel zero-risk (free, instant, no commitment, no credit card)',
-    '- hero_accent_lines = JSON array of exactly 3 phrases (max 6 words) completing "Reduce Utility Risk ___"',
-    '- hero_proof_items  = JSON array of exactly 3 short trust/social-proof signals',
-    `- Allowed copy keys: ${allowedCopyKeys}`,
+    '## SITE HEALTH',
+    `  Score: ${health.score}/100` + (health.failedRoutes.length
+      ? ' | BROKEN: ' + health.failedRoutes.map((x: { name: string }) => x.name).join(', ')
+      : ' | all routes OK'),
     '',
-    '### 2. CODE SUGGESTIONS (1-2 items)',
-    'Specific bugs, performance issues, or missing features that hurt conversion.',
-    'Be technically precise: name the file, function, or component. No vague suggestions.',
+    '## THE SIGN-UP FUNNEL (exact steps a user takes)',
+    '  1. Visitor lands → reads hero headline + subtext',
+    '  2. Clicks hero CTA button → business/ZIP search appears',
+    '  3. Types business name or ZIP → clicks "Get My Report"',
+    '  4. Completes 5-6 step quote wizard',
+    '  5. Hits EmailCaptureModal → sees modal_headline at top',
+    '  6. Reads modal_subtext → decides whether to fill the 3-field form',
+    '  7. Clicks modal_cta_text button → BECOMES A USER',
+    '  8. Reads modal_social_proof at bottom → reassured or abandons',
     '',
-    '### 3. DESIGN/UI SUGGESTIONS (1-2 items)',
-    'Specific page layout, visual hierarchy, or UX flow changes.',
-    'Reference which page/component and what exactly to change.',
+    '  ► Steps 5-8 are your HIGHEST leverage. The user already completed the quote.',
+    '    They are warm and motivated. Modal copy is what closes or loses them.',
+    '    Prioritize modal keys above all others.',
     '',
-    '### 4. WORKFLOW SUGGESTIONS (1-2 items)',
-    'Changes to how users move through the product (onboarding, quote flow, signup modal, etc).',
-    'Focus on removing friction from the path to getting a quote.',
+    '## ENERGY MARKET HEADLINES (tie copy to real pain happening NOW)',
+    ...headlines.slice(0, 8).map(h => `  - ${h}`),
     '',
-    '### 5. OPTIMIZATION SUGGESTIONS (1-2 items)',
-    'SEO, page speed, email sequences, follow-up automation, etc.',
+    '## CURRENT LIVE COPY (exactly what users see right now)',
+    ...Object.entries(copy).map(([k, v]) => `  ${k}: ${v.slice(0, 140)}`),
     '',
-    'Priority guidance:',
-    '- high = directly blocks or severely hurts signups/revenue',
-    '- medium = meaningful improvement, do this week',
-    '- low = nice to have, do when time permits',
+    '## COPY KEY GUIDE (what each key controls)',
+    '  modal_headline     → H2 title at top of sign-up form. Make it about VALUE received.',
+    '    ✓ "Your Energy Savings Report Is Ready"  ✗ "Create an Account"',
+    '  modal_subtext      → Line below title. Kill anxiety. Tell them what happens next.',
+    '    ✓ "We\'ll email your CFO-ready report — no salesperson will call."  ✗ "Join today"',
+    '  modal_cta_text     → Submit button. Feel like getting something, not giving.',
+    '    ✓ "Send Me My Free Report"  ✗ "Create Account & Download"',
+    '  modal_social_proof → Trust line at bottom. Kill cost/spam/commitment objections.',
+    '    ✓ "Free forever · No credit card · Unsubscribe anytime"  ✗ generic',
+    '  hero_cta_primary   → Big button on homepage. Must feel zero-risk and urgent.',
+    '  hero_accent_lines  → JSON array of exactly 3 phrases (max 6 words) completing "Reduce Utility Risk ___"',
+    '  hero_proof_items   → JSON array of exactly 3 short social-proof signals',
+    `  All allowed keys: ${allowedCopyKeys}`,
     '',
-    'Return ONLY valid JSON matching this EXACT shape:',
+    '## YOUR OUTPUT TASKS',
+    '',
+    '### 1. COPY SUGGESTIONS (3-5 items, modal keys first)',
+    '',
+    '### 2. CODE IMPROVEMENTS (1-2 items)',
+    '  Only bugs or missing features that directly block sign-ups.',
+    '  Be precise: name the file and component. Example: "EmailCaptureModal.tsx — the',
+    '  3-field requirement (name+email+company) adds friction; suggest email-only first,',
+    '  collect name/company post-signup in onboarding step."',
+    '',
+    '### 3. DESIGN & UI CHANGES (1-2 items)',
+    '  Visual changes that reduce friction at the modal or hero.',
+    '  Examples: trust badge icons, progress bar in wizard, modal button color,',
+    '  social proof logos, urgency indicator (X people got a report today).',
+    '',
+    '### 4. WORKFLOW CHANGES (1-2 items)',
+    '  User-journey changes that increase conversion.',
+    '  Examples: show modal earlier, guest/preview mode before requiring email,',
+    '  pre-fill company field from business search, add "save & continue later" option.',
+    '',
+    '### 5. OPTIMIZATIONS (1 item)',
+    '  One specific SEO, page speed, or follow-up email action.',
+    '',
+    'Priority:',
+    '  high   = will directly increase sign-ups this week',
+    '  medium = meaningful improvement, implement soon',
+    '  low    = nice to have, do when time permits',
+    '',
+    'Return ONLY valid JSON:',
     '{',
-    '  "brief": "3-4 sentence summary of what Merlin most needs to fix today",',
+    '  "brief": "3-4 sentences: current signup metric status, biggest friction, your #1 recommendation today",',
     '  "copy_suggestions": [',
-    '    {"key": "hero_headline_prefix", "value": "...", "rationale": "...", "priority": "high"}',
+    '    {"key": "modal_headline", "value": "...", "rationale": "...", "priority": "high"}',
     '  ],',
     '  "other_suggestions": [',
-    '    {"type": "code", "title": "Short title", "description": "Specific actionable description", "rationale": "why this matters", "priority": "high"},',
-    '    {"type": "design", "title": "...", "description": "...", "rationale": "...", "priority": "medium"},',
-    '    {"type": "ui", "title": "...", "description": "...", "rationale": "...", "priority": "medium"},',
-    '    {"type": "workflow", "title": "...", "description": "...", "rationale": "...", "priority": "high"},',
+    '    {"type": "code",         "title": "...", "description": "...", "rationale": "...", "priority": "high"},',
+    '    {"type": "design",       "title": "...", "description": "...", "rationale": "...", "priority": "medium"},',
+    '    {"type": "ui",           "title": "...", "description": "...", "rationale": "...", "priority": "medium"},',
+    '    {"type": "workflow",     "title": "...", "description": "...", "rationale": "...", "priority": "high"},',
     '    {"type": "optimization", "title": "...", "description": "...", "rationale": "...", "priority": "low"}',
     '  ]',
     '}',
