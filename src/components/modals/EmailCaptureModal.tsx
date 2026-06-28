@@ -135,15 +135,14 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({
       }
 
       // Create or update user record in user_profiles (canonical table).
-      // Previously wrote to a legacy `users` table; this aligns with authService.
       const { error: profileError } = await supabase
         .from('user_profiles')
         .upsert({
           id: authData.user.id,
           email: formData.email,
           full_name: formData.name,
-          company: formData.company,
-          tier: 'free',
+          company_name: formData.company,
+          plan: 'free',
           updated_at: new Date().toISOString(),
         });
 

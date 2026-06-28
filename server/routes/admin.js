@@ -36,18 +36,18 @@ router.get('/admin/stats', async (req, res) => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    // Signups are split across two tables (legacy `users` + new `user_profiles`).
-    // We union them by email to deduplicate, using user_profiles as authoritative
-    // for tier, falling back to `users` for any email not yet in user_profiles.
+    // user_profiles is the canonical table. Column is `plan`, not `tier`.
+    // There is no legacy `users` table in this schema.
     const weekStart = new Date(todayStart);
     weekStart.setDate(weekStart.getDate() - 7);
     const prevWeekStart = new Date(weekStart);
     prevWeekStart.setDate(prevWeekStart.getDate() - 7);
 
-    const [profilesRes, legacyUsersRes, quotesTodayRes, totalQuotesRes, totalLeadsRes,
+    // user_profiles is the canonical table. Column is `plan`, not `tier`.
+    // There is no legacy `users` table in this schema.
+    const [profilesRes, quotesTodayRes, totalQuotesRes, totalLeadsRes,
            signupsTodayRes, signupsWeekRes, signupsPrevWeekRes] = await Promise.all([
-      sb.from('user_profiles').select('email, tier'),
-      sb.from('users').select('email, tier'),
+      sb.from('user_profiles').select('email, plan, role'),
       sb
         .from('saved_quotes')
         .select('id', { count: 'exact', head: true })
@@ -67,34 +67,27 @@ router.get('/admin/stats', async (req, res) => {
         .lt('created_at', weekStart.toISOString()),
     ]);
 
-    // Merge: user_profiles wins on duplicates (keyed by email)
-    const emailMap = new Map();
-    for (const u of (legacyUsersRes.data ?? [])) {
-      emailMap.set((u.email ?? '').toLowerCase(), u);
-    }
-    for (const u of (profilesRes.data ?? [])) {
-      emailMap.set((u.email ?? '').toLowerCase(), u); // overwrite with authoritative row
-    }
-    const allUsers = [...emailMap.values()];
+    // user_profiles is the only source of truth
+    const allUsers = profilesRes.data ?? [];
     const totalUsers = allUsers.length;
 
-    // Count by tier (handle both 'FREE'/'free' and new tiers)
+    // `plan` column: 'free' = free, anything else = paid
     const freeUsers = allUsers.filter(
-      (u) => !u.tier || u.tier.toLowerCase() === 'free'
+      (u) => !u.plan || u.plan.toLowerCase() === 'free'
     ).length;
     const paidUsers = allUsers.filter(
-      (u) => u.tier && u.tier.toLowerCase() !== 'free'
+      (u) => u.plan && u.plan.toLowerCase() !== 'free'
     );
 
     const tierBreakdown = {};
     for (const u of allUsers) {
-      const t = (u.tier || 'free').toLowerCase();
+      const t = (u.plan || 'free').toLowerCase();
       tierBreakdown[t] = (tierBreakdown[t] ?? 0) + 1;
     }
 
-    // MRR = sum of tier price for each paid user
+    // MRR = sum of plan price for each paid user
     const monthlyRevenue = paidUsers.reduce((sum, u) => {
-      const t = (u.tier || 'free').toLowerCase();
+      const t = (u.plan || 'free').toLowerCase();
       return sum + (TIER_MRR[t] ?? 0);
     }, 0);
 
