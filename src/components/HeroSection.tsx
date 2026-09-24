@@ -149,7 +149,7 @@ const _telemetryRows: UseCase[] = [
 // proofItems and heroHeadlineAccents are now sourced from site_copy DB
 // (AI growth loop writes to them; SITE_COPY_DEFAULTS are the compiled fallback)
 const _DEFAULT_PROOF_ITEMS = JSON.parse(SITE_COPY_DEFAULTS.hero_proof_items) as string[];
-const _DEFAULT_ACCENTS     = JSON.parse(SITE_COPY_DEFAULTS.hero_accent_lines) as string[];
+const _DEFAULT_ACCENTS = JSON.parse(SITE_COPY_DEFAULTS.hero_accent_lines) as string[];
 
 const HERO_HEADLINE_ROTATION_MS = 15000;
 const HERO_INTAKE_STORAGE_KEY = "merlin_hero_intake_v1";
@@ -728,7 +728,7 @@ function EsEventItem({
   );
 }
 
-function AgentTelemetryPanel({
+export function AgentTelemetryPanel({
   modelPreview,
 }: {
   modelPreview: {
@@ -1061,6 +1061,7 @@ function AgentTelemetryPanel({
             <EsEventItem {...card.wide} fullWidth sparkline={card.wide.sparkline ?? null} />
           </div>
         ))}
+        <AgentTelemetryPanel modelPreview={modelPreview} />
       </div>
 
       {/* Dot Nav */}
@@ -1132,8 +1133,43 @@ function AgentTelemetryPanel({
   );
 }
 
+const HERO_INTERNATIONAL_COUNTRIES = [
+  { code: "US", name: "United States" },
+  { code: "CA", name: "Canada" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "AU", name: "Australia" },
+  { code: "NZ", name: "New Zealand" },
+  { code: "DE", name: "Germany" },
+  { code: "FR", name: "France" },
+  { code: "ES", name: "Spain" },
+  { code: "IT", name: "Italy" },
+  { code: "NL", name: "Netherlands" },
+  { code: "SE", name: "Sweden" },
+  { code: "NO", name: "Norway" },
+  { code: "DK", name: "Denmark" },
+  { code: "FI", name: "Finland" },
+  { code: "IE", name: "Ireland" },
+  { code: "CH", name: "Switzerland" },
+  { code: "AT", name: "Austria" },
+  { code: "BE", name: "Belgium" },
+  { code: "JP", name: "Japan" },
+  { code: "SG", name: "Singapore" },
+  { code: "AE", name: "United Arab Emirates" },
+  { code: "SA", name: "Saudi Arabia" },
+  { code: "KW", name: "Kuwait" },
+  { code: "QA", name: "Qatar" },
+  { code: "ZA", name: "South Africa" },
+  { code: "BR", name: "Brazil" },
+  { code: "MX", name: "Mexico" },
+  { code: "IN", name: "India" },
+  { code: "CN", name: "China" },
+  { code: "KR", name: "South Korea" },
+];
+
 function HeroIntakeCard() {
   const [zip, setZip] = useState("");
+  const [countryMode, setCountryMode] = useState<"US" | "International">("US");
+  const [selectedCountryCode, setSelectedCountryCode] = useState("CA");
   const [businessType, setBusinessType] = useState<IndustrySlug | "">("");
   const [businessName, setBusinessName] = useState("");
   const [address, setAddress] = useState("");
@@ -1142,26 +1178,27 @@ function HeroIntakeCard() {
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | undefined>();
   const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
   const [isResolvingSuggestion, setIsResolvingSuggestion] = useState(false);
-  const [hasZipStarted, setHasZipStarted] = useState(false);
   const [error, setError] = useState("");
   const sessionTokenRef = useRef<unknown>(null);
   const suggestionRequestIdRef = useRef(0);
 
-  const normalizedZip = zip.replace(/\D/g, "").slice(0, 5);
+  const normalizedZip = countryMode === "US" ? zip.replace(/\D/g, "").slice(0, 5) : zip.trim();
   const selectedTypeLabel =
     heroBusinessTypes.find((type) => type.slug === businessType)?.label ?? "commercial facility";
-  const canContinue = normalizedZip.length === 5 && businessType;
+
+  // ZIP ONLY is 100% sufficient to continue! Business type selection is optional.
+  const canContinue = countryMode === "US" ? normalizedZip.length === 5 : normalizedZip.length >= 2;
 
   useEffect(() => {
-    if (hasZipStarted) {
+    if (canContinue) {
       importGooglePlacesLibrary().catch(() => {
         // Suggestions fail gracefully; users can still type manually.
       });
     }
-  }, [hasZipStarted]);
+  }, [canContinue]);
 
   useEffect(() => {
-    if (!hasZipStarted || selectedSuggestion || businessName.trim().length < 2) {
+    if (!canContinue || selectedSuggestion || businessName.trim().length < 2) {
       setBusinessSuggestions([]);
       setIsSuggestionsLoading(false);
       return;
@@ -1183,18 +1220,19 @@ function HeroIntakeCard() {
 
         const suggestions = await fetchBusinessSuggestions({
           input: businessName.trim(),
-          countryCode: "US",
+          countryCode: countryMode === "US" ? "US" : selectedCountryCode,
           sessionToken: sessionTokenRef.current,
           limit: 4,
         });
 
         if (suggestionRequestIdRef.current !== requestId) return;
 
-        const zipScopedSuggestions = normalizedZip
-          ? suggestions.filter((suggestion) =>
-              `${suggestion.secondaryText ?? ""} ${suggestion.label}`.includes(normalizedZip)
-            )
-          : suggestions;
+        const zipScopedSuggestions =
+          normalizedZip && countryMode === "US"
+            ? suggestions.filter((suggestion) =>
+                `${suggestion.secondaryText ?? ""} ${suggestion.label}`.includes(normalizedZip)
+              )
+            : suggestions;
 
         setBusinessSuggestions(zipScopedSuggestions.length ? zipScopedSuggestions : suggestions);
       } catch (placesError) {
@@ -1210,7 +1248,14 @@ function HeroIntakeCard() {
     }, 250);
 
     return () => globalThis.clearTimeout(timer);
-  }, [businessName, hasZipStarted, normalizedZip, selectedSuggestion]);
+  }, [
+    businessName,
+    canContinue,
+    countryMode,
+    normalizedZip,
+    selectedCountryCode,
+    selectedSuggestion,
+  ]);
 
   const handleSuggestionSelect = async (suggestion: BusinessSuggestion) => {
     setSelectedSuggestion(suggestion);
@@ -1237,26 +1282,21 @@ function HeroIntakeCard() {
     }
   };
 
-  const beginDetails = () => {
-    if (normalizedZip.length !== 5) {
-      setError("Enter a 5-digit facility ZIP code to begin stacking.");
-      return;
-    }
-
-    setError("");
-    setHasZipStarted(true);
-  };
-
   const launchWizard = () => {
     if (!canContinue) {
-      setError("Add your ZIP code and business type so Merlin can open the right Step 3 profile.");
+      setError(
+        countryMode === "US"
+          ? "Enter a 5-digit facility ZIP code to begin."
+          : "Enter a country or postal code to begin."
+      );
       return;
     }
 
     const draft = {
       source: "hero-stacking-cta",
       zip: normalizedZip,
-      industry: businessType,
+      country: countryMode === "US" ? "US" : selectedCountryCode,
+      industry: businessType || "",
       businessTypeLabel: selectedTypeLabel,
       businessName: businessName.trim(),
       address: address.trim(),
@@ -1270,12 +1310,16 @@ function HeroIntakeCard() {
       // If storage is blocked, the query string still carries the essential routing context.
     }
 
-    const query = new URLSearchParams({
+    const queryParams: Record<string, string> = {
       source: "hero-stacking-cta",
       zip: normalizedZip,
-      industry: businessType,
-    });
+      country: countryMode === "US" ? "US" : selectedCountryCode,
+    };
+    if (businessType) {
+      queryParams.industry = businessType;
+    }
 
+    const query = new URLSearchParams(queryParams);
     window.location.href = `/wizard?${query.toString()}`;
   };
 
@@ -1289,15 +1333,70 @@ function HeroIntakeCard() {
             className="max-w-[430px] text-[1.55rem] font-black leading-[1.04] tracking-[-0.045em] text-white sm:text-[1.82rem]"
             style={{ fontFamily: "'Plus Jakarta Sans', 'Outfit', sans-serif" }}
           >
-            Enter your ZIP code to begin.
+            Enter your location to begin.
           </h2>
           <p className="mt-2.5 max-w-md text-[13px] leading-5 text-slate-400">
-            Merlin opens the right Step 3 profile from your location and facility type.
+            Merlin opens your energy profile from your location and facility details.
           </p>
 
-          <div className="mt-4 grid gap-2">
+          {/* ── Country Toggle — US vs International Lookup ── */}
+          <div className="mt-3.5 flex rounded-lg border border-white/10 bg-white/[0.04] p-1">
+            <button
+              type="button"
+              onClick={() => {
+                setCountryMode("US");
+                setError("");
+              }}
+              className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${
+                countryMode === "US"
+                  ? "bg-[#3FE8FF]/15 text-[#3FE8FF] border border-[#3FE8FF]/30 shadow-sm"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🇺🇸 US ZIP Code
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCountryMode("International");
+                setError("");
+              }}
+              className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${
+                countryMode === "International"
+                  ? "bg-[#A855F7]/20 text-[#C084FC] border border-[#A855F7]/40 shadow-sm"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🌍 International Lookup
+            </button>
+          </div>
+
+          {/* International Country Select */}
+          {countryMode === "International" && (
+            <div className="mt-2.5 grid gap-1.5">
+              <label className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
+                Select Country
+              </label>
+              <select
+                value={selectedCountryCode}
+                onChange={(e) => {
+                  setSelectedCountryCode(e.target.value);
+                  setError("");
+                }}
+                className="h-9 w-full rounded-lg border border-white/10 bg-[#0c1321] px-3 text-xs font-bold text-white outline-none focus:border-cyan-300/60"
+              >
+                {HERO_INTERNATIONAL_COUNTRIES.filter((c) => c.code !== "US").map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.name} ({c.code})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="mt-3 grid gap-2">
             <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-              Facility ZIP Code
+              {countryMode === "US" ? "Facility ZIP Code" : "City or Postal Code"}
             </label>
             <div className="flex gap-2 rounded-xl border border-[#3FE8FF]/28 bg-white/[0.035] p-1.5 transition focus-within:border-[#A855F7]/70 focus-within:ring-2 focus-within:ring-[#A855F7]/12">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-[#3FE8FF]/25 bg-transparent text-[#3FE8FF]">
@@ -1306,23 +1405,23 @@ function HeroIntakeCard() {
               <input
                 value={zip}
                 onChange={(event) => {
-                  setZip(event.target.value.replace(/\D/g, "").slice(0, 5));
+                  setZip(
+                    countryMode === "US"
+                      ? event.target.value.replace(/\D/g, "").slice(0, 5)
+                      : event.target.value
+                  );
                   setError("");
                 }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
-                    if (hasZipStarted) {
-                      launchWizard();
-                    } else {
-                      beginDetails();
-                    }
+                    launchWizard();
                   }
                 }}
-                inputMode="numeric"
-                maxLength={5}
-                placeholder="89101"
-                className="min-w-0 flex-1 bg-transparent text-base font-black tracking-[0.18em] text-white outline-none placeholder:text-slate-600"
+                inputMode={countryMode === "US" ? "numeric" : "text"}
+                maxLength={countryMode === "US" ? 5 : 40}
+                placeholder={countryMode === "US" ? "e.g. 89101" : "e.g. Toronto, M5V 2T6, London"}
+                className="min-w-0 flex-1 bg-transparent text-base font-black tracking-[0.08em] text-white outline-none placeholder:text-slate-600 placeholder:font-normal placeholder:tracking-normal"
               />
             </div>
           </div>
@@ -1332,7 +1431,8 @@ function HeroIntakeCard() {
               <div className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-3">
                 <div className="grid gap-2">
                   <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                    Business type
+                    Business type{" "}
+                    <span className="font-medium normal-case tracking-normal">(optional)</span>
                   </label>
                   <select
                     value={businessType}
@@ -1342,7 +1442,7 @@ function HeroIntakeCard() {
                     }}
                     className="h-10 rounded-lg border border-white/10 bg-[#0c1321] px-3 text-sm font-bold text-white outline-none focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/10"
                   >
-                    <option value="">Select facility type</option>
+                    <option value="">Select facility type (optional)</option>
                     {heroBusinessTypes.map((type) => (
                       <option key={type.slug} value={type.slug}>
                         {type.label}
@@ -1425,18 +1525,23 @@ function HeroIntakeCard() {
 
           <button
             type="button"
-            onClick={hasZipStarted ? launchWizard : beginDetails}
-            className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-xl border border-[#3FE8FF]/65 bg-transparent px-4 py-3.5 text-base font-black transition hover:border-[#A855F7]/80 sm:text-lg"
+            onClick={launchWizard}
+            disabled={!canContinue}
+            className={`mt-3.5 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3.5 text-base font-black transition sm:text-lg ${
+              canContinue
+                ? "border-[#3FE8FF]/65 bg-gradient-to-r from-[#3FE8FF]/10 to-[#A855F7]/10 hover:border-[#A855F7]/80 cursor-pointer"
+                : "border-white/10 bg-white/5 text-slate-500 cursor-not-allowed"
+            }`}
           >
             <span className="bg-[linear-gradient(90deg,#3FE8FF_0%,#22D3EE_38%,#A855F7_78%,#C084FC_100%)] bg-clip-text text-transparent">
-              {hasZipStarted ? "Continue to Step 3" : "Start Stacking"}
+              Start Stacking →
             </span>
             <ArrowRight size={20} className="text-[#A855F7]" />
           </button>
 
           <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.025] px-3 py-2 text-[10px] font-bold text-slate-400">
-            <span>ZIP → facility profile → StackQuote</span>
-            <span className="text-emerald-300">No utility login</span>
+            <span>Location → Industry selection → StackQuote</span>
+            <span className="text-emerald-300">No signup required</span>
           </div>
         </div>
       </div>
@@ -1446,16 +1551,16 @@ function HeroIntakeCard() {
 
 export default function HeroSection() {
   const { copy } = useSiteCopy();
-  const heroAccents     = copy<string[]>('hero_accent_lines',    _DEFAULT_ACCENTS);
-  const proofItems      = copy<string[]>('hero_proof_items',     _DEFAULT_PROOF_ITEMS);
-  const headlinePrefix  = copy('hero_headline_prefix');
-  const heroBadge       = copy('hero_badge_text');
-  const heroSubtext     = copy('hero_subtext');
+  const heroAccents = copy<string[]>("hero_accent_lines", _DEFAULT_ACCENTS);
+  const proofItems = copy<string[]>("hero_proof_items", _DEFAULT_PROOF_ITEMS);
+  const headlinePrefix = copy("hero_headline_prefix");
+  const heroBadge = copy("hero_badge_text");
+  const heroSubtext = copy("hero_subtext");
 
   const [activeAccentIndex, setActiveAccentIndex] = useState(0);
   const [typedAccent, setTypedAccent] = useState("");
 
-  const activeAccent = (heroAccents[activeAccentIndex] ?? heroAccents[0] ?? '');
+  const activeAccent = heroAccents[activeAccentIndex] ?? heroAccents[0] ?? "";
 
   useEffect(() => {
     const rotationTimer = window.setInterval(() => {
@@ -1492,7 +1597,8 @@ export default function HeroSection() {
       <div className="relative z-10 mx-auto grid w-full max-w-screen-2xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_0.74fr] lg:px-8 xl:px-12">
         <div className="max-w-3xl">
           <div className="mb-9 inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-purple-500/10 px-3 py-1.5 text-[12px] font-medium tracking-[0.12em] text-purple-400 shadow-[0_0_18px_rgba(168,85,247,0.18)]">
-            <Sparkles size={13} className="text-purple-400" /> {heroBadge || 'Independent B2B Energy Intelligence'}
+            <Sparkles size={13} className="text-purple-400" />{" "}
+            {heroBadge || "Independent B2B Energy Intelligence"}
           </div>
 
           <h1
@@ -1504,7 +1610,7 @@ export default function HeroSection() {
               textShadow: "0 1px 0 rgba(255,255,255,0.08), 0 14px 36px rgba(2,6,23,0.42)",
             }}
           >
-            <span className="inline-block">{headlinePrefix || 'Reduce Utility Risk'} </span>
+            <span className="inline-block">{headlinePrefix || "Reduce Utility Risk"} </span>
             <br />
             <span
               key={activeAccent}
@@ -1526,7 +1632,8 @@ export default function HeroSection() {
             className="mt-7 max-w-2xl text-lg leading-8 text-slate-400"
             style={{ fontFamily: "'Plus Jakarta Sans', 'DM Sans', sans-serif" }}
           >
-            {heroSubtext || 'Merlin compares utility power, storage, solar, generators, and flexible loads to recommend the right energy architecture for your business.'}
+            {heroSubtext ||
+              "Merlin compares utility power, storage, solar, generators, and flexible loads to recommend the right energy architecture for your business."}
           </p>
 
           <div className="mt-7 flex flex-wrap gap-x-7 gap-y-3">
