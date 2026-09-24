@@ -641,12 +641,15 @@ export default function WizardV8Page() {
         heroDraft = {};
       }
 
-      const slug = toIndustrySlug(industryParam ?? heroDraft.industry) ?? "other";
+      const countryParam = params.get("country");
+      const rawIndustry = industryParam ?? heroDraft.industry;
+      const slug = rawIndustry ? (toIndustrySlug(rawIndustry) ?? "") : "";
       const zip = zipParam ?? heroDraft.zip ?? "";
 
       actions.hydrateHeroIntake({
         zip,
-        industry: slug,
+        industry: slug as IndustrySlug,
+        country: countryParam ?? undefined,
         businessTypeLabel: heroDraft.businessTypeLabel,
         businessName: heroDraft.businessName,
         address: heroDraft.address,

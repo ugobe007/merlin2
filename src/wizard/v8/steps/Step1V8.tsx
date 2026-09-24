@@ -972,7 +972,9 @@ export function Step1V8({ state, actions }: Step1Props) {
                 onKeyDown={(event) => {
                   if (event.key === "Enter") handleLocationSubmit();
                 }}
-                placeholder={country === "US" ? "ZIP code" : "Country name or postal code"}
+                placeholder={
+                  country === "US" ? "5-digit US ZIP code" : "Country name or postal code"
+                }
                 className="step1-zip-input"
                 style={{
                   width: "100%",
@@ -984,9 +986,43 @@ export function Step1V8({ state, actions }: Step1Props) {
                   padding: "0 14px",
                   fontSize: 18,
                   outline: "none",
-                  marginBottom: zipPhase !== "idle" ? 6 : 12,
+                  marginBottom: country === "US" ? 6 : zipPhase !== "idle" ? 6 : 12,
                 }}
               />
+
+              {country === "US" && (
+                <div style={{ marginBottom: 10, display: "flex", justifyContent: "flex-end" }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCountry("International");
+                      if (locationConfirmed) {
+                        resetBusinessFlow();
+                        actions.clearLocation();
+                      }
+                      const firstIntlCountry = INTERNATIONAL_COUNTRIES.find((c) => c.code !== "US");
+                      if (firstIntlCountry) {
+                        setSelectedCountryCode(firstIntlCountry.code);
+                        actions.setLocationRaw(firstIntlCountry.name);
+                      }
+                    }}
+                    style={{
+                      border: "none",
+                      background: "transparent",
+                      color: T.accent,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      opacity: 0.9,
+                    }}
+                  >
+                    🌍 Outside the US? Switch to International Lookup →
+                  </button>
+                </div>
+              )}
 
               {/* ZIP detection status line — locating → fetching phases */}
               {zipPhase !== "idle" && (

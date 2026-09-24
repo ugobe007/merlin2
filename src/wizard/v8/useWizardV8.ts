@@ -1240,46 +1240,67 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
   const hydrateHeroIntake = useCallback(
     (input: {
       zip: string;
-      industry: IndustrySlug;
+      industry?: IndustrySlug | "";
       businessTypeLabel?: string;
       businessName?: string;
       address?: string;
       placeId?: string;
+      country?: string;
     }) => {
-      const zip = input.zip.replace(/\D/g, "").slice(0, 5);
+      const isUS = !input.country || input.country === "US";
+      const rawZip = input.zip.trim();
+      const zip = isUS ? rawZip.replace(/\D/g, "").slice(0, 5) : rawZip;
       const businessName = input.businessName?.trim() ?? "";
       const address = input.address?.trim() ?? "";
 
-      if (zip.length === 5) {
+      if (zip) {
         dispatch({ type: "SET_LOCATION_RAW", value: zip });
         dispatch({
           type: "SET_LOCATION",
           location: {
             zip,
             city: "",
-            state: "",
+            state: isUS ? "" : (input.country ?? ""),
             formattedAddress: address || zip,
           },
         });
 
-        void resolveZip(zip, abortRef.current?.signal)
-          .then((locationData) => {
-            dispatch({
-              type: "SET_LOCATION",
-              location: {
-                ...locationData,
-                formattedAddress: address || locationData.formattedAddress,
-              },
+        if (isUS && zip.length === 5) {
+          void resolveZip(zip, abortRef.current?.signal)
+            .then((locationData) => {
+              dispatch({
+                type: "SET_LOCATION",
+                location: {
+                  ...locationData,
+                  formattedAddress: address || locationData.formattedAddress,
+                },
+              });
+            })
+            .catch(() => {
+              // Keep the minimal ZIP location; utility/solar intel still loads fail-soft.
             });
-          })
-          .catch(() => {
-            // Keep the minimal ZIP location; utility/solar intel still loads fail-soft.
-          });
 
-        void loadLocationIntel(zip);
+          void loadLocationIntel(zip);
+        } else if (!isUS) {
+          void fetchUtility(zip, input.country ?? "CA")
+            .then((utilityData) => {
+              dispatch({
+                type: "PATCH_INTEL",
+                patch: {
+                  utilityRate: utilityData.rate ?? 0,
+                  demandCharge: utilityData.demandCharge ?? 0,
+                  utilityProvider: utilityData.provider ?? "",
+                  utilityStatus: "ready",
+                },
+              });
+            })
+            .catch(() => {});
+        }
       }
 
-      setIndustry(input.industry);
+      if (input.industry && input.industry !== ("other" as IndustrySlug)) {
+        setIndustry(input.industry);
+      }
 
       if (businessName || address) {
         setBusiness(businessName || `${input.businessTypeLabel ?? "Commercial facility"} site`, {
@@ -1289,7 +1310,13 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
         });
       }
 
-      dispatch({ type: "GO_TO_STEP", step: 3 });
+      // If a valid industry was selected, navigate to Step 3.
+      // If ZIP code ONLY was entered (no industry), navigate to Step 2 (Industry Selection)!
+      if (input.industry && input.industry !== ("other" as IndustrySlug)) {
+        dispatch({ type: "GO_TO_STEP", step: 3 });
+      } else {
+        dispatch({ type: "GO_TO_STEP", step: 2 });
+      }
     },
     [loadLocationIntel, setBusiness, setIndustry]
   );
