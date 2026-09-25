@@ -1064,6 +1064,7 @@ export interface WizardActions {
   hydrateHeroIntake: (input: {
     zip: string;
     industry: IndustrySlug;
+    country?: string;
     businessTypeLabel?: string;
     businessName?: string;
     address?: string;
