@@ -42,3 +42,12 @@ docs
 html
 button_mapping_audit_report.json
 customQuestions
+
+# Local build outputs and heavy dev folders (built inside Docker)
+dist
+mcp-server
+build
+.cache
+.output
+out
+.next
