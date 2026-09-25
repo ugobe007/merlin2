@@ -160,27 +160,33 @@ export default function QuestionCard({
                   type="button"
                   onClick={() => setAnswer(q.id, optVal)}
                   className={`
-                      p-3 rounded-lg border text-left transition-colors relative
+                      p-3 rounded-lg border text-left transition-all relative
                       ${
                         selected
-                          ? "border-blue-400 text-blue-300 font-semibold bg-transparent"
-                          : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
+                          ? "border-2 border-emerald-400 text-white font-bold bg-gradient-to-br from-emerald-500/25 to-cyan-500/15 shadow-[0_0_16px_rgba(16,185,129,0.35)]"
+                          : "border-slate-700/80 text-slate-200 hover:border-sky-400/60 hover:bg-slate-800/80 hover:text-white bg-slate-900/80"
                       }
                       ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                     `}
                   disabled={opt.disabled}
                 >
                   {selected && (
-                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 border-blue-400 flex items-center justify-center text-blue-300 text-xs font-bold">
+                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 flex items-center justify-center text-xs font-black shadow-[0_0_8px_rgba(16,185,129,0.6)]">
                       ✓
                     </span>
                   )}
                   <div className="flex items-center gap-2">
                     {opt.icon && <span className="text-lg">{opt.icon}</span>}
-                    <span className="font-medium text-sm lg:text-base">{opt.label}</span>
+                    <span className="font-semibold text-sm lg:text-base">{opt.label}</span>
                   </div>
                   {opt.description && (
-                    <p className="text-xs lg:text-sm text-slate-400 mt-1">{opt.description}</p>
+                    <p
+                      className={`text-xs lg:text-sm mt-1 ${
+                        selected ? "text-emerald-200" : "text-slate-400"
+                      }`}
+                    >
+                      {opt.description}
+                    </p>
                   )}
                 </button>
               );
@@ -200,24 +206,28 @@ export default function QuestionCard({
                   type="button"
                   onClick={() => setAnswer(q.id, optVal)}
                   className={`
-                      px-2 py-2.5 rounded-lg border text-center transition-colors relative min-h-[44px]
+                      px-2 py-2.5 rounded-lg border text-center transition-all relative min-h-[44px]
                       ${
                         selected
-                          ? "border-blue-400 text-blue-300 font-bold bg-blue-500/[0.08]"
-                          : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
+                          ? "border-2 border-emerald-400 text-white font-extrabold bg-gradient-to-br from-emerald-500/25 to-cyan-500/15 shadow-[0_0_14px_rgba(16,185,129,0.35)]"
+                          : "border-slate-700/80 text-slate-200 hover:border-sky-400/60 hover:bg-slate-800/80 hover:text-white bg-slate-900/80"
                       }
                       ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                     `}
                   disabled={opt.disabled}
                 >
                   {selected && (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] font-bold shadow-sm">
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 flex items-center justify-center text-[9px] font-black shadow-sm">
                       ✓
                     </span>
                   )}
-                  <div className="text-sm lg:text-base font-medium">{opt.icon || opt.label}</div>
+                  <div className="text-sm lg:text-base font-semibold">{opt.icon || opt.label}</div>
                   {opt.description && (
-                    <div className="text-[10px] lg:text-xs text-slate-500 mt-0.5">
+                    <div
+                      className={`text-[10px] lg:text-xs mt-0.5 ${
+                        selected ? "text-emerald-200" : "text-slate-400"
+                      }`}
+                    >
                       {opt.description}
                     </div>
                   )}
@@ -405,25 +415,31 @@ export default function QuestionCard({
                   type="button"
                   onClick={() => setAnswer(q.id, optVal)}
                   className={`
-                      p-3.5 rounded-lg border text-center transition-colors relative
+                      p-3.5 rounded-lg border text-center transition-all relative
                       ${
                         selected
-                          ? "border-violet-400 text-violet-300 font-semibold bg-transparent"
-                          : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
+                          ? "border-2 border-emerald-400 text-white font-bold bg-gradient-to-br from-emerald-500/25 to-cyan-500/15 shadow-[0_0_16px_rgba(16,185,129,0.35)]"
+                          : "border-slate-700/80 text-slate-200 hover:border-sky-400/60 hover:bg-slate-800/80 hover:text-white bg-slate-900/80"
                       }
                       ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                     `}
                   disabled={opt.disabled}
                 >
                   {selected && (
-                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 border-violet-400 flex items-center justify-center text-violet-400 text-xs font-bold">
+                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 flex items-center justify-center text-xs font-black shadow-[0_0_8px_rgba(16,185,129,0.6)]">
                       ✓
                     </span>
                   )}
                   {opt.icon && <div className="text-2xl mb-1.5">{opt.icon}</div>}
-                  <div className="font-semibold text-sm lg:text-base">{opt.label}</div>
+                  <div className="font-bold text-sm lg:text-base">{opt.label}</div>
                   {opt.description && (
-                    <p className="text-xs lg:text-sm text-slate-400 mt-1">{opt.description}</p>
+                    <p
+                      className={`text-xs lg:text-sm mt-1 ${
+                        selected ? "text-emerald-200" : "text-slate-400"
+                      }`}
+                    >
+                      {opt.description}
+                    </p>
                   )}
                 </button>
               );
@@ -449,7 +465,7 @@ export default function QuestionCard({
               <div className="space-y-3">
                 {/* Current value badge */}
                 <div className="flex justify-center">
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-lg border border-blue-400/30 text-blue-300 font-semibold text-base">
+                  <span className="inline-flex items-center px-4 py-1.5 rounded-lg border border-emerald-400/50 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 text-emerald-300 font-extrabold text-base shadow-[0_0_12px_rgba(16,185,129,0.3)]">
                     {sliderVal}
                     {q.unit || ""}
                   </span>
@@ -458,11 +474,11 @@ export default function QuestionCard({
                 <div className="relative pt-1">
                   <input
                     type="range"
-                    className="w-full h-2 rounded-full appearance-none cursor-pointer
-                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-400/80 [&::-webkit-slider-thumb]:cursor-pointer
-                      [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-blue-500 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-400/80 [&::-moz-range-thumb]:cursor-pointer"
+                    className="w-full h-2.5 rounded-full appearance-none cursor-pointer
+                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-emerald-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(16,185,129,0.8)]
+                      [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-emerald-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
                     style={{
-                      background: `linear-gradient(to right, rgb(79 140 255) 0%, rgb(79 140 255) ${pct}%, rgb(51 65 85) ${pct}%, rgb(51 65 85) 100%)`,
+                      background: `linear-gradient(to right, #10b981 0%, #38bdf8 ${pct}%, #1e293b ${pct}%, #1e293b 100%)`,
                     }}
                     min={q.range.min}
                     max={q.range.max}
@@ -471,7 +487,7 @@ export default function QuestionCard({
                     onChange={(e) => setAnswer(q.id, Number(e.target.value))}
                   />
                 </div>
-                <div className="flex justify-between text-xs text-slate-500">
+                <div className="flex justify-between text-xs text-slate-400 font-medium">
                   <span>
                     {q.range.min}
                     {q.unit || ""}
@@ -494,21 +510,21 @@ export default function QuestionCard({
                 type="button"
                 onClick={() => setAnswer(q.id, opt)}
                 className={`
-                    flex-1 p-3 rounded-lg border transition-colors relative
+                    flex-1 p-3.5 rounded-lg border transition-all relative flex items-center justify-center gap-2
                     ${
                       value === opt
-                        ? "border-blue-400 text-blue-300 font-semibold bg-transparent"
-                        : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
+                        ? "border-2 border-emerald-400 text-white font-bold bg-gradient-to-br from-emerald-500/25 to-cyan-500/15 shadow-[0_0_16px_rgba(16,185,129,0.35)]"
+                        : "border-slate-700/80 text-slate-200 hover:border-sky-400/60 hover:bg-slate-800/80 hover:text-white bg-slate-900/80"
                     }
                   `}
               >
                 {value === opt && (
-                  <span className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 border-blue-400 flex items-center justify-center text-blue-300 text-xs font-bold">
+                  <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 flex items-center justify-center text-xs font-black shadow-[0_0_8px_rgba(16,185,129,0.6)]">
                     ✓
                   </span>
                 )}
-                <span className="text-lg mr-2">{opt ? "✅" : "❌"}</span>
-                <span className="font-medium">{opt ? "Yes" : "No"}</span>
+                <span className="text-lg mr-1">{opt ? "✅" : "❌"}</span>
+                <span className="font-bold text-base">{opt ? "Yes" : "No"}</span>
               </button>
             ))}
           </div>
@@ -518,7 +534,7 @@ export default function QuestionCard({
         {renderer === "text" && (
           <input
             type="text"
-            className="w-full rounded-lg bg-slate-950/60 border border-slate-700/60 px-3 py-2.5 text-slate-100"
+            className="w-full rounded-lg bg-slate-900/90 border border-slate-700/80 px-3.5 py-2.5 text-slate-100 font-medium focus:border-sky-400 focus:ring-1 focus:ring-sky-400/40 focus:outline-none transition-all"
             placeholder={q.placeholder || ""}
             value={asString(value)}
             onChange={(e) => setAnswer(q.id, e.target.value)}
@@ -547,27 +563,33 @@ export default function QuestionCard({
                     }
                   }}
                   className={`
-                      p-3 rounded-lg border text-left transition-colors relative
+                      p-3 rounded-lg border text-left transition-all relative
                       ${
                         selected
-                          ? "border-violet-400 text-violet-300 font-semibold bg-transparent"
-                          : "border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-slate-300 bg-transparent"
+                          ? "border-2 border-emerald-400 text-white font-bold bg-gradient-to-br from-emerald-500/25 to-cyan-500/15 shadow-[0_0_16px_rgba(16,185,129,0.35)]"
+                          : "border-slate-700/80 text-slate-200 hover:border-sky-400/60 hover:bg-slate-800/80 hover:text-white bg-slate-900/80"
                       }
                       ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                     `}
                   disabled={opt.disabled}
                 >
                   {selected && (
-                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full border-2 border-violet-400 flex items-center justify-center text-violet-400 text-xs font-bold">
+                    <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 flex items-center justify-center text-xs font-black shadow-[0_0_8px_rgba(16,185,129,0.6)]">
                       ✓
                     </span>
                   )}
                   <div className="flex items-center gap-2">
                     {opt.icon && <span className="text-lg">{opt.icon}</span>}
-                    <span className="font-medium text-sm lg:text-base">{opt.label}</span>
+                    <span className="font-semibold text-sm lg:text-base">{opt.label}</span>
                   </div>
                   {opt.description && (
-                    <p className="text-xs lg:text-sm text-slate-400 mt-1">{opt.description}</p>
+                    <p
+                      className={`text-xs lg:text-sm mt-1 ${
+                        selected ? "text-emerald-200" : "text-slate-400"
+                      }`}
+                    >
+                      {opt.description}
+                    </p>
                   )}
                 </button>
               );
