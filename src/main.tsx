@@ -29,14 +29,21 @@ function isDynamicChunkLoadError(reason: unknown): boolean {
 }
 
 function reloadForStaleChunk() {
-  if (sessionStorage.getItem(CHUNK_RELOAD_KEY) === "1") return;
-
-  sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
+  try {
+    if (sessionStorage.getItem(CHUNK_RELOAD_KEY) === "1") return;
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, "1");
+  } catch (e) {
+    console.warn("Storage access disabled or restricted in incognito:", e);
+  }
   window.location.reload();
 }
 
 window.addEventListener("pageshow", () => {
-  sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+  try {
+    sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+  } catch (e) {
+    // Silent fail in incognito storage restriction
+  }
 });
 
 window.addEventListener("error", (event) => {
