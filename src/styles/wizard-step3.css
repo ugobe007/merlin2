@@ -35,11 +35,13 @@
 
 /* Configurator — project type + detail level */
 .wiz-s3-panel {
-  border: 1px solid rgba(99, 102, 241, 0.35);
-  border-radius: 12px;
-  background: transparent;
-  padding: 16px;
-  margin-bottom: 16px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(12px);
+  padding: 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .wiz-s3-config {
@@ -55,11 +57,11 @@
 
 .wiz-s3-field-label {
   margin: 0 0 10px;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #818cf8;
+  color: #38bdf8;
 }
 
 .wiz-s3-choices {
@@ -82,26 +84,31 @@
 }
 
 .wiz-s3-choice {
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(15, 23, 42, 0.35);
+  padding: 13px 15px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  background: rgba(15, 23, 42, 0.75);
   cursor: pointer;
   text-align: left;
-  transition:
-    border-color 0.15s,
-    background 0.15s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .wiz-s3-choice:hover {
-  border-color: rgba(129, 140, 248, 0.55);
-  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(56, 189, 248, 0.5);
+  background: rgba(30, 41, 59, 0.85);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 0 12px rgba(56, 189, 248, 0.15);
+  transform: translateY(-1px);
 }
 
 .wiz-s3-choice.active {
-  border: 2px solid #6366f1;
-  background: rgba(99, 102, 241, 0.18);
-  padding: 11px 13px;
+  border: 2px solid #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.24) 0%, rgba(6, 182, 212, 0.16) 100%);
+  padding: 12.5px 14.5px;
+  box-shadow:
+    0 0 20px rgba(16, 185, 129, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .wiz-s3-choice-label {
@@ -121,10 +128,12 @@
 
 .wiz-s3-choice.active .wiz-s3-choice-label {
   color: #ffffff;
+  font-weight: 800;
 }
 
 .wiz-s3-choice.active .wiz-s3-choice-sub {
-  color: #c7d2fe;
+  color: #a7f3d0;
+  font-weight: 600;
 }
 
 /* Streamline path */
@@ -164,20 +173,23 @@
 }
 
 .wiz-s3-skip {
-  padding: 12px 22px;
+  padding: 12px 24px;
   border-radius: 10px;
-  border: none;
-  background: #4f46e5;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #ffffff;
   font-size: 0.9375rem;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+  transition: all 0.2s ease;
 }
 
 .wiz-s3-skip:hover {
-  background: #4338ca;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.5);
+  transform: translateY(-1px);
 }
 
 /* Streamline — optional profile collapsed by default */
@@ -298,20 +310,23 @@
 }
 
 .wiz-s3-section {
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: transparent;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.45);
   overflow: hidden;
-  transition: border-color 0.15s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .wiz-s3-section.open {
   grid-column: 1 / -1;
-  border-color: rgba(99, 102, 241, 0.5);
+  border: 2px solid #38bdf8;
+  background: rgba(15, 23, 42, 0.85);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
 }
 
 .wiz-s3-section.complete:not(.open) {
-  border-color: rgba(52, 211, 153, 0.4);
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(16, 185, 129, 0.06);
 }
 
 .wiz-s3-section-trigger {
@@ -328,7 +343,7 @@
 }
 
 .wiz-s3-section-trigger:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .wiz-s3-section-icon {
@@ -354,7 +369,8 @@
 }
 
 .wiz-s3-section.open .wiz-s3-section-title {
-  color: #c7d2fe;
+  color: #7dd3fc;
+  font-weight: 800;
 }
 
 .wiz-s3-section-check {
@@ -409,7 +425,7 @@
 
 .wiz-s3-section.open .wiz-s3-section-chevron {
   transform: rotate(180deg);
-  color: #a5b4fc;
+  color: #38bdf8;
 }
 
 .wiz-s3-section-content {
@@ -432,7 +448,7 @@
   gap: 6px;
   padding: 10px 16px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   background: transparent;
   color: #cbd5e1;
   font-size: 0.8125rem;
@@ -445,7 +461,7 @@
 
 .wiz-s3-back:hover {
   color: #f8fafc;
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .wiz-s3-progress {
@@ -459,21 +475,21 @@
   align-items: center;
   gap: 8px;
   padding: 14px 28px;
-  border-radius: 10px;
-  border: 2px solid #4f8aff;
-  background: transparent;
-  color: #93c5fd;
+  border-radius: 12px;
+  border: 2px solid #34d399;
+  background: linear-gradient(135deg, #10b981 0%, #0284c7 100%);
+  color: #ffffff;
   font-size: 1.0625rem;
   font-weight: 800;
   cursor: pointer;
-  transition:
-    border-color 0.15s,
-    color 0.15s;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+  transition: all 0.2s ease;
 }
 
 .wiz-s3-continue:hover {
-  border-color: #38bdf8;
-  color: #e0f2fe;
+  box-shadow: 0 6px 26px rgba(16, 185, 129, 0.6);
+  transform: translateY(-1px);
+  color: #ffffff;
 }
 
 /* Brighter page header copy inside Step 3 */

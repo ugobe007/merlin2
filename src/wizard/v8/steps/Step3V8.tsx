@@ -393,30 +393,37 @@ export function Step3V8({ state, actions }: Props) {
                     type="button"
                     onClick={() => setAnswerWithTracking(q.id, opt.value)}
                     style={{
-                      background: isSelected ? "rgba(16,185,129,0.10)" : "rgba(51, 65, 85, 0.5)",
+                      background: isSelected
+                        ? "linear-gradient(135deg, rgba(16,185,129,0.24) 0%, rgba(6,182,212,0.16) 100%)"
+                        : "rgba(15, 23, 42, 0.75)",
                       border: isSelected
-                        ? "1.5px solid rgba(16,185,129,0.50)"
-                        : "1px solid rgba(255,255,255,0.08)",
-                      borderRadius: 10,
+                        ? "2px solid #10B981"
+                        : "1.5px solid rgba(255,255,255,0.16)",
+                      borderRadius: 12,
                       padding: "12px 14px",
                       textAlign: "left",
                       cursor: "pointer",
-                      transition: "all 0.15s ease",
+                      transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                       color: "white",
                       display: "flex",
                       alignItems: "center",
                       gap: 10,
+                      boxShadow: isSelected
+                        ? "0 0 20px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.2)"
+                        : "none",
                     }}
                     onMouseEnter={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.background = "rgba(51, 65, 85, 0.7)";
-                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                        e.currentTarget.style.background = "rgba(30, 41, 59, 0.85)";
+                        e.currentTarget.style.borderColor = "rgba(56,189,248,0.5)";
+                        e.currentTarget.style.boxShadow = "0 0 12px rgba(56,189,248,0.15)";
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.background = "rgba(51, 65, 85, 0.5)";
-                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                        e.currentTarget.style.background = "rgba(15, 23, 42, 0.75)";
+                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.16)";
+                        e.currentTarget.style.boxShadow = "none";
                       }
                     }}
                   >
@@ -432,15 +439,20 @@ export function Step3V8({ state, actions }: Props) {
                         <span
                           style={{
                             fontSize: 13,
-                            fontWeight: 600,
-                            color: isSelected ? "#6EE7B7" : "white",
+                            fontWeight: isSelected ? 800 : 700,
+                            color: isSelected ? "#FFFFFF" : "#F1F5F9",
                           }}
                         >
                           {opt.label}
                         </span>
                       </div>
                       {opt.description && (
-                        <div className="wiz-s3-q-opt-desc">{opt.description}</div>
+                        <div
+                          className="wiz-s3-q-opt-desc"
+                          style={{ color: isSelected ? "#A7F3D0" : "#94A3B8" }}
+                        >
+                          {opt.description}
+                        </div>
                       )}
                     </div>
                     {/* Circle checkmark indicator */}
@@ -451,15 +463,17 @@ export function Step3V8({ state, actions }: Props) {
                         height: 22,
                         borderRadius: "50%",
                         border: isSelected ? "none" : "1.5px solid rgba(255,255,255,0.25)",
-                        background: isSelected ? "#34d399" : "transparent",
+                        background: isSelected
+                          ? "linear-gradient(135deg, #10b981 0%, #06b6d4 100%)"
+                          : "transparent",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         fontSize: 11,
-                        fontWeight: 700,
-                        color: "#0d1230",
+                        fontWeight: 800,
+                        color: "#FFFFFF",
                         transition: "all 0.15s ease",
-                        boxShadow: isSelected ? "0 0 8px rgba(52,211,153,0.45)" : "none",
+                        boxShadow: isSelected ? "0 0 10px rgba(16,185,129,0.6)" : "none",
                       }}
                     >
                       {isSelected && "✓"}
@@ -478,12 +492,23 @@ export function Step3V8({ state, actions }: Props) {
               placeholder={(qAny.placeholder as string) || "Enter value"}
               style={{
                 width: "100%",
-                background: "rgba(51, 65, 85, 0.5)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(15, 23, 42, 0.75)",
+                border: "1.5px solid rgba(255,255,255,0.18)",
                 borderRadius: 10,
                 padding: "12px 14px",
                 color: "white",
                 fontSize: 14,
+                fontWeight: 600,
+                outline: "none",
+                transition: "all 0.15s ease",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "#38bdf8";
+                e.currentTarget.style.boxShadow = "0 0 12px rgba(56,189,248,0.3)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
+                e.currentTarget.style.boxShadow = "none";
               }}
             />
           )}
@@ -502,21 +527,36 @@ export function Step3V8({ state, actions }: Props) {
                     onClick={() => setAnswerWithTracking(q.id, opt.value)}
                     style={{
                       flex: 1,
-                      background: isSelected ? "rgba(16,185,129,0.10)" : "rgba(51, 65, 85, 0.5)",
+                      background: isSelected
+                        ? "linear-gradient(135deg, rgba(16,185,129,0.24) 0%, rgba(6,182,212,0.16) 100%)"
+                        : "rgba(15, 23, 42, 0.75)",
                       border: isSelected
-                        ? "1.5px solid rgba(16,185,129,0.50)"
-                        : "1px solid rgba(255,255,255,0.08)",
+                        ? "2px solid #10B981"
+                        : "1.5px solid rgba(255,255,255,0.16)",
                       borderRadius: 10,
                       padding: "12px",
-                      color: isSelected ? "#6EE7B7" : "white",
+                      color: isSelected ? "#FFFFFF" : "#F1F5F9",
                       fontSize: 13,
-                      fontWeight: 600,
+                      fontWeight: isSelected ? 800 : 700,
                       cursor: "pointer",
-                      transition: "all 0.15s ease",
+                      transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       gap: 8,
+                      boxShadow: isSelected ? "0 0 18px rgba(16,185,129,0.35)" : "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = "rgba(30, 41, 59, 0.85)";
+                        e.currentTarget.style.borderColor = "rgba(56,189,248,0.5)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.background = "rgba(15, 23, 42, 0.75)";
+                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.16)";
+                      }
                     }}
                   >
                     {opt.label}
@@ -526,15 +566,18 @@ export function Step3V8({ state, actions }: Props) {
                         height: 18,
                         borderRadius: "50%",
                         border: isSelected ? "none" : "1.5px solid rgba(255,255,255,0.25)",
-                        background: isSelected ? "#34d399" : "transparent",
+                        background: isSelected
+                          ? "linear-gradient(135deg, #10b981 0%, #06b6d4 100%)"
+                          : "transparent",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         fontSize: 10,
-                        fontWeight: 700,
-                        color: "#0d1230",
+                        fontWeight: 800,
+                        color: "#FFFFFF",
                         transition: "all 0.15s ease",
                         flexShrink: 0,
+                        boxShadow: isSelected ? "0 0 8px rgba(16,185,129,0.5)" : "none",
                       }}
                     >
                       {isSelected && "✓"}

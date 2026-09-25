@@ -1066,9 +1066,8 @@ export default function WizardShellV7({
               </div>
             </div>
 
-            {/* Next — solid fill for steps 4+ (high-intent CTA), outline for early steps */}
+            {/* Next — solid vibrant CTA button when enabled */}
             {(() => {
-              const isFilled = canGoNext && !isNextLoading && safeStep >= 3;
               const isActive = canGoNext && !isNextLoading;
               return (
                 <button
@@ -1078,44 +1077,38 @@ export default function WizardShellV7({
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
-                    padding: isFilled ? "14px 28px" : "11px 22px",
-                    borderRadius: isFilled ? 12 : 10,
-                    minHeight: isFilled ? 54 : 46,
-                    background: "transparent",
-                    border: isFilled
-                      ? "2px solid #7c3aed"
-                      : isActive
-                        ? "2px solid #4f8aff"
-                        : "2px solid rgba(255,255,255,0.08)",
-                    color: isFilled ? "#c4b5fd" : isActive ? "#BFDBFE" : "rgba(232,235,243,0.28)",
+                    padding: "14px 28px",
+                    borderRadius: 12,
+                    minHeight: 52,
+                    background: isActive
+                      ? "linear-gradient(135deg, #10b981 0%, #0284c7 100%)"
+                      : "rgba(30, 41, 59, 0.5)",
+                    border: isActive ? "2px solid #34d399" : "1.5px solid rgba(255,255,255,0.12)",
+                    color: isActive ? "#ffffff" : "rgba(148,163,184,0.6)",
                     cursor: isActive ? "pointer" : "not-allowed",
-                    fontSize: isFilled ? 16 : 14,
-                    fontWeight: 700,
-                    letterSpacing: "0.01em",
-                    boxShadow: isFilled ? "0 0 20px rgba(124,58,237,0.30)" : "none",
-                    animation: "none",
-                    transition: "all 0.18s ease",
+                    fontSize: 16,
+                    fontWeight: 800,
+                    letterSpacing: "0.02em",
+                    boxShadow: isActive
+                      ? "0 0 24px rgba(16,185,129,0.45), 0 4px 14px rgba(0,0,0,0.3)"
+                      : "none",
+                    transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                   }}
                   onMouseEnter={(e) => {
                     if (isActive) {
-                      if (isFilled) {
-                        e.currentTarget.style.borderColor = "#9b6dff";
-                        e.currentTarget.style.boxShadow = "0 0 28px rgba(124,58,237,0.45)";
-                        e.currentTarget.style.transform = "translateY(-1px)";
-                      } else {
-                        e.currentTarget.style.background = "rgba(99,120,255,0.06)";
-                      }
+                      e.currentTarget.style.background =
+                        "linear-gradient(135deg, #059669 0%, #0369a1 100%)";
+                      e.currentTarget.style.boxShadow =
+                        "0 0 34px rgba(16,185,129,0.65), 0 6px 20px rgba(0,0,0,0.4)";
+                      e.currentTarget.style.transform = "translateY(-2px)";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.borderColor = isFilled
-                      ? "#7c3aed"
-                      : isActive
-                        ? "#4f8aff"
-                        : "rgba(255,255,255,0.08)";
-                    e.currentTarget.style.boxShadow = isFilled
-                      ? "0 0 20px rgba(124,58,237,0.30)"
+                    e.currentTarget.style.background = isActive
+                      ? "linear-gradient(135deg, #10b981 0%, #0284c7 100%)"
+                      : "rgba(30, 41, 59, 0.5)";
+                    e.currentTarget.style.boxShadow = isActive
+                      ? "0 0 24px rgba(16,185,129,0.45), 0 4px 14px rgba(0,0,0,0.3)"
                       : "none";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
