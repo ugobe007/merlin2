@@ -135,7 +135,45 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Pre-rendered semantic HTML for search crawlers, AI bots, & link previews -->
+      <main style="max-width: 1200px; margin: 0 auto; padding: 40px 20px; font-family: system-ui, -apple-system, sans-serif; color: #f8fafc; background-color: #060D1F;">
+        <header style="margin-bottom: 32px;">
+          <h1 style="font-size: 36px; font-weight: 800; color: #ffffff; margin-bottom: 12px;">Merlin Energy — Energy Stacking & Commercial Battery Calculator</h1>
+          <p style="font-size: 18px; color: #94a3b8; max-width: 800px; line-height: 1.6;">
+            Compare utility power, battery storage (BESS), rooftop/canopy solar, generators, and flexible loads to recommend the right energy architecture for your business.
+          </p>
+        </header>
+        
+        <section style="margin-bottom: 40px; background: rgba(255,255,255,0.03); padding: 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+          <h2 style="font-size: 24px; font-weight: 700; color: #38bdf8; margin-bottom: 16px;">Calculate Demand Charge Savings & BESS Payback in 60 Seconds</h2>
+          <p style="font-size: 16px; color: #cbd5e1; line-height: 1.5; margin-bottom: 20px;">
+            Input your location and industry to simulate 8,760 hourly load profiles, utility tariff schedules, and NREL 2024 technology cost benchmarks.
+          </p>
+          <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <a href="https://merlinenergy.net/wizard" style="background: #3b82f6; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Launch StackQuote™ Calculator →</a>
+            <a href="https://merlinenergy.net/pricing" style="border: 1px solid #475569; color: #cbd5e1; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">View Pricing & API Access</a>
+            <a href="https://merlinenergy.net/widget/docs" style="border: 1px solid #475569; color: #cbd5e1; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Embed 3rd-Party Widget</a>
+          </div>
+        </section>
+
+        <section style="margin-bottom: 40px;">
+          <h3 style="font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 16px;">Supported Commercial Industry Verticals</h3>
+          <ul style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; list-style: none; padding: 0;">
+            <li><a href="https://merlinenergy.net/hotel" style="color: #60a5fa; text-decoration: none;">Hotels & Hospitality</a></li>
+            <li><a href="https://merlinenergy.net/car-wash" style="color: #60a5fa; text-decoration: none;">Car Wash Facilities</a></li>
+            <li><a href="https://merlinenergy.net/data-center" style="color: #60a5fa; text-decoration: none;">Data Centers & Cloud</a></li>
+            <li><a href="https://merlinenergy.net/hospital" style="color: #60a5fa; text-decoration: none;">Hospitals & Healthcare</a></li>
+            <li><a href="https://merlinenergy.net/ev-charging" style="color: #60a5fa; text-decoration: none;">EV Charging Depots</a></li>
+            <li><a href="https://merlinenergy.net/manufacturing" style="color: #60a5fa; text-decoration: none;">Manufacturing Plants</a></li>
+            <li><a href="https://merlinenergy.net/warehouse" style="color: #60a5fa; text-decoration: none;">Logistics Warehouses</a></li>
+            <li><a href="https://merlinenergy.net/retail" style="color: #60a5fa; text-decoration: none;">Commercial Retail</a></li>
+            <li><a href="https://merlinenergy.net/office" style="color: #60a5fa; text-decoration: none;">Commercial Office Buildings</a></li>
+            <li><a href="https://merlinenergy.net/cold-storage" style="color: #60a5fa; text-decoration: none;">Cold Storage & Refrigeration</a></li>
+          </ul>
+        </section>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
