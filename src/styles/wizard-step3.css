@@ -142,17 +142,21 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  padding: 14px 16px;
-  margin-bottom: 16px;
-  border: 1px solid rgba(52, 211, 153, 0.35);
-  border-radius: 10px;
-  background: rgba(52, 211, 153, 0.06);
+  gap: 16px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  border: 1.5px solid rgba(56, 189, 248, 0.35);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.6) 100%);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .wiz-s3-streamline-text {
   flex: 1;
-  min-width: 220px;
+  min-width: 260px;
   font-size: 0.875rem;
   font-weight: 500;
   color: #e2e8f0;
@@ -160,7 +164,7 @@
 }
 
 .wiz-s3-streamline-text strong {
-  color: #34d399;
+  color: #38bdf8;
   font-weight: 800;
 }
 
@@ -172,32 +176,62 @@
   line-height: 1.45;
 }
 
-.wiz-s3-skip {
-  padding: 12px 24px;
+.wiz-s3-streamline-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.wiz-s3-build-detail {
+  padding: 11px 18px;
   border-radius: 10px;
-  border: 1px solid rgba(52, 211, 153, 0.4);
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: 1.5px solid #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(6, 182, 212, 0.18) 100%);
   color: #ffffff;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wiz-s3-build-detail:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.38) 0%, rgba(6, 182, 212, 0.28) 100%);
+  box-shadow: 0 0 22px rgba(16, 185, 129, 0.5);
+  transform: translateY(-1px);
+}
+
+.wiz-s3-skip-cyan {
+  padding: 11px 18px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  background: rgba(15, 23, 42, 0.75);
+  color: #38bdf8;
+  font-size: 0.875rem;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
-  transition: all 0.2s ease;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.18);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.wiz-s3-skip:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  box-shadow: 0 6px 22px rgba(16, 185, 129, 0.5);
+.wiz-s3-skip-cyan:hover {
+  color: #7dd3fc;
+  border-color: #38bdf8;
+  background: rgba(30, 41, 59, 0.9);
+  box-shadow: 0 0 22px rgba(56, 189, 248, 0.4);
   transform: translateY(-1px);
 }
 
 /* Streamline — optional profile collapsed by default */
 .wiz-s3-profile-optional {
-  margin-top: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  background: rgba(15, 23, 42, 0.25);
+  margin-top: 10px;
+  border: 1.5px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.45);
+  transition: all 0.2s ease;
 }
 
 .wiz-s3-profile-optional-summary {
@@ -205,12 +239,16 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 11px 14px;
+  padding: 13px 16px;
   cursor: pointer;
   list-style: none;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: #f8fafc;
+}
+
+.wiz-s3-profile-optional-summary:hover {
+  color: #38bdf8;
 }
 
 .wiz-s3-profile-optional-summary::-webkit-details-marker {
@@ -218,11 +256,15 @@
 }
 
 .wiz-s3-profile-optional-meta {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #38bdf8;
   letter-spacing: 0.04em;
   white-space: nowrap;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
 }
 
 .wiz-s3-hub--optional {

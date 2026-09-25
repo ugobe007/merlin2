@@ -290,6 +290,17 @@ export function Step3V8({ state, actions }: Props) {
     });
   }, []);
 
+  const handleBuildInDetail = useCallback(() => {
+    setProfileOptionalOpen(true);
+    setOpenSections(new Set(orderedSections.map((sec) => sec.id)));
+    setTimeout(() => {
+      const el = document.getElementById("wiz-s3-customize-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 60);
+  }, [orderedSections]);
+
   // Scroll sentinel for section-top
   const sectionTopRef = useRef<HTMLDivElement>(null);
 
@@ -789,31 +800,41 @@ export function Step3V8({ state, actions }: Props) {
         {detailLevel === "streamline" && (
           <div className="wiz-s3-streamline">
             <div className="wiz-s3-streamline-text">
-              <strong>Defaults applied</strong> for {displayName} — you&apos;re ready for add-ons.
+              <strong>Defaults applied</strong> for {displayName} — choose your path:
               <span className="wiz-s3-streamline-hint">
-                Expand profile below only if you want to override specific inputs.
+                Customize your facility inputs in detail below for max precision, or skip ahead
+                using high-confidence industry defaults.
               </span>
             </div>
-            <button
-              type="button"
-              className="wiz-s3-skip"
-              onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
-            >
-              Skip to add-ons →
-            </button>
+            <div className="wiz-s3-streamline-actions">
+              <button type="button" className="wiz-s3-build-detail" onClick={handleBuildInDetail}>
+                ✏️ Build quote in detail
+              </button>
+              <button
+                type="button"
+                className="wiz-s3-skip-cyan"
+                onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
+              >
+                Skip to add-ons →
+              </button>
+            </div>
           </div>
         )}
 
         {detailLevel === "streamline" ? (
           <details
+            id="wiz-s3-customize-section"
             className="wiz-s3-profile-optional"
             open={profileOptionalOpen}
             onToggle={(e) => setProfileOptionalOpen((e.target as HTMLDetailsElement).open)}
           >
             <summary className="wiz-s3-profile-optional-summary">
-              <span>Customize facility profile</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span>⚙️</span>
+                <span>Customize facility inputs in detail</span>
+              </span>
               <span className="wiz-s3-profile-optional-meta">
-                Optional · {displayedCount} defaults applied
+                Optional · {displayedCount} defaults pre-filled
               </span>
             </summary>
             <div className="wiz-s3-hub wiz-s3-hub--optional">
