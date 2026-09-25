@@ -1523,6 +1523,34 @@ function HeroIntakeCard() {
             </div>
           )}
 
+          {((countryMode === "US" && zip.length === 5) ||
+            (countryMode === "International" && zip.length >= 2)) && (
+            <div className="mt-4 rounded-xl border border-cyan-400/30 bg-gradient-to-r from-blue-950/60 via-purple-950/60 to-slate-950/60 p-4 text-left shadow-xl animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center justify-between text-xs font-bold text-cyan-300 uppercase tracking-wider mb-2.5">
+                <span className="flex items-center gap-1.5">
+                  ⚡ Instant 60-Sec Regional Estimate
+                </span>
+                <span className="text-[10px] text-slate-400 font-semibold bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                  NREL ATB 2024
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-lg bg-slate-900/80 p-2.5 border border-emerald-500/20">
+                  <div className="text-[10px] text-slate-400 font-medium">Est. Demand Savings</div>
+                  <div className="text-sm font-black text-emerald-400">$18,500/yr</div>
+                </div>
+                <div className="rounded-lg bg-slate-900/80 p-2.5 border border-purple-500/20">
+                  <div className="text-[10px] text-slate-400 font-medium">Rec. BESS Size</div>
+                  <div className="text-sm font-black text-purple-300">150 kW / 300 kWh</div>
+                </div>
+                <div className="rounded-lg bg-slate-900/80 p-2.5 border border-amber-500/20">
+                  <div className="text-[10px] text-slate-400 font-medium">Est. Simple Payback</div>
+                  <div className="text-sm font-black text-amber-300">3.8 Years</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={launchWizard}
