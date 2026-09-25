@@ -1426,7 +1426,7 @@ function HeroIntakeCard() {
             </div>
           </div>
 
-          {hasZipStarted && (
+          {zip.trim().length > 0 && (
             <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.035] p-3">
                 <div className="grid gap-2">
