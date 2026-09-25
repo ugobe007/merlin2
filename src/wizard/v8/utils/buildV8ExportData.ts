@@ -31,12 +31,11 @@ function generateQuoteNumber(): string {
  * Requires: state.selectedTierIndex is valid (Step 6 validation ensures this)
  */
 export function buildV8ExportData(state: WizardState): QuoteExportData {
+  const activeIdx = state.selectedTierIndex !== null ? state.selectedTierIndex : 1;
   const tier =
-    state.tiers && state.selectedTierIndex !== null
-      ? state.tiers[state.selectedTierIndex]
-      : undefined;
+    state.tiers && state.tiers.length > 0 ? (state.tiers[activeIdx] ?? state.tiers[0]) : undefined;
   if (!tier) {
-    throw new Error("Cannot export quote: no tier selected");
+    throw new Error("Cannot export quote: no tier available");
   }
 
   // Location string

@@ -36,6 +36,7 @@ import {
   ExternalLink,
   Home,
   Droplets,
+  Loader2,
 } from "lucide-react";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import TrueQuoteFinancialModal from "@/components/wizard/v7/shared/TrueQuoteFinancialModal";
@@ -559,11 +560,19 @@ export default function Step5V8({ state, actions }: Props) {
   // ═══════════════════════════════════════════════════════════════════════
 
   const { tiers, selectedTierIndex, location, industry } = state;
-  const tier = tiers && selectedTierIndex !== null ? tiers[selectedTierIndex] : undefined;
+  const activeTierIndex = selectedTierIndex !== null ? selectedTierIndex : 1;
+  const tier = tiers && tiers.length > 0 ? (tiers[activeTierIndex] ?? tiers[0]) : undefined;
   const countryCode = state.countryCode || state.country || "US";
   const dcProfile =
     state.facilityCalcDetails?.industry === "data_center" ? state.facilityCalcDetails : null;
   const dcFin = tier?.dataCenterFinancials;
+
+  // Auto-select tier 1 (Recommended) if selectedTierIndex is null
+  React.useEffect(() => {
+    if (selectedTierIndex === null && tiers && tiers.length > 0) {
+      actions.selectTier(1);
+    }
+  }, [selectedTierIndex, tiers, actions]);
 
   // Debug logging (dev only, runs once on mount)
   React.useEffect(() => {
@@ -665,17 +674,24 @@ export default function Step5V8({ state, actions }: Props) {
   // ═══════════════════════════════════════════════════════════════════════
 
   if (!tier) {
-    console.error("[Step5V8] No tier data available!", { tiers, selectedTierIndex });
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="text-red-500 text-xl">⚠️ No tier data available</div>
-          <button
-            onClick={() => actions.goToStep(5)}
-            className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-          >
-            ← Back to Energy Stack
-          </button>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "80px 24px",
+          gap: 16,
+          color: "white",
+        }}
+      >
+        <Loader2
+          style={{ width: 36, height: 36, color: "#38bdf8", animation: "spin 1s linear infinite" }}
+        />
+        <div style={{ fontSize: 18, fontWeight: 700 }}>Finalizing your StackQuote™...</div>
+        <div style={{ fontSize: 14, color: "rgba(232,235,243,0.64)" }}>
+          Building equipment specifications and financial model
         </div>
       </div>
     );
