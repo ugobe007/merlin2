@@ -280,8 +280,12 @@ export function getCriticalFieldIds(
     questions.map((q) => String(q?.id ?? "")).filter((id) => id && id !== "undefined")
   );
 
-  // 1. Explicit curated list (filtered to IDs that actually exist in the schema).
-  const explicit = schemaKey ? CRITICAL_FIELDS_BY_SCHEMA[schemaKey] : undefined;
+  // 1. Explicit curated list (supports both underscore and hyphenated keys).
+  const normalizedKey = schemaKey ? schemaKey.replace(/_/g, "-") : undefined;
+  const explicit = schemaKey
+    ? (CRITICAL_FIELDS_BY_SCHEMA[schemaKey] ??
+      (normalizedKey ? CRITICAL_FIELDS_BY_SCHEMA[normalizedKey] : undefined))
+    : undefined;
   if (explicit && explicit.length > 0) {
     for (const id of explicit) {
       if (validIds.has(id)) ids.add(id);

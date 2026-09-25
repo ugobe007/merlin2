@@ -284,6 +284,14 @@ export function Step3V8({ state, actions }: Props) {
     });
   }, []);
 
+  const expandAllSections = useCallback(() => {
+    setOpenSections(new Set(orderedSections.map((s) => s.id)));
+  }, [orderedSections]);
+
+  const collapseAllSections = useCallback(() => {
+    setOpenSections(new Set());
+  }, []);
+
   // Scroll sentinel for section-top
   const sectionTopRef = useRef<HTMLDivElement>(null);
 
@@ -789,7 +797,28 @@ export function Step3V8({ state, actions }: Props) {
                 add-ons.
               </span>
             </div>
-            <div className="wiz-s3-streamline-actions">
+            <div
+              className="wiz-s3-streamline-actions"
+              style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}
+            >
+              <button
+                type="button"
+                onClick={() => actions.setDetailLevel("critical")}
+                style={{
+                  padding: "11px 18px",
+                  borderRadius: 10,
+                  border: "1.5px solid rgba(255,255,255,0.22)",
+                  background: "rgba(15, 23, 42, 0.75)",
+                  color: "#ffffff",
+                  fontSize: "0.875rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                🎯 Customize key inputs
+              </button>
               <button
                 type="button"
                 className="wiz-s3-skip-cyan"
@@ -802,12 +831,57 @@ export function Step3V8({ state, actions }: Props) {
         )}
 
         <div className="wiz-s3-hub">
-          <div className="wiz-s3-hub-hdr">
-            <span className="wiz-s3-hub-title">Facility Profile Inputs</span>
-            <span className="wiz-s3-hub-count">
-              {answeredCount} of {displayedCount} complete · {defaultFilledIds.size} defaults
-              applied
-            </span>
+          <div
+            className="wiz-s3-hub-hdr"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 12,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span className="wiz-s3-hub-title">{displayName} Profile Inputs</span>
+              <span className="wiz-s3-hub-count">
+                {answeredCount} of {displayedCount} complete · {defaultFilledIds.size} defaults
+                applied
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                type="button"
+                onClick={expandAllSections}
+                style={{
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  borderRadius: 8,
+                  color: "#38bdf8",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  padding: "5px 12px",
+                  cursor: "pointer",
+                }}
+              >
+                Expand all
+              </button>
+              <button
+                type="button"
+                onClick={collapseAllSections}
+                style={{
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  borderRadius: 8,
+                  color: "rgba(232,235,243,0.70)",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: "5px 12px",
+                  cursor: "pointer",
+                }}
+              >
+                Collapse all
+              </button>
+            </div>
           </div>
 
           <div className="wiz-s3-sections">
