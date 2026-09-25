@@ -39,6 +39,36 @@ import {
 const devLog = import.meta.env.DEV ? (...a: unknown[]) => console.log(...a) : () => undefined;
 const devWarn = import.meta.env.DEV ? (...a: unknown[]) => console.warn(...a) : () => undefined;
 
+export const DEFAULT_INDUSTRY_LOAD_KW: Record<string, number> = {
+  hotel: 150,
+  car_wash: 45,
+  ev_charging: 350,
+  office: 120,
+  retail: 90,
+  restaurant: 65,
+  warehouse: 200,
+  manufacturing: 500,
+  data_center: 2000,
+  hospital: 800,
+  healthcare: 300,
+  gas_station: 40,
+  truck_stop: 250,
+  apartment: 180,
+  cold_storage: 400,
+  college: 600,
+  government: 300,
+  airport: 1500,
+  casino: 1200,
+  microgrid: 500,
+  residential: 15,
+  agricultural: 100,
+  shopping_center: 450,
+  indoor_farm: 350,
+  fitness_center: 110,
+  gym: 110,
+  other: 100,
+};
+
 // Intel fetches (utility, solar, weather) use local services — no backend needed.
 // Location resolution is V8-native: direct ZIP lookup (zippopotam.us) with
 // utility-rate-service fallback. No dependency on V7's backend /api/location/resolve.
@@ -1062,21 +1092,26 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
           baseLoadKW: Math.round(baseKW),
           peakLoadKW: Math.round(peakKW),
           facilityCalcDetails: null,
-          // criticalLoadKW: result.criticalLoadKW, // TODO: Re-enable when PowerCalculationResult includes this
         });
       } else {
-        // No valid power calculated - log for debugging
-        if (import.meta.env.DEV) {
-          console.warn("[useWizardV8] Power calculation returned 0 for both base and peak", result);
-        }
+        // Fallback default base load by industry to guarantee non-zero baseLoadKW
+        const fallbackBase = DEFAULT_INDUSTRY_LOAD_KW[state.industry ?? "other"] ?? 100;
+        dispatch({
+          type: "SET_BASE_LOAD",
+          baseLoadKW: fallbackBase,
+          peakLoadKW: Math.round(fallbackBase * 1.3),
+          facilityCalcDetails: null,
+        });
       }
     } catch (err) {
-      // Calculation may fail with partial answers
-      if (import.meta.env.DEV) {
-        console.error("[useWizardV8] Power calculation failed:", err);
-        console.log("[useWizardV8] Failed with industry:", ssotSlug, "answers:", answers);
-      }
-      // baseLoadKW stays at 0 until enough answers are present
+      // Calculation may fail with partial answers — fallback to default industry load
+      const fallbackBase = DEFAULT_INDUSTRY_LOAD_KW[state.industry ?? "other"] ?? 100;
+      dispatch({
+        type: "SET_BASE_LOAD",
+        baseLoadKW: fallbackBase,
+        peakLoadKW: Math.round(fallbackBase * 1.3),
+        facilityCalcDetails: null,
+      });
     }
   }, [powerAnswersKey, state.industry]);
 
