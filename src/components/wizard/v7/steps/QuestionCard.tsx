@@ -91,18 +91,18 @@ export default function QuestionCard({
             <div className="w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-blue-500/15 flex items-center justify-center text-blue-300 text-xs lg:text-sm font-semibold">
               {index + 1}
             </div>
-            <span className="px-2 py-0.5 text-slate-400 text-xs lg:text-sm font-semibold tracking-wide rounded capitalize border border-white/[0.08]">
-              {q.section}
+            <span className="px-2 py-0.5 text-slate-400 text-xs font-semibold tracking-wide rounded capitalize border border-white/[0.08] whitespace-nowrap inline-flex items-center truncate max-w-[140px] shrink-0">
+              {q.section?.replace(/_/g, " ")}
             </span>
             {required && !hasValue && (
-              <span className="px-2 py-0.5 bg-red-500/20 text-red-300 text-[10px] font-bold uppercase rounded border border-red-500/40">
+              <span className="px-2 py-0.5 bg-red-500/20 text-red-300 text-[10px] font-bold uppercase rounded border border-red-500/40 whitespace-nowrap inline-flex items-center shrink-0">
                 Required
               </span>
             )}
-            {hasValue && !isDefaultFilled && <span className="text-blue-300 text-sm">✓</span>}
+            {hasValue && !isDefaultFilled && <span className="text-blue-300 text-sm shrink-0">✓</span>}
             {isDefaultFilled && (
-              <span className="px-2 py-0.5 bg-cyan-500/15 text-cyan-300 text-[10px] font-medium rounded-full border border-cyan-500/20 flex items-center gap-1">
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <span className="px-2 py-0.5 bg-cyan-500/15 text-cyan-300 text-[10px] font-medium rounded-full border border-cyan-500/20 inline-flex items-center gap-1 whitespace-nowrap shrink-0">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="shrink-0">
                   <path
                     d="M5 0.5L6.09 3.26L9.09 3.64L6.95 5.64L7.55 8.59L5 7.15L2.45 8.59L3.05 5.64L0.91 3.64L3.91 3.26L5 0.5Z"
                     fill="currentColor"

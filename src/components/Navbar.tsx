@@ -67,7 +67,7 @@ export default function Navbar() {
               >
                 MERLIN
               </span>
-              <span className="rounded-full border border-blue-500/35 bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium tracking-[0.14em] text-blue-500">
+              <span className="rounded-full border border-blue-500/35 bg-blue-500/10 px-2 py-0.5 text-[10px] font-medium tracking-[0.14em] text-blue-500 whitespace-nowrap inline-flex items-center shrink-0">
                 AGENT V2.4
               </span>
             </a>
