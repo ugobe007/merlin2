@@ -714,94 +714,148 @@ export default function WizardShellV7({
             {telemetry && (telemetry.rate || telemetry.utility) && (
               <div
                 style={{
-                  borderBottom: "1px solid rgba(99,120,255,0.22)",
-                  padding: "12px 24px",
+                  borderBottom: "1px solid rgba(99,102,241,0.35)",
+                  padding: "10px 20px",
                   display: "flex",
                   flexWrap: "wrap",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "8px 24px",
-                  fontSize: 14,
-                  fontWeight: 600,
+                  gap: "10px 14px",
+                  fontSize: 13.5,
+                  fontWeight: 700,
                   color: "#cbd5e1",
                   fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-                  background: "rgba(15,23,42,0.65)",
-                  boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.06)",
+                  background: "linear-gradient(90deg, rgba(15,23,42,0.92) 0%, rgba(30,41,59,0.85) 50%, rgba(15,23,42,0.92) 100%)",
+                  boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.08)",
                 }}
               >
                 {telemetry.rate != null && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 18 }}>⚡</span>
-                    <span style={{ color: "rgba(226, 232, 240, 0.75)" }}>Rate</span>
-                    <span style={{ color: "#fbbf24", fontWeight: 800, fontSize: 15 }}>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "4px 12px",
+                      borderRadius: 20,
+                      background: "rgba(245, 158, 11, 0.12)",
+                      border: "1px solid rgba(245, 158, 11, 0.35)",
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>⚡</span>
+                    <span style={{ color: "rgba(253, 230, 138, 0.85)", fontSize: 12 }}>Rate</span>
+                    <span style={{ color: "#fbbf24", fontWeight: 800, fontSize: 14 }}>
                       ${telemetry.rate.toFixed(2)}/kWh
                     </span>
                   </span>
                 )}
                 {telemetry.demand != null && (
-                  <>
-                    <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 700 }}>•</span>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 18 }}>📈</span>
-                      <span style={{ color: "rgba(226, 232, 240, 0.75)" }}>Demand</span>
-                      <span style={{ color: "#34d399", fontWeight: 800, fontSize: 15 }}>
-                        ${telemetry.demand.toFixed(2)}/kW
-                      </span>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "4px 12px",
+                      borderRadius: 20,
+                      background: "rgba(52, 211, 153, 0.12)",
+                      border: "1px solid rgba(52, 211, 153, 0.35)",
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>📈</span>
+                    <span style={{ color: "rgba(167, 243, 208, 0.85)", fontSize: 12 }}>Demand</span>
+                    <span style={{ color: "#34d399", fontWeight: 800, fontSize: 14 }}>
+                      ${telemetry.demand.toFixed(2)}/kW
                     </span>
-                  </>
+                  </span>
                 )}
                 {telemetry.solar != null && (
-                  <>
-                    <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 700 }}>•</span>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 18 }}>☀️</span>
-                      <span style={{ color: "#f59e0b", fontWeight: 800, fontSize: 15 }}>
-                        {telemetry.solar.toFixed(2)} hrs
-                      </span>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "4px 12px",
+                      borderRadius: 20,
+                      background: "rgba(245, 158, 11, 0.09)",
+                      border: "1px solid rgba(245, 158, 11, 0.25)",
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>☀️</span>
+                    <span style={{ color: "#f59e0b", fontWeight: 800, fontSize: 14 }}>
+                      {telemetry.solar.toFixed(2)} hrs
                     </span>
-                  </>
+                  </span>
                 )}
                 {telemetry.grade && (
-                  <>
-                    <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 700 }}>•</span>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 18 }}>⭐</span>
-                      <span style={{ color: "rgba(226, 232, 240, 0.75)" }}>Grade</span>
-                      <span style={{ color: "#c084fc", fontWeight: 800, fontSize: 15 }}>
-                        {telemetry.grade}
-                      </span>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "4px 12px",
+                      borderRadius: 20,
+                      background: "rgba(192, 132, 252, 0.12)",
+                      border: "1px solid rgba(192, 132, 252, 0.35)",
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>⭐</span>
+                    <span style={{ color: "rgba(233, 213, 255, 0.85)", fontSize: 12 }}>Grade</span>
+                    <span style={{ color: "#c084fc", fontWeight: 800, fontSize: 14 }}>
+                      {telemetry.grade}
                     </span>
-                  </>
+                  </span>
                 )}
                 {telemetry.climate && (
-                  <>
-                    <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 700 }}>•</span>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 18 }}>🌡️</span>
-                      <span style={{ color: "rgba(232,235,243,0.9)", fontWeight: 700 }}>
-                        {telemetry.climate}
-                      </span>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "4px 12px",
+                      borderRadius: 20,
+                      background: "rgba(248, 113, 113, 0.10)",
+                      border: "1px solid rgba(248, 113, 113, 0.28)",
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>🌡️</span>
+                    <span style={{ color: "rgba(254, 202, 202, 0.9)", fontWeight: 700, fontSize: 13 }}>
+                      {telemetry.climate}
                     </span>
-                  </>
+                  </span>
                 )}
                 {telemetry.temp != null && (
-                  <>
-                    <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 700 }}>•</span>
-                    <span style={{ color: "#f87171", fontWeight: 800, fontSize: 15 }}>
-                      {telemetry.temp}°F
-                    </span>
-                  </>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      padding: "4px 10px",
+                      borderRadius: 20,
+                      background: "rgba(248, 113, 113, 0.12)",
+                      border: "1px solid rgba(248, 113, 113, 0.3)",
+                      color: "#f87171",
+                      fontWeight: 800,
+                      fontSize: 14,
+                    }}
+                  >
+                    {telemetry.temp}°F
+                  </span>
                 )}
                 {telemetry.utility && (
-                  <>
-                    <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 700 }}>•</span>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 18 }}>🏢</span>
-                      <span style={{ color: "#60a5fa", fontWeight: 800, fontSize: 15 }}>
-                        {telemetry.utility}
-                      </span>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "4px 12px",
+                      borderRadius: 20,
+                      background: "rgba(96, 165, 250, 0.12)",
+                      border: "1px solid rgba(96, 165, 250, 0.35)",
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>🏢</span>
+                    <span style={{ color: "#60a5fa", fontWeight: 800, fontSize: 14 }}>
+                      {telemetry.utility}
                     </span>
-                  </>
+                  </span>
                 )}
               </div>
             )}
