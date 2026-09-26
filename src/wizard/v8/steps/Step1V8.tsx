@@ -567,6 +567,12 @@ export function Step1V8({ state, actions }: Step1Props) {
           .step1-grid-reliability {
             grid-template-columns: repeat(2, 1fr) !important;
           }
+          .step1-cta-button {
+            width: 100% !important;
+            text-align: center !important;
+            padding: 12px 18px !important;
+            font-size: 15px !important;
+          }
         }
         @media (max-width: 380px) {
           .step1-hero-grid {
@@ -1392,6 +1398,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                 >
                   <button
                     type="button"
+                    className="step1-cta-button"
                     onClick={() => actions.goToStep(6)}
                     style={{
                       padding: "10px 18px",
