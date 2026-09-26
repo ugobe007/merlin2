@@ -34,14 +34,14 @@ export default function BillLandingPage() {
               </span>
               Merlin<span className="text-cyan-400">Energy</span>
             </a>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+            <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
               bill.merlinenergy.net
             </span>
           </div>
           <div className="flex items-center gap-4">
             <a
               href="/wizard"
-              className="text-sm font-semibold text-slate-300 hover:text-cyan-400 transition-colors"
+              className="text-xs sm:text-sm font-semibold text-slate-300 hover:text-cyan-400 transition-colors"
             >
               Full Proposal Engine →
             </a>
@@ -50,23 +50,23 @@ export default function BillLandingPage() {
       </header>
 
       {/* Main Hero */}
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-12 flex flex-col items-center">
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-8 sm:py-12 flex flex-col items-center">
         {/* Title Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-blue-500/10 border border-cyan-500/30 text-xs font-bold text-cyan-300 mb-6 shadow-sm">
-          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-blue-500/10 border border-cyan-500/30 text-xs font-bold text-cyan-300 mb-6 shadow-sm text-center">
+          <Sparkles className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
           Free Commercial AI Utility Bill OCR Engine
         </div>
 
         {/* Main Headline */}
-        <h1 className="text-4xl sm:text-5xl font-black text-center text-white tracking-tight max-w-3xl leading-tight">
+        <h1 className="text-2xl sm:text-5xl font-black text-center text-white tracking-tight max-w-3xl leading-tight">
           Drop any utility bill. Get instant tariff, demand charge & load profile analysis.
         </h1>
-        <p className="mt-4 text-base sm:text-lg text-slate-400 text-center max-w-2xl">
+        <p className="mt-4 text-sm sm:text-lg text-slate-400 text-center max-w-2xl">
           Instantly extract peak kW demand, TOU rate schedules, tariffs, and monthly usage from PDF electric statements with 99.4% AI precision.
         </p>
 
         {/* Upload Panel Card Container */}
-        <div className="w-full mt-10 bg-slate-900/80 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-cyan-500/5 backdrop-blur-xl">
+        <div className="w-full mt-8 sm:mt-10 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-8 shadow-2xl shadow-cyan-500/5 backdrop-blur-xl">
           <BillUploadPanel
             uploadedData={billData}
             onExtracted={(data) => setBillData(data)}
@@ -75,12 +75,12 @@ export default function BillLandingPage() {
 
           {/* CTA Conversion Box when Bill Extracted */}
           {billData && (
-            <div className="mt-8 p-6 rounded-xl bg-gradient-to-br from-slate-900 via-cyan-950/40 to-emerald-950/40 border-2 border-emerald-500/40 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="mt-8 p-4 sm:p-6 rounded-xl bg-gradient-to-br from-slate-900 via-cyan-950/40 to-emerald-950/40 border-2 border-emerald-500/40 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
               <div className="space-y-1 text-center sm:text-left">
                 <div className="inline-flex items-center gap-1.5 text-emerald-400 font-extrabold text-sm uppercase tracking-wider">
                   <CheckCircle className="w-4 h-4" /> Bill Extraction Complete
                 </div>
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-base sm:text-lg font-bold text-white">
                   Ready to calculate BESS & Solar Savings for this utility account?
                 </h3>
                 <p className="text-xs text-slate-300">
@@ -90,7 +90,7 @@ export default function BillLandingPage() {
               <button
                 type="button"
                 onClick={handleLaunchWizard}
-                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-black text-sm hover:from-emerald-400 hover:to-cyan-400 transition-all transform hover:-translate-y-0.5 shadow-lg shadow-emerald-500/25 flex items-center gap-2 whitespace-nowrap"
+                className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-black text-sm hover:from-emerald-400 hover:to-cyan-400 transition-all transform hover:-translate-y-0.5 shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 ⚡ Calculate Battery Proposal →
               </button>
