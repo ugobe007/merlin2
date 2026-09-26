@@ -11,6 +11,7 @@ import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import type { WizardActions, WizardState, WizardStep, QuoteTier } from "../wizardState";
 import { trackWizardEvent } from "@/services/analyticsService";
+import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
 
 const C = {
   panel: "#111a3e",
@@ -472,10 +473,26 @@ export function Step4V8({ state, actions }: Props) {
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
-      <div className="wiz-step-header" style={{ marginBottom: 16 }}>
-        <div className="wiz-step-eyebrow">Step 5 of 6 · Energy Stack</div>
-        <h1 className="wiz-step-title">Choose your stack strategy</h1>
-        <p className="wiz-step-desc">
+      <div className="wiz-step-header" style={{ marginBottom: 20 }}>
+        <div className="wiz-step-eyebrow" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <img src={badgeGoldIcon} alt="StackQuote" style={{ width: 15, height: 15, borderRadius: "50%", objectFit: "cover" }} />
+          <span>Step 5 of 6 · Energy Stack</span>
+        </div>
+        <h1
+          className="wiz-step-title"
+          style={{
+            fontSize: "2.25rem",
+            fontWeight: 900,
+            color: "#ffffff",
+            letterSpacing: "-0.03em",
+            lineHeight: 1.15,
+            marginTop: 4,
+            textShadow: "0 2px 24px rgba(62,207,142,0.20)",
+          }}
+        >
+          Choose your stack strategy
+        </h1>
+        <p className="wiz-step-desc" style={{ fontSize: "0.9375rem", marginTop: 8 }}>
           Pick a tier — Starter, Balanced, or Complete — then confirm to generate your quote.
           Estimated savings{" "}
           <span style={{ color: C.green, fontWeight: 800 }}>{fmt$(tier.annualSavings)}/yr</span>.
@@ -487,6 +504,121 @@ export function Step4V8({ state, actions }: Props) {
         className="stack-builder-grid"
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* 1. STACK STRATEGY PANEL (Prominent, Top of Column 1, Above the fold) */}
+          <Panel
+            style={{
+              border: "2px solid rgba(79,138,255,0.55)",
+              background: "linear-gradient(145deg, rgba(20,30,65,0.95), rgba(15,23,42,0.95))",
+              boxShadow: "0 0 28px rgba(79,138,255,0.20), inset 0 1px 0 rgba(255,255,255,0.12)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <SectionLabel color={C.sky}>🎯 Stack strategy</SectionLabel>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.35)", padding: "3px 10px", borderRadius: 999 }}>
+                <img src={badgeGoldIcon} alt="StackQuote" style={{ width: 14, height: 14, borderRadius: "50%", objectFit: "cover" }} />
+                <span style={{ fontSize: 11, fontWeight: 800, color: "#fbbf24", letterSpacing: "0.02em" }}>StackQuote™ Verified</span>
+              </div>
+            </div>
+            <p
+              style={{
+                fontSize: 12,
+                color: C.textSub,
+                lineHeight: 1.55,
+                marginBottom: 14,
+                marginTop: -2,
+              }}
+            >
+              Select a strategy tier below — each automatically optimizes BESS, solar, and generator sizing before generating your quote.
+            </p>
+            <div className="wiz-strategy-pills">
+              {([0, 1, 2] as const).map((idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={`wiz-strategy-pill${tierIdx === idx ? " active" : ""}`}
+                  onClick={() => selectStrategyTier(idx)}
+                >
+                  <div className="wiz-strategy-pill-tier">
+                    <span className="wiz-strategy-pill-icon">{STRATEGY[idx].icon}</span>
+                    {STRATEGY[idx].tier}
+                  </div>
+                  <div className="wiz-strategy-pill-label">{STRATEGY[idx].label}</div>
+                  <div className="wiz-strategy-pill-sub">{STRATEGY[idx].sub}</div>
+                </button>
+              ))}
+            </div>
+            <div
+              style={{
+                marginTop: 12,
+                padding: "10px 12px",
+                borderRadius: 10,
+                background: "rgba(79,138,255,0.06)",
+                border: `1px solid rgba(125,211,252,0.28)`,
+              }}
+            >
+              <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.55 }}>
+                <strong style={{ color: C.amber }}>
+                  {strategyInfo.tier} · {strategyInfo.label}
+                </strong>{" "}
+                — {strategyInfo.sub}
+              </div>
+            </div>
+            <div
+              style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 14 }}
+            >
+              {[
+                { label: "BESS", value: `${tier.bessKWh} kWh`, color: C.purple },
+                {
+                  label: "Solar",
+                  value: tier.solarKW > 0 ? `${tier.solarKW} kW` : "—",
+                  color: C.sky,
+                },
+                {
+                  label: "Generator",
+                  value: tier.generatorKW > 0 ? `${tier.generatorKW} kW` : "—",
+                  color: C.green,
+                },
+              ].map(({ label, value, color }) => (
+                <div
+                  key={`${label}-${tierIdx}`}
+                  className="tier-chip-animate"
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: `1px solid ${C.panelBorder}`,
+                    borderRadius: 8,
+                    padding: "10px 10px",
+                    textAlign: "center" as const,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: C.textMuted,
+                      marginBottom: 4,
+                      fontWeight: 700,
+                      letterSpacing: "0.10em",
+                      textTransform: "uppercase" as const,
+                    }}
+                  >
+                    {label}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 800,
+                      color,
+                      fontVariantNumeric: "tabular-nums" as const,
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    {value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Panel>
+
+          {/* 2. QUOTED SYSTEM PANEL */}
           <Panel>
             <SectionLabel color={C.sky}>🔧 Quoted System</SectionLabel>
             <StackRow
@@ -575,6 +707,7 @@ export function Step4V8({ state, actions }: Props) {
             </div>
           </Panel>
 
+          {/* 3. HOW THIS STACK SAVES MONEY PANEL (Moved below Stack Strategy and Quoted System) */}
           <Panel
             style={{
               background: "linear-gradient(135deg, rgba(62,207,142,0.07), rgba(56,189,248,0.045))",
@@ -613,112 +746,6 @@ export function Step4V8({ state, actions }: Props) {
                     <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.5 }}>
                       {driver.text}
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Panel>
-
-          <Panel
-            style={{
-              border: "1.5px solid rgba(79,138,255,0.30)",
-              background: "transparent",
-            }}
-          >
-            <SectionLabel color={C.sky}>Stack strategy</SectionLabel>
-            <p
-              style={{
-                fontSize: 11,
-                color: C.textSub,
-                lineHeight: 1.55,
-                marginBottom: 12,
-                marginTop: -4,
-              }}
-            >
-              Select a tier — each adjusts BESS, solar, and generator sizing before you confirm.
-            </p>
-            <div className="wiz-strategy-pills">
-              {([0, 1, 2] as const).map((idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className={`wiz-strategy-pill${tierIdx === idx ? " active" : ""}`}
-                  onClick={() => selectStrategyTier(idx)}
-                >
-                  <div className="wiz-strategy-pill-tier">
-                    <span className="wiz-strategy-pill-icon">{STRATEGY[idx].icon}</span>
-                    {STRATEGY[idx].tier}
-                  </div>
-                  <div className="wiz-strategy-pill-label">{STRATEGY[idx].label}</div>
-                  <div className="wiz-strategy-pill-sub">{STRATEGY[idx].sub}</div>
-                </button>
-              ))}
-            </div>
-            <div
-              style={{
-                marginTop: 12,
-                padding: "10px 12px",
-                borderRadius: 10,
-                background: "transparent",
-                border: `1px solid rgba(125,211,252,0.24)`,
-              }}
-            >
-              <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.55 }}>
-                <strong style={{ color: C.amber }}>
-                  {strategyInfo.tier} · {strategyInfo.label}
-                </strong>{" "}
-                — {strategyInfo.sub}
-              </div>
-            </div>
-            <div
-              style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 14 }}
-            >
-              {[
-                { label: "BESS", value: `${tier.bessKWh} kWh`, color: C.purple },
-                {
-                  label: "Solar",
-                  value: tier.solarKW > 0 ? `${tier.solarKW} kW` : "—",
-                  color: C.sky,
-                },
-                {
-                  label: "Generator",
-                  value: tier.generatorKW > 0 ? `${tier.generatorKW} kW` : "—",
-                  color: C.green,
-                },
-              ].map(({ label, value, color }) => (
-                <div
-                  key={`${label}-${tierIdx}`}
-                  className="tier-chip-animate"
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: `1px solid ${C.panelBorder}`,
-                    borderRadius: 8,
-                    padding: "10px 10px",
-                    textAlign: "center" as const,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 10,
-                      color: C.textMuted,
-                      marginBottom: 4,
-                      fontWeight: 700,
-                      letterSpacing: "0.10em",
-                      textTransform: "uppercase" as const,
-                    }}
-                  >
-                    {label}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 16,
-                      fontWeight: 800,
-                      color,
-                      fontVariantNumeric: "tabular-nums" as const,
-                      transition: "all 0.3s ease",
-                    }}
-                  >
-                    {value}
                   </div>
                 </div>
               ))}

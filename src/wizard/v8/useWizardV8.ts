@@ -990,7 +990,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     // Data center: use dc_load_v1 contract (PUE band, evaporative cooling, WUE).
     if (slug === "data_center") {
       try {
-        const dcResult = DC_LOAD_V1_SSOT.compute(answers as Record<string, unknown>);
+        const dcResult = DC_LOAD_V1_SSOT.compute(answers as any);
         const dcDetails = dcResult.validation?.details?.data_center as
           | Record<string, unknown>
           | undefined;
@@ -1010,11 +1010,14 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
           };
         }
 
-        if (dcResult.peakLoadKW > 0) {
+        const baseLoadKW = dcResult.baseLoadKW ?? 0;
+        const peakLoadKW = dcResult.peakLoadKW ?? 0;
+
+        if (peakLoadKW > 0) {
           dispatch({
             type: "SET_BASE_LOAD",
-            baseLoadKW: dcResult.baseLoadKW,
-            peakLoadKW: dcResult.peakLoadKW,
+            baseLoadKW,
+            peakLoadKW,
             facilityCalcDetails,
           });
         }
