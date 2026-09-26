@@ -716,10 +716,21 @@ export function Step3V8({ state, actions }: Props) {
         {!state.uploadedBillData && !billUploadOpen ? (
           <button
             type="button"
-            className="wiz-s3-bill-link"
+            className="wiz-s3-bill-banner"
             onClick={() => setBillUploadOpen(true)}
           >
-            📄 Have a utility bill? Upload to auto-fill peak demand and rates
+            <div className="wiz-s3-bill-icon-badge">📄</div>
+            <div className="wiz-s3-bill-banner-content">
+              <div className="wiz-s3-bill-banner-title">
+                Have a utility bill? Upload to auto-fill peak demand and rates
+              </div>
+              <div className="wiz-s3-bill-banner-sub">
+                Drop your PDF, image, or statement to instantly extract tariffs, peak kW, and load profiles
+              </div>
+            </div>
+            <div className="wiz-s3-bill-cta-btn">
+              Upload Bill →
+            </div>
           </button>
         ) : (
           <BillUploadPanel
@@ -735,7 +746,7 @@ export function Step3V8({ state, actions }: Props) {
         <div className="wiz-s3-panel">
           <div className="wiz-s3-config">
             <div>
-              <h3 className="wiz-s3-field-label">Project type</h3>
+              <h3 className="wiz-s3-field-label">PROJECT TYPE</h3>
               <div className="wiz-s3-choices cols-2">
                 {(
                   [
@@ -767,7 +778,7 @@ export function Step3V8({ state, actions }: Props) {
               </div>
             </div>
             <div>
-              <h3 className="wiz-s3-field-label">How much detail?</h3>
+              <h3 className="wiz-s3-field-label">HOW MUCH DETAIL?</h3>
               <div className="wiz-s3-choices cols-3">
                 {detailOptions.map(({ id, label, sub }) => {
                   const active = detailLevel === id;
@@ -822,6 +833,30 @@ export function Step3V8({ state, actions }: Props) {
               <button
                 type="button"
                 className="wiz-s3-skip-cyan"
+                onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
+              >
+                Skip to add-ons →
+              </button>
+            </div>
+            <div className="wiz-s3-streamline-left">
+              <div className="wiz-s3-streamline-title">
+                ⚡ Smart defaults applied for {displayName}
+              </div>
+              <div className="wiz-s3-streamline-hint">
+                Review or edit your facility parameters in the cards below, or skip directly to add-ons.
+              </div>
+            </div>
+            <div className="wiz-s3-streamline-actions">
+              <button
+                type="button"
+                className="wiz-s3-customize-btn"
+                onClick={() => setProfileOptionalOpen((o) => !o)}
+              >
+                🎯 {profileOptionalOpen ? "Hide inputs" : "Customize key inputs"}
+              </button>
+              <button
+                type="button"
+                className="wiz-s3-skip"
                 onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
               >
                 Skip to add-ons →
