@@ -374,18 +374,26 @@
   text-align: left;
   transition:
     border-color 0.15s,
-    background 0.15s;
+    background 0.15s,
+    transform 0.15s,
+    box-shadow 0.15s;
 }
 
 .wiz-strategy-pill:hover {
-  border-color: rgba(129, 140, 248, 0.45);
-  background: rgba(99, 102, 241, 0.06);
+  border-color: rgba(251, 191, 36, 0.55);
+  background: rgba(245, 158, 11, 0.08);
 }
 
 .wiz-strategy-pill.active {
-  border: 2px solid rgba(99, 102, 241, 0.75);
-  background: rgba(99, 102, 241, 0.12);
-  padding: 11px 13px;
+  border: 2.5px solid #fbbf24;
+  background: rgba(245, 158, 11, 0.16);
+  padding: 14px 16px;
+  transform: scale(1.06);
+  box-shadow:
+    0 0 24px rgba(251, 191, 36, 0.42),
+    inset 0 0 14px rgba(251, 191, 36, 0.18);
+  z-index: 5;
+  position: relative;
 }
 
 .wiz-strategy-pill-tier {
@@ -398,6 +406,11 @@
   text-transform: uppercase;
   color: #818cf8;
   margin-bottom: 4px;
+}
+
+.wiz-strategy-pill.active .wiz-strategy-pill-tier {
+  color: #fbbf24;
+  font-weight: 900;
 }
 
 .wiz-strategy-pill-icon {
@@ -413,10 +426,21 @@
   line-height: 1.25;
 }
 
+.wiz-strategy-pill.active .wiz-strategy-pill-label {
+  color: #fbbf24;
+  font-size: 1.0625rem;
+  font-weight: 900;
+}
+
 .wiz-strategy-pill-sub {
   font-size: 0.75rem;
   color: #94a3b8;
   line-height: 1.4;
+}
+
+.wiz-strategy-pill.active .wiz-strategy-pill-sub {
+  color: #fef3c7;
+  font-weight: 600;
 }
 
 .wiz-hero-stroke {
@@ -937,4 +961,3 @@
     padding: 1rem !important;
   }
 }
-
