@@ -893,3 +893,45 @@
 .wiz-btn-ghost:hover {
   border-color: rgba(255, 255, 255, 0.22);
 }
+
+/* ── Mobile responsiveness enhancements (< 640px) ────────────────────────── */
+@media (max-width: 640px) {
+  .wiz-strategy-pills {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .wiz-kpi-strip,
+  .wiz-quote-kpi-strip {
+    grid-template-columns: 1fr !important;
+  }
+
+  .wiz-kpi-cell {
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 10px 12px !important;
+  }
+
+  .wiz-kpi-cell:last-child {
+    border-bottom: none !important;
+  }
+
+  .wiz-step-title {
+    font-size: 1.5rem !important;
+  }
+
+  .wiz-quote-header-top {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .wiz-quote-actions {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .wiz-hero-stroke {
+    padding: 1rem !important;
+  }
+}
+
