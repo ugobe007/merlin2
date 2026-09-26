@@ -9,7 +9,7 @@
 
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
-import type { WizardState, WizardActions, WizardStep } from "../wizardState";
+import type { WizardState, WizardActions } from "../wizardState";
 import {
   estimateSolarKW,
   estimateGenKW,
@@ -18,7 +18,6 @@ import {
   industryRequiresGenerator,
   industryPanelTier,
   industryPanelTierReason,
-  buildStep4AddonCommit,
   computeStep35PreviewFinancials,
   fmtAddonMoneyK,
 } from "../addonSizing";
@@ -2593,11 +2592,6 @@ export default function Step3_5V8({ state, actions }: Props) {
   const city =
     state.location?.city ??
     (state.locationRaw ? state.locationRaw.split(",")[0].trim() : "Your Facility");
-  const handleContinue = () => {
-    actions.setAddonConfig(buildStep4AddonCommit(state));
-    actions.setAnswer("step3_5Visited", true);
-    actions.goToStep(5 as WizardStep);
-  };
 
   return (
     <div className="wiz-root" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -2698,7 +2692,10 @@ export default function Step3_5V8({ state, actions }: Props) {
             </div>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span className="wiz-addon-title" style={{ color: "#ffffff", fontSize: "1.125rem", fontWeight: 800 }}>
+                <span
+                  className="wiz-addon-title"
+                  style={{ color: "#ffffff", fontSize: "1.125rem", fontWeight: 800 }}
+                >
                   EV Charging
                 </span>
                 <span
@@ -2717,7 +2714,10 @@ export default function Step3_5V8({ state, actions }: Props) {
                   ⚡ REVENUE ADD-ON
                 </span>
               </div>
-              <div className="wiz-addon-sub" style={{ color: "rgba(203,213,225,0.88)", marginTop: 2 }}>
+              <div
+                className="wiz-addon-sub"
+                style={{ color: "rgba(203,213,225,0.88)", marginTop: 2 }}
+              >
                 Customer &amp; fleet charging revenue · Level 2 &amp; DC Fast Chargers
               </div>
             </div>
@@ -2808,7 +2808,10 @@ export default function Step3_5V8({ state, actions }: Props) {
             </div>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span className="wiz-addon-title" style={{ color: "#ffffff", fontSize: "1.125rem", fontWeight: 800 }}>
+                <span
+                  className="wiz-addon-title"
+                  style={{ color: "#ffffff", fontSize: "1.125rem", fontWeight: 800 }}
+                >
                   Backup Generator
                 </span>
                 <span
@@ -2827,7 +2830,10 @@ export default function Step3_5V8({ state, actions }: Props) {
                   🛡️ RESILIENCE BOOST
                 </span>
               </div>
-              <div className="wiz-addon-sub" style={{ color: "rgba(203,213,225,0.88)", marginTop: 2 }}>
+              <div
+                className="wiz-addon-sub"
+                style={{ color: "rgba(203,213,225,0.88)", marginTop: 2 }}
+              >
                 Extended outage protection · Diesel, Natural Gas, Dual Fuel &amp; Linear
               </div>
             </div>
