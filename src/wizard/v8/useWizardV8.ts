@@ -1022,6 +1022,7 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
     if (slug === "data_center") {
       try {
         const dcResult = DC_LOAD_V1_SSOT.compute(answers as CalcInputs);
+        const dcResult = DC_LOAD_V1_SSOT.compute(answers as any);
         const dcDetails = dcResult.validation?.details?.data_center as
           | Record<string, unknown>
           | undefined;
@@ -1046,6 +1047,14 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
             type: "SET_BASE_LOAD",
             baseLoadKW: dcResult.baseLoadKW ?? 0,
             peakLoadKW: dcResult.peakLoadKW ?? 0,
+        const baseLoadKW = dcResult.baseLoadKW ?? 0;
+        const peakLoadKW = dcResult.peakLoadKW ?? 0;
+
+        if (peakLoadKW > 0) {
+          dispatch({
+            type: "SET_BASE_LOAD",
+            baseLoadKW,
+            peakLoadKW,
             facilityCalcDetails,
           });
         }
