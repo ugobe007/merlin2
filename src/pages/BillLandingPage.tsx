@@ -28,10 +28,12 @@ export default function BillLandingPage() {
       <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <a href="/" className="flex items-center gap-2 text-xl font-extrabold text-white">
-              <span className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-emerald-400 flex items-center justify-center text-slate-950 font-black text-sm shadow-lg shadow-cyan-500/20">
-                ⚡
-              </span>
+            <a href="/" className="flex items-center gap-2.5 text-xl font-extrabold text-white">
+              <img
+                src="/merlin-icon.png"
+                alt="Merlin Energy"
+                className="w-8 h-8 rounded-lg object-contain shadow-md shadow-cyan-500/20"
+              />
               Merlin<span className="text-cyan-400">Energy</span>
             </a>
             <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
@@ -58,11 +60,11 @@ export default function BillLandingPage() {
         </div>
 
         {/* Main Headline */}
-        <h1 className="text-2xl sm:text-5xl font-black text-center text-white tracking-tight max-w-3xl leading-tight">
-          Drop any utility bill. Get instant tariff, demand charge & load profile analysis.
+        <h1 className="text-3xl sm:text-5xl font-black text-center text-white tracking-tight max-w-3xl leading-tight">
+          Let's Save Money. <span className="bg-gradient-to-r from-emerald-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent">Drop your Utility Bill.</span> We will show you how much.
         </h1>
-        <p className="mt-4 text-sm sm:text-lg text-slate-400 text-center max-w-2xl">
-          Instantly extract peak kW demand, TOU rate schedules, tariffs, and monthly usage from PDF electric statements with 99.4% AI precision.
+        <p className="mt-4 text-sm sm:text-lg text-slate-300 text-center max-w-2xl font-medium">
+          Instantly extract peak kW demand, tariffs, and monthly usage from your electric statement with 99.4% AI precision.
         </p>
 
         {/* Upload Panel Card Container */}
