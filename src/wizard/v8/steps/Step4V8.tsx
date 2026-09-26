@@ -291,7 +291,6 @@ export function Step4V8({ state, actions }: Props) {
     if (selectedTierIndex === 2) return 85;
     return 50;
   });
-  const [stackConfirmed, setStackConfirmed] = useState(false);
 
   useEffect(() => {
     if (tiersStatus === "ready" && tiers && selectedTierIndex === null) {
@@ -475,7 +474,11 @@ export function Step4V8({ state, actions }: Props) {
     >
       <div className="wiz-step-header" style={{ marginBottom: 20 }}>
         <div className="wiz-step-eyebrow" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <img src={badgeGoldIcon} alt="StackQuote" style={{ width: 15, height: 15, borderRadius: "50%", objectFit: "cover" }} />
+          <img
+            src={badgeGoldIcon}
+            alt="StackQuote"
+            style={{ width: 15, height: 15, borderRadius: "50%", objectFit: "cover" }}
+          />
           <span>Step 5 of 6 · Energy Stack</span>
         </div>
         <h1
@@ -512,11 +515,41 @@ export function Step4V8({ state, actions }: Props) {
               boxShadow: "0 0 28px rgba(79,138,255,0.20), inset 0 1px 0 rgba(255,255,255,0.12)",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
               <SectionLabel color={C.sky}>🎯 Stack strategy</SectionLabel>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.35)", padding: "3px 10px", borderRadius: 999 }}>
-                <img src={badgeGoldIcon} alt="StackQuote" style={{ width: 14, height: 14, borderRadius: "50%", objectFit: "cover" }} />
-                <span style={{ fontSize: 11, fontWeight: 800, color: "#fbbf24", letterSpacing: "0.02em" }}>StackQuote™ Verified</span>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  background: "rgba(245,158,11,0.12)",
+                  border: "1px solid rgba(245,158,11,0.35)",
+                  padding: "3px 10px",
+                  borderRadius: 999,
+                }}
+              >
+                <img
+                  src={badgeGoldIcon}
+                  alt="StackQuote"
+                  style={{ width: 14, height: 14, borderRadius: "50%", objectFit: "cover" }}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: "#fbbf24",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  StackQuote™ Verified
+                </span>
               </div>
             </div>
             <p
@@ -528,7 +561,8 @@ export function Step4V8({ state, actions }: Props) {
                 marginTop: -2,
               }}
             >
-              Select a strategy tier below — each automatically optimizes BESS, solar, and generator sizing before generating your quote.
+              Select a strategy tier below — each automatically optimizes BESS, solar, and generator
+              sizing before generating your quote.
             </p>
             <div className="wiz-strategy-pills">
               {([0, 1, 2] as const).map((idx) => (
@@ -903,7 +937,6 @@ export function Step4V8({ state, actions }: Props) {
           </Panel>
         </div>
       </div>
-
 
       <style>{`
         @media (max-width: 720px) { .stack-builder-grid { grid-template-columns: 1fr !important; } }
