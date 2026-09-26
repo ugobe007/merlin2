@@ -945,7 +945,8 @@ export function Step4V8({ state, actions }: Props) {
             Includes financing options, incentives, and installer recommendations.
           </div>
         </div>
-        <label
+        <button
+          type="button"
           onClick={() => {
             if (stackConfirmed) return;
             setStackConfirmed(true);
@@ -1019,9 +1020,8 @@ export function Step4V8({ state, actions }: Props) {
           >
             {stackConfirmed ? "✓" : "→"}
           </span>
-          <input type="checkbox" checked={stackConfirmed} readOnly style={{ display: "none" }} />
           <span>{stackConfirmed ? "Stack selected" : "Select Stack"}</span>
-        </label>
+        </button>
       </div>
 
       <style>{`
