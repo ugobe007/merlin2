@@ -271,6 +271,7 @@ export default function Step5V8({ state, actions }: Props) {
   const [evBreakdownOpen, setEvBreakdownOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [expandedFinancingId, setExpandedFinancingId] = useState<string | null>(null);
+  const [financingSectionOpen, setFinancingSectionOpen] = useState(false);
 
   // ── LEAD CAPTURE GATE ────────────────────────────────────────────
   const [showLeadGate, setShowLeadGate] = useState(false);
@@ -988,130 +989,6 @@ export default function Step5V8({ state, actions }: Props) {
         </div>
       )}
 
-      {/* ================================================================
-          YOUR NEXT STEPS — collapsible
-      ================================================================ */}
-      <div className="wiz-stroke" style={{ padding: "0 14px" }}>
-        <button
-          type="button"
-          className="wiz-collapse-trigger"
-          onClick={() => setPathForwardOpen((o) => !o)}
-          style={{ borderTop: "none" }}
-        >
-          <div className="flex items-center gap-2">
-            <ClipboardList className="w-3.5 h-3.5 text-violet-400" />
-            <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-violet-300">
-              Your Path Forward
-            </span>
-            <span className="text-xs text-slate-500">Export · Finance · Install · RFP</span>
-          </div>
-          {pathForwardOpen ? (
-            <ChevronUp className="w-4 h-4 text-slate-500" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-slate-500" />
-          )}
-        </button>
-
-        {pathForwardOpen && (
-          <div style={{ paddingBottom: 12 }}>
-            {[
-              {
-                n: 1,
-                color: "#4f8aff",
-                title: "Save your quote",
-                desc: "Export as PDF, Word, or Excel to share with your team or lender.",
-                cta: "Go to Export",
-                arrow: "\u2193",
-                onClick: () =>
-                  document
-                    .getElementById("step5-export-section")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" }),
-              },
-              {
-                n: 2,
-                color: "#34d399",
-                title: "Review financing options",
-                desc: "Compare C-PACE, PACE, SBA 7(a), and equipment financing programs matched to your project.",
-                cta: "See Financing",
-                arrow: "\u2193",
-                onClick: () =>
-                  document
-                    .getElementById("step5-financing-section")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" }),
-              },
-              {
-                n: 3,
-                color: "#f59e0b",
-                title: "Find a certified installer",
-                desc: "Merlin matched installers in your area who specialize in commercial energy storage.",
-                cta: "View Installers",
-                arrow: "\u2193",
-                onClick: () =>
-                  document
-                    .getElementById("step5-installers-section")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" }),
-              },
-              {
-                n: 4,
-                color: "#9b6dff",
-                title: "Get your full engineering package",
-                desc: "ProStack\u2122 adds custom equipment sizing, DCF/IRR modeling, and bank-ready documentation.",
-                cta: "Upgrade to ProStack\u2122",
-                arrow: "\u2192",
-                onClick: openProQuotePage,
-              },
-            ].map((s) => (
-              <div
-                key={s.n}
-                style={{
-                  display: "flex",
-                  alignItems: "baseline",
-                  gap: 10,
-                  padding: "7px 0",
-                  borderBottom: "1px solid rgba(255,255,255,0.07)",
-                }}
-              >
-                <span
-                  style={{
-                    color: s.color,
-                    fontWeight: 800,
-                    fontSize: 12,
-                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-                    fontVariantNumeric: "tabular-nums",
-                    flexShrink: 0,
-                    minWidth: 12,
-                  }}
-                >
-                  {s.n}
-                </span>
-                <p className="flex-1 min-w-0 text-[13px] leading-snug">
-                  <span className="font-semibold text-white">{s.title}</span>
-                  <span className="text-slate-500">
-                    {" \u2014 "}
-                    {s.desc}
-                  </span>
-                </p>
-                <button
-                  onClick={s.onClick}
-                  style={{
-                    flexShrink: 0,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: s.color,
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                    cursor: "pointer",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {s.cta} <span style={{ fontSize: 13 }}>{s.arrow}</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* ================================================================
           ROI GUARDRAIL BANNER — shown when payback was auto-adjusted
@@ -1199,6 +1076,195 @@ export default function Step5V8({ state, actions }: Props) {
           </div>
         </div>
       )}
+
+      {/* ================================================================
+          EXPORT / DOWNLOAD — PDF, Word, Excel (Moved above breakdown)
+      ================================================================ */}
+      <div id="step5-export-section" className="wiz-stroke" style={{ padding: "14px 16px" }}>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <FileText className="w-4 h-4 text-emerald-400" />
+              <div className="text-base font-bold text-slate-100">Download quote</div>
+            </div>
+            <p className="text-sm text-slate-500">
+              PDF, Word, or Excel — equipment specs, financials, and methodology
+            </p>
+          </div>
+
+          <div className="flex gap-2 flex-shrink-0">
+            {(["pdf", "word", "excel"] as const).map((format) => (
+              <button
+                key={format}
+                type="button"
+                onClick={() => handleExport(format)}
+                disabled={exportingFormat !== null}
+                className="wiz-btn-ghost inline-flex items-center gap-1.5 uppercase disabled:opacity-50"
+              >
+                {exportingFormat === format ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin text-[#3ECF8E]" />
+                    <span className="text-sm font-semibold text-[#3ECF8E]">...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5" />
+                    {format}
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Export error */}
+        {exportError && (
+          <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-400 text-center">
+            {exportError}
+          </div>
+        )}
+
+        {/* ── SAVE QUOTE ROW ── */}
+        <div className="mt-4 pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {isAuthenticated ? (
+            <>
+              <div className="flex-1 min-w-0">
+                {quoteSaved ? (
+                  <div className="flex items-center gap-2 text-sm text-emerald-400 font-semibold">
+                    <Check className="w-4 h-4" />
+                    Quote saved to your account
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400">
+                    Save this quote to your account to access it anytime.
+                  </p>
+                )}
+                {saveError && <p className="text-xs text-red-400 mt-1">{saveError}</p>}
+              </div>
+              {!quoteSaved && (
+                <button
+                  type="button"
+                  onClick={saveQuoteToAccount}
+                  disabled={savingQuote}
+                  className="flex-shrink-0 flex items-center justify-center gap-2 h-10 px-4 rounded-xl border-2 border-emerald-500/30 bg-emerald-500/[0.06] hover:border-emerald-500/50 hover:bg-emerald-500/[0.10] transition-all disabled:opacity-50 text-emerald-400 font-semibold text-sm"
+                >
+                  {savingQuote ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="w-3.5 h-3.5" />
+                      Save Quote
+                    </>
+                  )}
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-slate-400">
+                <span className="text-slate-300 font-medium">Sign up free</span> to save this quote
+                and access it from your dashboard anytime.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(true)}
+                className="flex-shrink-0 flex items-center gap-2 h-9 px-4 rounded-xl border border-[#3ECF8E]/30 bg-[#3ECF8E]/[0.06] hover:border-[#3ECF8E]/50 hover:bg-[#3ECF8E]/[0.10] transition-all text-[#3ECF8E] font-semibold text-sm"
+              >
+                <Bookmark className="w-3.5 h-3.5" />
+                Save Quote →
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* ── BUILD AN RFP CTA ── */}
+        <div className="mt-4 pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-amber-500/[0.12] border border-amber-500/25 flex items-center justify-center flex-shrink-0">
+              <ClipboardList className="w-4.5 h-4.5 text-amber-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-200 leading-snug">
+                Turn this quote into a live RFP
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Receive competing bids from certified vendors — no upload needed.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={openRfpPage}
+            className="flex-shrink-0 flex items-center gap-2 h-9 px-4 rounded-xl border border-amber-500/40 text-amber-400 hover:border-amber-400 hover:text-amber-300 transition-colors text-sm font-semibold"
+          >
+            <ClipboardList className="w-3.5 h-3.5" />
+            Build RFP →
+          </button>
+        </div>
+
+        {/* ── CONTACT US CTA ── */}
+        <div className="mt-4 pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-sky-500/[0.12] border border-sky-500/25 flex items-center justify-center flex-shrink-0">
+              <Mail className="w-4 h-4 text-sky-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-200 leading-snug">
+                Speak with a Merlin Energy specialist
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Questions about this quote? Our team typically responds within 1 business day.
+              </p>
+            </div>
+          </div>
+          <a
+            href={`mailto:sales@merlinenergy.net?cc=ugobe07%40gmail.com%2Cvkapila2004%40gmail.com&subject=${encodeURIComponent(`BESS Quote Inquiry — ${quoteRef}`)}&body=${encodeURIComponent(`Hi Merlin Energy team,\n\nI have a question about my BESS quote:\n\nQuote Reference: ${quoteRef}\nSystem Size: ${tier ? `${(tier.bessKW / 1000).toFixed(2)} MW / ${tier.durationHours ?? 2} hr` : "—"}\nLocation: ${state.locationRaw || "—"}\n\nPlease reach out at your earliest convenience.\n\nThank you.`)}`}
+            className="flex-shrink-0 flex items-center gap-2 h-9 px-4 rounded-xl border border-sky-500/40 text-sky-400 hover:border-sky-400 hover:text-sky-300 hover:bg-sky-500/[0.06] transition-colors text-sm font-semibold"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            Contact Us →
+          </a>
+        </div>
+
+        {/* ── TECHNICAL SPECS TOGGLE ── */}
+        <div className="pt-3 border-t border-white/[0.04]">
+          <button
+            type="button"
+            onClick={() => setShowTechSpecs((v) => !v)}
+            className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors w-full py-1"
+          >
+            <ChevronDown
+              className="w-3.5 h-3.5 transition-transform"
+              style={{ transform: showTechSpecs ? "rotate(180deg)" : "none" }}
+            />
+            {showTechSpecs ? "Hide" : "View"} Technical Specifications
+          </button>
+          {showTechSpecs && tier && (
+            <div className="mt-3">
+              <BessSpecSheet
+                bessKW={tier.bessKW ?? 0}
+                bessKWh={tier.bessKWh ?? 0}
+                durationHours={tier.durationHours ?? 2}
+                chemistry={tier.selectedBESS?.chemistry ?? "LFP"}
+                manufacturer={tier.selectedBESS?.manufacturer}
+                model={tier.selectedBESS?.model}
+                moduleKwh={tier.selectedBESS?.capacityKwh}
+                roundtripEfficiencyPct={tier.selectedBESS?.roundtripEfficiencyPct}
+                warrantyYears={tier.selectedBESS?.warrantyYears}
+                cycleLife={tier.selectedBESS?.cycleLife}
+                solarKW={tier.solarKW ?? 0}
+                generatorKW={tier.generatorKW ?? 0}
+                baseLoadKW={state.baseLoadKW || undefined}
+                peakLoadKW={state.peakLoadKW || undefined}
+                compact
+              />
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* ── Quote breakdown — collapsed by default ── */}
       <div
@@ -2073,7 +2139,7 @@ export default function Step5V8({ state, actions }: Props) {
       </div>
 
       {/* ================================================================
-          FINANCING & FUNDING OPTIONS
+          FINANCING & FUNDING OPTIONS — Collapsible link
       ================================================================ */}
       <div id="step5-financing-section" />
       {(() => {
@@ -2087,215 +2153,240 @@ export default function Step5V8({ state, actions }: Props) {
         if (options.length === 0) return null;
 
         return (
-          <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/[0.03] p-4 sm:p-5">
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                <Landmark className="w-3.5 h-3.5 text-indigo-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-bold text-slate-100 tracking-tight">
-                  Financing &amp; Funding Options
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {options.length} programs matched to your{" "}
-                  {location?.state ? `${location.state} ` : ""}project
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-[10px] text-slate-600 uppercase tracking-wider">
-                  Net project cost
+          <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/[0.03] overflow-hidden">
+            {/* Collapsed Link / Trigger Header */}
+            <button
+              type="button"
+              onClick={() => setFinancingSectionOpen((o) => !o)}
+              className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-indigo-500/[0.06] transition-colors text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
+                  <Landmark className="w-3.5 h-3.5 text-indigo-400" />
                 </div>
-                <div className="text-sm font-bold text-slate-300">{fmt$(netCost, countryCode)}</div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-slate-100 tracking-tight">
+                      Federal Grant, Loan &amp; Financing Options
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-bold border border-indigo-500/30">
+                      {options.length} programs
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    C-PACE, SBA 7(a), REAP Grants &amp; equipment loans matched to your project
+                  </p>
+                </div>
               </div>
-            </div>
+              <div className="flex items-center gap-3">
+                <div className="text-right hidden sm:block">
+                  <div className="text-[10px] text-slate-500 uppercase tracking-wider">
+                    Net project cost
+                  </div>
+                  <div className="text-xs font-bold text-slate-300">
+                    {fmt$(netCost, countryCode)}
+                  </div>
+                </div>
+                {financingSectionOpen ? (
+                  <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                )}
+              </div>
+            </button>
 
-            {/* Monthly payment context strip */}
-            <div className="mb-4 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-              <span className="text-slate-400 font-medium">If financed after ITC:</span>
-              {[
-                { label: "20yr @ 6.5%", rate: 6.5, term: 20 },
-                { label: "15yr @ 7%", rate: 7, term: 15 },
-                { label: "10yr @ 8%", rate: 8, term: 10 },
-              ].map(({ label, rate, term }) => (
-                <span key={label}>
-                  <span className="text-slate-500">{label} → </span>
-                  <span className="text-indigo-300 font-semibold tabular-nums">
-                    {fmt$(calcMonthlyPayment(netCost, rate, term), countryCode)}/mo
-                  </span>
-                </span>
-              ))}
-            </div>
-
-            {/* Program cards */}
-            <div className="space-y-2">
-              {options.slice(0, 8).map((opt: FinancingOption) => {
-                const isExpanded = expandedFinancingId === opt.id;
-                const monthlyPmt = opt.rateForCalc
-                  ? calcMonthlyPayment(netCost, opt.rateForCalc, opt.termYearsForCalc)
-                  : null;
-
-                return (
-                  <div
-                    key={opt.id}
-                    className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden transition-all"
-                  >
-                    {/* Card header row — always visible */}
-                    <button
-                      onClick={() => setExpandedFinancingId(isExpanded ? null : opt.id)}
-                      className="w-full px-3 py-2.5 flex items-center gap-2 text-left hover:bg-white/[0.03] transition-colors"
-                    >
-                      {/* Type badge */}
-                      <span
-                        className={`shrink-0 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${opt.typeBadge}`}
-                      >
-                        {opt.typeLabel}
+            {financingSectionOpen && (
+              <div className="p-4 sm:p-5 border-t border-indigo-500/15">
+                {/* Monthly payment context strip */}
+                <div className="mb-4 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                  <span className="text-slate-400 font-medium">If financed after ITC:</span>
+                  {[
+                    { label: "20yr @ 6.5%", rate: 6.5, term: 20 },
+                    { label: "15yr @ 7%", rate: 7, term: 15 },
+                    { label: "10yr @ 8%", rate: 8, term: 10 },
+                  ].map(({ label, rate, term }) => (
+                    <span key={label}>
+                      <span className="text-slate-500">{label} → </span>
+                      <span className="text-indigo-300 font-semibold tabular-nums">
+                        {fmt$(calcMonthlyPayment(netCost, rate, term), countryCode)}/mo
                       </span>
+                    </span>
+                  ))}
+                </div>
 
-                      {/* Provider + program */}
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold text-slate-200 truncate">
-                          {opt.provider}
-                        </div>
-                        <div className="text-[10px] text-slate-500 truncate">{opt.programName}</div>
-                      </div>
+                {/* Program cards */}
+                <div className="space-y-2">
+                  {options.slice(0, 8).map((opt: FinancingOption) => {
+                    const isExpanded = expandedFinancingId === opt.id;
+                    const monthlyPmt = opt.rateForCalc
+                      ? calcMonthlyPayment(netCost, opt.rateForCalc, opt.termYearsForCalc)
+                      : null;
 
-                      {/* Quick stats */}
-                      <div className="shrink-0 text-right hidden sm:block">
-                        <div className="text-xs font-bold text-slate-300 tabular-nums">
-                          {opt.rateDisplay}
-                        </div>
-                        <div className="text-[10px] text-slate-600">{opt.termDisplay}</div>
-                      </div>
-
-                      {/* Monthly est or $0 down */}
-                      <div className="shrink-0 text-right ml-2">
-                        {opt.fullyCovered ? (
-                          <span className="text-xs font-bold text-teal-400">$0 down</span>
-                        ) : monthlyPmt ? (
-                          <span className="text-xs font-bold text-indigo-300 tabular-nums">
-                            {fmt$(monthlyPmt, countryCode)}/mo
+                    return (
+                      <div
+                        key={opt.id}
+                        className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden transition-all"
+                      >
+                        {/* Card header row — always visible */}
+                        <button
+                          onClick={() => setExpandedFinancingId(isExpanded ? null : opt.id)}
+                          className="w-full px-3 py-2.5 flex items-center gap-2 text-left hover:bg-white/[0.03] transition-colors"
+                        >
+                          {/* Type badge */}
+                          <span
+                            className={`shrink-0 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${opt.typeBadge}`}
+                          >
+                            {opt.typeLabel}
                           </span>
-                        ) : (
-                          <span className="text-xs text-slate-600">varies</span>
-                        )}
-                      </div>
 
-                      {isExpanded ? (
-                        <ChevronUp className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                      ) : (
-                        <ChevronDown className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                      )}
-                    </button>
-
-                    {/* Expanded detail */}
-                    {isExpanded && (
-                      <div className="px-3 pb-3 pt-1 border-t border-white/[0.04] space-y-3">
-                        {/* Rate/term/size row */}
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div className="rounded-lg bg-white/[0.03] px-2 py-1.5">
-                            <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-0.5">
-                              Rate
+                          {/* Provider + program */}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-semibold text-slate-200 truncate">
+                              {opt.provider}
                             </div>
-                            <div className="text-xs font-bold text-slate-200">
+                            <div className="text-[10px] text-slate-500 truncate">
+                              {opt.programName}
+                            </div>
+                          </div>
+
+                          {/* Quick stats */}
+                          <div className="shrink-0 text-right hidden sm:block">
+                            <div className="text-xs font-bold text-slate-300 tabular-nums">
                               {opt.rateDisplay}
                             </div>
+                            <div className="text-[10px] text-slate-600">{opt.termDisplay}</div>
                           </div>
-                          <div className="rounded-lg bg-white/[0.03] px-2 py-1.5">
-                            <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-0.5">
-                              Term
-                            </div>
-                            <div className="text-xs font-bold text-slate-200">
-                              {opt.termDisplay}
-                            </div>
-                          </div>
-                          <div className="rounded-lg bg-white/[0.03] px-2 py-1.5">
-                            <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-0.5">
-                              Min size
-                            </div>
-                            <div className="text-xs font-bold text-slate-200">
-                              ${opt.minProjectSizeK}K
-                            </div>
-                          </div>
-                        </div>
 
-                        {/* Monthly payment detail */}
-                        {monthlyPmt && (
-                          <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-indigo-500/[0.06] border border-indigo-500/15">
-                            <span className="text-xs text-slate-400">
-                              Est. monthly payment at {opt.rateForCalc}% / {opt.termYearsForCalc}{" "}
-                              yrs
-                            </span>
-                            <span className="text-sm font-bold text-indigo-300 tabular-nums">
-                              {fmt$(monthlyPmt, countryCode)}/mo
-                            </span>
+                          {/* Monthly est or $0 down */}
+                          <div className="shrink-0 text-right ml-2">
+                            {opt.fullyCovered ? (
+                              <span className="text-xs font-bold text-teal-400">$0 down</span>
+                            ) : monthlyPmt ? (
+                              <span className="text-xs font-bold text-indigo-300 tabular-nums">
+                                {fmt$(monthlyPmt, countryCode)}/mo
+                              </span>
+                            ) : (
+                              <span className="text-xs text-slate-600">varies</span>
+                            )}
+                          </div>
+
+                          {isExpanded ? (
+                            <ChevronUp className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                          )}
+                        </button>
+
+                        {/* Expanded detail */}
+                        {isExpanded && (
+                          <div className="px-3 pb-3 pt-1 border-t border-white/[0.04] space-y-3">
+                            {/* Rate/term/size row */}
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              <div className="rounded-lg bg-white/[0.03] px-2 py-1.5">
+                                <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-0.5">
+                                  Rate
+                                </div>
+                                <div className="text-xs font-bold text-slate-200">
+                                  {opt.rateDisplay}
+                                </div>
+                              </div>
+                              <div className="rounded-lg bg-white/[0.03] px-2 py-1.5">
+                                <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-0.5">
+                                  Term
+                                </div>
+                                <div className="text-xs font-bold text-slate-200">
+                                  {opt.termDisplay}
+                                </div>
+                              </div>
+                              <div className="rounded-lg bg-white/[0.03] px-2 py-1.5">
+                                <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-0.5">
+                                  Min size
+                                </div>
+                                <div className="text-xs font-bold text-slate-200">
+                                  ${opt.minProjectSizeK}K
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Monthly payment detail */}
+                            {monthlyPmt && (
+                              <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-indigo-500/[0.06] border border-indigo-500/15">
+                                <span className="text-xs text-slate-400">
+                                  Est. monthly payment at {opt.rateForCalc}% /{" "}
+                                  {opt.termYearsForCalc} yrs
+                                </span>
+                                <span className="text-sm font-bold text-indigo-300 tabular-nums">
+                                  {fmt$(monthlyPmt, countryCode)}/mo
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Requirements */}
+                            <div>
+                              <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-1">
+                                Requirements
+                              </div>
+                              <ul className="space-y-0.5">
+                                {opt.requirements.map((req) => (
+                                  <li
+                                    key={req}
+                                    className="flex items-start gap-1.5 text-[11px] text-slate-400"
+                                  >
+                                    <span className="text-slate-600 mt-0.5 shrink-0">·</span>
+                                    {req}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            {/* Highlights */}
+                            <div>
+                              <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-1">
+                                Key benefits
+                              </div>
+                              <ul className="space-y-0.5">
+                                {opt.highlights.map((h) => (
+                                  <li
+                                    key={h}
+                                    className="flex items-start gap-1.5 text-[11px] text-slate-300"
+                                  >
+                                    <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
+                                    {h}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            {/* Note */}
+                            {opt.note && (
+                              <p className="text-[10px] text-slate-600 italic">{opt.note}</p>
+                            )}
+
+                            {/* CTA */}
+                            <a
+                              href={opt.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/20 hover:border-indigo-500/40 transition-all"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {opt.ctaLabel}
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
                           </div>
                         )}
-
-                        {/* Requirements */}
-                        <div>
-                          <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-1">
-                            Requirements
-                          </div>
-                          <ul className="space-y-0.5">
-                            {opt.requirements.map((req) => (
-                              <li
-                                key={req}
-                                className="flex items-start gap-1.5 text-[11px] text-slate-400"
-                              >
-                                <span className="text-slate-600 mt-0.5 shrink-0">·</span>
-                                {req}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Highlights */}
-                        <div>
-                          <div className="text-[9px] uppercase tracking-wider text-slate-600 mb-1">
-                            Key benefits
-                          </div>
-                          <ul className="space-y-0.5">
-                            {opt.highlights.map((h) => (
-                              <li
-                                key={h}
-                                className="flex items-start gap-1.5 text-[11px] text-slate-300"
-                              >
-                                <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
-                                {h}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Note */}
-                        {opt.note && (
-                          <p className="text-[10px] text-slate-600 italic">{opt.note}</p>
-                        )}
-
-                        {/* CTA */}
-                        <a
-                          href={opt.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/20 hover:border-indigo-500/40 transition-all"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {opt.ctaLabel}
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                </div>
 
-            <p className="mt-3 text-[10px] text-slate-700 leading-relaxed">
-              Monthly payment estimates are illustrative. Actual terms vary by lender,
-              creditworthiness, and project details. Programs subject to availability and
-              eligibility. Consult a financial advisor before committing.
-            </p>
+                <p className="mt-3 text-[10px] text-slate-700 leading-relaxed">
+                  Monthly payment estimates are illustrative. Actual terms vary by lender,
+                  creditworthiness, and project details. Programs subject to availability and
+                  eligibility. Consult a financial advisor before committing.
+                </p>
+              </div>
+            )}
           </div>
         );
       })()}
@@ -2440,194 +2531,7 @@ export default function Step5V8({ state, actions }: Props) {
         </div>
       )}
 
-      {/* ================================================================
-          EXPORT / DOWNLOAD — PDF, Word, Excel
-      ================================================================ */}
-      <div id="step5-export-section" className="wiz-stroke" style={{ padding: "14px 16px" }}>
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <FileText className="w-4 h-4 text-emerald-400" />
-              <div className="text-base font-bold text-slate-100">Download quote</div>
-            </div>
-            <p className="text-sm text-slate-500">
-              PDF, Word, or Excel — equipment specs, financials, and methodology
-            </p>
-          </div>
 
-          <div className="flex gap-2 flex-shrink-0">
-            {(["pdf", "word", "excel"] as const).map((format) => (
-              <button
-                key={format}
-                type="button"
-                onClick={() => handleExport(format)}
-                disabled={exportingFormat !== null}
-                className="wiz-btn-ghost inline-flex items-center gap-1.5 uppercase disabled:opacity-50"
-              >
-                {exportingFormat === format ? (
-                  <>
-                    <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin text-[#3ECF8E]" />
-                    <span className="text-sm font-semibold text-[#3ECF8E]">...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-3.5 h-3.5" />
-                    {format}
-                  </>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Export error */}
-        {exportError && (
-          <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-400 text-center">
-            {exportError}
-          </div>
-        )}
-
-        {/* ── SAVE QUOTE ROW ── */}
-        <div className="mt-4 pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          {isAuthenticated ? (
-            <>
-              <div className="flex-1 min-w-0">
-                {quoteSaved ? (
-                  <div className="flex items-center gap-2 text-sm text-emerald-400 font-semibold">
-                    <Check className="w-4 h-4" />
-                    Quote saved to your account
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-400">
-                    Save this quote to your account to access it anytime.
-                  </p>
-                )}
-                {saveError && <p className="text-xs text-red-400 mt-1">{saveError}</p>}
-              </div>
-              {!quoteSaved && (
-                <button
-                  type="button"
-                  onClick={saveQuoteToAccount}
-                  disabled={savingQuote}
-                  className="flex-shrink-0 flex items-center justify-center gap-2 h-10 px-4 rounded-xl border-2 border-emerald-500/30 bg-emerald-500/[0.06] hover:border-emerald-500/50 hover:bg-emerald-500/[0.10] transition-all disabled:opacity-50 text-emerald-400 font-semibold text-sm"
-                >
-                  {savingQuote ? (
-                    <>
-                      <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      Saving…
-                    </>
-                  ) : (
-                    <>
-                      <Bookmark className="w-3.5 h-3.5" />
-                      Save Quote
-                    </>
-                  )}
-                </button>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="text-sm text-slate-400">
-                <span className="text-slate-300 font-medium">Sign up free</span> to save this quote
-                and access it from your dashboard anytime.
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowAuthModal(true)}
-                className="flex-shrink-0 flex items-center gap-2 h-9 px-4 rounded-xl border border-[#3ECF8E]/30 bg-[#3ECF8E]/[0.06] hover:border-[#3ECF8E]/50 hover:bg-[#3ECF8E]/[0.10] transition-all text-[#3ECF8E] font-semibold text-sm"
-              >
-                <Bookmark className="w-3.5 h-3.5" />
-                Save Quote →
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* ── BUILD AN RFP CTA ── */}
-        <div className="mt-4 pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-amber-500/[0.12] border border-amber-500/25 flex items-center justify-center flex-shrink-0">
-              <ClipboardList className="w-4.5 h-4.5 text-amber-400" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-200 leading-snug">
-                Turn this quote into a live RFP
-              </p>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Receive competing bids from certified vendors — no upload needed.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={openRfpPage}
-            className="flex-shrink-0 flex items-center gap-2 h-9 px-4 rounded-xl border border-amber-500/40 text-amber-400 hover:border-amber-400 hover:text-amber-300 transition-colors text-sm font-semibold"
-          >
-            <ClipboardList className="w-3.5 h-3.5" />
-            Build RFP →
-          </button>
-        </div>
-
-        {/* ── CONTACT US CTA ── */}
-        <div className="mt-4 pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-sky-500/[0.12] border border-sky-500/25 flex items-center justify-center flex-shrink-0">
-              <Mail className="w-4 h-4 text-sky-400" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-200 leading-snug">
-                Speak with a Merlin Energy specialist
-              </p>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Questions about this quote? Our team typically responds within 1 business day.
-              </p>
-            </div>
-          </div>
-          <a
-            href={`mailto:sales@merlinenergy.net?cc=ugobe07%40gmail.com%2Cvkapila2004%40gmail.com&subject=${encodeURIComponent(`BESS Quote Inquiry — ${quoteRef}`)}&body=${encodeURIComponent(`Hi Merlin Energy team,\n\nI have a question about my BESS quote:\n\nQuote Reference: ${quoteRef}\nSystem Size: ${tier ? `${(tier.bessKW / 1000).toFixed(2)} MW / ${tier.durationHours ?? 2} hr` : "—"}\nLocation: ${state.locationRaw || "—"}\n\nPlease reach out at your earliest convenience.\n\nThank you.`)}`}
-            className="flex-shrink-0 flex items-center gap-2 h-9 px-4 rounded-xl border border-sky-500/40 text-sky-400 hover:border-sky-400 hover:text-sky-300 hover:bg-sky-500/[0.06] transition-colors text-sm font-semibold"
-          >
-            <Mail className="w-3.5 h-3.5" />
-            Contact Us →
-          </a>
-        </div>
-
-        {/* ── TECHNICAL SPECS TOGGLE ── */}
-        <div className="pt-3 border-t border-white/[0.04]">
-          <button
-            type="button"
-            onClick={() => setShowTechSpecs((v) => !v)}
-            className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors w-full py-1"
-          >
-            <ChevronDown
-              className="w-3.5 h-3.5 transition-transform"
-              style={{ transform: showTechSpecs ? "rotate(180deg)" : "none" }}
-            />
-            {showTechSpecs ? "Hide" : "View"} Technical Specifications
-          </button>
-          {showTechSpecs && tier && (
-            <div className="mt-3">
-              <BessSpecSheet
-                bessKW={tier.bessKW ?? 0}
-                bessKWh={tier.bessKWh ?? 0}
-                durationHours={tier.durationHours ?? 2}
-                chemistry={tier.selectedBESS?.chemistry ?? "LFP"}
-                manufacturer={tier.selectedBESS?.manufacturer}
-                model={tier.selectedBESS?.model}
-                moduleKwh={tier.selectedBESS?.capacityKwh}
-                roundtripEfficiencyPct={tier.selectedBESS?.roundtripEfficiencyPct}
-                warrantyYears={tier.selectedBESS?.warrantyYears}
-                cycleLife={tier.selectedBESS?.cycleLife}
-                solarKW={tier.solarKW ?? 0}
-                generatorKW={tier.generatorKW ?? 0}
-                baseLoadKW={state.baseLoadKW || undefined}
-                peakLoadKW={state.peakLoadKW || undefined}
-                compact
-              />
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* ================================================================
           LEAD CAPTURE MODAL — rendered via portal to escape willChange container
@@ -2856,6 +2760,131 @@ export default function Step5V8({ state, actions }: Props) {
             }}
           >
             📄 Load & rate sourced from your uploaded utility bill
+          </div>
+        )}
+      </div>
+
+      {/* ================================================================
+          YOUR PATH FORWARD — placed at bottom of page
+      ================================================================ */}
+      <div className="wiz-stroke mt-4" style={{ padding: "0 14px" }}>
+        <button
+          type="button"
+          className="wiz-collapse-trigger"
+          onClick={() => setPathForwardOpen((o) => !o)}
+          style={{ borderTop: "none" }}
+        >
+          <div className="flex items-center gap-2">
+            <ClipboardList className="w-3.5 h-3.5 text-violet-400" />
+            <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-violet-300">
+              Your Path Forward
+            </span>
+            <span className="text-xs text-slate-500">Export · Finance · Install · RFP</span>
+          </div>
+          {pathForwardOpen ? (
+            <ChevronUp className="w-4 h-4 text-slate-500" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-slate-500" />
+          )}
+        </button>
+
+        {pathForwardOpen && (
+          <div style={{ paddingBottom: 12 }}>
+            {[
+              {
+                n: 1,
+                color: "#4f8aff",
+                title: "Save your quote",
+                desc: "Export as PDF, Word, or Excel to share with your team or lender.",
+                cta: "Go to Export",
+                arrow: "\u2193",
+                onClick: () =>
+                  document
+                    .getElementById("step5-export-section")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+              },
+              {
+                n: 2,
+                color: "#34d399",
+                title: "Review financing options",
+                desc: "Compare C-PACE, PACE, SBA 7(a), and equipment financing programs matched to your project.",
+                cta: "See Financing",
+                arrow: "\u2193",
+                onClick: () =>
+                  document
+                    .getElementById("step5-financing-section")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+              },
+              {
+                n: 3,
+                color: "#f59e0b",
+                title: "Find a certified installer",
+                desc: "Merlin matched installers in your area who specialize in commercial energy storage.",
+                cta: "View Installers",
+                arrow: "\u2193",
+                onClick: () =>
+                  document
+                    .getElementById("step5-installers-section")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+              },
+              {
+                n: 4,
+                color: "#9b6dff",
+                title: "Get your full engineering package",
+                desc: "ProStack\u2122 adds custom equipment sizing, DCF/IRR modeling, and bank-ready documentation.",
+                cta: "Upgrade to ProStack\u2122",
+                arrow: "\u2192",
+                onClick: openProQuotePage,
+              },
+            ].map((s) => (
+              <div
+                key={s.n}
+                style={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: 10,
+                  padding: "7px 0",
+                  borderBottom: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                <span
+                  style={{
+                    color: s.color,
+                    fontWeight: 800,
+                    fontSize: 12,
+                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                    fontVariantNumeric: "tabular-nums",
+                    flexShrink: 0,
+                    minWidth: 12,
+                  }}
+                >
+                  {s.n}
+                </span>
+                <p className="flex-1 min-w-0 text-[13px] leading-snug">
+                  <span className="font-semibold text-white">{s.title}</span>
+                  <span className="text-slate-500">
+                    {" \u2014 "}
+                    {s.desc}
+                  </span>
+                </p>
+                <button
+                  onClick={s.onClick}
+                  style={{
+                    flexShrink: 0,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: s.color,
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {s.cta} <span style={{ fontSize: 13 }}>{s.arrow}</span>
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </div>

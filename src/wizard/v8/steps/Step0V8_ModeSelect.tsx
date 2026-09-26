@@ -6,6 +6,8 @@
 
 import React, { useState } from "react";
 import { ArrowRight, Zap, Wrench, Upload, CheckCircle2, Clock3, Shield } from "lucide-react";
+import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
+import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
 
 interface Step0V8Props {
   onSelectMode: (mode: "wizard" | "proquote" | "upload") => void;
@@ -55,15 +57,10 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
               border: "1px solid rgba(62,207,142,0.2)",
             }}
           >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: "#3ECF8E",
-                display: "inline-block",
-                boxShadow: "0 0 8px #3ECF8E",
-              }}
+            <img
+              src={badgeGoldIcon}
+              alt="StackQuote"
+              className="w-4 h-4 rounded-full object-cover"
             />
             <span
               className="text-[11px] font-semibold tracking-widest uppercase"
@@ -133,7 +130,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
 
             <div className="p-6">
               <div
-                className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 overflow-hidden"
                 style={{
                   background:
                     "linear-gradient(135deg, rgba(62,207,142,0.2) 0%, rgba(62,207,142,0.05) 100%)",
@@ -141,7 +138,11 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
                   boxShadow: "0 0 24px rgba(62,207,142,0.15)",
                 }}
               >
-                <Zap className="w-6 h-6" style={{ color: "#3ECF8E" }} />
+                <img
+                  src={badgeGoldIcon}
+                  alt="StackQuote"
+                  className="w-10 h-10 object-contain rounded-lg"
+                />
               </div>
 
               <div className="mb-2">
@@ -175,7 +176,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
                       border: "1px solid rgba(245,158,11,0.25)",
                     }}
                   >
-                    <Shield className="w-2.5 h-2.5" />
+                    <img src={badgeGoldIcon} alt="" className="w-3 h-3 rounded-full" />
                     StackQuote™
                   </span>
                 </div>
@@ -236,7 +237,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
           >
             <div className="p-6">
               <div
-                className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 overflow-hidden"
                 style={{
                   background:
                     "linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(245,158,11,0.05) 100%)",
@@ -244,7 +245,11 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
                   boxShadow: "0 0 24px rgba(245,158,11,0.12)",
                 }}
               >
-                <Wrench className="w-6 h-6" style={{ color: "#F59E0B" }} />
+                <img
+                  src={badgeProQuoteIcon}
+                  alt="ProStack"
+                  className="w-10 h-10 object-contain rounded-lg"
+                />
               </div>
 
               <div className="mb-2">
