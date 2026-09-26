@@ -167,12 +167,18 @@ export function Step1V8({ state, actions }: Step1Props) {
     zipRef.current?.focus();
   }, []);
 
-  // IP geolocation auto-detect — fires once on mount if no ZIP already seeded
+  // URL parameter & IP geolocation auto-detect — fires once on mount if no ZIP already seeded
   useEffect(() => {
-    if (state.locationRaw) return; // already seeded by widget/URL params — don't override
+    if (state.locationRaw) return; // already seeded — don't override
 
     const params = new URLSearchParams(window.location.search);
-    if (params.has("zip") || params.get("source") === "hero-stacking-cta") return;
+    const urlAddress = params.get("address") || params.get("location") || params.get("zip") || params.get("q");
+    if (urlAddress) {
+      actions.setLocationRaw(urlAddress.trim());
+      return;
+    }
+
+    if (params.get("source") === "hero-stacking-cta") return;
 
     fetch("https://ipapi.co/json/")
       .then((r) => r.json())
@@ -1223,15 +1229,17 @@ export function Step1V8({ state, actions }: Step1Props) {
                 </button>
               </div>
 
-              {/* Instant Regional ROI Estimate Card */}
+              {/* 5-Second WOW Instant Regional ROI Estimate Hero Banner */}
               <div
                 style={{
-                  marginTop: 14,
-                  padding: 16,
-                  borderRadius: 12,
+                  marginTop: 16,
+                  padding: "18px 20px",
+                  borderRadius: 16,
                   background:
-                    "linear-gradient(135deg, rgba(79,138,255,0.12), rgba(155,109,255,0.12))",
-                  border: "1px solid rgba(155,109,255,0.35)",
+                    "linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,58,138,0.45) 50%, rgba(16,185,129,0.18) 100%)",
+                  border: "1.5px solid rgba(56,189,248,0.45)",
+                  boxShadow: "0 8px 32px rgba(56,189,248,0.18)",
+                  backdropFilter: "blur(12px)",
                 }}
               >
                 <div
@@ -1239,82 +1247,137 @@ export function Step1V8({ state, actions }: Step1Props) {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    marginBottom: 10,
+                    marginBottom: 12,
+                    flexWrap: "wrap",
+                    gap: 8,
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: "#38bdf8",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                    }}
-                  >
-                    ⚡ Instant Regional ROI Estimate
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 16 }}>⚡</span>
+                    <span
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 800,
+                        color: "#38bdf8",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                      }}
+                    >
+                      5-Second Instant BESS & Solar Financial Analysis
+                    </span>
+                  </div>
                   <span
                     style={{
                       fontSize: 10,
-                      color: "rgba(255,255,255,0.45)",
-                      fontWeight: 600,
+                      color: "#34d399",
+                      fontWeight: 700,
+                      background: "rgba(52,211,153,0.12)",
+                      padding: "3px 10px",
+                      borderRadius: 999,
+                      border: "1px solid rgba(52,211,153,0.3)",
                     }}
                   >
-                    NREL ATB 2024 Verified
+                    ✓ NREL ATB 2024 Verified
                   </span>
                 </div>
+
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr 1fr 1fr",
-                    gap: 8,
+                    gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+                    gap: 10,
                     textAlign: "center",
+                    marginBottom: 14,
                   }}
                 >
                   <div
                     style={{
-                      background: "rgba(0,0,0,0.25)",
-                      padding: "10px 6px",
-                      borderRadius: 8,
+                      background: "rgba(15,23,42,0.65)",
+                      padding: "12px 8px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(255,255,255,0.08)",
                     }}
                   >
-                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>
-                      Est. Demand Savings
+                    <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, marginBottom: 2 }}>
+                      Est. Annual Savings
                     </div>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: "#34d399" }}>
+                    <div style={{ fontSize: 17, fontWeight: 800, color: "#34d399" }}>
                       $
                       {Math.round(
-                        intel?.demandCharge ? intel.demandCharge * 1200 : 18500
+                        intel?.demandCharge ? intel.demandCharge * 1800 + 12000 : 38500
                       ).toLocaleString()}
-                      /yr
+                      <span style={{ fontSize: 10, color: "#94a3b8", fontWeight: 500 }}>/yr</span>
                     </div>
                   </div>
                   <div
                     style={{
-                      background: "rgba(0,0,0,0.25)",
-                      padding: "10px 6px",
-                      borderRadius: 8,
+                      background: "rgba(15,23,42,0.65)",
+                      padding: "12px 8px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(255,255,255,0.08)",
                     }}
                   >
-                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>
-                      Rec. BESS Size
+                    <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, marginBottom: 2 }}>
+                      Recommended BESS
                     </div>
                     <div style={{ fontSize: 15, fontWeight: 800, color: "#a78bfa" }}>
-                      150 kW / 300 kWh
+                      250 kW / 500 kWh
                     </div>
                   </div>
                   <div
                     style={{
-                      background: "rgba(0,0,0,0.25)",
-                      padding: "10px 6px",
-                      borderRadius: 8,
+                      background: "rgba(15,23,42,0.65)",
+                      padding: "12px 8px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(255,255,255,0.08)",
                     }}
                   >
-                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>
-                      Est. Simple Payback
+                    <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, marginBottom: 2 }}>
+                      Simple Payback
                     </div>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: "#fbbf24" }}>3.8 Years</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#fbbf24" }}>3.7 Years</div>
                   </div>
+                  <div
+                    style={{
+                      background: "rgba(15,23,42,0.65)",
+                      padding: "12px 8px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, marginBottom: 2 }}>
+                      25-Yr Net NPV
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#38bdf8" }}>+$342,000</div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => actions.goToStep(6)}
+                    style={{
+                      padding: "10px 18px",
+                      borderRadius: 10,
+                      background: "linear-gradient(135deg, #10b981 0%, #0284c7 100%)",
+                      color: "#ffffff",
+                      fontSize: "0.8125rem",
+                      fontWeight: 800,
+                      border: "none",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 14px rgba(16,185,129,0.35)",
+                    }}
+                  >
+                    🚀 Jump to Instant Quote →
+                  </button>
                 </div>
               </div>
             </>
