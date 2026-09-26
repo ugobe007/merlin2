@@ -14,6 +14,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
 import merlinProfileImage from "@/assets/images/new_profile_merlin.png";
+import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
+import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
 
 interface WizardShellV7Props {
   currentStep: number; // 0-indexed from parent
@@ -345,29 +347,11 @@ export default function WizardShellV7({
                 aria-label="Learn about the Energy Stack quote"
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                  <svg
-                    width="20"
-                    height="22"
-                    viewBox="0 0 20 22"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{ flexShrink: 0 }}
-                  >
-                    <path
-                      d="M10 1L2 4.5V10C2 14.97 5.42 19.6 10 21C14.58 19.6 18 14.97 18 10V4.5L10 1Z"
-                      fill="rgba(79,138,255,0.15)"
-                      stroke="#38bdf8"
-                      strokeWidth="1.4"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M7 11L9.5 13.5L14 8.5"
-                      stroke="#4f8aff"
-                      strokeWidth="1.7"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <img
+                    src={badgeGoldIcon}
+                    alt="StackQuote"
+                    style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", boxShadow: "0 0 10px rgba(245,158,11,0.5)" }}
+                  />
                   <span
                     style={{
                       fontSize: 17,
@@ -714,7 +698,12 @@ export default function WizardShellV7({
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
-                  ⚡ ProStack
+                  <img
+                    src={badgeProQuoteIcon}
+                    alt="ProStack"
+                    style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover" }}
+                  />
+                  <span>ProStack</span>
                 </button>
               ) : (
                 <div style={{ width: 138, flexShrink: 0 }} />
@@ -725,34 +714,37 @@ export default function WizardShellV7({
             {telemetry && (telemetry.rate || telemetry.utility) && (
               <div
                 style={{
-                  borderBottom: "1px solid rgba(99,120,255,0.12)",
-                  padding: "10px 20px",
+                  borderBottom: "1px solid rgba(99,120,255,0.22)",
+                  padding: "12px 24px",
                   display: "flex",
                   flexWrap: "wrap",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "0 16px",
-                  rowGap: 6,
-                  fontSize: 11,
-                  color: "#4a5568",
+                  gap: "8px 24px",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#cbd5e1",
                   fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-                  background: "rgba(15,23,42,0.30)",
+                  background: "rgba(15,23,42,0.65)",
+                  boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.06)",
                 }}
               >
                 {telemetry.rate != null && (
-                  <span>
-                    Rate{" "}
-                    <span style={{ color: "#f59e0b", fontWeight: 700 }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 18 }}>⚡</span>
+                    <span style={{ color: "rgba(226, 232, 240, 0.75)" }}>Rate</span>
+                    <span style={{ color: "#fbbf24", fontWeight: 800, fontSize: 15 }}>
                       ${telemetry.rate.toFixed(2)}/kWh
                     </span>
                   </span>
                 )}
                 {telemetry.demand != null && (
                   <>
-                    <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
-                    <span>
-                      Demand{" "}
-                      <span style={{ color: "#34d399", fontWeight: 700 }}>
+                    <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 700 }}>•</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 18 }}>📈</span>
+                      <span style={{ color: "rgba(226, 232, 240, 0.75)" }}>Demand</span>
+                      <span style={{ color: "#34d399", fontWeight: 800, fontSize: 15 }}>
                         ${telemetry.demand.toFixed(2)}/kW
                       </span>
                     </span>
@@ -760,10 +752,10 @@ export default function WizardShellV7({
                 )}
                 {telemetry.solar != null && (
                   <>
-                    <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      ☀️{" "}
-                      <span style={{ color: "rgba(232,235,243,0.7)" }}>
+                    <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 700 }}>•</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 18 }}>☀️</span>
+                      <span style={{ color: "#f59e0b", fontWeight: 800, fontSize: 15 }}>
                         {telemetry.solar.toFixed(2)} hrs
                       </span>
                     </span>
@@ -771,31 +763,44 @@ export default function WizardShellV7({
                 )}
                 {telemetry.grade && (
                   <>
-                    <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
-                    <span>
-                      Grade{" "}
-                      <span style={{ color: "#a78bfa", fontWeight: 700 }}>{telemetry.grade}</span>
+                    <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 700 }}>•</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 18 }}>⭐</span>
+                      <span style={{ color: "rgba(226, 232, 240, 0.75)" }}>Grade</span>
+                      <span style={{ color: "#c084fc", fontWeight: 800, fontSize: 15 }}>
+                        {telemetry.grade}
+                      </span>
                     </span>
                   </>
                 )}
                 {telemetry.climate && (
                   <>
-                    <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      🌡️ <span style={{ color: "rgba(232,235,243,0.7)" }}>{telemetry.climate}</span>
+                    <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 700 }}>•</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 18 }}>🌡️</span>
+                      <span style={{ color: "rgba(232,235,243,0.9)", fontWeight: 700 }}>
+                        {telemetry.climate}
+                      </span>
                     </span>
                   </>
                 )}
                 {telemetry.temp != null && (
                   <>
-                    <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
-                    <span style={{ color: "#f87171" }}>{telemetry.temp}°F</span>
+                    <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 700 }}>•</span>
+                    <span style={{ color: "#f87171", fontWeight: 800, fontSize: 15 }}>
+                      {telemetry.temp}°F
+                    </span>
                   </>
                 )}
                 {telemetry.utility && (
                   <>
-                    <span style={{ color: "rgba(255,255,255,0.1)" }}>•</span>
-                    <span style={{ color: "rgba(232,235,243,0.58)" }}>{telemetry.utility}</span>
+                    <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 700 }}>•</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 18 }}>🏢</span>
+                      <span style={{ color: "#60a5fa", fontWeight: 800, fontSize: 15 }}>
+                        {telemetry.utility}
+                      </span>
+                    </span>
                   </>
                 )}
               </div>
@@ -818,6 +823,208 @@ export default function WizardShellV7({
               }}
             >
               {children}
+            </div>
+
+            {/* PANEL BOTTOM NAV — Attached directly to bottom of the content panel */}
+            <div
+              className="merlin-panel-bottomnav"
+              style={{
+                padding: "16px 24px",
+                background: "rgba(15, 23, 42, 0.70)",
+                borderRadius: "0 0 12px 12px",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderTop: "1px solid rgba(255, 255, 255, 0.10)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginTop: 12,
+              }}
+            >
+              {/* Back */}
+              <button
+                onClick={onBack}
+                disabled={!canGoBack}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "11px 20px",
+                  borderRadius: 10,
+                  minHeight: 46,
+                  background: "transparent",
+                  border: canGoBack ? "1px solid rgba(255,255,255,0.18)" : "1px solid transparent",
+                  color: canGoBack ? "rgba(232, 235, 243, 0.65)" : "rgba(232, 235, 243, 0.18)",
+                  cursor: canGoBack ? "pointer" : "not-allowed",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (canGoBack) {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)";
+                    e.currentTarget.style.color = "rgba(232, 235, 243, 0.9)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.borderColor = canGoBack
+                    ? "rgba(255,255,255,0.18)"
+                    : "transparent";
+                  e.currentTarget.style.color = canGoBack
+                    ? "rgba(232, 235, 243, 0.65)"
+                    : "rgba(232, 235, 243, 0.18)";
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
+                  <path
+                    d="M9 11.5L4.5 7L9 2.5"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Back
+              </button>
+
+              {/* Center: hint + step dot pills */}
+              <div
+                className="merlin-nexthint"
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}
+              >
+                {nextHint && (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "rgba(232, 235, 243, 0.35)",
+                      letterSpacing: "0.01em",
+                    }}
+                  >
+                    Next: {nextHint}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+                  {stepLabels.map((_, idx) => {
+                    const isActive = idx === safeStep;
+                    const isComplete = idx < safeStep;
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          width: isActive ? 20 : 6,
+                          height: 6,
+                          borderRadius: 3,
+                          background: isComplete
+                            ? "rgba(79, 140, 255, 0.55)"
+                            : isActive
+                              ? "#7c3aed"
+                              : "rgba(255, 255, 255, 0.12)",
+                          transition: "all 0.25s ease",
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Next — solid fill for steps 4+ (high-intent CTA), outline for early steps */}
+              {(() => {
+                const isFilled = canGoNext && !isNextLoading && safeStep >= 3;
+                const isActive = canGoNext && !isNextLoading;
+                return (
+                  <button
+                    onClick={onNext}
+                    disabled={!canGoNext || isNextLoading}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: isFilled ? "14px 28px" : "11px 22px",
+                      borderRadius: isFilled ? 12 : 10,
+                      minHeight: isFilled ? 54 : 46,
+                      background: "transparent",
+                      border: isFilled
+                        ? "2px solid #7c3aed"
+                        : isActive
+                          ? "2px solid #4f8aff"
+                          : "2px solid rgba(255,255,255,0.08)",
+                      color: isFilled ? "#c4b5fd" : isActive ? "#BFDBFE" : "rgba(232,235,243,0.28)",
+                      cursor: isActive ? "pointer" : "not-allowed",
+                      fontSize: isFilled ? 16 : 14,
+                      fontWeight: 700,
+                      letterSpacing: "0.01em",
+                      boxShadow: isFilled ? "0 0 20px rgba(124,58,237,0.30)" : "none",
+                      animation: "none",
+                      transition: "all 0.18s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (isActive) {
+                        if (isFilled) {
+                          e.currentTarget.style.borderColor = "#9b6dff";
+                          e.currentTarget.style.boxShadow = "0 0 28px rgba(124,58,237,0.45)";
+                          e.currentTarget.style.transform = "translateY(-1px)";
+                        } else {
+                          e.currentTarget.style.background = "rgba(99,120,255,0.06)";
+                        }
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.borderColor = isFilled
+                        ? "#7c3aed"
+                        : isActive
+                          ? "#4f8aff"
+                          : "rgba(255,255,255,0.08)";
+                      e.currentTarget.style.boxShadow = isFilled
+                        ? "0 0 20px rgba(124,58,237,0.30)"
+                        : "none";
+                      e.currentTarget.style.transform = "translateY(0)";
+                    }}
+                  >
+                    {isNextLoading ? (
+                      <>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          style={{ animation: "merlin-spin 0.8s linear infinite", flexShrink: 0 }}
+                        >
+                          <circle
+                            cx="8"
+                            cy="8"
+                            r="6"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeDasharray="30 10"
+                          />
+                        </svg>
+                        Working…
+                      </>
+                    ) : (
+                      <>
+                        {nextLabel || "Next Step"}
+                        <svg
+                          width="15"
+                          height="15"
+                          viewBox="0 0 15 15"
+                          fill="none"
+                          style={{ flexShrink: 0 }}
+                        >
+                          <path
+                            d="M5.5 3L10 7.5L5.5 12"
+                            stroke="currentColor"
+                            strokeWidth="1.9"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </>
+                    )}
+                  </button>
+                );
+              })()}
             </div>
           </div>
 
@@ -860,8 +1067,8 @@ export default function WizardShellV7({
               .merlin-shell-rail {
                 display: none !important;
               }
-              .merlin-shell-bottomnav {
-                padding: 16px 16px 24px !important;
+              .merlin-panel-bottomnav {
+                padding: 12px 14px !important;
                 width: 100% !important;
               }
               .merlin-progress-bar {
@@ -903,9 +1110,7 @@ export default function WizardShellV7({
               }
             }
 
-            /* ── LANDSCAPE PHONE (short viewport, wide) ───────────────────────
-               Handles iPhone landscape (390×844 → 844×390 rotated).
-               Goal: everything fits on screen without scrolling. */
+            /* ── LANDSCAPE PHONE (short viewport, wide) ─────────────────────── */
             @media (orientation: landscape) and (max-height: 520px) {
               .merlin-shell-grid {
                 grid-template-columns: 1fr !important;
@@ -933,7 +1138,7 @@ export default function WizardShellV7({
               .merlin-nexthint {
                 display: none !important;
               }
-              .merlin-shell-bottomnav {
+              .merlin-panel-bottomnav {
                 padding: 6px 12px 10px !important;
                 width: 100% !important;
               }
@@ -944,11 +1149,7 @@ export default function WizardShellV7({
               }
             }
 
-            /* ── LANDSCAPE TABLET (iPad, 521-900px height, landscape) ─────────
-               Handles iPad mini/Air in landscape. Show narrow rail.
-               (pointer: coarse) ensures this ONLY targets touch tablets,
-               NOT laptops — 1366×768 and 1440×900 laptops were being caught
-               by the height range and wrongly capped the advisor at 240px. */
+            /* ── LANDSCAPE TABLET (iPad, 521-900px height, landscape) ───────── */
             @media (orientation: landscape) and (min-height: 521px) and (max-height: 900px) and (min-width: 901px) and (pointer: coarse) {
               .merlin-shell-grid {
                 grid-template-columns: 240px 1fr !important;
@@ -959,8 +1160,8 @@ export default function WizardShellV7({
                 padding: 20px 24px !important;
                 min-height: 280px !important;
               }
-              .merlin-shell-bottomnav {
-                padding: 0 20px 16px !important;
+              .merlin-panel-bottomnav {
+                padding: 10px 16px !important;
               }
             }
           `}</style>
