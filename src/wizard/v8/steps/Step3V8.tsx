@@ -838,30 +838,6 @@ export function Step3V8({ state, actions }: Props) {
                 Skip to add-ons →
               </button>
             </div>
-            <div className="wiz-s3-streamline-left">
-              <div className="wiz-s3-streamline-title">
-                ⚡ Smart defaults applied for {displayName}
-              </div>
-              <div className="wiz-s3-streamline-hint">
-                Review or edit your facility parameters in the cards below, or skip directly to add-ons.
-              </div>
-            </div>
-            <div className="wiz-s3-streamline-actions">
-              <button
-                type="button"
-                className="wiz-s3-customize-btn"
-                onClick={() => setProfileOptionalOpen((o) => !o)}
-              >
-                🎯 {profileOptionalOpen ? "Hide inputs" : "Customize key inputs"}
-              </button>
-              <button
-                type="button"
-                className="wiz-s3-skip"
-                onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
-              >
-                Skip to add-ons →
-              </button>
-            </div>
           </div>
         )}
 
