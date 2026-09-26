@@ -47,6 +47,7 @@ const PartnerDemo = lazy(() => import("./pages/PartnerDemo"));
 const WorkflowOSPage = lazy(() => import("./pages/WorkflowOSPage"));
 const EnergyNews = lazy(() => import("./pages/EnergyNews"));
 const ElCarWashLanding = lazy(() => import("./pages/ElCarWashLanding"));
+const BillLandingPage = lazy(() => import("./pages/BillLandingPage"));
 const MicrogridPage = lazy(() => import("./pages/MicrogridPage"));
 const OpportunitiesDashboard = lazy(() => import("./pages/OpportunitiesDashboard"));
 const BuildRFPPage = lazy(() => import("./pages/BuildRFPPage"));
@@ -102,6 +103,12 @@ function App() {
   const isVendorPortalRoute = pathname === "/vendor-portal" || pathname === "/vendor";
   const isVendorAdminRoute = pathname === "/admin/vendors";
   const isSalesAgentRoute = pathname === "/admin/sales-agent";
+  const isBillRoute =
+    pathname === "/bill" ||
+    pathname === "/bill-analyzer" ||
+    pathname === "/bill-ocr" ||
+    pathname === "/bill.merlinenergy.net" ||
+    window.location.hostname.includes("bill.merlinenergy.net");
 
   const [showAdmin, setShowAdmin] = useState(isAdminRoute);
   const [showVendorPortal] = useState(isVendorPortalRoute);
@@ -222,6 +229,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <SalesAgentDashboard />
+      </Suspense>
+    );
+  }
+
+  // Access via /bill or bill.merlinenergy.net - AI Utility Bill OCR Lead Magnet
+  if (isBillRoute) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <BillLandingPage />
       </Suspense>
     );
   }
