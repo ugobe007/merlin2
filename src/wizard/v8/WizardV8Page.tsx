@@ -570,7 +570,7 @@ function getAdvisorContent(
 function resolveCanGoNext(step: number, state: S): boolean {
   if (step === 3) return state.baseLoadKW > 0;
   if (step === 4) return true; // Add-ons: always continuable
-  if (step === 5) return state.selectedTierIndex !== null && state.tiersStatus === "ready"; // MagicFit: tier selected + build complete
+  if (step === 5) return (state.selectedTierIndex !== null || Boolean(state.tiers && state.tiers.length > 0)) && state.tiersStatus === "ready"; // MagicFit: tier selected or available + build complete
   return false;
 }
 

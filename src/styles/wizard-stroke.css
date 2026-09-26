@@ -597,6 +597,9 @@
   letter-spacing: 0.07em;
   text-transform: uppercase;
   flex-shrink: 0;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
 }
 
 .wiz-addon-row {
