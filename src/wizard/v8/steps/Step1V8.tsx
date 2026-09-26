@@ -544,10 +544,36 @@ export function Step1V8({ state, actions }: Step1Props) {
             font-size: 16px !important;
           }
           .step1-location-container {
-            padding: 16px !important;
+            padding: 14px !important;
           }
           .step1-business-input {
             font-size: 16px !important;
+          }
+          .step1-hero-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+          }
+          .step1-journey-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 4px !important;
+            padding: 10px 6px !important;
+          }
+          .step1-journey-grid-sub {
+            display: none !important;
+          }
+          .step1-country-row {
+            flex-wrap: wrap !important;
+          }
+          .step1-grid-reliability {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        @media (max-width: 380px) {
+          .step1-hero-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .step1-grid-reliability {
+            grid-template-columns: 1fr !important;
           }
         }
       `}</style>
@@ -646,6 +672,7 @@ export function Step1V8({ state, actions }: Step1Props) {
 
         {/* ── Journey preview strip ── */}
         <div
+          className="step1-journey-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr 1fr",
@@ -707,7 +734,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                 {icon}
               </div>
               <div style={{ fontSize: 11, fontWeight: 700, color: T.textPrimary }}>{label}</div>
-              <div style={{ fontSize: 10, color: T.textMuted, marginTop: -2 }}>{sub}</div>
+              <div className="step1-journey-grid-sub" style={{ fontSize: 10, color: T.textMuted, marginTop: -2 }}>{sub}</div>
             </div>
           ))}
         </div>
@@ -739,6 +766,7 @@ export function Step1V8({ state, actions }: Step1Props) {
           {/* Row 1: Country Selection — large segmented pill toggle */}
           <div style={{ marginBottom: 14 }}>
             <div
+              className="step1-country-row"
               style={{
                 display: "flex",
                 gap: 10,
@@ -1282,6 +1310,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                 </div>
 
                 <div
+                  className="step1-hero-grid"
                   style={{
                     display: "grid",
                     gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
@@ -1914,7 +1943,7 @@ export function Step1V8({ state, actions }: Step1Props) {
                 >
                   ⚡ How reliable is your grid?
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+                <div className="step1-grid-reliability" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
                   {[
                     { value: "reliable", label: "Reliable", subtitle: "Rare outages" },
                     {

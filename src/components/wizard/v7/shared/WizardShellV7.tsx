@@ -540,7 +540,7 @@ export default function WizardShellV7({
               }}
             >
               {/* Left spacer to keep pills centered */}
-              <div style={{ width: 138, flexShrink: 0 }} />
+              <div className="merlin-progress-spacer" style={{ width: 138, flexShrink: 0 }} />
 
               {/* Step pills — centered */}
               <div
@@ -1131,6 +1131,9 @@ export default function WizardShellV7({
                 overflow-x: auto !important;
                 -webkit-overflow-scrolling: touch;
                 border-radius: 8px !important;
+              }
+              .merlin-progress-spacer {
+                display: none !important;
               }
               .merlin-progress-label {
                 display: none !important;
