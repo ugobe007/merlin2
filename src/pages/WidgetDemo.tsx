@@ -34,9 +34,13 @@ export default function WidgetDemo() {
   }, []);
 
   // Code snippet with customization
-  const codeSnippet = `<!-- Add this to your website -->
+  const codeSnippet = `<!-- Option 1: 1-Line Responsive Script Embed -->
+<div id="merlin-energy-widget"></div>
+<script src="https://merlinenergy.net/embed.js" data-industry="${selectedIndustry}" data-color="${customColor.replace("#", "")}"></script>
+
+<!-- Option 2: Direct iFrame Embed -->
 <iframe
-  src="https://merlin2.fly.dev/v8?industry=${selectedIndustry}&color=${customColor.replace("#", "")}${logoUrl ? `&logo=${encodeURIComponent(logoUrl)}` : ""}"
+  src="https://merlinenergy.net/wizard?industry=${selectedIndustry}&color=${customColor.replace("#", "")}${logoUrl ? `&logo=${encodeURIComponent(logoUrl)}` : ""}&embed=true"
   width="100%"
   height="800"
   frameborder="0"
@@ -44,9 +48,9 @@ export default function WidgetDemo() {
   allow="geolocation"
 ></iframe>
 
-<!-- Or use REST API for backend integration -->
+<!-- Option 3: REST API Quote Integration -->
 <script>
-  fetch('https://merlin2.fly.dev/api/quote', {
+  fetch('https://merlinenergy.net/api/widget/quote', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -54,12 +58,11 @@ export default function WidgetDemo() {
     },
     body: JSON.stringify({
       industry: '${selectedIndustry}',
-      location: 'San Francisco, CA',
-      // Add your facility details here
+      address: '123 Industrial Pkwy, Austin TX',
     })
   })
   .then(res => res.json())
-  .then(quote => console.log('Quote:', quote));
+  .then(quote => console.log('Merlin Instant Quote:', quote));
 </script>`;
 
   const handleCopySnippet = () => {
