@@ -394,17 +394,19 @@ function AcceptButton({
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
-        padding: "13px 20px",
+        padding: "14px 24px",
         borderRadius: 999,
-        border: accepted ? "2px solid rgba(62,207,142,0.98)" : "2px solid rgba(62,207,142,0.72)",
-        background: accepted ? "rgba(62,207,142,0.07)" : "rgba(62,207,142,0.025)",
-        color: "#3ecf8e",
-        fontSize: 16,
+        border: accepted ? "2.5px solid #10b981" : "2.5px solid #34d399",
+        background: accepted ? "rgba(16,185,129,0.12)" : "rgba(16,185,129,0.04)",
+        color: "#34d399",
+        fontSize: 18,
         fontWeight: 900,
+        letterSpacing: "0.02em",
         cursor: "pointer",
         boxShadow: accepted
-          ? "0 0 22px rgba(62,207,142,0.20), inset 0 0 0 1px rgba(62,207,142,0.16)"
-          : "0 0 18px rgba(62,207,142,0.12)",
+          ? "0 0 24px rgba(16,185,129,0.38), inset 0 0 0 1px rgba(16,185,129,0.20)"
+          : "0 0 18px rgba(16,185,129,0.22)",
+        transition: "all 0.15s ease",
       }}
     >
       <OptionCheck checked={accepted} />
@@ -2666,19 +2668,77 @@ export default function Step3_5V8({ state, actions }: Props) {
           />
         </>
       ) : (
-        <div className="wiz-addon-teaser">
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div className="wiz-addon-icon ev">⚡</div>
+        <div
+          className="wiz-addon-teaser"
+          style={{
+            border: "1.5px solid rgba(56,189,248,0.50)",
+            background: "linear-gradient(135deg, rgba(56,189,248,0.08), rgba(15,23,42,0.85))",
+            boxShadow: "0 0 20px rgba(56,189,248,0.18)",
+            padding: "16px 20px",
+            borderRadius: 12,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div
+              className="wiz-addon-icon ev"
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 10,
+                background: "rgba(56,189,248,0.18)",
+                border: "1px solid rgba(56,189,248,0.35)",
+                fontSize: 20,
+              }}
+            >
+              ⚡
+            </div>
             <div>
-              <div className="wiz-addon-title" style={{ color: "rgba(203,213,225,0.85)" }}>
-                EV Charging
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span className="wiz-addon-title" style={{ color: "#ffffff", fontSize: "1.125rem", fontWeight: 800 }}>
+                  EV Charging
+                </span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 800,
+                    color: "#38bdf8",
+                    background: "rgba(56,189,248,0.15)",
+                    border: "1px solid rgba(56,189,248,0.35)",
+                    padding: "2px 8px",
+                    borderRadius: 999,
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  ⚡ REVENUE ADD-ON
+                </span>
               </div>
-              <div className="wiz-addon-sub">
-                Optional add-on · Customer &amp; fleet charging revenue
+              <div className="wiz-addon-sub" style={{ color: "rgba(203,213,225,0.88)", marginTop: 2 }}>
+                Customer &amp; fleet charging revenue · Level 2 &amp; DC Fast Chargers
               </div>
             </div>
           </div>
-          <button type="button" onClick={handleAddEV} className="wiz-btn-addon-add ev">
+          <button
+            type="button"
+            onClick={handleAddEV}
+            className="wiz-btn-addon-add ev"
+            style={{
+              padding: "10px 18px",
+              borderRadius: 10,
+              border: "2px solid #38bdf8",
+              background: "rgba(56,189,248,0.12)",
+              color: "#38bdf8",
+              fontSize: 14,
+              fontWeight: 800,
+              cursor: "pointer",
+              boxShadow: "0 0 14px rgba(56,189,248,0.25)",
+              transition: "all 0.15s ease",
+            }}
+          >
             + Add EV Charging
           </button>
         </div>
@@ -2718,19 +2778,77 @@ export default function Step3_5V8({ state, actions }: Props) {
           />
         </>
       ) : (
-        <div className="wiz-addon-teaser">
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div className="wiz-addon-icon gen">🏭</div>
+        <div
+          className="wiz-addon-teaser"
+          style={{
+            border: "1.5px solid rgba(249,115,22,0.50)",
+            background: "linear-gradient(135deg, rgba(249,115,22,0.08), rgba(15,23,42,0.85))",
+            boxShadow: "0 0 20px rgba(249,115,22,0.18)",
+            padding: "16px 20px",
+            borderRadius: 12,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div
+              className="wiz-addon-icon gen"
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 10,
+                background: "rgba(249,115,22,0.18)",
+                border: "1px solid rgba(249,115,22,0.35)",
+                fontSize: 20,
+              }}
+            >
+              🏭
+            </div>
             <div>
-              <div className="wiz-addon-title" style={{ color: "rgba(203,213,225,0.85)" }}>
-                Backup Generator
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span className="wiz-addon-title" style={{ color: "#ffffff", fontSize: "1.125rem", fontWeight: 800 }}>
+                  Backup Generator
+                </span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 800,
+                    color: "#fb923c",
+                    background: "rgba(249,115,22,0.15)",
+                    border: "1px solid rgba(249,115,22,0.35)",
+                    padding: "2px 8px",
+                    borderRadius: 999,
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  🛡️ RESILIENCE BOOST
+                </span>
               </div>
-              <div className="wiz-addon-sub">
-                Optional resilience add-on · Does not affect solar/BESS ROI
+              <div className="wiz-addon-sub" style={{ color: "rgba(203,213,225,0.88)", marginTop: 2 }}>
+                Extended outage protection · Diesel, Natural Gas, Dual Fuel &amp; Linear
               </div>
             </div>
           </div>
-          <button type="button" onClick={handleAddGenerator} className="wiz-btn-addon-add gen">
+          <button
+            type="button"
+            onClick={handleAddGenerator}
+            className="wiz-btn-addon-add gen"
+            style={{
+              padding: "10px 18px",
+              borderRadius: 10,
+              border: "2px solid #fb923c",
+              background: "rgba(249,115,22,0.12)",
+              color: "#fb923c",
+              fontSize: 14,
+              fontWeight: 800,
+              cursor: "pointer",
+              boxShadow: "0 0 14px rgba(249,115,22,0.25)",
+              transition: "all 0.15s ease",
+            }}
+          >
             + Add Generator
           </button>
         </div>
@@ -2743,22 +2861,6 @@ export default function Step3_5V8({ state, actions }: Props) {
         energyInvestK={energyInvestK}
         resilienceInvestK={resilienceInvestK}
       />
-
-      <div style={{ marginTop: 4 }}>
-        <button type="button" className="wiz-cta-primary" onClick={handleContinue}>
-          Continue to Energy Stack →
-        </button>
-        <p
-          style={{
-            marginTop: 8,
-            textAlign: "center",
-            fontSize: 11,
-            color: "rgba(148,163,184,0.55)",
-          }}
-        >
-          BESS sizing and three quote tiers in the next step
-        </p>
-      </div>
     </div>
   );
 }
