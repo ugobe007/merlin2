@@ -110,7 +110,7 @@ function App() {
     pathname === "/bill.merlinenergy.net" ||
     window.location.hostname.includes("bill.merlinenergy.net");
 
-  const [showAdmin, setShowAdmin] = useState(isAdminRoute);
+  const [showAdmin, setShowAdmin] = useState(false);
   const [showVendorPortal] = useState(isVendorPortalRoute);
   const [showVendorAdmin] = useState(isVendorAdminRoute);
   // const [showWizard, setShowWizard] = useState(pathname === '/wizard'); // Unused
@@ -172,6 +172,19 @@ function App() {
   useEffect(() => {
     syncApprovedVendorProducts().catch(() => {});
   }, []);
+
+  // Auto-verify admin credentials on /admin route
+  useEffect(() => {
+    if (isAdminRoute) {
+      import("./services/adminAuthService").then(({ isCurrentUserAdmin }) => {
+        if (isCurrentUserAdmin()) {
+          setShowAdmin(true);
+        } else {
+          handleAdminAccess();
+        }
+      });
+    }
+  }, [isAdminRoute]);
 
   // Keyboard shortcut: Ctrl+Shift+A for admin access
   useEffect(() => {

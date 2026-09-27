@@ -12,10 +12,11 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { Menu, X, LogIn, LayoutDashboard, HelpCircle } from "lucide-react";
+import { Menu, X, LogIn, LayoutDashboard, HelpCircle, Lock } from "lucide-react";
 import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
 import AuthModal from "@/components/AuthModal";
 import { authService } from "@/services/authService";
+import { isCurrentUserAdmin } from "@/services/adminAuthService";
 import merlinProfileImage from "@/assets/images/new_profile_merlin.png";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
@@ -108,9 +109,39 @@ export default function WizardShellV7({
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const currentUser = authService.getCurrentUser();
+  const isAdmin = isCurrentUserAdmin();
   const shellRef = useRef<HTMLDivElement>(null);
   const stepContentRef = useRef<HTMLDivElement>(null);
   const prevStepRef = useRef(currentStep);
+
+  const handleAdminClick = (e: React.MouseEvent) => {
+    if (!isAdmin) {
+      e.preventDefault();
+      alert(
+        "Administrator credentials required. Please log in with your administrator account to access the Admin Panel."
+      );
+      setAuthMode("login");
+      setShowAuthModal(true);
+      setNavMenuOpen(false);
+    } else {
+      setNavMenuOpen(false);
+    }
+  };
+
+  const handleProtectedToolClick = (e: React.MouseEvent, targetHref: string) => {
+    if (!isAdmin) {
+      e.preventDefault();
+      alert(
+        "Administrator access required. You must be logged in as an administrator to access Platform & Tools."
+      );
+      setAuthMode("login");
+      setShowAuthModal(true);
+      setNavMenuOpen(false);
+    } else {
+      setNavMenuOpen(false);
+      window.location.href = targetHref;
+    }
+  };
 
   // ✅ SCROLL-TO-TOP + flash-free step transition animation
   useEffect(() => {
@@ -210,9 +241,14 @@ export default function WizardShellV7({
 
             <a
               href="/admin"
-              className="hidden sm:flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 px-2.5 py-1.5 font-semibold rounded-lg bg-amber-500/10 border border-amber-500/30"
+              onClick={handleAdminClick}
+              className={`hidden sm:flex items-center gap-1 text-xs px-2.5 py-1.5 font-semibold rounded-lg border ${
+                isAdmin
+                  ? "text-amber-400 bg-amber-500/15 border-amber-500/40"
+                  : "text-amber-400/80 bg-amber-500/10 border-amber-500/20"
+              }`}
             >
-              <LayoutDashboard size={13} />
+              {isAdmin ? <LayoutDashboard size={13} /> : <Lock size={12} />}
               Admin Panel
             </a>
 
@@ -246,8 +282,8 @@ export default function WizardShellV7({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Access Column */}
               <div className="space-y-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                  Account & Management
+                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1">
+                  <Lock size={12} /> Account & Admin
                 </div>
                 <button
                   onClick={() => {
@@ -257,14 +293,22 @@ export default function WizardShellV7({
                   }}
                   className="w-full text-left px-3 py-2 text-xs font-semibold text-blue-300 hover:bg-blue-900/30 rounded-lg flex items-center gap-2"
                 >
-                  <LogIn size={14} /> Log In / Sign In
+                  <LogIn size={14} />{" "}
+                  {currentUser
+                    ? `Signed In (${currentUser.firstName || currentUser.email})`
+                    : "Log In / Sign In"}
                 </button>
                 <a
                   href="/admin"
-                  className="block px-3 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-900/30 rounded-lg flex items-center gap-2"
-                  onClick={() => setNavMenuOpen(false)}
+                  onClick={handleAdminClick}
+                  className={`px-3 py-2 text-xs font-semibold rounded-lg flex items-center justify-between ${
+                    isAdmin
+                      ? "text-amber-300 bg-amber-900/30 hover:bg-amber-900/50"
+                      : "text-slate-400 bg-slate-800/40 hover:bg-amber-900/20 hover:text-amber-300"
+                  }`}
                 >
-                  <LayoutDashboard size={14} /> Admin Panel
+                  <span className="flex items-center gap-2">⚙️ Admin Panel</span>
+                  {!isAdmin && <Lock size={12} className="text-amber-400/80" />}
                 </a>
                 <a
                   href="/support"
@@ -303,27 +347,49 @@ export default function WizardShellV7({
                 </a>
               </div>
 
-              {/* Tools Column */}
+              {/* Tools Column (Enforced Admin Access) */}
               <div className="space-y-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
-                  Sales & Tools
+                <div className="text-[10px] font-bold uppercase tracking-wider text-blue-400 flex items-center justify-between">
+                  <span>Platforms & Tools</span>
+                  {!isAdmin && (
+                    <span className="text-[9px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 flex items-center gap-0.5">
+                      <Lock size={9} /> Admin Only
+                    </span>
+                  )}
                 </div>
                 <a
                   href="/campaign"
-                  className="block px-3 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg"
-                  onClick={() => setNavMenuOpen(false)}
+                  onClick={(e) => handleProtectedToolClick(e, "/campaign")}
+                  className={`px-3 py-1.5 text-xs rounded-lg flex items-center justify-between ${
+                    isAdmin
+                      ? "text-slate-200 hover:text-white hover:bg-slate-800"
+                      : "text-slate-400 hover:text-amber-300 hover:bg-slate-800/50"
+                  }`}
                 >
-                  🎯 Outbound Sales Panel
+                  <span>🎯 Outbound Sales Panel</span>
+                  {!isAdmin && <Lock size={12} className="text-slate-500" />}
                 </a>
                 {onSwitchToProStack && (
                   <button
-                    onClick={() => {
-                      setNavMenuOpen(false);
-                      onSwitchToProStack();
+                    onClick={(e) => {
+                      if (!isAdmin) {
+                        e.preventDefault();
+                        alert("Administrator access required for ProStack Builder.");
+                        setAuthMode("login");
+                        setShowAuthModal(true);
+                      } else {
+                        setNavMenuOpen(false);
+                        onSwitchToProStack();
+                      }
                     }}
-                    className="w-full text-left px-3 py-1.5 text-xs font-semibold text-blue-300 hover:bg-blue-900/40 rounded-lg"
+                    className={`w-full text-left px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center justify-between ${
+                      isAdmin
+                        ? "text-blue-300 hover:bg-blue-900/40"
+                        : "text-slate-400 hover:text-amber-300 hover:bg-slate-800/50"
+                    }`}
                   >
-                    ⚡ Switch to ProStack Builder
+                    <span>⚡ ProStack Builder</span>
+                    {!isAdmin && <Lock size={12} className="text-slate-500" />}
                   </button>
                 )}
               </div>

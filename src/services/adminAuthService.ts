@@ -243,3 +243,28 @@ export class AdminAuthService {
 
 // Export singleton instance
 export const adminAuthService = AdminAuthService.getInstance();
+
+/**
+ * Global helper to check if current user is an authenticated Administrator
+ */
+export function isCurrentUserAdmin(): boolean {
+  if (adminAuthService.isSessionValid()) {
+    return true;
+  }
+  try {
+    const rawUser = localStorage.getItem("merlin_auth_user");
+    if (rawUser) {
+      const user = JSON.parse(rawUser);
+      const email = (user.email || "").toLowerCase();
+      const adminEmails = [
+        "ugobe07@gmail.com",
+        "admin@merlinenergy.net",
+        "viewer@merlinenergy.net",
+      ];
+      if (adminEmails.includes(email)) return true;
+    }
+  } catch {
+    // Ignore parse error
+  }
+  return false;
+}

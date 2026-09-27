@@ -1,11 +1,10 @@
 /* Merlin Energy — Navbar */
 
-import { useState, useEffect } from "react";
-import { Menu, X, LogOut, User, LayoutDashboard } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Menu, X, LogOut, User, LayoutDashboard, Lock } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
 import { authService } from "@/services/authService";
-
-const ADMIN_EMAILS = ["ugobe07@gmail.com", "admin@merlinenergy.net", "viewer@merlinenergy.net"];
+import { isCurrentUserAdmin } from "@/services/adminAuthService";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -13,7 +12,7 @@ export default function Navbar() {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [currentUser, setCurrentUser] = useState(authService.getCurrentUser());
-  const isAdmin = !!currentUser && ADMIN_EMAILS.includes(currentUser.email);
+  const isAdmin = isCurrentUserAdmin();
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -32,6 +31,31 @@ export default function Navbar() {
     setAuthMode("login");
     setShowAuth(true);
     setMobileOpen(false);
+  };
+
+  const handleAdminClick = (e: React.MouseEvent) => {
+    if (!isAdmin) {
+      e.preventDefault();
+      alert(
+        "Administrator credentials required. Please log in with your administrator account to access the Admin Panel."
+      );
+      openSignIn();
+    } else {
+      setMobileOpen(false);
+    }
+  };
+
+  const handleProtectedToolClick = (e: React.MouseEvent, targetHref: string) => {
+    if (!isAdmin) {
+      e.preventDefault();
+      alert(
+        "Administrator access required. You must be logged in as an administrator to access Platform & Tools."
+      );
+      openSignIn();
+    } else {
+      setMobileOpen(false);
+      window.location.href = targetHref;
+    }
   };
 
   const navLinks = [
@@ -87,32 +111,31 @@ export default function Navbar() {
 
             {/* Right nav — desktop */}
             <div className="hidden lg:flex items-center gap-2">
-              {currentUser ? (
+              {isAdmin ? (
                 <div className="flex items-center gap-3">
-                  {/* Admin link */}
                   <a
                     href="/admin"
-                    className="flex items-center gap-1.5 text-sm text-amber-400 hover:text-amber-300 transition-colors px-3 py-2 rounded-md hover:bg-amber-500/[0.08]"
-                    style={{ fontFamily: "'Manrope', sans-serif" }}
+                    onClick={handleAdminClick}
+                    className="flex items-center gap-1.5 text-xs text-amber-400 font-bold px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 transition-colors"
                   >
                     <LayoutDashboard size={14} />
-                    Admin Panel
+                    Admin Panel Active
                   </a>
                   <div className="flex items-center gap-2 text-sm text-slate-300">
-                    <User size={15} className="text-slate-400" />
+                    <User size={15} className="text-amber-400" />
                     <span style={{ fontFamily: "'Manrope', sans-serif" }}>
-                      {currentUser.firstName || currentUser.email}
+                      {currentUser?.firstName || currentUser?.email || "Admin"}
                     </span>
                   </div>
                   <button
                     onClick={async () => {
                       await authService.signOut();
                       setCurrentUser(null);
+                      window.location.reload();
                     }}
-                    className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors px-3 py-2"
-                    style={{ fontFamily: "'Manrope', sans-serif" }}
+                    className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors px-2.5 py-1.5"
                   >
-                    <LogOut size={14} />
+                    <LogOut size={13} />
                     Sign Out
                   </button>
                 </div>
@@ -120,10 +143,12 @@ export default function Navbar() {
                 <>
                   <a
                     href="/admin"
+                    onClick={handleAdminClick}
                     className="text-xs text-amber-400/90 hover:text-amber-300 transition-colors font-semibold px-2.5 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/10 flex items-center gap-1"
+                    title="Requires Admin Authentication"
                   >
-                    <LayoutDashboard size={13} />
-                    Admin
+                    <Lock size={12} />
+                    Admin Panel
                   </a>
                   <a
                     href="/support"
@@ -133,15 +158,13 @@ export default function Navbar() {
                   </a>
                   <button
                     onClick={openSignIn}
-                    className="text-sm text-slate-200 hover:text-white transition-colors font-semibold px-3 py-2 rounded-lg border border-slate-700 bg-slate-800/80"
-                    style={{ fontFamily: "'Manrope', sans-serif" }}
+                    className="text-sm text-slate-200 hover:text-white transition-colors font-semibold px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80"
                   >
                     Log In
                   </button>
                   <a
                     href="/wizard"
                     className="rounded-lg border border-blue-400/70 bg-blue-600/20 px-4 py-2 text-sm font-semibold text-blue-300 transition-all duration-200 hover:border-blue-300 hover:text-blue-200"
-                    style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                   >
                     Activate Agent
                   </a>
@@ -172,10 +195,11 @@ export default function Navbar() {
 
         {/* Hamburger dropdown menu (Mobile & Desktop) */}
         {mobileOpen && (
-          <div className="bg-[#060D1F]/95 backdrop-blur-xl border-b border-slate-700/80 px-4 py-4 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="max-w-screen-2xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-[#060D1F]/95 backdrop-blur-xl border-b border-slate-700/80 px-4 py-5 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="max-w-screen-2xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Column 1: Public Navigation */}
               <div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">
                   Navigation
                 </div>
                 <div className="flex flex-col gap-1">
@@ -192,23 +216,32 @@ export default function Navbar() {
                 </div>
               </div>
 
+              {/* Column 2: Access & Admin */}
               <div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-amber-400 mb-2">
-                  Access & Support
+                <div className="text-[11px] font-extrabold uppercase tracking-wider text-amber-400 mb-2 flex items-center gap-1.5">
+                  <Lock size={12} /> Access & Admin Panel
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1.5">
                   <button
                     onClick={openSignIn}
                     className="text-left py-2 px-3 text-blue-300 hover:text-blue-200 hover:bg-blue-900/30 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
                   >
-                    🔑 Log In / Sign In
+                    🔑{" "}
+                    {currentUser
+                      ? `Signed In (${currentUser.firstName || currentUser.email})`
+                      : "Log In / Sign In"}
                   </button>
                   <a
                     href="/admin"
-                    className="py-2 px-3 text-amber-300 hover:text-amber-200 hover:bg-amber-900/30 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
-                    onClick={() => setMobileOpen(false)}
+                    onClick={handleAdminClick}
+                    className={`py-2 px-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-between ${
+                      isAdmin
+                        ? "text-amber-300 bg-amber-900/30 hover:bg-amber-900/50"
+                        : "text-slate-400 bg-slate-800/40 hover:bg-amber-900/20 hover:text-amber-300"
+                    }`}
                   >
-                    ⚙️ Admin Panel
+                    <span className="flex items-center gap-2">⚙️ Admin Panel</span>
+                    {!isAdmin && <Lock size={13} className="text-amber-400/80" />}
                   </a>
                   <a
                     href="/support"
@@ -220,42 +253,81 @@ export default function Navbar() {
                 </div>
               </div>
 
+              {/* Column 3: Platform & Tools (Enforced Permissions) */}
               <div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-400 mb-2">
-                  Platforms & Tools
+                <div className="text-[11px] font-extrabold uppercase tracking-wider text-blue-400 mb-2 flex items-center justify-between">
+                  <span>Platforms & Tools</span>
+                  {!isAdmin && (
+                    <span className="text-[10px] text-amber-400 font-bold flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                      <Lock size={10} /> Admin Only
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1">
                   <a
                     href="/wizard"
-                    className="py-2 px-3 text-slate-200 hover:text-white hover:bg-slate-800/60 rounded-lg text-sm font-medium transition-colors"
-                    onClick={() => setMobileOpen(false)}
+                    onClick={(e) => handleProtectedToolClick(e, "/wizard")}
+                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${
+                      isAdmin
+                        ? "text-slate-200 hover:text-white hover:bg-slate-800/60"
+                        : "text-slate-400 hover:text-amber-300 hover:bg-slate-800/40"
+                    }`}
                   >
-                    ⚡ StackQuote Wizard
+                    <span>⚡ StackQuote Wizard</span>
+                    {!isAdmin && <Lock size={12} className="text-slate-500" />}
                   </a>
                   <a
                     href="/campaign"
-                    className="py-2 px-3 text-slate-200 hover:text-white hover:bg-slate-800/60 rounded-lg text-sm font-medium transition-colors"
-                    onClick={() => setMobileOpen(false)}
+                    onClick={(e) => handleProtectedToolClick(e, "/campaign")}
+                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${
+                      isAdmin
+                        ? "text-slate-200 hover:text-white hover:bg-slate-800/60"
+                        : "text-slate-400 hover:text-amber-300 hover:bg-slate-800/40"
+                    }`}
                   >
-                    🎯 Outbound Sales Panel
+                    <span>🎯 Outbound Sales Panel</span>
+                    {!isAdmin && <Lock size={12} className="text-slate-500" />}
                   </a>
                   <a
                     href="/workflow"
-                    className="py-2 px-3 text-slate-200 hover:text-white hover:bg-slate-800/60 rounded-lg text-sm font-medium transition-colors"
-                    onClick={() => setMobileOpen(false)}
+                    onClick={(e) => handleProtectedToolClick(e, "/workflow")}
+                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${
+                      isAdmin
+                        ? "text-slate-200 hover:text-white hover:bg-slate-800/60"
+                        : "text-slate-400 hover:text-amber-300 hover:bg-slate-800/40"
+                    }`}
                   >
-                    📊 Merlin Energy OS
+                    <span>📊 Merlin Energy OS</span>
+                    {!isAdmin && <Lock size={12} className="text-slate-500" />}
                   </a>
                 </div>
               </div>
 
+              {/* Column 4: Quick Launch */}
               <div className="flex flex-col justify-between pt-2 sm:pt-0">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
+                  Session Rights
+                </div>
+                <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 mb-3 space-y-1">
+                  <div className="font-semibold text-slate-300">
+                    Status: {isAdmin ? "⚡ Administrator Active" : "👤 Standard Guest"}
+                  </div>
+                  <p className="text-[11px]">
+                    {isAdmin
+                      ? "Full permissions unlocked for all Merlin platforms & tools."
+                      : "Admin login required for Platform & Tools and Admin Panel."}
+                  </p>
+                </div>
                 <a
                   href="/wizard"
-                  className="rounded-xl border border-blue-400/70 bg-blue-600/30 p-3 text-center text-sm font-bold text-blue-200 hover:bg-blue-600/50 transition-colors shadow-lg"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={(e) => handleProtectedToolClick(e, "/wizard")}
+                  className={`rounded-xl p-3 text-center text-sm font-bold transition-colors shadow-lg flex items-center justify-center gap-2 ${
+                    isAdmin
+                      ? "border border-blue-400/70 bg-blue-600/30 text-blue-200 hover:bg-blue-600/50"
+                      : "border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
+                  }`}
                 >
-                  🚀 Launch Merlin Agent
+                  {isAdmin ? "🚀 Launch Merlin Agent" : "🔒 Log In as Admin to Access"}
                 </a>
               </div>
             </div>
@@ -267,7 +339,10 @@ export default function Navbar() {
       <AuthModal
         isOpen={showAuth}
         onClose={() => setShowAuth(false)}
-        onLoginSuccess={() => setShowAuth(false)}
+        onLoginSuccess={() => {
+          setShowAuth(false);
+          window.location.reload();
+        }}
         defaultMode={authMode}
       />
     </>
