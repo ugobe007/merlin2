@@ -12,7 +12,10 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
+import { Menu, X, LogIn, LayoutDashboard, HelpCircle } from "lucide-react";
 import TrueQuoteModal from "@/components/shared/TrueQuoteModal";
+import AuthModal from "@/components/AuthModal";
+import { authService } from "@/services/authService";
 import merlinProfileImage from "@/assets/images/new_profile_merlin.png";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
@@ -101,6 +104,10 @@ export default function WizardShellV7({
   children,
 }: WizardShellV7Props) {
   const [showTrueQuoteModal, setShowTrueQuoteModal] = useState(false);
+  const [navMenuOpen, setNavMenuOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const currentUser = authService.getCurrentUser();
   const shellRef = useRef<HTMLDivElement>(null);
   const stepContentRef = useRef<HTMLDivElement>(null);
   const prevStepRef = useRef(currentStep);
@@ -140,6 +147,190 @@ export default function WizardShellV7({
         onClose={() => setShowTrueQuoteModal(false)}
         mode="about"
       />
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLoginSuccess={() => setShowAuthModal(false)}
+        defaultMode={authMode}
+      />
+
+      {/* TOP NAVIGATION BAR WITH HAMBURGER MENU */}
+      <header className="w-full border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-8 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Brand Logo & Nav Links */}
+          <div className="flex items-center gap-6">
+            <a href="/" className="flex items-center gap-2.5 group">
+              <img
+                src="/merlin-icon.png"
+                alt="Merlin Energy"
+                className="w-7 h-7 rounded-md object-contain"
+              />
+              <span className="text-base font-extrabold text-white tracking-tight">MERLIN</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400">
+                STACKQUOTE™
+              </span>
+            </a>
+
+            {/* Desktop Nav Links */}
+            <nav className="hidden md:flex items-center gap-4 text-xs font-semibold">
+              <a href="/" className="text-slate-300 hover:text-white transition-colors">
+                Home
+              </a>
+              <a href="/workflow" className="text-slate-300 hover:text-white transition-colors">
+                Energy OS
+              </a>
+              <a href="/pricing" className="text-slate-300 hover:text-white transition-colors">
+                Pricing
+              </a>
+              <a href="/support" className="text-slate-300 hover:text-white transition-colors">
+                Support
+              </a>
+            </nav>
+          </div>
+
+          {/* Quick Actions & Hamburger Button */}
+          <div className="flex items-center gap-2.5">
+            {onSwitchToProStack && (
+              <button
+                type="button"
+                onClick={onSwitchToProStack}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-400/80 text-blue-300 hover:text-blue-200 text-xs font-bold transition-all bg-blue-500/10 hover:bg-blue-500/20"
+              >
+                <span>⚡</span> ProStack Mode
+              </button>
+            )}
+
+            <a
+              href="/support"
+              className="hidden sm:flex items-center gap-1 text-xs text-slate-300 hover:text-white px-2.5 py-1.5 font-medium"
+            >
+              <HelpCircle size={14} />
+              Support
+            </a>
+
+            <a
+              href="/admin"
+              className="hidden sm:flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 px-2.5 py-1.5 font-semibold rounded-lg bg-amber-500/10 border border-amber-500/30"
+            >
+              <LayoutDashboard size={13} />
+              Admin Panel
+            </a>
+
+            <button
+              onClick={() => {
+                setAuthMode("login");
+                setShowAuthModal(true);
+              }}
+              className="text-xs font-bold text-slate-200 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/90 flex items-center gap-1.5"
+            >
+              <LogIn size={13} />
+              {currentUser ? currentUser.firstName || "Account" : "Log In"}
+            </button>
+
+            {/* Hamburger Menu Toggle */}
+            <button
+              onClick={() => setNavMenuOpen(!navMenuOpen)}
+              className="p-2 text-slate-300 hover:text-white rounded-lg bg-slate-800/80 border border-slate-700/80 transition-colors flex items-center gap-1.5"
+              title="Open Navigation Menu"
+              aria-label="Navigation Menu"
+            >
+              {navMenuOpen ? <X size={18} /> : <Menu size={18} />}
+              <span className="text-xs font-bold hidden xs:inline">Menu</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Hamburger Dropdown Menu Overlay */}
+        {navMenuOpen && (
+          <div className="mt-3 p-4 bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Access Column */}
+              <div className="space-y-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                  Account & Management
+                </div>
+                <button
+                  onClick={() => {
+                    setNavMenuOpen(false);
+                    setAuthMode("login");
+                    setShowAuthModal(true);
+                  }}
+                  className="w-full text-left px-3 py-2 text-xs font-semibold text-blue-300 hover:bg-blue-900/30 rounded-lg flex items-center gap-2"
+                >
+                  <LogIn size={14} /> Log In / Sign In
+                </button>
+                <a
+                  href="/admin"
+                  className="block px-3 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-900/30 rounded-lg flex items-center gap-2"
+                  onClick={() => setNavMenuOpen(false)}
+                >
+                  <LayoutDashboard size={14} /> Admin Panel
+                </a>
+                <a
+                  href="/support"
+                  className="block px-3 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-900/30 rounded-lg flex items-center gap-2"
+                  onClick={() => setNavMenuOpen(false)}
+                >
+                  <HelpCircle size={14} /> Support & FAQ
+                </a>
+              </div>
+
+              {/* Navigation Column */}
+              <div className="space-y-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Navigation
+                </div>
+                <a
+                  href="/"
+                  className="block px-3 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg"
+                  onClick={() => setNavMenuOpen(false)}
+                >
+                  Home
+                </a>
+                <a
+                  href="/workflow"
+                  className="block px-3 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg"
+                  onClick={() => setNavMenuOpen(false)}
+                >
+                  Merlin Energy OS
+                </a>
+                <a
+                  href="/pricing"
+                  className="block px-3 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg"
+                  onClick={() => setNavMenuOpen(false)}
+                >
+                  Pricing
+                </a>
+              </div>
+
+              {/* Tools Column */}
+              <div className="space-y-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                  Sales & Tools
+                </div>
+                <a
+                  href="/campaign"
+                  className="block px-3 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg"
+                  onClick={() => setNavMenuOpen(false)}
+                >
+                  🎯 Outbound Sales Panel
+                </a>
+                {onSwitchToProStack && (
+                  <button
+                    onClick={() => {
+                      setNavMenuOpen(false);
+                      onSwitchToProStack();
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-xs font-semibold text-blue-300 hover:bg-blue-900/40 rounded-lg"
+                  >
+                    ⚡ Switch to ProStack Builder
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </header>
 
       <div
         ref={shellRef}
