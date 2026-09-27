@@ -133,273 +133,6 @@ function bullet(text: string): React.ReactNode {
 // ── Per-step advisor content rendered in the left rail ────────────────────────
 type S = ReturnType<typeof useWizardV8>["state"];
 
-// ── Dynamic Savings Model for Left Rail ────────────────────────────────────────
-interface SavingsMetrics {
-  annualSavings: number;
-  paybackYears: number;
-  netProfit10Yr: number;
-  isExactTier: boolean;
-  labelHint: string;
-}
-
-function computeSavingsMetrics(opts: {
-  baseLoadKW: number;
-  peakLoadKW: number;
-  intel: S["intel"];
-  industry: S["industry"];
-  tiers: S["tiers"];
-  selectedTierIndex: number | null;
-}): SavingsMetrics {
-  const { baseLoadKW, peakLoadKW, intel, industry, tiers, selectedTierIndex } = opts;
-
-  // 1. If real quote tiers exist (Steps 4 / 5 / 6), use selected or recommended tier
-  if (tiers && tiers.length > 0) {
-    const activeIdx =
-      selectedTierIndex !== null && selectedTierIndex >= 0 && selectedTierIndex < tiers.length
-        ? selectedTierIndex
-        : 1; // default to Recommended tier (index 1)
-    const tier = tiers[activeIdx] || tiers[0];
-    if (tier && tier.annualSavings > 0) {
-      const netProfit = tier.annualSavings * 10 - tier.netCost;
-      return {
-        annualSavings: tier.annualSavings,
-        paybackYears: tier.paybackYears,
-        netProfit10Yr: Math.max(0, netProfit),
-        isExactTier: true,
-        labelHint: `${tier.label} Tier Quote`,
-      };
-    }
-  }
-
-  // 2. Dynamic benchmark model based on location (utility rate + solar) and load/industry
-  const rate = intel?.utilityRate ?? 0.16;
-  const demandCharge = intel?.demandCharge ?? 14.0;
-
-  // Peak load: take explicit peak, base load, or industry benchmark load
-  let loadKW = peakLoadKW > 0 ? peakLoadKW : baseLoadKW > 0 ? baseLoadKW : 0;
-  if (loadKW === 0) {
-    const industryLoads: Record<string, number> = {
-      hotel: 250,
-      car_wash: 180,
-      ev_charging: 350,
-      office: 200,
-      retail: 150,
-      restaurant: 120,
-      warehouse: 300,
-      manufacturing: 450,
-      data_center: 800,
-      hospital: 600,
-      cold_storage: 400,
-      airport: 750,
-      casino: 650,
-    };
-    loadKW = industry && industryLoads[industry] ? industryLoads[industry] : 180;
-  }
-
-  // Energy cost reduction model:
-  // Energy arbitrage + demand charge reduction (~34% of total facility energy bill)
-  const annualKWh = loadKW * 4200;
-  const annualEnergyCost = annualKWh * rate;
-  const annualDemandCost = loadKW * 12 * demandCharge;
-  const totalAnnualBill = annualEnergyCost + annualDemandCost;
-
-  const annualSavings = Math.round(totalAnnualBill * 0.34);
-  const netCost = Math.round(loadKW * 1320); // Turnkey after 30% ITC
-  const paybackYears = annualSavings > 0 ? parseFloat((netCost / annualSavings).toFixed(1)) : 3.8;
-  const netProfit10Yr = Math.round(annualSavings * 10 - netCost);
-
-  const labelHint = intel
-    ? `${intel.utilityProvider || "Local Utility"} (${(rate * 100).toFixed(1)}¢/kWh)`
-    : "Live Benchmark";
-
-  return {
-    annualSavings,
-    paybackYears: Math.min(12, Math.max(2.1, paybackYears)),
-    netProfit10Yr: Math.max(0, netProfit10Yr),
-    isExactTier: false,
-    labelHint,
-  };
-}
-
-function fmtCurrency(val: number): string {
-  if (val >= 1_000_000) {
-    return `$${(val / 1_000_000).toFixed(1)}M`;
-  }
-  if (val >= 1_000) {
-    return `$${Math.round(val / 1_000)}K`;
-  }
-  return `$${Math.round(val)}`;
-}
-
-function PersistentSavingsCard({ metrics }: { metrics: SavingsMetrics }) {
-  return (
-    <div
-      style={{
-        marginTop: 14,
-        padding: "12px 14px",
-        borderRadius: 12,
-        background: "linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.70))",
-        border: "1px solid rgba(62, 207, 142, 0.28)",
-        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.25)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 10,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              backgroundColor: "#3ECF8E",
-              boxShadow: "0 0 8px #3ECF8E",
-            }}
-          />
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: 800,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "#3ECF8E",
-            }}
-          >
-            Potential Savings
-          </span>
-        </div>
-        <span
-          style={{
-            fontSize: 9.5,
-            fontWeight: 600,
-            color: "rgba(226, 232, 240, 0.60)",
-            maxWidth: 140,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {metrics.labelHint}
-        </span>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <div
-          style={{
-            padding: "8px 6px",
-            borderRadius: 8,
-            background: "rgba(62, 207, 142, 0.07)",
-            border: "1px solid rgba(62, 207, 142, 0.16)",
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 9.5,
-              fontWeight: 700,
-              color: "rgba(255, 255, 255, 0.55)",
-              textTransform: "uppercase",
-              letterSpacing: "0.03em",
-              marginBottom: 2,
-            }}
-          >
-            Annual
-          </div>
-          <div
-            style={{
-              fontSize: 15,
-              fontWeight: 800,
-              color: "#3ECF8E",
-              fontFamily: "'JetBrains Mono', monospace",
-              lineHeight: 1.1,
-            }}
-          >
-            {fmtCurrency(metrics.annualSavings)}
-          </div>
-          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>/yr</div>
-        </div>
-
-        <div
-          style={{
-            padding: "8px 6px",
-            borderRadius: 8,
-            background: "rgba(245, 158, 11, 0.07)",
-            border: "1px solid rgba(245, 158, 11, 0.16)",
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 9.5,
-              fontWeight: 700,
-              color: "rgba(255, 255, 255, 0.55)",
-              textTransform: "uppercase",
-              letterSpacing: "0.03em",
-              marginBottom: 2,
-            }}
-          >
-            Payback
-          </div>
-          <div
-            style={{
-              fontSize: 15,
-              fontWeight: 800,
-              color: "#F59E0B",
-              fontFamily: "'JetBrains Mono', monospace",
-              lineHeight: 1.1,
-            }}
-          >
-            {metrics.paybackYears.toFixed(1)}
-          </div>
-          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>yrs</div>
-        </div>
-
-        <div
-          style={{
-            padding: "8px 6px",
-            borderRadius: 8,
-            background: "rgba(79, 138, 255, 0.07)",
-            border: "1px solid rgba(79, 138, 255, 0.16)",
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 9.5,
-              fontWeight: 700,
-              color: "rgba(255, 255, 255, 0.55)",
-              textTransform: "uppercase",
-              letterSpacing: "0.03em",
-              marginBottom: 2,
-            }}
-          >
-            10-Yr Profit
-          </div>
-          <div
-            style={{
-              fontSize: 15,
-              fontWeight: 800,
-              color: "#38BDF8",
-              fontFamily: "'JetBrains Mono', monospace",
-              lineHeight: 1.1,
-            }}
-          >
-            {fmtCurrency(metrics.netProfit10Yr)}
-          </div>
-          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-            net return
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function getAdvisorContent(
   step: number,
   opts: {
@@ -413,7 +146,6 @@ function getAdvisorContent(
   }
 ): React.ReactNode {
   const { industry, baseLoadKW, peakLoadKW, intel, business, tiers, selectedTierIndex } = opts;
-  const metrics = computeSavingsMetrics(opts);
 
   switch (step) {
     case 0:
@@ -586,7 +318,6 @@ function getAdvisorContent(
               </div>
             </>
           )}
-          <PersistentSavingsCard metrics={metrics} />
         </div>
       );
 
@@ -605,12 +336,12 @@ function getAdvisorContent(
               bullet
             )}
           </div>
-          <PersistentSavingsCard metrics={metrics} />
         </div>
       );
 
     case 3: {
       const industryLabel = industry ? industry.replace(/_/g, " ") : "your facility";
+      const loadVal = peakLoadKW > 0 ? peakLoadKW : baseLoadKW;
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", lineHeight: 1.4 }}>
@@ -620,7 +351,7 @@ function getAdvisorContent(
             Questions are pre-filled with {hi(`${industryLabel} industry defaults`)}. Accept them or
             review — the more accurate your inputs, the better your quote.
           </div>
-          {baseLoadKW > 0 && (
+          {loadVal > 0 && (
             <div
               style={{
                 padding: "14px 16px",
@@ -632,35 +363,28 @@ function getAdvisorContent(
             >
               <div
                 style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: "0.06em",
-                  color: "rgba(62,207,142,0.7)",
-                  marginBottom: 6,
-                  textTransform: "uppercase",
-                }}
-              >
-                Estimated Peak Load
-              </div>
-              <div
-                style={{
-                  fontSize: 28,
+                  fontSize: 10,
                   fontWeight: 800,
-                  color: ACCENT,
-                  letterSpacing: "-0.5px",
-                  fontVariantNumeric: "tabular-nums",
+                  color: "#3ECF8E",
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  marginBottom: 4,
                 }}
               >
-                ~{Math.round(baseLoadKW).toLocaleString()} kW
+                ⚡ Input Update
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(245,248,255,0.85)", lineHeight: 1.5 }}>
+                Your {industryLabel} answers set peak load to{" "}
+                {hi(`~${Math.round(loadVal).toLocaleString()} kW`)}.
               </div>
             </div>
           )}
-          <PersistentSavingsCard metrics={metrics} />
         </div>
       );
     }
 
-    case 4:
+    case 4: {
+      const loadVal = peakLoadKW > 0 ? peakLoadKW : baseLoadKW;
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: 1.4 }}>
@@ -678,7 +402,7 @@ function getAdvisorContent(
               "Only add EV or generator if revenue, fleet needs, or outage risk justify the scope.",
             ].map(bullet)}
           </div>
-          {peakLoadKW > 0 && (
+          {loadVal > 0 && (
             <div
               style={{
                 padding: "14px 16px",
@@ -699,7 +423,7 @@ function getAdvisorContent(
                   textTransform: "uppercase",
                 }}
               >
-                Your Peak Load
+                Your Peak Load Profile
               </div>
               <div
                 style={{
@@ -710,16 +434,16 @@ function getAdvisorContent(
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
-                {Math.round(peakLoadKW).toLocaleString()} kW
+                {Math.round(loadVal).toLocaleString()} kW
               </div>
               <div style={{ fontSize: 11, color: T.muted, marginTop: 4 }}>
-                Add-ons should support this load without distracting from BESS ROI.
+                Add-ons support this load without distracting from BESS demand shaving.
               </div>
             </div>
           )}
-          <PersistentSavingsCard metrics={metrics} />
         </div>
       );
+    }
 
     case 5:
       return (
@@ -752,7 +476,6 @@ function getAdvisorContent(
               "Select the option you want Merlin to finalize",
             ].map(bullet)}
           </div>
-          <PersistentSavingsCard metrics={metrics} />
         </div>
       );
 

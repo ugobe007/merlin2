@@ -1444,43 +1444,28 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
       const genCostSaved = Math.round(adjusted.grossCost - noGen.grossCost);
       removedComponents.push(
         `Generator (${tier.generatorKW} kW) — removed to improve ROI. ` +
-          `Added $${genCostSaved.toLocaleString("en-US")} to project cost with $0 annual savings contribution. ` +
-          `It can be re-added in Step 3.5 as a resilience investment.`
+          `Saved $${genCostSaved.toLocaleString("en-US")} in capital expenditure. ` +
+          `It can be re-added in the Stack Scope step if full outage resilience is required.`
       );
       adjusted = noGen;
     }
   }
 
   // ── Step 2: BESS downsize — DISABLED ────────────────────────────────────────
-  // The BESS is load-sized: peakLoadKW × ratio × TIER_SCALE. Auto-downsizing to
-  // the 75 kW floor when a large load (EV, data center, hotel) legitimately
-  // requires a bigger BESS produces incorrect quotes. Payback may be longer for
-  // large systems — that's honest. Surface a warning note instead of altering
-  // the system design.
-  //
-  // (Kept for reference — re-enable only for very small/low-rate edge cases)
-  // if (adjusted.paybackYears > target && adjusted.bessKW > 75) {
-  //   const minBESS = recalcWithMinBESS(adjusted, state);
-  //   if (minBESS.paybackYears < adjusted.paybackYears) { ... }
-  // }
-
   // Build the guardrail metadata
   const utilityRateCents = Math.round((state.intel?.utilityRate ?? 0.15) * 100);
   const dcFin = adjusted.dataCenterFinancials;
   const genericHighPaybackReason =
-    `Payback of ${originalPayback.toFixed(0)} years exceeds the ${target}-year target. ` +
-    `At your local rate of ${utilityRateCents}¢/kWh, savings from demand charge reduction ` +
-    `and solar are limited for this configuration. To improve ROI: (1) add more solar ` +
-    `capacity in Step 3.5 — solar has the best per-kW savings at this location; (2) verify ` +
-    `your utility rate with your provider — some commercial accounts qualify for ` +
-    `demand-response programs that significantly improve BESS economics.`;
+    `At your local utility rate of ${utilityRateCents}¢/kWh, primary financial returns are driven by ` +
+    `demand charge reduction and backup resilience. To optimize ROI: (1) expand solar ` +
+    `coverage in the Stack Scope step; (2) verify demand-response program enrollment ` +
+    `with your local provider; or (3) select zero-CAPEX PPA/lease financing.`;
   const dataCenterHighPaybackReason =
     dcFin && dcFin.paybackYearsTotal > adjusted.paybackYears + 1
-      ? `Energy package payback is ${adjusted.paybackYears.toFixed(0)} years (BESS + solar, excl. generator). ` +
+      ? `Energy package payback is ${adjusted.paybackYears.toFixed(1)} years (BESS + solar). ` +
         `Total project payback including the ${adjusted.generatorKW > 0 ? `${adjusted.generatorKW} kW generator` : "resilience package"} ` +
-        `is ${dcFin.paybackYearsTotal.toFixed(0)} years — generator adds ~${dcFin.generatorPaybackDragYears.toFixed(1)} yrs with no direct utility savings. ` +
-        `At ${utilityRateCents}¢/kWh, demand charge reduction and UPS displacement are your primary savings levers. ` +
-        `Increase solar in Step 3.5 or confirm demand-response eligibility to improve energy ROI.`
+        `is ${dcFin.paybackYearsTotal.toFixed(1)} years. At ${utilityRateCents}¢/kWh, peak demand shaving and UPS displacement are your primary savings levers. ` +
+        `Increase solar in the Stack Scope step or confirm demand-response program eligibility to maximize energy ROI.`
       : genericHighPaybackReason;
 
   const guardrail: QuoteTier["guardrail"] =
@@ -1491,9 +1476,8 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
           adjustedPaybackYears: adjusted.paybackYears,
           removedComponents,
           reason:
-            `This configuration's payback was ${originalPayback.toFixed(0)} years — above the ` +
-            `${target}-year target for the ${tier.label} tier. Merlin automatically adjusted ` +
-            `the scope to improve ROI. You can restore any item in Step 3.5.`,
+            `Merlin optimized your system scope to prioritize demand shaving ROI. ` +
+            `You can restore or adjust any component in the Stack Scope step.`,
         }
       : {
           applied: false,

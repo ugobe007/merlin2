@@ -989,9 +989,7 @@ export default function Step5V8({ state, actions }: Props) {
               <div className="wiz-kpi-value positive">
                 {(tier.evRevenuePerYear ?? 0) > 500 && tier.paybackYearsEnergyOnly != null
                   ? `${tier.paybackYearsEnergyOnly.toFixed(1)} yrs`
-                  : dcFin
-                    ? `${Math.round(tier.paybackYears)} yrs`
-                    : `${Math.round(tier.paybackYears)} yrs`}
+                  : `${tier.paybackYears.toFixed(1)} yrs`}
               </div>
             </div>
             <div className="wiz-kpi-cell">
@@ -1004,7 +1002,6 @@ export default function Step5V8({ state, actions }: Props) {
           </div>
         </div>
       )}
-
 
       {/* ================================================================
           ROI GUARDRAIL BANNER — shown when payback was auto-adjusted
@@ -1947,7 +1944,7 @@ export default function Step5V8({ state, actions }: Props) {
                         </div>
                         <div className="mt-2 flex items-end gap-2">
                           <span className="text-3xl font-black text-white tabular-nums">
-                            {Math.round(tier.paybackYears)}
+                            {tier.paybackYears.toFixed(1)}
                           </span>
                           <span className="pb-1 text-sm font-semibold text-slate-400">years</span>
                         </div>
@@ -1955,7 +1952,7 @@ export default function Step5V8({ state, actions }: Props) {
                           <div className="mt-1 text-xs text-amber-300/80">
                             Total project (incl. generator):{" "}
                             <strong className="text-amber-200">
-                              {Math.round(dcFin.paybackYearsTotal)} years
+                              {dcFin.paybackYearsTotal.toFixed(1)} years
                             </strong>
                           </div>
                         )}
@@ -1996,7 +1993,8 @@ export default function Step5V8({ state, actions }: Props) {
                                           Math.max(1, tier.annualSavings)) *
                                           10
                                       ) / 10}{" "}
-                                      yrs. Remove in Step 3.5 to shorten payback.
+                                      yrs. Adjust in the Stack Scope step if full backup is not
+                                      required.
                                     </>
                                   )}
                                 </span>
@@ -2007,7 +2005,8 @@ export default function Step5V8({ state, actions }: Props) {
                                 <span className="text-yellow-400 mt-0.5 shrink-0">☀️</span>
                                 <span>
                                   <strong className="text-yellow-300">More solar</strong> = lower
-                                  payback. Try increasing solar in Step 3.5 to boost annual savings.
+                                  payback. Try increasing solar in the Stack Scope step to boost
+                                  annual savings.
                                 </span>
                               </div>
                             )}
@@ -2546,8 +2545,6 @@ export default function Step5V8({ state, actions }: Props) {
           )}
         </div>
       )}
-
-
 
       {/* ================================================================
           LEAD CAPTURE MODAL — rendered via portal to escape willChange container
