@@ -16,6 +16,7 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import type { WizardState, WizardActions } from "../wizardState";
 import { BillUploadPanel } from "./BillUploadPanel";
+import { estimateSolarKW } from "../addonSizing";
 import {
   resolveStep3Schema,
   type CuratedField,
@@ -86,6 +87,33 @@ export function Step3V8({ state, actions }: Props) {
     state.uploadedBillData ? "upload" : "defaults"
   );
   const appliedSchemaRef = useRef<string>("");
+
+  // Derived recommended solar capacity for Step 3
+  const computedSolarCap = estimateSolarKW("roof_canopy", state);
+  const recommendedSolarKW = useMemo(() => {
+    return computedSolarCap > 0 ? computedSolarCap : Math.round((state.baseLoadKW || 100) * 0.35);
+  }, [computedSolarCap, state.baseLoadKW]);
+
+  const isSolarIncluded = state.wantsSolar !== false;
+
+  const handleToggleSolar = useCallback(
+    (include: boolean) => {
+      actions.setAddonPreference("solar", include);
+      if (include) {
+        actions.setAddonConfig({ solarKW: recommendedSolarKW });
+      } else {
+        actions.setAddonConfig({ solarKW: 0 });
+      }
+    },
+    [actions, recommendedSolarKW]
+  );
+
+  const handleGetEnergyQuote = useCallback(() => {
+    if (isSolarIncluded && recommendedSolarKW > 0) {
+      actions.setAddonConfig({ solarKW: recommendedSolarKW });
+    }
+    actions.goToStep(6 as import("../wizardState").WizardStep);
+  }, [actions, isSolarIncluded, recommendedSolarKW]);
 
   // Auto-apply smart defaults on load
   useEffect(() => {
@@ -854,6 +882,114 @@ export function Step3V8({ state, actions }: Props) {
           </button>
         </div>
 
+        {/* ── Solar PV Coverage Section ── */}
+        <div
+          style={{
+            padding: 24,
+            borderRadius: 16,
+            background: "rgba(15, 23, 42, 0.70)",
+            border: "1.5px solid rgba(79, 138, 255, 0.30)",
+            marginBottom: 24,
+            boxShadow: "0 0 24px rgba(79, 138, 255, 0.08)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <span style={{ fontSize: 24 }}>☀️</span>
+            <div>
+              <h3 style={{ fontSize: 17, fontWeight: 800, color: "#ffffff", margin: 0 }}>
+                Solar PV Coverage Option
+              </h3>
+              <p style={{ fontSize: 13, color: "rgba(203,213,225,0.80)", margin: "3px 0 0" }}>
+                Merlin recommends adding{" "}
+                <strong style={{ color: "#38bdf8" }}>~{recommendedSolarKW} kW solar</strong> to
+                lower peak energy costs and maximize 30% Federal ITC tax savings.
+              </p>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 12,
+              marginTop: 16,
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => handleToggleSolar(true)}
+              style={{
+                padding: "14px 18px",
+                borderRadius: 12,
+                border: isSolarIncluded ? "2px solid #38bdf8" : "1px solid rgba(255,255,255,0.12)",
+                background: isSolarIncluded ? "rgba(56, 189, 248, 0.12)" : "rgba(255,255,255,0.03)",
+                color: "#ffffff",
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 800,
+                  color: isSolarIncluded ? "#38bdf8" : "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                {isSolarIncluded ? "✓ Include Recommended Solar" : "Include Recommended Solar"}
+                <span
+                  style={{
+                    fontSize: 11,
+                    padding: "2px 8px",
+                    borderRadius: 12,
+                    background: "rgba(56,189,248,0.20)",
+                    color: "#38bdf8",
+                    fontWeight: 700,
+                  }}
+                >
+                  ~{recommendedSolarKW} kW
+                </span>
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(203, 213, 225, 0.75)", marginTop: 4 }}>
+                Auto-added to energy stack for max financial ROI &amp; 30% ITC
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleToggleSolar(false)}
+              style={{
+                padding: "14px 18px",
+                borderRadius: 12,
+                border: !isSolarIncluded ? "2px solid #94a3b8" : "1px solid rgba(255,255,255,0.12)",
+                background: !isSolarIncluded
+                  ? "rgba(148, 163, 184, 0.12)"
+                  : "rgba(255,255,255,0.03)",
+                color: "#ffffff",
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 800,
+                  color: !isSolarIncluded ? "#cbd5e1" : "rgba(255,255,255,0.70)",
+                }}
+              >
+                {!isSolarIncluded ? "✓ No Solar" : "No Solar"}
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(203, 213, 225, 0.75)", marginTop: 4 }}>
+                Battery Storage (BESS) peak-shaving stack only
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* ── Mode 1: Upload Utility Bill ── */}
         {facilityMode === "upload" && (
           <div style={{ marginBottom: 24 }}>
@@ -869,7 +1005,7 @@ export function Step3V8({ state, actions }: Props) {
               <div style={{ marginTop: 16, textAlign: "right" }}>
                 <button
                   type="button"
-                  onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
+                  onClick={handleGetEnergyQuote}
                   style={{
                     padding: "12px 24px",
                     borderRadius: 10,
@@ -882,7 +1018,7 @@ export function Step3V8({ state, actions }: Props) {
                     boxShadow: "0 0 20px rgba(16,185,129,0.4)",
                   }}
                 >
-                  Review Add Solar →
+                  Get Energy Quote →
                 </button>
               </div>
             )}
@@ -923,7 +1059,7 @@ export function Step3V8({ state, actions }: Props) {
             <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
               <button
                 type="button"
-                onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
+                onClick={handleGetEnergyQuote}
                 style={{
                   padding: "13px 26px",
                   borderRadius: 10,
@@ -937,7 +1073,7 @@ export function Step3V8({ state, actions }: Props) {
                   transition: "all 0.15s ease",
                 }}
               >
-                Add Solar →
+                Get Energy Quote →
               </button>
               <button
                 type="button"

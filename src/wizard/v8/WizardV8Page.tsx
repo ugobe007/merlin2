@@ -26,7 +26,7 @@ import React, { Suspense, lazy, useEffect, useMemo } from "react";
 import { useWizardV8 } from "./useWizardV8";
 import type { WizardStep, IndustrySlug } from "./wizardState";
 import WizardShellV7 from "@/components/wizard/v7/shared/WizardShellV7";
-import { buildStep4AddonCommit } from "./addonSizing";
+import { estimateSolarKW } from "./addonSizing";
 
 // Lazy-load all steps — Step0 (mode select) is the true entry point and is
 // eagerly imported above. Step1 is preloaded immediately so it feels instant.
@@ -80,24 +80,14 @@ function toIndustrySlug(value: string | null | undefined): IndustrySlug | null {
   return VALID_INDUSTRY_SLUGS.has(value as IndustrySlug) ? (value as IndustrySlug) : null;
 }
 
-// Step labels — index 0 = step 0 (Mode Select), index 1 = step 1 (Location), etc.
-// Note: Step 3.5 (Add-ons) is inserted between Profile and MagicFit
-const STEP_LABELS = [
-  "Location",
-  "Industry",
-  "Facility Profile",
-  "Add Solar",
-  "Energy Stack",
-  "Executive Quote",
-];
+// 4-Step Streamlined Flow: Location -> Industry -> Facility Profile -> Energy Quote
+const STEP_LABELS = ["Location", "Industry", "Facility Profile", "Energy Quote"];
 
 function wizardStepToDisplayIndex(step: number): number {
   if (step === 1) return 0; // Location
   if (step === 2) return 1; // Industry
   if (step === 3) return 2; // Facility Profile
-  if (step === 4) return 3; // Add Solar (Step 3.5)
-  if (step === 5) return 4; // Energy Stack (Step 4 MagicFit)
-  return 5; // Executive Quote (Step 5 Quote)
+  return 3; // Energy Quote (Step 6)
 }
 
 // ── Accent helpers ────────────────────────────────────────────────────────────
@@ -609,26 +599,16 @@ function getAdvisorContent(
 // Step 5 is final step with export buttons - no Next button needed.
 function resolveCanGoNext(step: number, state: S): boolean {
   if (step === 3) return state.baseLoadKW > 0;
-  if (step === 4) return true; // Add-ons: always continuable
-  if (step === 5)
-    return (
-      (state.selectedTierIndex !== null || Boolean(state.tiers && state.tiers.length > 0)) &&
-      state.tiersStatus === "ready"
-    ); // MagicFit: tier selected or available + build complete
-  return false;
+  return false; // Step 6 (Energy Quote) is the terminal step
 }
 
 const NEXT_LABELS: Partial<Record<number, string>> = {
-  3: "Add Solar →",
-  4: "Review Energy Stack →",
-  5: "Review Quote →",
+  3: "Get Energy Quote →",
 };
 
 const NEXT_HINTS: Partial<Record<number, string>> = {
   1: "Select your industry",
-  3: "Auto-sized for your facility",
-  4: "Configure battery & energy stack",
-  5: "Review your Executive Quote",
+  3: "Auto-sized energy stack & quote",
 };
 
 // ── Spinner fallback ──────────────────────────────────────────────────────────
@@ -813,8 +793,14 @@ export default function WizardV8Page() {
         stepLabels={STEP_LABELS}
         canGoBack={step > 1}
         canGoNext={resolveCanGoNext(step, state)}
-        isNextLoading={(step === 4 || step === 5) && state.tiersStatus === "fetching"}
-        onBack={actions.goBack}
+        isNextLoading={state.tiersStatus === "fetching"}
+        onBack={() => {
+          if (step === 6) {
+            actions.goToStep(3);
+          } else {
+            actions.goBack();
+          }
+        }}
         onSwitchToProStack={() => {
           // Serialize wizard state to sessionStorage so ProStack can hydrate from it
           try {
@@ -839,15 +825,14 @@ export default function WizardV8Page() {
           window.location.href = "/quote-builder?from=wizard";
         }}
         onNext={() => {
-          if (step === 4) {
-            actions.setAddonConfig(buildStep4AddonCommit(state));
-            actions.setAnswer("step3_5Visited", true);
-            actions.goToStep(5);
-          } else if (step === 5) {
-            const tierIdx =
-              state.selectedTierIndex !== null ? state.selectedTierIndex : (1 as 0 | 1 | 2);
-            if (state.selectedTierIndex === null && state.tiers) {
-              actions.selectTier(tierIdx);
+          if (step === 3) {
+            if (state.wantsSolar !== false) {
+              const recKW =
+                estimateSolarKW("roof_canopy", state) ||
+                Math.round((state.baseLoadKW || 100) * 0.35);
+              if (recKW > 0) {
+                actions.setAddonConfig({ solarKW: recKW });
+              }
             }
             actions.goToStep(6);
           } else {
