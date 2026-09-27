@@ -255,6 +255,7 @@ function EmailPreviewModal({ html, onClose }: { html: string; onClose: () => voi
 // ─── AI Email Drafter & Trainer Modal ─────────────────────────────────────────
 function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onClose: () => void }) {
   type AngleType =
+    | "pay_less_for_power"
     | "peak_shaving"
     | "demand_insurance"
     | "solar_bess_itc"
@@ -262,13 +263,7 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
     | "tariff_optimization";
   type ToneType = "executive" | "engineering" | "consultative";
 
-  const defaultAngle: AngleType = lead.vertical.includes("Car Wash")
-    ? "peak_shaving"
-    : lead.vertical.includes("Cold Storage") || lead.vertical.includes("Food")
-      ? "demand_insurance"
-      : lead.vertical.includes("Manufacturing")
-        ? "industrial_resilience"
-        : "solar_bess_itc";
+  const defaultAngle: AngleType = "pay_less_for_power";
 
   const [angle, setAngle] = useState<AngleType>(defaultAngle);
   const [tone, setTone] = useState<ToneType>("executive");
@@ -396,6 +391,9 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
                 onChange={(e) => setAngle(e.target.value as AngleType)}
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
               >
+                <option value="pay_less_for_power">
+                  ⭐ Pay Less for Power (Bob's Template - Recommended)
+                </option>
                 <option value="peak_shaving">⚡ Motor Peak Shaving (Car Wash / Heavy)</option>
                 <option value="demand_insurance">
                   ❄️ 24/7 Refrigeration Clamping (Cold Storage)
