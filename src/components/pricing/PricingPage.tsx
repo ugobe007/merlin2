@@ -317,7 +317,7 @@ export default function PricingPage() {
       }
     } catch (err) {
       console.error("[PricingPage] Checkout error:", err);
-      alert("Something went wrong. Please try again or contact support.");
+      window.location.href = `/wizard?tier=${planId}`;
     } finally {
       setCheckoutLoading(null);
     }

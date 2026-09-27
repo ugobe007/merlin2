@@ -1283,15 +1283,6 @@ function HeroIntakeCard() {
   };
 
   const launchWizard = () => {
-    if (!canContinue) {
-      setError(
-        countryMode === "US"
-          ? "Enter a 5-digit facility ZIP code to begin."
-          : "Enter a country or postal code to begin."
-      );
-      return;
-    }
-
     const draft = {
       source: "hero-stacking-cta",
       zip: normalizedZip,
@@ -1312,15 +1303,18 @@ function HeroIntakeCard() {
 
     const queryParams: Record<string, string> = {
       source: "hero-stacking-cta",
-      zip: normalizedZip,
-      country: countryMode === "US" ? "US" : selectedCountryCode,
     };
+    if (normalizedZip) {
+      queryParams.zip = normalizedZip;
+      queryParams.country = countryMode === "US" ? "US" : selectedCountryCode;
+    }
     if (businessType) {
       queryParams.industry = businessType;
     }
 
     const query = new URLSearchParams(queryParams);
-    window.location.href = `/wizard?${query.toString()}`;
+    const queryString = query.toString();
+    window.location.href = queryString ? `/wizard?${queryString}` : "/wizard";
   };
 
   return (
@@ -1554,12 +1548,7 @@ function HeroIntakeCard() {
           <button
             type="button"
             onClick={launchWizard}
-            disabled={!canContinue}
-            className={`mt-3.5 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3.5 text-base font-black transition sm:text-lg ${
-              canContinue
-                ? "border-[#3FE8FF]/65 bg-gradient-to-r from-[#3FE8FF]/10 to-[#A855F7]/10 hover:border-[#A855F7]/80 cursor-pointer"
-                : "border-white/10 bg-white/5 text-slate-500 cursor-not-allowed"
-            }`}
+            className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-xl border border-[#3FE8FF]/65 bg-gradient-to-r from-[#3FE8FF]/10 to-[#A855F7]/10 hover:border-[#A855F7]/80 cursor-pointer px-4 py-3.5 text-base font-black transition sm:text-lg shadow-lg hover:shadow-cyan-500/20"
           >
             <span className="bg-[linear-gradient(90deg,#3FE8FF_0%,#22D3EE_38%,#A855F7_78%,#C084FC_100%)] bg-clip-text text-transparent">
               Start Stacking →
