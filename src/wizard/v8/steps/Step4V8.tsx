@@ -802,32 +802,35 @@ export function Step4V8({ state, actions }: Props) {
             <div
               style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}
             >
-              {[
-                {
-                  label: "Annual Savings",
-                  value: fmt$(tier.annualSavings),
-                  color: C.green,
-                  sub: "/year net",
-                },
-                {
-                  label: "Net Cost",
-                  value: fmt$(tier.netCost),
-                  color: C.text,
-                  sub: `after ${Math.round(tier.itcRate * 100)}% ITC`,
-                },
-                {
-                  label: "Payback",
-                  value: `${tier.paybackYears.toFixed(1)} yrs`,
-                  color: C.text,
-                  sub: "simple payback",
-                },
-                {
-                  label: "10-Year ROI",
-                  value: `${Math.round(tier.roi10Year)}%`,
-                  color: tier.roi10Year >= 0 ? C.green : C.red,
-                  sub: "net return",
-                },
-              ].map(({ label, value, color, sub }) => (
+              {(() => {
+                const net10YrProfit = tier.annualSavings * 10 - tier.netCost;
+                return [
+                  {
+                    label: "Annual Savings",
+                    value: fmt$(tier.annualSavings),
+                    color: C.green,
+                    sub: "/year net",
+                  },
+                  {
+                    label: "Net Cost",
+                    value: fmt$(tier.netCost),
+                    color: C.text,
+                    sub: `after ${Math.round(tier.itcRate * 100)}% ITC`,
+                  },
+                  {
+                    label: "Payback",
+                    value: `${tier.paybackYears.toFixed(1)} yrs`,
+                    color: C.green,
+                    sub: "simple payback",
+                  },
+                  {
+                    label: "10-Year Return",
+                    value: `${Math.round(tier.roi10Year)}%`,
+                    color: tier.roi10Year >= 0 ? C.green : C.red,
+                    sub: net10YrProfit > 0 ? `+${fmt$(net10YrProfit)} profit` : "net return",
+                  },
+                ];
+              })().map(({ label, value, color, sub }) => (
                 <div key={label}>
                   <div
                     style={{
