@@ -214,11 +214,6 @@ Merlin Energy
 merlinenergy.net`;
   }
 
-  // Apply custom training rules if provided
-  if (customTrainingRules.length > 0) {
-    body += `\n\n[Applied Trained AI Agent Directives:\n${customTrainingRules.map((r) => `• ${r}`).join("\n")}]`;
-  }
-
   // Tone adjustments
   if (tone === "executive") {
     body = body.replace(
