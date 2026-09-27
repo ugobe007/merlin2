@@ -2385,7 +2385,7 @@ export default function Step3_5V8({ state, actions }: Props) {
   return (
     <div className="wiz-root" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="wiz-step-header">
-        <div className="wiz-step-eyebrow">Step 4 of 6 · Add Solar</div>
+        <div className="wiz-step-eyebrow">Add Solar</div>
         <h1 className="wiz-step-title">
           Add Solar{city && city !== "Your Facility" ? ` — ${city}` : ""}
         </h1>

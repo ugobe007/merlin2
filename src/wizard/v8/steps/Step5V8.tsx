@@ -717,7 +717,7 @@ export default function Step5V8({ state, actions }: Props) {
       <div className="wiz-quote-header">
         <div className="wiz-quote-header-top">
           <div>
-            <div className="wiz-step-eyebrow mb-1">Step 6 of 6 · Your quote</div>
+            <div className="wiz-step-eyebrow mb-1">Step 4 of 4 · Energy Quote</div>
             <h1 className="wiz-step-title" style={{ fontSize: "1.25rem" }}>
               {(industry?.replace(/_/g, " ") || "Facility")
                 .split(" ")

@@ -735,7 +735,7 @@ export function Step3V8({ state, actions }: Props) {
     <div className="wiz-root wiz-s3">
       <div className="wiz-s3-inner" ref={sectionTopRef}>
         <div className="wiz-step-header">
-          <div className="wiz-step-eyebrow">Step 3 of 6 · Facility profile</div>
+          <div className="wiz-step-eyebrow">Step 3 of 4 · Facility profile</div>
           <h1 className="wiz-step-title">{displayName} profile</h1>
           <p className="wiz-step-desc">
             Choose how to set up your facility profile — upload a bill, accept industry defaults, or

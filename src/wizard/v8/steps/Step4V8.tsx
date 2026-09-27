@@ -480,7 +480,7 @@ export function Step4V8({ state, actions }: Props) {
             alt="StackQuote"
             style={{ width: 15, height: 15, borderRadius: "50%", objectFit: "cover" }}
           />
-          <span>Step 5 of 6 · Energy Stack</span>
+          <span>Energy Stack</span>
         </div>
         <h1
           className="wiz-step-title"
