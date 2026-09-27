@@ -350,7 +350,13 @@ export default function WizardShellV7({
                   <img
                     src={badgeGoldIcon}
                     alt="StackQuote"
-                    style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", boxShadow: "0 0 10px rgba(245,158,11,0.5)" }}
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      boxShadow: "0 0 10px rgba(245,158,11,0.5)",
+                    }}
                   />
                   <span
                     style={{
@@ -725,7 +731,8 @@ export default function WizardShellV7({
                   fontWeight: 700,
                   color: "#cbd5e1",
                   fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-                  background: "linear-gradient(90deg, rgba(15,23,42,0.92) 0%, rgba(30,41,59,0.85) 50%, rgba(15,23,42,0.92) 100%)",
+                  background:
+                    "linear-gradient(90deg, rgba(15,23,42,0.92) 0%, rgba(30,41,59,0.85) 50%, rgba(15,23,42,0.92) 100%)",
                   boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.08)",
                 }}
               >
@@ -817,7 +824,9 @@ export default function WizardShellV7({
                     }}
                   >
                     <span style={{ fontSize: 16 }}>🌡️</span>
-                    <span style={{ color: "rgba(254, 202, 202, 0.9)", fontWeight: 700, fontSize: 13 }}>
+                    <span
+                      style={{ color: "rgba(254, 202, 202, 0.9)", fontWeight: 700, fontSize: 13 }}
+                    >
                       {telemetry.climate}
                     </span>
                   </span>
@@ -930,7 +939,13 @@ export default function WizardShellV7({
                     : "rgba(232, 235, 243, 0.18)";
                 }}
               >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  style={{ flexShrink: 0 }}
+                >
                   <path
                     d="M9 11.5L4.5 7L9 2.5"
                     stroke="currentColor"
@@ -982,9 +997,8 @@ export default function WizardShellV7({
                 </div>
               </div>
 
-              {/* Next — solid fill for steps 4+ (high-intent CTA), outline for early steps */}
+              {/* Next — vibrant solid fill CTA button */}
               {(() => {
-                const isFilled = canGoNext && !isNextLoading && safeStep >= 3;
                 const isActive = canGoNext && !isNextLoading;
                 return (
                   <button
@@ -994,44 +1008,38 @@ export default function WizardShellV7({
                       display: "flex",
                       alignItems: "center",
                       gap: 10,
-                      padding: isFilled ? "14px 28px" : "11px 22px",
-                      borderRadius: isFilled ? 12 : 10,
-                      minHeight: isFilled ? 54 : 46,
-                      background: "transparent",
-                      border: isFilled
-                        ? "2px solid #7c3aed"
-                        : isActive
-                          ? "2px solid #4f8aff"
-                          : "2px solid rgba(255,255,255,0.08)",
-                      color: isFilled ? "#c4b5fd" : isActive ? "#BFDBFE" : "rgba(232,235,243,0.28)",
+                      padding: "14px 28px",
+                      borderRadius: 12,
+                      minHeight: 52,
+                      background: isActive
+                        ? "linear-gradient(135deg, #10b981 0%, #0284c7 100%)"
+                        : "rgba(30, 41, 59, 0.5)",
+                      border: isActive ? "2px solid #34d399" : "1.5px solid rgba(255,255,255,0.12)",
+                      color: isActive ? "#ffffff" : "rgba(148,163,184,0.6)",
                       cursor: isActive ? "pointer" : "not-allowed",
-                      fontSize: isFilled ? 16 : 14,
-                      fontWeight: 700,
-                      letterSpacing: "0.01em",
-                      boxShadow: isFilled ? "0 0 20px rgba(124,58,237,0.30)" : "none",
-                      animation: "none",
-                      transition: "all 0.18s ease",
+                      fontSize: 16,
+                      fontWeight: 800,
+                      letterSpacing: "0.02em",
+                      boxShadow: isActive
+                        ? "0 0 24px rgba(16,185,129,0.45), 0 4px 14px rgba(0,0,0,0.3)"
+                        : "none",
+                      transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                     }}
                     onMouseEnter={(e) => {
                       if (isActive) {
-                        if (isFilled) {
-                          e.currentTarget.style.borderColor = "#9b6dff";
-                          e.currentTarget.style.boxShadow = "0 0 28px rgba(124,58,237,0.45)";
-                          e.currentTarget.style.transform = "translateY(-1px)";
-                        } else {
-                          e.currentTarget.style.background = "rgba(99,120,255,0.06)";
-                        }
+                        e.currentTarget.style.background =
+                          "linear-gradient(135deg, #059669 0%, #0369a1 100%)";
+                        e.currentTarget.style.boxShadow =
+                          "0 0 34px rgba(16,185,129,0.65), 0 6px 20px rgba(0,0,0,0.4)";
+                        e.currentTarget.style.transform = "translateY(-2px)";
                       }
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.borderColor = isFilled
-                        ? "#7c3aed"
-                        : isActive
-                          ? "#4f8aff"
-                          : "rgba(255,255,255,0.08)";
-                      e.currentTarget.style.boxShadow = isFilled
-                        ? "0 0 20px rgba(124,58,237,0.30)"
+                      e.currentTarget.style.background = isActive
+                        ? "linear-gradient(135deg, #10b981 0%, #0284c7 100%)"
+                        : "rgba(30, 41, 59, 0.5)";
+                      e.currentTarget.style.boxShadow = isActive
+                        ? "0 0 24px rgba(16,185,129,0.45), 0 4px 14px rgba(0,0,0,0.3)"
                         : "none";
                       e.currentTarget.style.transform = "translateY(0)";
                     }}
@@ -1222,199 +1230,6 @@ export default function WizardShellV7({
               }
             }
           `}</style>
-        </div>
-
-        {/* BOTTOM NAV */}
-        <div
-          className="merlin-shell-bottomnav"
-          style={{
-            padding: "0 32px 12px",
-            width: "100%",
-          }}
-        >
-          {/* Separator */}
-          <div style={{ height: 1, background: "rgba(255,255,255,0.05)", marginBottom: 10 }} />
-
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            {/* Back */}
-            <button
-              onClick={onBack}
-              disabled={!canGoBack}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "11px 20px",
-                borderRadius: 10,
-                minHeight: 46,
-                background: "transparent",
-                border: canGoBack ? "1px solid rgba(255,255,255,0.18)" : "1px solid transparent",
-                color: canGoBack ? "rgba(232, 235, 243, 0.65)" : "rgba(232, 235, 243, 0.18)",
-                cursor: canGoBack ? "pointer" : "not-allowed",
-                fontSize: 14,
-                fontWeight: 500,
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                if (canGoBack) {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)";
-                  e.currentTarget.style.color = "rgba(232, 235, 243, 0.9)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.borderColor = canGoBack
-                  ? "rgba(255,255,255,0.18)"
-                  : "transparent";
-                e.currentTarget.style.color = canGoBack
-                  ? "rgba(232, 235, 243, 0.65)"
-                  : "rgba(232, 235, 243, 0.18)";
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0 }}>
-                <path
-                  d="M9 11.5L4.5 7L9 2.5"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Back
-            </button>
-
-            {/* Center: hint + step dot pills — hidden on mobile */}
-            <div
-              className="merlin-nexthint"
-              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}
-            >
-              {nextHint && (
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: "rgba(232, 235, 243, 0.35)",
-                    letterSpacing: "0.01em",
-                  }}
-                >
-                  Next: {nextHint}
-                </div>
-              )}
-              <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
-                {stepLabels.map((_, idx) => {
-                  const isActive = idx === safeStep;
-                  const isComplete = idx < safeStep;
-                  return (
-                    <div
-                      key={idx}
-                      style={{
-                        width: isActive ? 20 : 6,
-                        height: 6,
-                        borderRadius: 3,
-                        background: isComplete
-                          ? "rgba(79, 140, 255, 0.55)"
-                          : isActive
-                            ? "#7c3aed"
-                            : "rgba(255, 255, 255, 0.12)",
-                        transition: "all 0.25s ease",
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Next — solid vibrant CTA button when enabled */}
-            {(() => {
-              const isActive = canGoNext && !isNextLoading;
-              return (
-                <button
-                  onClick={onNext}
-                  disabled={!canGoNext || isNextLoading}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "14px 28px",
-                    borderRadius: 12,
-                    minHeight: 52,
-                    background: isActive
-                      ? "linear-gradient(135deg, #10b981 0%, #0284c7 100%)"
-                      : "rgba(30, 41, 59, 0.5)",
-                    border: isActive ? "2px solid #34d399" : "1.5px solid rgba(255,255,255,0.12)",
-                    color: isActive ? "#ffffff" : "rgba(148,163,184,0.6)",
-                    cursor: isActive ? "pointer" : "not-allowed",
-                    fontSize: 16,
-                    fontWeight: 800,
-                    letterSpacing: "0.02em",
-                    boxShadow: isActive
-                      ? "0 0 24px rgba(16,185,129,0.45), 0 4px 14px rgba(0,0,0,0.3)"
-                      : "none",
-                    transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (isActive) {
-                      e.currentTarget.style.background =
-                        "linear-gradient(135deg, #059669 0%, #0369a1 100%)";
-                      e.currentTarget.style.boxShadow =
-                        "0 0 34px rgba(16,185,129,0.65), 0 6px 20px rgba(0,0,0,0.4)";
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = isActive
-                      ? "linear-gradient(135deg, #10b981 0%, #0284c7 100%)"
-                      : "rgba(30, 41, 59, 0.5)";
-                    e.currentTarget.style.boxShadow = isActive
-                      ? "0 0 24px rgba(16,185,129,0.45), 0 4px 14px rgba(0,0,0,0.3)"
-                      : "none";
-                    e.currentTarget.style.transform = "translateY(0)";
-                  }}
-                >
-                  {isNextLoading ? (
-                    <>
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        style={{ animation: "merlin-spin 0.8s linear infinite", flexShrink: 0 }}
-                      >
-                        <circle
-                          cx="8"
-                          cy="8"
-                          r="6"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeDasharray="30 10"
-                        />
-                      </svg>
-                      Working…
-                    </>
-                  ) : (
-                    <>
-                      {nextLabel || "Next Step"}
-                      <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 15 15"
-                        fill="none"
-                        style={{ flexShrink: 0 }}
-                      >
-                        <path
-                          d="M5.5 3L10 7.5L5.5 12"
-                          stroke="currentColor"
-                          strokeWidth="1.9"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </>
-                  )}
-                </button>
-              );
-            })()}
-          </div>
         </div>
       </div>
     </>

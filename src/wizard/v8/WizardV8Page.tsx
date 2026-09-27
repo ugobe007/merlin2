@@ -83,17 +83,21 @@ function toIndustrySlug(value: string | null | undefined): IndustrySlug | null {
 // Step labels — index 0 = step 0 (Mode Select), index 1 = step 1 (Location), etc.
 // Note: Step 3.5 (Add-ons) is inserted between Profile and MagicFit
 const STEP_LABELS = [
-  "Location & Industry",
+  "Location",
+  "Industry",
   "Facility Profile",
-  "Recommended Stack",
+  "Add Solar",
+  "Energy Stack",
   "Executive Quote",
 ];
 
 function wizardStepToDisplayIndex(step: number): number {
-  if (step <= 2) return 0; // Location & Industry
-  if (step === 3) return 1; // Facility Profile
-  if (step === 3.5 || step === 4) return 2; // Recommended Stack
-  return 3; // Executive Quote
+  if (step === 1) return 0; // Location
+  if (step === 2) return 1; // Industry
+  if (step === 3) return 2; // Facility Profile
+  if (step === 4) return 3; // Add Solar (Step 3.5)
+  if (step === 5) return 4; // Energy Stack (Step 4 MagicFit)
+  return 5; // Executive Quote (Step 5 Quote)
 }
 
 // ── Accent helpers ────────────────────────────────────────────────────────────
@@ -383,18 +387,17 @@ function getAdvisorContent(
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: 1.4 }}>
-            Build the add-ons that make your {hi("Energy Stack")} work harder.
+            Merlin recommends adding {hi("Solar PV")} to your energy stack.
           </div>
           <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.65 }}>
-            Solar changes energy cost. EV charging can add revenue. Generator capacity changes
-            resilience. Use this step to accept Merlin&apos;s baseline or push the stack toward more
-            capacity before quote optimization.
+            Adding solar offsets your daytime grid power and increases your overall battery ROI.
+            Review the recommended solar capacity below or opt for no solar.
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
             {[
-              "Start with solar: accept the recommended kW, then use Advanced Solar Coverage for carport/canopy expansion.",
-              "Use Panel Grade Settings when roof area is tight or you want premium solar types.",
-              "Only add EV or generator if revenue, fleet needs, or outage risk justify the scope.",
+              "Solar offsets daytime baseline energy before it hits the meter.",
+              "Pairing solar with BESS maximizes 30% Federal ITC tax savings.",
+              "EV Charging and Backup Power can be added as secondary options.",
             ].map(bullet)}
           </div>
           {loadVal > 0 && (
@@ -432,7 +435,7 @@ function getAdvisorContent(
                 {Math.round(loadVal).toLocaleString()} kW
               </div>
               <div style={{ fontSize: 11, color: T.muted, marginTop: 4 }}>
-                Add-ons support this load without distracting from BESS demand shaving.
+                Solar supports this peak load while BESS eliminates high demand charges.
               </div>
             </div>
           )}
@@ -440,39 +443,84 @@ function getAdvisorContent(
       );
     }
 
-    case 5:
+    case 5: {
+      const recIdx = selectedTierIndex ?? 1;
+      const tier = tiers?.[recIdx];
+      const fmt$ = (n: number) =>
+        n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : `$${Math.round(n / 1_000)}K`;
+
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", lineHeight: 1.35 }}>
-            Review your official Energy Stack quote.
+            Review your Energy Stack quote.
           </div>
-          <div style={{ fontSize: 13.5, color: T.secondary, lineHeight: 1.6 }}>
-            This is the product recommendation: a Merlin Energy Stack tuned to your{" "}
-            {hi("utility cost, peak demand, and backup-power goals")}.
+          <div style={{ fontSize: 13, color: T.secondary, lineHeight: 1.6 }}>
+            Selected Strategy: {hi(tier ? `${tier.label} Tier` : "Balanced Stack")}
           </div>
+
+          {tier && (
+            <div
+              style={{
+                padding: "14px 16px",
+                borderRadius: 12,
+                background: "rgba(62,207,142,0.06)",
+                border: "1px solid rgba(62,207,142,0.22)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: "rgba(62,207,142,0.75)",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                    marginBottom: 3,
+                  }}
+                >
+                  Est. Annual Savings
+                </div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: ACCENT, lineHeight: 1 }}>
+                  {fmt$(tier.annualSavings)}
+                  <span
+                    style={{ fontSize: 14, fontWeight: 600, color: T.secondary, marginLeft: 4 }}
+                  >
+                    /yr
+                  </span>
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: T.secondary, lineHeight: 1.5 }}>
+                Payback in {hi(`${tier.paybackYears.toFixed(1)} yrs`)} · Net cost{" "}
+                {hi(fmt$(tier.netCost))} after {hi(`${Math.round(tier.itcRate * 100)}% ITC`)}
+              </div>
+              {tier.roi10Year > 0 && (
+                <div style={{ fontSize: 12, color: T.muted }}>
+                  10-year ROI: {hi(`${Math.round(tier.roi10Year)}%`)}
+                </div>
+              )}
+            </div>
+          )}
+
           <div
             style={{
-              padding: "12px 14px",
-              borderRadius: 12,
-              background: "rgba(79,138,255,0.10)",
-              border: "1px solid rgba(79,138,255,0.26)",
-              color: "rgba(245,248,255,0.90)",
-              fontSize: 12.5,
-              lineHeight: 1.55,
+              padding: "10px 12px",
+              borderRadius: 10,
+              background: "rgba(79,138,255,0.08)",
+              border: "1px solid rgba(79,138,255,0.22)",
+              color: "rgba(245,248,255,0.85)",
+              fontSize: 12,
+              lineHeight: 1.5,
             }}
           >
-            Move the optimization slider to see how cost, resilience, and annual savings change
-            before selecting the quote.
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 2 }}>
-            {[
-              "Quote variants show cost vs. resilience tradeoffs",
-              "Savings update as the stack changes",
-              "Select the option you want Merlin to finalize",
-            ].map(bullet)}
+            Adjust the strategy buttons to compare Starter, Balanced, and Complete options before
+            proceeding.
           </div>
         </div>
       );
+    }
 
     case 6: {
       // Pick the recommended tier (index 1 = middle) or the user's selection
@@ -571,15 +619,15 @@ function resolveCanGoNext(step: number, state: S): boolean {
 }
 
 const NEXT_LABELS: Partial<Record<number, string>> = {
-  3: "See Recommended Stack →",
-  4: "Review Executive Quote →",
-  5: "Review Executive Quote →",
+  3: "Add Solar →",
+  4: "Review Energy Stack →",
+  5: "Review Quote →",
 };
 
 const NEXT_HINTS: Partial<Record<number, string>> = {
   1: "Select your industry",
   3: "Auto-sized for your facility",
-  4: "Calculate executive ROI package",
+  4: "Configure battery & energy stack",
   5: "Review your Executive Quote",
 };
 

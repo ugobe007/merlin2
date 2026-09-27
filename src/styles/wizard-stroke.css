@@ -376,6 +376,7 @@
   min-width: 0;
   overflow: hidden;
   box-sizing: border-box;
+  word-break: break-word;
   transition:
     border-color 0.15s,
     background 0.15s,
@@ -408,9 +409,9 @@
   text-transform: uppercase;
   color: #818cf8;
   margin-bottom: 3px;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .wiz-strategy-pill.active .wiz-strategy-pill-tier {
@@ -431,8 +432,8 @@
   margin-bottom: 3px;
   line-height: 1.2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .wiz-strategy-pill.active .wiz-strategy-pill-label {
@@ -448,6 +449,7 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
 }
 
 .wiz-strategy-pill.active .wiz-strategy-pill-sub {

@@ -17,7 +17,6 @@ import {
   defaultGeneratorScope,
   industryRequiresGenerator,
   industryPanelTier,
-  industryPanelTierReason,
   computeStep35PreviewFinancials,
   fmtAddonMoneyK,
 } from "../addonSizing";
@@ -536,24 +535,24 @@ function SolarCard({
   peakSunHours,
   utilityRate,
   peakLoadKW,
-  solarGrade,
+  solarGrade: _solarGrade,
   onConfig,
-  canopyPotentialKW = 0,
-  canopyInterest,
-  onCanopyChange,
-  canopyLabel = "Canopy",
-  canopyAreaLabel = "parking area",
-  roofOnlyKW = 0,
-  withCanopyKW = 0,
+  canopyPotentialKW: _canopyPotentialKW = 0,
+  canopyInterest: _canopyInterest,
+  onCanopyChange: _onCanopyChange,
+  canopyLabel: _canopyLabel = "Canopy",
+  canopyAreaLabel: _canopyAreaLabel = "parking area",
+  roofOnlyKW: _roofOnlyKW = 0,
+  withCanopyKW: _withCanopyKW = 0,
   pendingExternalKW,
   onPendingConsumed,
-  onCarportToggle,
-  industry,
-  projectType,
-  solarPanelTier = "standard",
-  onPanelTierChange,
-  solarStructureType = "rooftop",
-  onStructureTypeChange,
+  onCarportToggle: _onCarportToggle,
+  industry: _industry,
+  projectType: _projectType,
+  solarPanelTier: _solarPanelTier = "standard",
+  onPanelTierChange: _onPanelTierChange,
+  solarStructureType: _solarStructureType = "rooftop",
+  onStructureTypeChange: _onStructureTypeChange,
 }: {
   maxKW: number;
   recKW: number;
@@ -593,7 +592,7 @@ function SolarCard({
   const [sliderKW, setSliderKW] = useState(() =>
     Math.max(solarMin, Math.min(safeMax, initialKW > 0 ? initialKW : safeRec))
   );
-  const [accepted, setAccepted] = useState(false);
+  const [_accepted, setAccepted] = useState(false);
   // When canopy interest changes → recKW & maxKW update → snap slider to new rec.
   useEffect(() => {
     if (recKW > 0) {
@@ -618,17 +617,30 @@ function SolarCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingExternalKW]);
 
-  const pct = peakLoadKW > 0 ? Math.min(100, Math.round((sliderKW / peakLoadKW) * 100)) : null;
+  const _pct = peakLoadKW > 0 ? Math.min(100, Math.round((sliderKW / peakLoadKW) * 100)) : null;
   // NREL methodology: kW × PSH × 365 × PR(0.77) × rate — matches pricingServiceV45
   const savingsK = Math.round((sliderKW * peakSunHours * 365 * 0.77 * utilityRate) / 1000);
-  const isOptimal = safeRec > 0 && Math.abs(sliderKW - safeRec) / safeRec < 0.12;
-  const recPct = safeMax > solarMin ? ((safeRec - solarMin) / (safeMax - solarMin)) * 100 : 50;
+  const _isOptimal = safeRec > 0 && Math.abs(sliderKW - safeRec) / safeRec < 0.12;
+  const _recPct = safeMax > solarMin ? ((safeRec - solarMin) / (safeMax - solarMin)) * 100 : 50;
 
   const handleChange = (v: number) => {
     const c = Math.max(solarMin, Math.min(safeMax, v));
     setSliderKW(c);
     setAccepted(false);
     onConfig(c);
+  };
+
+  const isSolarEnabled = sliderKW > 0;
+
+  const handleSelectSolarOption = (enable: boolean) => {
+    if (enable) {
+      const target = safeRec > 0 ? safeRec : Math.max(1, Math.round(safeMax * 0.8));
+      setSliderKW(target);
+      onConfig(target);
+    } else {
+      setSliderKW(0);
+      onConfig(0);
+    }
   };
 
   return (
@@ -640,391 +652,168 @@ function SolarCard({
           <div className="wiz-addon-sub">
             {peakLoadKW > 0 ? `${peakLoadKW.toLocaleString()} kW peak` : ""}
             {peakLoadKW > 0 && safeMax > 0 ? " • " : ""}
-            {safeMax > 0 ? `Max: ${safeMax.toLocaleString()} kW` : ""}
-            {solarGrade ? ` • ${solarGrade}` : ""}
+            {safeMax > 0 ? `Max rooftop capacity: ${safeMax.toLocaleString()} kW` : ""}
           </div>
         </div>
-        {isOptimal && <span className="wiz-addon-badge">Optimal</span>}
+        {isSolarEnabled && <span className="wiz-addon-badge">Recommended</span>}
       </div>
       <CardDivider />
-      <div className="wiz-addon-row">
-        <span className="wiz-addon-row-label">Solar Capacity</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <StepperBtn onClick={() => handleChange(sliderKW - stepKW)}>−</StepperBtn>
-          <div style={{ textAlign: "center", minWidth: 100 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 7,
-              }}
-            >
-              <span className="wiz-addon-kw">{sliderKW.toLocaleString()} kW</span>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                justifyContent: "center",
-                marginTop: 3,
-                flexWrap: "wrap",
-              }}
-            >
-              {pct !== null && (
-                <span style={{ fontSize: 13, color: "rgba(148,163,184,0.6)" }}>{pct}%</span>
-              )}
-              {savingsK > 0 && (
-                <span style={{ fontSize: 13, color: "#9b6dff", fontWeight: 600 }}>
-                  +${savingsK}K
-                </span>
-              )}
-            </div>
-          </div>
-          <StepperBtn onClick={() => handleChange(sliderKW + stepKW)}>+</StepperBtn>
-        </div>
-      </div>
-      <div style={{ padding: "0 14px 12px" }}>
-        <AddonSlider
-          value={sliderKW}
-          min={solarMin}
-          max={safeMax}
-          color="#fbbf24"
-          onChange={handleChange}
-          isAtRec={isOptimal}
-        />
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: 8,
-          }}
-        >
-          <span style={{ fontSize: 11, color: "rgba(148,163,184,0.45)" }}>{fmtKW(solarMin)}</span>
-          <span style={{ fontSize: 11, color: "rgba(148,163,184,0.45)" }}>{fmtKW(safeMax)}</span>
-        </div>
-        {safeRec > 0 && safeRec >= solarMin && safeRec <= safeMax && (
-          <div style={{ position: "relative", height: 22, marginTop: 4 }}>
-            <div
-              style={{
-                position: "absolute",
-                left: `${Math.max(8, Math.min(92, recPct))}%`,
-                transform: "translateX(-50%)",
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                padding: "2px 7px",
-                borderRadius: 20,
-                background: "rgba(251,191,36,0.13)",
-                border: "1px solid rgba(251,191,36,0.28)",
-                fontSize: 10,
-                fontWeight: 600,
-                color: "#fbbf24",
-                whiteSpace: "nowrap",
-              }}
-            >
-              🧙 rec: {safeRec.toLocaleString()} kW
-            </div>
-          </div>
-        )}
-      </div>
 
-      {/* ── Advanced solar options — tight stack ── */}
-      <div className="wiz-addon-advanced">
-        {canopyPotentialKW > 0 && onCanopyChange && (
-          <>
-            <style>{`
-            @keyframes carportGlow {
-              0%,100% {
-                box-shadow: none;
-                border-color: rgba(251,191,36,0.5);
-              }
-              50% {
-                box-shadow: 0 0 0 3px rgba(251,191,36,0.22), 0 0 16px 3px rgba(251,191,36,0.15);
-                border-color: rgba(251,191,36,0.95);
-              }
-            }
-          `}</style>
-            <details className="wiz-addon-details">
-              <summary className="wiz-addon-details-summary wiz-addon-details-summary--violet">
-                Advanced solar coverage · use this to adjust your solar footprint
-              </summary>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "rgba(148,163,184,0.85)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.09em",
-                  marginBottom: 8,
-                }}
-              >
-                {"☀️ Solar Coverage"}
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                {/* ── Rooftop — always included, active-confirmed badge ── */}
-                <SelectOptionCard
-                  checked
-                  icon="🏠"
-                  label="Rooftop"
-                  value={
-                    canopyInterest === "yes"
-                      ? roofOnlyKW > 0
-                        ? `${roofOnlyKW.toLocaleString()} kW`
-                        : "—"
-                      : sliderKW > 0
-                        ? `${sliderKW.toLocaleString()} kW`
-                        : "—"
-                  }
-                  meta={
-                    canopyInterest !== "yes" && roofOnlyKW > 0 && sliderKW < roofOnlyKW
-                      ? `Included · ${roofOnlyKW.toLocaleString()} kW roof max`
-                      : "Included"
-                  }
-                  accent="#fbbf24"
-                />
-
-                {/* ── Carport — optional add-on toggle ── */}
-                {(() => {
-                  const carportActive = canopyInterest === "yes";
-                  const additiveKW = withCanopyKW - roofOnlyKW;
-                  return (
-                    <SelectOptionCard
-                      checked={carportActive}
-                      icon="🏗️"
-                      label={`${carportActive ? "Remove" : "Add"} ${canopyLabel}`}
-                      value={additiveKW > 0 ? `+${additiveKW.toLocaleString()} kW` : "—"}
-                      meta={
-                        carportActive
-                          ? `${withCanopyKW.toLocaleString()} kW total selected`
-                          : `Optional ${canopyAreaLabel} canopy`
-                      }
-                      accent="#fbbf24"
-                      onClick={() => {
-                        const nextVal = carportActive ? "no" : "yes";
-                        if (onCarportToggle) {
-                          onCarportToggle(nextVal, 0);
-                        } else {
-                          onCanopyChange?.(nextVal);
-                        }
-                      }}
-                    />
-                  );
-                })()}
-              </div>
-
-              <div
-                style={{
-                  fontSize: 11,
-                  color: "rgba(148,163,184,0.5)",
-                  marginTop: 7,
-                  lineHeight: 1.5,
-                }}
-              >
-                {canopyInterest === "yes"
-                  ? (() => {
-                      const roofPortion = Math.min(sliderKW, roofOnlyKW);
-                      const canopyPortion = Math.max(0, sliderKW - roofOnlyKW);
-                      return canopyPortion > 0
-                        ? `${roofPortion.toLocaleString()} kW rooftop + ${canopyPortion.toLocaleString()} kW ${canopyLabel.toLowerCase()} canopy = ${sliderKW.toLocaleString()} kW configured. Tap carport to remove it.`
-                        : `${roofPortion.toLocaleString()} kW rooftop (carport not yet needed at this size). Tap carport to remove it.`;
-                    })()
-                  : `Rooftop solar is always included. Tap "+ Add ${canopyLabel}" to also cover your ${canopyAreaLabel} for +${(withCanopyKW - roofOnlyKW).toLocaleString()} kW more capacity.`}
-              </div>
-
-              {/* ── Carport installation type (new build vs retrofit) ── */}
-              {canopyInterest === "yes" && (
-                <div
-                  style={{
-                    marginTop: 12,
-                    padding: "10px 0 2px",
-                    borderTop: "1px solid rgba(251,191,36,0.15)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: "rgba(62,207,142,0.78)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                      marginBottom: 7,
-                    }}
-                  >
-                    Carport Installation Type
-                  </div>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {(
-                      [
-                        {
-                          id: "carport_new" as const,
-                          label: "New Build",
-                          sub: "Greenfield construction",
-                          cost: "~$1.75/W",
-                          hint: "Structural steel included in new-build budget.",
-                        },
-                        {
-                          id: "carport_retrofit" as const,
-                          label: "Retrofit",
-                          sub: "Added over existing lot",
-                          cost: "~$3.10/W",
-                          hint: "Steel structure + frost-line footings over existing paving.",
-                        },
-                      ] as const
-                    ).map(({ id, label, sub, cost }) => {
-                      const active = solarStructureType === id;
-                      return (
-                        <SelectOptionCard
-                          key={id}
-                          checked={active}
-                          label={label}
-                          value={cost}
-                          meta={sub}
-                          accent="#fbbf24"
-                          onClick={() => onStructureTypeChange?.(id)}
-                        />
-                      );
-                    })}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 10,
-                      color: "rgba(148,163,184,0.5)",
-                      marginTop: 5,
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {solarStructureType === "carport_new"
-                      ? "Structural steel in new-build budget — lowest marginal cost for solar canopy."
-                      : solarStructureType === "carport_retrofit"
-                        ? "Adding steel structure over existing paving. Michigan frost-line footings add $0.25–$0.40/W."
-                        : "Select type to see accurate cost modeling in your quote."}
-                  </div>
-                </div>
-              )}
-            </details>
-          </>
-        )}
-
-        <details className="wiz-addon-details">
-          <summary className="wiz-addon-details-summary wiz-addon-details-summary--violet">
-            Panel grade settings · use this to choose solar types
-          </summary>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            {(
-              [
-                {
-                  id: "standard" as const,
-                  emoji: "⚡",
-                  label: "Standard",
-                  sub: "Best $/kWh ratio",
-                  spec: "~400W · $0.30/W",
-                },
-                {
-                  id: "premium" as const,
-                  emoji: "🏆",
-                  label: "Premium",
-                  sub: "Max roof yield",
-                  spec: "REC Alpha · 22.3%",
-                },
-              ] as const
-            ).map(({ id, emoji, label, sub, spec }) => {
-              const active = solarPanelTier === id;
-              return (
-                <SelectOptionCard
-                  key={id}
-                  checked={active}
-                  icon={emoji}
-                  label={label}
-                  value={spec}
-                  meta={sub}
-                  accent={id === "premium" ? "#a78bfa" : "#3ecf8e"}
-                  onClick={() => onPanelTierChange?.(id)}
-                />
-              );
-            })}
-          </div>
-          {(() => {
-            const reason = industryPanelTierReason(industry, projectType);
-            if (reason) {
-              return (
-                <div
-                  style={{
-                    fontSize: 11,
-                    color:
-                      solarPanelTier === "premium"
-                        ? "rgba(155,109,255,0.75)"
-                        : "rgba(16,185,129,0.75)",
-                    marginTop: 7,
-                    lineHeight: 1.5,
-                    display: "flex",
-                    gap: 5,
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <span style={{ flexShrink: 0 }}>🧙</span>
-                  <span>
-                    <strong>Merlin recommends {solarPanelTier}:</strong> {reason}
-                  </span>
-                </div>
-              );
-            }
-            if (solarPanelTier === "premium") {
-              return (
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "rgba(155,109,255,0.75)",
-                    marginTop: 7,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Premium panels fit ~19% more capacity in the same roof area — ideal for tight
-                  rooftops. Adds ~$0.16/W to project cost; incremental payback typically 1.5–3 yrs.
-                </div>
-              );
-            }
-            return null;
-          })()}
-        </details>
-      </div>
-
-      <div className="wiz-addon-actions">
-        <AcceptButton
-          accepted={accepted}
-          label="Accept solar capacity"
-          acceptedLabel={`${sliderKW.toLocaleString()} kW solar accepted`}
-          onClick={() => {
-            onConfig(sliderKW);
-            setAccepted(true);
-          }}
-        />
-      </div>
-
-      <div className="wiz-addon-merlin-note">
-        <div style={{ display: "flex", gap: 7, alignItems: "flex-start" }}>
-          <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>ℹ️</span>
-          <div
+      {/* ── Yes / No Hero Card Choice ── */}
+      <div style={{ padding: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+          <button
+            type="button"
+            onClick={() => handleSelectSolarOption(true)}
             style={{
-              fontSize: 13,
-              color: "rgba(203,213,225,0.9)",
-              lineHeight: 1.55,
+              padding: "16px 14px",
+              borderRadius: 12,
+              background: isSolarEnabled
+                ? "linear-gradient(135deg, rgba(251,191,36,0.18), rgba(15,23,42,0.85))"
+                : "rgba(15,23,42,0.6)",
+              border: isSolarEnabled ? "2px solid #fbbf24" : "1.5px solid rgba(255,255,255,0.14)",
+              color: "#ffffff",
+              textAlign: "left",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              boxShadow: isSolarEnabled ? "0 0 20px rgba(251,191,36,0.25)" : "none",
             }}
           >
-            <span style={{ fontSize: 14 }}>🧙 </span>
-            <strong style={{ color: "#fbbf24", fontWeight: 700 }}>
-              Merlin: {safeRec.toLocaleString()} kW recommended
-            </strong>{" "}
-            based on{" "}
-            {canopyInterest === "yes"
-              ? `roof + ${canopyLabel.toLowerCase()} (${safeMax.toLocaleString()} kW total)`
-              : safeMax > 0
-                ? `${safeMax.toLocaleString()} kW roof space`
-                : "available roof area"}
-            {peakLoadKW > 0 ? ` and ${peakLoadKW.toLocaleString()} kW peak load` : ""}.
-          </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <div
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: "50%",
+                  background: isSolarEnabled ? "#fbbf24" : "transparent",
+                  border: isSolarEnabled ? "none" : "1.5px solid rgba(255,255,255,0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#000",
+                  fontSize: 12,
+                  fontWeight: 900,
+                }}
+              >
+                {isSolarEnabled && "✓"}
+              </div>
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 800,
+                  color: isSolarEnabled ? "#fbbf24" : "#f1f5f9",
+                }}
+              >
+                Add {safeRec.toLocaleString()} kW Recommended Solar
+              </span>
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                color: "rgba(203,213,225,0.80)",
+                lineHeight: 1.4,
+                marginTop: 4,
+              }}
+            >
+              Offsets daytime energy • Unlocks 30% Federal ITC credit
+            </div>
+            {savingsK > 0 && isSolarEnabled && (
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#34d399", marginTop: 8 }}>
+                Est. Savings: +${savingsK}K/yr
+              </div>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSelectSolarOption(false)}
+            style={{
+              padding: "16px 14px",
+              borderRadius: 12,
+              background: !isSolarEnabled
+                ? "linear-gradient(135deg, rgba(148,163,184,0.18), rgba(15,23,42,0.85))"
+                : "rgba(15,23,42,0.6)",
+              border: !isSolarEnabled ? "2px solid #94a3b8" : "1.5px solid rgba(255,255,255,0.14)",
+              color: "#ffffff",
+              textAlign: "left",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <div
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: "50%",
+                  background: !isSolarEnabled ? "#94a3b8" : "transparent",
+                  border: !isSolarEnabled ? "none" : "1.5px solid rgba(255,255,255,0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#000",
+                  fontSize: 12,
+                  fontWeight: 900,
+                }}
+              >
+                {!isSolarEnabled && "✓"}
+              </div>
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 800,
+                  color: !isSolarEnabled ? "#f1f5f9" : "rgba(255,255,255,0.6)",
+                }}
+              >
+                No Solar
+              </span>
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                color: "rgba(203,213,225,0.70)",
+                lineHeight: 1.4,
+                marginTop: 4,
+              }}
+            >
+              Battery storage only • No solar panels added
+            </div>
+          </button>
         </div>
+
+        {/* ── Capacity Stepper (Shown when solar is enabled) ── */}
+        {isSolarEnabled && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "12px 14px",
+              borderRadius: 10,
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            <span style={{ fontSize: 13, color: "rgba(232,235,243,0.85)", fontWeight: 600 }}>
+              Adjust capacity size
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <StepperBtn onClick={() => handleChange(sliderKW - stepKW)}>−</StepperBtn>
+              <span
+                style={{
+                  fontSize: 16,
+                  fontWeight: 800,
+                  color: "#fbbf24",
+                  minWidth: 65,
+                  textAlign: "center",
+                }}
+              >
+                {sliderKW.toLocaleString()} kW
+              </span>
+              <StepperBtn onClick={() => handleChange(sliderKW + stepKW)}>+</StepperBtn>
+            </div>
+          </div>
+        )}
       </div>
     </Card>
   );
@@ -2596,13 +2385,13 @@ export default function Step3_5V8({ state, actions }: Props) {
   return (
     <div className="wiz-root" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="wiz-step-header">
-        <div className="wiz-step-eyebrow">Step 4 of 6 · Configure add-ons</div>
+        <div className="wiz-step-eyebrow">Step 4 of 6 · Add Solar</div>
         <h1 className="wiz-step-title">
-          Optional boosters{city && city !== "Your Facility" ? ` — ${city}` : ""}
+          Add Solar{city && city !== "Your Facility" ? ` — ${city}` : ""}
         </h1>
         <p className="wiz-step-desc">
-          Battery storage is already in your stack. Add solar, EV charging, or backup power — each
-          optional and adjustable below.
+          Pairing solar with your battery stack offsets daytime grid power and maximizes tax
+          savings.
         </p>
       </div>
 

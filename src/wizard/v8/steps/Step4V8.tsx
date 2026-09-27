@@ -291,6 +291,7 @@ export function Step4V8({ state, actions }: Props) {
     if (selectedTierIndex === 2) return 85;
     return 50;
   });
+  const [showTradeoffsModal, setShowTradeoffsModal] = useState(false);
 
   useEffect(() => {
     if (tiersStatus === "ready" && tiers && selectedTierIndex === null) {
@@ -933,13 +934,119 @@ export function Step4V8({ state, actions }: Props) {
           </Panel>
 
           <Panel>
-            <SectionLabel color={C.green}>⚖️ Stack Tradeoffs</SectionLabel>
-            <TradeoffRow label="Peak Grid Exposure" value={tradeoffs.peakExposure} invert />
-            <TradeoffRow label="Grid Independence" value={tradeoffs.gridIndependence} />
-            <TradeoffRow label="Savings Potential" value={tradeoffs.savingsPotential} />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
+              <SectionLabel color={C.green}>⚖️ Stack Tradeoffs</SectionLabel>
+              <button
+                type="button"
+                onClick={() => setShowTradeoffsModal(true)}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: 6,
+                  border: "1px solid rgba(52,211,153,0.30)",
+                  background: "rgba(52,211,153,0.08)",
+                  color: C.green,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                View Details ℹ️
+              </button>
+            </div>
+            <div style={{ fontSize: 12, color: C.textSub, lineHeight: 1.5 }}>
+              Grid exposure, resilience, and savings metrics for {tier.label} strategy.
+            </div>
           </Panel>
         </div>
       </div>
+
+      {/* ── Strategy Tradeoffs Modal ── */}
+      {showTradeoffsModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(15, 23, 42, 0.85)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+          }}
+          onClick={() => setShowTradeoffsModal(false)}
+        >
+          <div
+            style={{
+              background: "#0f172a",
+              border: "1.5px solid rgba(52,211,153,0.40)",
+              borderRadius: 16,
+              padding: "24px 28px",
+              maxWidth: 480,
+              width: "100%",
+              boxShadow: "0 0 40px rgba(0,0,0,0.6)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#ffffff", margin: 0 }}>
+                ⚖️ {tier.label} Strategy Tradeoffs
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowTradeoffsModal(false)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "rgba(255,255,255,0.6)",
+                  fontSize: 20,
+                  cursor: "pointer",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <TradeoffRow label="Peak Grid Exposure" value={tradeoffs.peakExposure} invert />
+            <TradeoffRow label="Grid Independence" value={tradeoffs.gridIndependence} />
+            <TradeoffRow label="Savings Potential" value={tradeoffs.savingsPotential} />
+            <div style={{ marginTop: 20, textAlign: "right" }}>
+              <button
+                type="button"
+                onClick={() => setShowTradeoffsModal(false)}
+                style={{
+                  padding: "8px 18px",
+                  borderRadius: 8,
+                  border: "none",
+                  background: "linear-gradient(135deg, #10b981 0%, #06b6d4 100%)",
+                  color: "#ffffff",
+                  fontSize: 13,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @media (max-width: 720px) { .stack-builder-grid { grid-template-columns: 1fr !important; } }

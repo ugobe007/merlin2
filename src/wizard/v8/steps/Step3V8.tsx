@@ -82,7 +82,9 @@ export function Step3V8({ state, actions }: Props) {
 
   // Track auto-filled defaults
   const [defaultFilledIds, setDefaultFilledIds] = useState<Set<string>>(new Set());
-  const [billUploadOpen, setBillUploadOpen] = useState(Boolean(state.uploadedBillData));
+  const [facilityMode, setFacilityMode] = useState<"upload" | "defaults" | "details">(
+    state.uploadedBillData ? "upload" : "defaults"
+  );
   const appliedSchemaRef = useRef<string>("");
 
   // Auto-apply smart defaults on load
@@ -708,256 +710,475 @@ export function Step3V8({ state, actions }: Props) {
           <div className="wiz-step-eyebrow">Step 3 of 6 · Facility profile</div>
           <h1 className="wiz-step-title">{displayName} profile</h1>
           <p className="wiz-step-desc">
-            Tell us about your site — or keep the smart defaults and continue. Answers here drive
-            system sizing, savings, and equipment selection.
+            Choose how to set up your facility profile — upload a bill, accept industry defaults, or
+            customize details.
           </p>
         </div>
 
-        {!state.uploadedBillData && !billUploadOpen ? (
+        {/* ── 3 Main Options Tab Selector ── */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+            gap: 12,
+            marginBottom: 24,
+          }}
+        >
           <button
             type="button"
-            className="wiz-s3-bill-banner"
-            onClick={() => setBillUploadOpen(true)}
-          >
-            <div className="wiz-s3-bill-icon-badge">📄</div>
-            <div className="wiz-s3-bill-banner-content">
-              <div className="wiz-s3-bill-banner-title">
-                Have a utility bill? Upload to auto-fill peak demand and rates
-              </div>
-              <div className="wiz-s3-bill-banner-sub">
-                Drop your PDF, image, or statement to instantly extract tariffs, peak kW, and load profiles
-              </div>
-            </div>
-            <div className="wiz-s3-bill-cta-btn">
-              Upload Bill →
-            </div>
-          </button>
-        ) : (
-          <BillUploadPanel
-            uploadedData={state.uploadedBillData}
-            onExtracted={actions.setBillData}
-            onCleared={() => {
-              actions.clearBillData();
-              setBillUploadOpen(false);
+            onClick={() => setFacilityMode("upload")}
+            style={{
+              padding: "16px 14px",
+              borderRadius: 12,
+              background:
+                facilityMode === "upload"
+                  ? "linear-gradient(135deg, rgba(6,182,212,0.20), rgba(15,23,42,0.85))"
+                  : "rgba(15,23,42,0.60)",
+              border:
+                facilityMode === "upload"
+                  ? "2px solid #06b6d4"
+                  : "1.5px solid rgba(255,255,255,0.14)",
+              color: "#ffffff",
+              textAlign: "left",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              boxShadow: facilityMode === "upload" ? "0 0 20px rgba(6,182,212,0.25)" : "none",
             }}
-          />
-        )}
-
-        <div className="wiz-s3-panel">
-          <div className="wiz-s3-config">
-            <div>
-              <h3 className="wiz-s3-field-label">PROJECT TYPE</h3>
-              <div className="wiz-s3-choices cols-2">
-                {(
-                  [
-                    {
-                      value: "existing" as const,
-                      label: "Existing facility",
-                      sub: "Real roof / canopy on site",
-                    },
-                    {
-                      value: "greenfield" as const,
-                      label: "Greenfield",
-                      sub: "Designing footprint from scratch",
-                    },
-                  ] as const
-                ).map(({ value, label, sub }) => {
-                  const active = projectType === value;
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      className={`wiz-s3-choice${active ? " active" : ""}`}
-                      onClick={() => actions.setAnswer("project_type", value)}
-                    >
-                      <div className="wiz-s3-choice-label">{active ? `✓ ${label}` : label}</div>
-                      <div className="wiz-s3-choice-sub">{sub}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <div>
-              <h3 className="wiz-s3-field-label">HOW MUCH DETAIL?</h3>
-              <div className="wiz-s3-choices cols-3">
-                {detailOptions.map(({ id, label, sub }) => {
-                  const active = detailLevel === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      className={`wiz-s3-choice${active ? " active" : ""}`}
-                      onClick={() => actions.setDetailLevel(id)}
-                    >
-                      <div className="wiz-s3-choice-label">{active ? `✓ ${label}` : label}</div>
-                      <div className="wiz-s3-choice-sub">{sub}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {detailLevel === "streamline" && (
-          <div className="wiz-s3-streamline">
-            <div className="wiz-s3-streamline-text">
-              <strong>⚡ Smart defaults applied</strong> for {displayName}
-              <span className="wiz-s3-streamline-hint">
-                Review or edit your facility parameters in the cards below, or skip directly to
-                add-ons.
-              </span>
+          >
+            <div style={{ fontSize: 20, marginBottom: 6 }}>📄</div>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                color: facilityMode === "upload" ? "#38bdf8" : "#f1f5f9",
+              }}
+            >
+              [1] Upload utility bill
             </div>
             <div
-              className="wiz-s3-streamline-actions"
-              style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}
+              style={{
+                fontSize: 11,
+                color: "rgba(148,163,184,0.70)",
+                marginTop: 4,
+                lineHeight: 1.4,
+              }}
             >
+              Auto-fill peak kW &amp; rates from your PDF statement
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setFacilityMode("defaults")}
+            style={{
+              padding: "16px 14px",
+              borderRadius: 12,
+              background:
+                facilityMode === "defaults"
+                  ? "linear-gradient(135deg, rgba(16,185,129,0.20), rgba(15,23,42,0.85))"
+                  : "rgba(15,23,42,0.60)",
+              border:
+                facilityMode === "defaults"
+                  ? "2px solid #10b981"
+                  : "1.5px solid rgba(255,255,255,0.14)",
+              color: "#ffffff",
+              textAlign: "left",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              boxShadow: facilityMode === "defaults" ? "0 0 20px rgba(16,185,129,0.25)" : "none",
+            }}
+          >
+            <div style={{ fontSize: 20, marginBottom: 6 }}>⚡</div>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                color: facilityMode === "defaults" ? "#34d399" : "#f1f5f9",
+              }}
+            >
+              [2] Accept industry defaults
+            </div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "rgba(148,163,184,0.70)",
+                marginTop: 4,
+                lineHeight: 1.4,
+              }}
+            >
+              Fastest setup · Sized using ASHRAE &amp; CBECS benchmarks
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setFacilityMode("details")}
+            style={{
+              padding: "16px 14px",
+              borderRadius: 12,
+              background:
+                facilityMode === "details"
+                  ? "linear-gradient(135deg, rgba(99,102,241,0.20), rgba(15,23,42,0.85))"
+                  : "rgba(15,23,42,0.60)",
+              border:
+                facilityMode === "details"
+                  ? "2px solid #6366f1"
+                  : "1.5px solid rgba(255,255,255,0.14)",
+              color: "#ffffff",
+              textAlign: "left",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              boxShadow: facilityMode === "details" ? "0 0 20px rgba(99,102,241,0.25)" : "none",
+            }}
+          >
+            <div style={{ fontSize: 20, marginBottom: 6 }}>📋</div>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                color: facilityMode === "details" ? "#818cf8" : "#f1f5f9",
+              }}
+            >
+              [3] Add details
+            </div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "rgba(148,163,184,0.70)",
+                marginTop: 4,
+                lineHeight: 1.4,
+              }}
+            >
+              Customize operating hours, HVAC &amp; specific equipment
+            </div>
+          </button>
+        </div>
+
+        {/* ── Mode 1: Upload Utility Bill ── */}
+        {facilityMode === "upload" && (
+          <div style={{ marginBottom: 24 }}>
+            <BillUploadPanel
+              uploadedData={state.uploadedBillData}
+              onExtracted={actions.setBillData}
+              onCleared={() => {
+                actions.clearBillData();
+                setBillUploadOpen(false);
+              }}
+            />
+            {state.uploadedBillData && (
+              <div style={{ marginTop: 16, textAlign: "right" }}>
+                <button
+                  type="button"
+                  onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
+                  style={{
+                    padding: "12px 24px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: "linear-gradient(135deg, #10b981 0%, #06b6d4 100%)",
+                    color: "#ffffff",
+                    fontSize: 14,
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    boxShadow: "0 0 20px rgba(16,185,129,0.4)",
+                  }}
+                >
+                  Review Add Solar →
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Mode 2: Accept Industry Defaults ── */}
+        {facilityMode === "defaults" && (
+          <div
+            style={{
+              padding: 28,
+              borderRadius: 16,
+              background: "linear-gradient(145deg, rgba(16,185,129,0.10), rgba(15,23,42,0.85))",
+              border: "1.5px solid rgba(16,185,129,0.30)",
+              marginBottom: 24,
+              boxShadow: "0 0 28px rgba(16,185,129,0.12)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+              <span style={{ fontSize: 24 }}>⚡</span>
+              <div>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: "#ffffff", margin: 0 }}>
+                  Smart Defaults Applied for {displayName}
+                </h3>
+                <p style={{ fontSize: 13, color: "rgba(203,213,225,0.80)", margin: "4px 0 0" }}>
+                  Estimated Peak Load:{" "}
+                  <strong style={{ color: "#34d399" }}>
+                    ~
+                    {Math.round(
+                      state.peakLoadKW > 0 ? state.peakLoadKW : state.baseLoadKW || 150
+                    ).toLocaleString()}{" "}
+                    kW
+                  </strong>{" "}
+                  based on standard {displayName.toLowerCase()} load profiles.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
               <button
                 type="button"
-                onClick={() => actions.setDetailLevel("critical")}
+                onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
                 style={{
-                  padding: "11px 18px",
+                  padding: "13px 26px",
                   borderRadius: 10,
-                  border: "1.5px solid rgba(255,255,255,0.22)",
-                  background: "rgba(15, 23, 42, 0.75)",
+                  border: "none",
+                  background: "linear-gradient(135deg, #10b981 0%, #06b6d4 100%)",
                   color: "#ffffff",
-                  fontSize: "0.875rem",
-                  fontWeight: 700,
+                  fontSize: 15,
+                  fontWeight: 800,
                   cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  transition: "all 0.2s ease",
+                  boxShadow: "0 0 20px rgba(16,185,129,0.4)",
+                  transition: "all 0.15s ease",
                 }}
               >
-                🎯 Customize key inputs
+                Add Solar →
               </button>
               <button
                 type="button"
-                className="wiz-s3-skip-cyan"
-                onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
+                onClick={() => setFacilityMode("details")}
+                style={{
+                  padding: "13px 20px",
+                  borderRadius: 10,
+                  border: "1.5px solid rgba(255,255,255,0.20)",
+                  background: "rgba(15,23,42,0.60)",
+                  color: "rgba(232,235,243,0.90)",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
               >
-                Skip to add-ons →
+                Customize details instead →
               </button>
             </div>
           </div>
         )}
 
-        <div className="wiz-s3-hub">
-          <div
-            className="wiz-s3-hub-hdr"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 12,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span className="wiz-s3-hub-title">{displayName} Profile Inputs</span>
-              <span className="wiz-s3-hub-count">
-                {answeredCount} of {displayedCount} complete · {defaultFilledIds.size} defaults
-                applied
-              </span>
+        {/* ── Mode 3: Add Details (Questionnaire) ── */}
+        {facilityMode === "details" && (
+          <>
+            <div className="wiz-s3-panel">
+              <div className="wiz-s3-config">
+                <div>
+                  <h3 className="wiz-s3-field-label">PROJECT TYPE</h3>
+                  <div className="wiz-s3-choices cols-2">
+                    {(
+                      [
+                        {
+                          value: "existing" as const,
+                          label: "Existing facility",
+                          sub: "Real roof / canopy on site",
+                        },
+                        {
+                          value: "greenfield" as const,
+                          label: "Greenfield",
+                          sub: "Designing footprint from scratch",
+                        },
+                      ] as const
+                    ).map(({ value, label, sub }) => {
+                      const active = projectType === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          className={`wiz-s3-choice${active ? " active" : ""}`}
+                          onClick={() => actions.setAnswer("project_type", value)}
+                        >
+                          <div className="wiz-s3-choice-label">{active ? `✓ ${label}` : label}</div>
+                          <div className="wiz-s3-choice-sub">{sub}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="wiz-s3-field-label">HOW MUCH DETAIL?</h3>
+                  <div className="wiz-s3-choices cols-3">
+                    {detailOptions.map(({ id, label, sub }) => {
+                      const active = detailLevel === id;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          className={`wiz-s3-choice${active ? " active" : ""}`}
+                          onClick={() => actions.setDetailLevel(id)}
+                        >
+                          <div className="wiz-s3-choice-label">{active ? `✓ ${label}` : label}</div>
+                          <div className="wiz-s3-choice-sub">{sub}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                type="button"
-                onClick={expandAllSections}
-                style={{
-                  background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.18)",
-                  borderRadius: 8,
-                  color: "#38bdf8",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  padding: "5px 12px",
-                  cursor: "pointer",
-                }}
-              >
-                Expand all
-              </button>
-              <button
-                type="button"
-                onClick={collapseAllSections}
-                style={{
-                  background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.18)",
-                  borderRadius: 8,
-                  color: "rgba(232,235,243,0.70)",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  padding: "5px 12px",
-                  cursor: "pointer",
-                }}
-              >
-                Collapse all
-              </button>
-            </div>
-          </div>
 
-          <div className="wiz-s3-sections">
-            {orderedSections.map((sec) => {
-              const isOpen = openSections.has(sec.id);
-              const sectionQs = sectionQuestionMap.get(sec.id) ?? [];
-              const answered = getSectionAnswered(sec.id);
-              const total = sectionQs.length;
-              const complete = isSectionComplete(sec.id);
-
-              const humanizeVal = (s: string) =>
-                s
-                  .replace(/[_-]+/g, " ")
-                  .replace(/\s+/g, " ")
-                  .trim()
-                  .replace(/^\w/, (c) => c.toUpperCase());
-
-              const previewItems = sectionQs
-                .slice(0, 3)
-                .map((q) => {
-                  const val = answers[q.id];
-                  const rawVal = Array.isArray(val) ? val.join(", ") : String(val ?? "");
-                  if (!rawVal) return null;
-                  const label = String(q.title || q.label || "").replace(/[?:]\s*$/, "");
-                  const displayVal = humanizeVal(rawVal);
-                  return label ? `${label}: ${displayVal}` : displayVal;
-                })
-                .filter(Boolean);
-
-              return (
+            {detailLevel === "streamline" && (
+              <div className="wiz-s3-streamline">
+                <div className="wiz-s3-streamline-text">
+                  <strong>⚡ Smart defaults applied</strong> for {displayName}
+                  <span className="wiz-s3-streamline-hint">
+                    Review or edit your facility parameters in the cards below, or skip directly to
+                    add-ons.
+                  </span>
+                </div>
                 <div
-                  key={sec.id}
-                  className={`wiz-s3-section${isOpen ? " open" : ""}${complete ? " complete" : ""}`}
+                  className="wiz-s3-streamline-actions"
+                  style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}
                 >
                   <button
                     type="button"
-                    className="wiz-s3-section-trigger"
-                    onClick={() => toggleSection(sec.id)}
+                    onClick={() => actions.setDetailLevel("critical")}
+                    style={{
+                      padding: "11px 18px",
+                      borderRadius: 10,
+                      border: "1.5px solid rgba(255,255,255,0.22)",
+                      background: "rgba(15, 23, 42, 0.75)",
+                      color: "#ffffff",
+                      fontSize: "0.875rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      transition: "all 0.2s ease",
+                    }}
                   >
-                    {sec.icon && <span className="wiz-s3-section-icon">{sec.icon}</span>}
-                    <div className="wiz-s3-section-body-wrap">
-                      <div className="wiz-s3-section-title-row">
-                        <span className="wiz-s3-section-title">{sec.label}</span>
-                        {complete && !isOpen && <span className="wiz-s3-section-check">✓</span>}
-                        <span className="wiz-s3-section-badge">
-                          {answered}/{total}
-                        </span>
-                      </div>
-                      {!isOpen && previewItems.length > 0 && (
-                        <div className="wiz-s3-section-preview">{previewItems.join(" · ")}</div>
+                    🎯 Customize key inputs
+                  </button>
+                  <button
+                    type="button"
+                    className="wiz-s3-skip-cyan"
+                    onClick={() => actions.goToStep(4 as import("../wizardState").WizardStep)}
+                  >
+                    Skip to add-ons →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="wiz-s3-hub">
+              <div
+                className="wiz-s3-hub-hdr"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 12,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span className="wiz-s3-hub-title">{displayName} Profile Inputs</span>
+                  <span className="wiz-s3-hub-count">
+                    {answeredCount} of {displayedCount} complete · {defaultFilledIds.size} defaults
+                    applied
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={expandAllSections}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid rgba(255,255,255,0.18)",
+                      borderRadius: 8,
+                      color: "#38bdf8",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      padding: "5px 12px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Expand all
+                  </button>
+                  <button
+                    type="button"
+                    onClick={collapseAllSections}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid rgba(255,255,255,0.18)",
+                      borderRadius: 8,
+                      color: "rgba(232,235,243,0.70)",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      padding: "5px 12px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Collapse all
+                  </button>
+                </div>
+              </div>
+
+              <div className="wiz-s3-sections">
+                {orderedSections.map((sec) => {
+                  const isOpen = openSections.has(sec.id);
+                  const sectionQs = sectionQuestionMap.get(sec.id) ?? [];
+                  const answered = getSectionAnswered(sec.id);
+                  const total = sectionQs.length;
+                  const complete = isSectionComplete(sec.id);
+
+                  const humanizeVal = (s: string) =>
+                    s
+                      .replace(/[_-]+/g, " ")
+                      .replace(/\s+/g, " ")
+                      .trim()
+                      .replace(/^\w/, (c) => c.toUpperCase());
+
+                  const previewItems = sectionQs
+                    .slice(0, 3)
+                    .map((q) => {
+                      const val = answers[q.id];
+                      const rawVal = Array.isArray(val) ? val.join(", ") : String(val ?? "");
+                      if (!rawVal) return null;
+                      const label = String(q.title || q.label || "").replace(/[?:]\s*$/, "");
+                      const displayVal = humanizeVal(rawVal);
+                      return label ? `${label}: ${displayVal}` : displayVal;
+                    })
+                    .filter(Boolean);
+
+                  return (
+                    <div
+                      key={sec.id}
+                      className={`wiz-s3-section${isOpen ? " open" : ""}${complete ? " complete" : ""}`}
+                    >
+                      <button
+                        type="button"
+                        className="wiz-s3-section-trigger"
+                        onClick={() => toggleSection(sec.id)}
+                      >
+                        {sec.icon && <span className="wiz-s3-section-icon">{sec.icon}</span>}
+                        <div className="wiz-s3-section-body-wrap">
+                          <div className="wiz-s3-section-title-row">
+                            <span className="wiz-s3-section-title">{sec.label}</span>
+                            {complete && !isOpen && <span className="wiz-s3-section-check">✓</span>}
+                            <span className="wiz-s3-section-badge">
+                              {answered}/{total}
+                            </span>
+                          </div>
+                          {!isOpen && previewItems.length > 0 && (
+                            <div className="wiz-s3-section-preview">{previewItems.join(" · ")}</div>
+                          )}
+                        </div>
+                        <span className="wiz-s3-section-chevron">▼</span>
+                      </button>
+
+                      {isOpen && (
+                        <div className="wiz-s3-section-content">
+                          {sectionQs.map((q, idx) => renderQuestion(q, idx))}
+                        </div>
                       )}
                     </div>
-                    <span className="wiz-s3-section-chevron">▼</span>
-                  </button>
-
-                  {isOpen && (
-                    <div className="wiz-s3-section-content">
-                      {sectionQs.map((q, idx) => renderQuestion(q, idx))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
