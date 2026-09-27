@@ -82,23 +82,12 @@ function toIndustrySlug(value: string | null | undefined): IndustrySlug | null {
 
 // Step labels — index 0 = step 0 (Mode Select), index 1 = step 1 (Location), etc.
 // Note: Step 3.5 (Add-ons) is inserted between Profile and MagicFit
-const STEP_LABELS = [
-  "Site",
-  "Facility",
-  "Load Profile",
-  "Stack Scope",
-  "Energy Stack",
-  "Your Quote",
-];
+const STEP_LABELS = ["Location & Facility", "Recommended Stack", "Executive Quote"];
 
-// Map WizardStep (1|2|3|3.5|4|5|6) → display index (0-5) for WizardShellV7.
-// Step 0 (Mode Select) renders outside the shell — no progress bar needed.
-// Shell uses integer indices for progress bar; 3.5/4 both map to 3 (Add-ons slot).
 function wizardStepToDisplayIndex(step: number): number {
-  if (step <= 3) return step - 1; // 1→0, 2→1, 3→2 (Profile)
-  if (step === 3.5 || step === 4) return 3; // Add-ons
-  if (step === 5) return 4; // MagicFit
-  return 5; // Quote
+  if (step <= 3) return 0; // Location & Facility
+  if (step === 3.5 || step === 4 || step === 5) return 1; // Recommended Stack
+  return 2; // Executive Quote
 }
 
 // ── Accent helpers ────────────────────────────────────────────────────────────
@@ -576,16 +565,16 @@ function resolveCanGoNext(step: number, state: S): boolean {
 }
 
 const NEXT_LABELS: Partial<Record<number, string>> = {
-  3: "Choose add-ons →",
-  4: "Build my Energy Stack →",
-  5: "See your quote →",
+  3: "See Recommended Stack →",
+  4: "Review Executive Quote →",
+  5: "Review Executive Quote →",
 };
 
 const NEXT_HINTS: Partial<Record<number, string>> = {
   1: "Select your industry",
-  3: "Solar, generator & EV options",
-  4: "MagicFit sizes your system",
-  5: "Review your StackQuote™",
+  3: "Auto-sized for your facility",
+  4: "Calculate executive ROI package",
+  5: "Review your Executive Quote",
 };
 
 // ── Spinner fallback ──────────────────────────────────────────────────────────

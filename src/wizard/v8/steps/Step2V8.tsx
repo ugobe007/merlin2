@@ -6,7 +6,7 @@
  */
 
 import React from "react";
-import type { WizardState, WizardActions, IndustrySlug } from "../wizardState";
+import type { WizardState, WizardActions, IndustrySlug, WizardStep } from "../wizardState";
 import { INDUSTRY_META } from "@/wizard/v7/industryMeta";
 
 // Vite requires static image imports
@@ -151,7 +151,7 @@ export function Step2V8({ state, actions }: Props) {
                 onClick={() => {
                   setNavigatingSlug(slug);
                   actions.setIndustry(slug);
-                  actions.goToStep(3);
+                  actions.goToStep(3.5 as unknown as WizardStep);
                 }}
                 className="rounded-xl text-left overflow-hidden transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                 style={{
