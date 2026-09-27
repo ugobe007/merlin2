@@ -220,32 +220,24 @@ export default function WizardShellV7({
           </div>
 
           {/* Quick Actions & Hamburger Button */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {onSwitchToProStack && (
               <button
                 type="button"
                 onClick={onSwitchToProStack}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-400/80 text-blue-300 hover:text-blue-200 text-xs font-bold transition-all bg-blue-500/10 hover:bg-blue-500/20"
+                className="h-9 hidden sm:inline-flex items-center gap-1.5 px-3.5 rounded-lg border border-blue-400/60 bg-blue-600/25 text-xs font-semibold text-blue-200 hover:bg-blue-600/40 hover:border-blue-300 shadow-sm shadow-blue-500/10 transition-all duration-200"
               >
                 <span>⚡</span> ProStack Mode
               </button>
             )}
 
             <a
-              href="/support"
-              className="hidden sm:flex items-center gap-1 text-xs text-slate-300 hover:text-white px-2.5 py-1.5 font-medium"
-            >
-              <HelpCircle size={14} />
-              Support
-            </a>
-
-            <a
               href="/admin"
               onClick={handleAdminClick}
-              className={`hidden sm:flex items-center gap-1 text-xs px-2.5 py-1.5 font-semibold rounded-lg border ${
+              className={`h-9 hidden sm:inline-flex items-center gap-1.5 px-3.5 rounded-lg text-xs font-semibold border transition-all duration-200 ${
                 isAdmin
-                  ? "text-amber-400 bg-amber-500/15 border-amber-500/40"
-                  : "text-amber-400/80 bg-amber-500/10 border-amber-500/20"
+                  ? "text-amber-400 bg-amber-500/15 border-amber-500/30 hover:bg-amber-500/25"
+                  : "text-amber-400/90 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300"
               }`}
             >
               {isAdmin ? <LayoutDashboard size={13} /> : <Lock size={12} />}
@@ -257,7 +249,7 @@ export default function WizardShellV7({
                 setAuthMode("login");
                 setShowAuthModal(true);
               }}
-              className="text-xs font-bold text-slate-200 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/90 flex items-center gap-1.5"
+              className="h-9 inline-flex items-center justify-center gap-1.5 px-3.5 rounded-lg border border-slate-700 bg-slate-800/80 text-xs font-semibold text-slate-200 hover:text-white hover:border-slate-600 transition-all duration-200"
             >
               <LogIn size={13} />
               {currentUser ? currentUser.firstName || "Account" : "Log In"}
@@ -266,12 +258,12 @@ export default function WizardShellV7({
             {/* Hamburger Menu Toggle */}
             <button
               onClick={() => setNavMenuOpen(!navMenuOpen)}
-              className="p-2 text-slate-300 hover:text-white rounded-lg bg-slate-800/80 border border-slate-700/80 transition-colors flex items-center gap-1.5"
+              className="h-9 inline-flex items-center justify-center gap-1.5 px-2.5 rounded-lg border border-slate-700/80 bg-slate-800/60 text-slate-300 hover:text-white hover:bg-slate-700/80 transition-all duration-200"
               title="Open Navigation Menu"
               aria-label="Navigation Menu"
             >
               {navMenuOpen ? <X size={18} /> : <Menu size={18} />}
-              <span className="text-xs font-bold hidden xs:inline">Menu</span>
+              <span className="text-xs font-semibold hidden xs:inline">Menu</span>
             </button>
           </div>
         </div>

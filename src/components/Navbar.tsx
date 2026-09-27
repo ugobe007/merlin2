@@ -112,17 +112,17 @@ export default function Navbar() {
             {/* Right nav — desktop */}
             <div className="hidden lg:flex items-center gap-2">
               {isAdmin ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <a
                     href="/admin"
                     onClick={handleAdminClick}
-                    className="flex items-center gap-1.5 text-xs text-amber-400 font-bold px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 transition-colors"
+                    className="h-9 inline-flex items-center gap-1.5 px-3.5 rounded-lg text-xs font-semibold text-amber-400 bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 transition-all duration-200"
                   >
                     <LayoutDashboard size={14} />
                     Admin Panel Active
                   </a>
-                  <div className="flex items-center gap-2 text-sm text-slate-300">
-                    <User size={15} className="text-amber-400" />
+                  <div className="flex items-center gap-1.5 text-xs text-slate-300 px-1 font-medium">
+                    <User size={14} className="text-amber-400" />
                     <span style={{ fontFamily: "'Manrope', sans-serif" }}>
                       {currentUser?.firstName || currentUser?.email || "Admin"}
                     </span>
@@ -133,7 +133,7 @@ export default function Navbar() {
                       setCurrentUser(null);
                       window.location.reload();
                     }}
-                    className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors px-2.5 py-1.5"
+                    className="h-9 inline-flex items-center gap-1.5 px-3 rounded-lg border border-slate-700/60 bg-slate-800/40 text-xs font-semibold text-slate-400 hover:text-white hover:border-slate-600 transition-all duration-200"
                   >
                     <LogOut size={13} />
                     Sign Out
@@ -144,27 +144,21 @@ export default function Navbar() {
                   <a
                     href="/admin"
                     onClick={handleAdminClick}
-                    className="text-xs text-amber-400/90 hover:text-amber-300 transition-colors font-semibold px-2.5 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/10 flex items-center gap-1"
+                    className="h-9 inline-flex items-center gap-1.5 px-3.5 rounded-lg text-xs font-semibold text-amber-400/90 border border-amber-500/20 bg-amber-500/10 hover:bg-amber-500/20 hover:text-amber-300 transition-all duration-200"
                     title="Requires Admin Authentication"
                   >
                     <Lock size={12} />
                     Admin Panel
                   </a>
-                  <a
-                    href="/support"
-                    className="text-xs text-slate-300 hover:text-white transition-colors font-medium px-2.5 py-1.5"
-                  >
-                    Support
-                  </a>
                   <button
                     onClick={openSignIn}
-                    className="text-sm text-slate-200 hover:text-white transition-colors font-semibold px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80"
+                    className="h-9 inline-flex items-center justify-center px-3.5 rounded-lg border border-slate-700 bg-slate-800/80 text-xs font-semibold text-slate-200 hover:text-white hover:border-slate-600 transition-all duration-200"
                   >
                     Log In
                   </button>
                   <a
                     href="/wizard"
-                    className="rounded-lg border border-blue-400/70 bg-blue-600/20 px-4 py-2 text-sm font-semibold text-blue-300 transition-all duration-200 hover:border-blue-300 hover:text-blue-200"
+                    className="h-9 inline-flex items-center justify-center px-4 rounded-lg border border-blue-400/60 bg-blue-600/25 text-xs font-semibold text-blue-200 hover:bg-blue-600/40 hover:border-blue-300 shadow-sm shadow-blue-500/10 transition-all duration-200"
                   >
                     Activate Agent
                   </a>
@@ -173,12 +167,12 @@ export default function Navbar() {
 
               {/* Desktop Hamburger button toggle */}
               <button
-                className="p-2 text-slate-300 hover:text-white rounded-lg hover:bg-slate-800 transition-colors border border-slate-700/60 ml-1"
+                className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-700/80 bg-slate-800/60 text-slate-300 hover:text-white hover:bg-slate-700/80 transition-all duration-200 ml-1"
                 onClick={() => setMobileOpen(!mobileOpen)}
                 title="Navigation Menu"
                 aria-label="Toggle menu"
               >
-                {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+                {mobileOpen ? <X size={18} /> : <Menu size={18} />}
               </button>
             </div>
 
