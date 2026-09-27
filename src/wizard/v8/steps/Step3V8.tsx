@@ -862,7 +862,7 @@ export function Step3V8({ state, actions }: Props) {
               onExtracted={actions.setBillData}
               onCleared={() => {
                 actions.clearBillData();
-                setBillUploadOpen(false);
+                setFacilityMode("defaults");
               }}
             />
             {state.uploadedBillData && (
