@@ -60,7 +60,7 @@ function getGoogleMapsKey() {
   return process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
 }
 const APP_BASE_URL = process.env.APP_BASE_URL || 'https://merlinenergy.net';
-const FROM_EMAIL = 'StackQuote by Merlin <hello@merlin.energy>';
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Merlin Energy <hello@merlinenergy.net>';
 const REPLY_EMAIL = 'sales@merlinenergy.net';
 const BOOKING_MAILTO = `mailto:sales@merlinenergy.net?subject=${encodeURIComponent('Let\u2019s schedule a call — StackQuote by Merlin')}&body=${encodeURIComponent('Hi,\n\nI\u2019d love to walk through my energy savings analysis. Please let me know a few times that work for a 20-minute call.\n\nThanks,')}`;
 
