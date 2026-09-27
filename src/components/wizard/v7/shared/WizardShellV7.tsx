@@ -516,6 +516,71 @@ export default function WizardShellV7({
                     </div>
                   </>
                 )}
+
+                {/* Always-visible ProStack callout in Advisor rail */}
+                {onSwitchToProStack && (
+                  <div
+                    style={{
+                      marginTop: 20,
+                      padding: 14,
+                      borderRadius: 12,
+                      background:
+                        "linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(15,23,42,0.95) 100%)",
+                      border: "1.5px solid rgba(245,158,11,0.40)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                      boxShadow: "0 0 18px rgba(245,158,11,0.10)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        fontSize: 11,
+                        fontWeight: 900,
+                        color: "#fbbf24",
+                        letterSpacing: "0.05em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      <span>⚡</span> PROSTACK™ OPTION
+                    </div>
+                    <div
+                      style={{ fontSize: 12, color: "rgba(226,232,240,0.85)", lineHeight: 1.45 }}
+                    >
+                      Need full engineering control, 8760 hourly dispatch, &amp; vendor RFP specs?
+                    </div>
+                    <button
+                      type="button"
+                      onClick={onSwitchToProStack}
+                      style={{
+                        padding: "8px 12px",
+                        borderRadius: 8,
+                        border: "1.5px solid #fef3c7",
+                        background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                        color: "#ffffff",
+                        fontSize: 12,
+                        fontWeight: 900,
+                        cursor: "pointer",
+                        textAlign: "center",
+                        boxShadow: "0 0 14px rgba(245,158,11,0.35)",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background =
+                          "linear-gradient(135deg, #fbbf24 0%, #b45309 100%)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background =
+                          "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+                      }}
+                    >
+                      Open ProStack Builder →
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -666,7 +731,7 @@ export default function WizardShellV7({
                 })}
               </div>
 
-              {/* ProStack escape button — top-right, always visible */}
+              {/* ProStack button — top-right, highly prominent */}
               {onSwitchToProStack ? (
                 <button
                   type="button"
@@ -676,40 +741,45 @@ export default function WizardShellV7({
                     flexShrink: 0,
                     display: "flex",
                     alignItems: "center",
-                    gap: 6,
-                    padding: "7px 14px",
-                    borderRadius: 9,
-                    border: "1.5px solid #f59e0b",
-                    background: "transparent",
-                    color: "#f59e0b",
-                    fontSize: 12,
-                    fontWeight: 700,
+                    gap: 7,
+                    padding: "8px 16px",
+                    borderRadius: 10,
+                    border: "1.5px solid #fef3c7",
+                    background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                    color: "#ffffff",
+                    fontSize: 13,
+                    fontWeight: 900,
                     cursor: "pointer",
-                    letterSpacing: "0.04em",
-                    textTransform: "uppercase" as const,
-                    boxShadow: "none",
-                    transition: "all 0.15s ease",
+                    letterSpacing: "0.03em",
+                    boxShadow: "0 0 20px rgba(245, 158, 11, 0.45)",
+                    transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                     whiteSpace: "nowrap",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "#fbbf24";
-                    e.currentTarget.style.color = "#fbbf24";
-                    e.currentTarget.style.background = "rgba(245,158,11,0.07)";
-                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.background =
+                      "linear-gradient(135deg, #fbbf24 0%, #b45309 100%)";
+                    e.currentTarget.style.boxShadow = "0 0 28px rgba(245, 158, 11, 0.65)";
+                    e.currentTarget.style.transform = "translateY(-1.5px)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "#f59e0b";
-                    e.currentTarget.style.color = "#f59e0b";
-                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.background =
+                      "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+                    e.currentTarget.style.boxShadow = "0 0 20px rgba(245, 158, 11, 0.45)";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
                   <img
                     src={badgeProQuoteIcon}
                     alt="ProStack"
-                    style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover" }}
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "1px solid #ffffff",
+                    }}
                   />
-                  <span>ProStack</span>
+                  <span>⚡ ProStack™ Mode</span>
                 </button>
               ) : (
                 <div style={{ width: 138, flexShrink: 0 }} />

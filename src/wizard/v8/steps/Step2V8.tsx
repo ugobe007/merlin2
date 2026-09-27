@@ -112,29 +112,77 @@ export function Step2V8({ state, actions }: Props) {
     <div style={{ padding: "0", color: DARK.textPrimary }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }} className="grid gap-4 sm:gap-5 px-1 sm:px-0">
         {/* Guidance row */}
-        <div>
-          <div style={{ fontSize: 14, color: DARK.textSecondary, lineHeight: 1.6 }}>
-            Select your industry
+        <div style={{ marginBottom: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 12,
+              marginBottom: 8,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 800,
+                  color: "#38bdf8",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  marginBottom: 6,
+                }}
+              >
+                Step 2 of 4 · Industry Selection
+              </div>
+              <h1
+                style={{
+                  fontSize: "clamp(24px, 4vw, 32px)",
+                  fontWeight: 900,
+                  color: "#ffffff",
+                  margin: 0,
+                  lineHeight: 1.2,
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                Select your industry
+              </h1>
+            </div>
+
             {locationLine && (
-              <>
-                <span
-                  style={{ color: "rgba(232,235,243,0.25)", margin: "0 8px" }}
-                  className="hidden sm:inline"
-                >
-                  ·
-                </span>
-                <span
-                  style={{ fontSize: 13, color: "rgba(232,235,243,0.35)" }}
-                  className="hidden sm:inline"
-                >
-                  📍 {locationLine}
-                </span>
-              </>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 14px",
+                  borderRadius: 20,
+                  background: "rgba(56, 189, 248, 0.12)",
+                  border: "1.5px solid rgba(56, 189, 248, 0.35)",
+                  color: "#38bdf8",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  boxShadow: "0 0 16px rgba(56, 189, 248, 0.15)",
+                }}
+              >
+                <span>📍</span>
+                <span>{locationLine}</span>
+              </div>
             )}
           </div>
-          <div style={{ fontSize: 12, color: "rgba(232,235,243,0.35)", marginTop: 4 }}>
-            This determines your facility's energy profile and custom questions.
-          </div>
+
+          <p
+            style={{
+              fontSize: 15,
+              fontWeight: 500,
+              color: "rgba(226, 232, 240, 0.85)",
+              margin: 0,
+              lineHeight: 1.5,
+            }}
+          >
+            This determines your facility's energy profile and customized questionnaire.
+          </p>
         </div>
 
         {/* Industry card grid */}
@@ -281,6 +329,96 @@ export function Step2V8({ state, actions }: Props) {
               </button>
             );
           })}
+        </div>
+
+        {/* ProStack Option Banner */}
+        <div
+          style={{
+            marginTop: 20,
+            padding: "18px 24px",
+            borderRadius: 16,
+            background:
+              "linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(15, 23, 42, 0.90) 100%)",
+            border: "1.5px solid rgba(245, 158, 11, 0.40)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 14,
+            boxShadow: "0 0 24px rgba(245, 158, 11, 0.12)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flex: "1 1 300px" }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: "rgba(245, 158, 11, 0.20)",
+                border: "1px solid #f59e0b",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 22,
+                flexShrink: 0,
+              }}
+            >
+              ⚡
+            </div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: "#fbbf24", marginBottom: 2 }}>
+                Need a Full Engineering &amp; EPC Quote?
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(226, 232, 240, 0.85)", lineHeight: 1.45 }}>
+                Switch to <strong>ProStack™</strong> anytime to build custom 8760 hourly dispatch
+                models, line-item equipment pricing, and downloadable RFP packages.
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              try {
+                sessionStorage.setItem(
+                  "merlin_wizard_handoff",
+                  JSON.stringify({
+                    industry: state.industry,
+                    zip: state.location?.zip,
+                    city: state.location?.city,
+                    fromStep: 2,
+                  })
+                );
+              } catch {
+                /* silent */
+              }
+              window.location.href = "/quote-builder?from=wizard";
+            }}
+            style={{
+              padding: "12px 22px",
+              borderRadius: 12,
+              border: "1.5px solid #fef3c7",
+              background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+              color: "#ffffff",
+              fontSize: 14,
+              fontWeight: 900,
+              cursor: "pointer",
+              boxShadow: "0 0 20px rgba(245, 158, 11, 0.45)",
+              whiteSpace: "nowrap",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background =
+                "linear-gradient(135deg, #fbbf24 0%, #b45309 100%)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background =
+                "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+              e.currentTarget.style.transform = "translateY(0)";
+            }}
+          >
+            Open ProStack Builder →
+          </button>
         </div>
       </div>
     </div>
