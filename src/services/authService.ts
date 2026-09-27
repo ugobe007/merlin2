@@ -67,14 +67,31 @@ export interface AuthResponse {
 // ── Cache helpers ─────────────────────────────────────────────────────────────
 
 const CURRENT_USER_KEY = "current_user";
+const MERLIN_AUTH_USER_KEY = "merlin_auth_user";
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
 
 function writeCache(user: User | null): void {
   if (!user) {
     localStorage.removeItem(CURRENT_USER_KEY);
+    localStorage.removeItem(MERLIN_AUTH_USER_KEY);
   } else {
     const sessionExpiry = new Date(Date.now() + SESSION_DURATION_MS).toISOString();
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify({ user, sessionExpiry }));
+    const payload = JSON.stringify({ user, sessionExpiry });
+    localStorage.setItem(CURRENT_USER_KEY, payload);
+    localStorage.setItem(MERLIN_AUTH_USER_KEY, JSON.stringify(user));
+
+    // Auto-grant admin session if the user's email is a recognized administrator
+    const adminEmails = ["ugobe07@gmail.com", "admin@merlinenergy.net", "viewer@merlinenergy.net"];
+    if (user.email && adminEmails.includes(user.email.toLowerCase())) {
+      sessionStorage.setItem(
+        "admin_session",
+        JSON.stringify({
+          email: user.email,
+          loginTime: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+        })
+      );
+    }
   }
   // Notify React components so they re-render after async auth state change
   window.dispatchEvent(new CustomEvent("merlin:authchange", { detail: user }));
@@ -82,14 +99,18 @@ function writeCache(user: User | null): void {
 
 function readCache(): User | null {
   try {
-    const raw = localStorage.getItem(CURRENT_USER_KEY);
+    const raw =
+      localStorage.getItem(CURRENT_USER_KEY) || localStorage.getItem(MERLIN_AUTH_USER_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
+    const user = data.user ?? (data.email ? data : null);
+    if (!user) return null;
     if (data.sessionExpiry && new Date(data.sessionExpiry) < new Date()) {
       localStorage.removeItem(CURRENT_USER_KEY);
+      localStorage.removeItem(MERLIN_AUTH_USER_KEY);
       return null;
     }
-    return data.user ?? null;
+    return user;
   } catch {
     return null;
   }
@@ -128,10 +149,21 @@ function rowToUser(row: Record<string, any>): User {
 class SupabaseAuthService {
   constructor() {
     supabase.auth.onAuthStateChange(async (event, session) => {
+      const hasOAuthParams =
+        typeof window !== "undefined" &&
+        (window.location.search.includes("code=") ||
+          window.location.hash.includes("access_token") ||
+          window.location.search.includes("access_token="));
+
       if (!session?.user) {
-        writeCache(null);
+        // If OAuth redirect parameters are present, code exchange is still processing.
+        // Avoid clearing cached session prematurely during initial page load.
+        if (!hasOAuthParams) {
+          writeCache(null);
+        }
         return;
       }
+
       // Try to fetch existing profile row
       const { data, error } = await supabase
         .from("user_profiles")
@@ -176,10 +208,18 @@ class SupabaseAuthService {
         }
       }
 
-      // After OAuth redirect, reload the page without the hash so
-      // all React components re-mount with the fresh auth state
-      if (event === "SIGNED_IN" && window.location.hash.includes("access_token")) {
-        window.location.replace(window.location.origin);
+      // Clean up single-use OAuth params from URL without page reload
+      // so refreshing will not attempt a re-exchange of an already consumed OAuth code.
+      if (hasOAuthParams) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    });
+
+    // Check active session on initial service instantiation
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user && !readCache()) {
+        const user = this._metaToUser(session.user);
+        writeCache(user);
       }
     });
   }

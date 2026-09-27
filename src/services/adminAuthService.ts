@@ -252,9 +252,12 @@ export function isCurrentUserAdmin(): boolean {
     return true;
   }
   try {
-    const rawUser = localStorage.getItem("merlin_auth_user");
+    const rawCurrentUser = localStorage.getItem("current_user");
+    const rawAuthUser = localStorage.getItem("merlin_auth_user");
+    const rawUser = rawCurrentUser || rawAuthUser;
     if (rawUser) {
-      const user = JSON.parse(rawUser);
+      const parsed = JSON.parse(rawUser);
+      const user = parsed.user || parsed;
       const email = (user.email || "").toLowerCase();
       const adminEmails = [
         "ugobe07@gmail.com",
