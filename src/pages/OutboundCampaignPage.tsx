@@ -18,9 +18,8 @@ import {
   saveTrainedAIRules,
   getSavedLeadDrafts,
   saveLeadDraft,
-  SavedLeadDraft,
 } from "@/services/aiOutreachTrainerService";
-import type { GeneratedEmailPitch } from "@/services/aiOutreachTrainerService";
+import type { GeneratedEmailPitch, SavedLeadDraft } from "@/services/aiOutreachTrainerService";
 import {
   Search,
   ExternalLink,
