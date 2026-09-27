@@ -887,10 +887,10 @@ export function Step3V8({ state, actions }: Props) {
           style={{
             padding: 24,
             borderRadius: 16,
-            background: "rgba(15, 23, 42, 0.70)",
-            border: "1.5px solid rgba(79, 138, 255, 0.30)",
+            background: "rgba(15, 23, 42, 0.75)",
+            border: "2px solid rgba(168, 85, 247, 0.45)",
             marginBottom: 24,
-            boxShadow: "0 0 24px rgba(79, 138, 255, 0.08)",
+            boxShadow: "0 0 28px rgba(168, 85, 247, 0.15)",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
@@ -901,7 +901,7 @@ export function Step3V8({ state, actions }: Props) {
               </h3>
               <p style={{ fontSize: 13, color: "rgba(203,213,225,0.80)", margin: "3px 0 0" }}>
                 Merlin recommends adding{" "}
-                <strong style={{ color: "#38bdf8" }}>~{recommendedSolarKW} kW solar</strong> to
+                <strong style={{ color: "#c084fc" }}>~{recommendedSolarKW} kW solar</strong> to
                 lower peak energy costs and maximize 30% Federal ITC tax savings.
               </p>
             </div>
@@ -921,19 +921,26 @@ export function Step3V8({ state, actions }: Props) {
               style={{
                 padding: "14px 18px",
                 borderRadius: 12,
-                border: isSolarIncluded ? "2px solid #38bdf8" : "1px solid rgba(255,255,255,0.12)",
-                background: isSolarIncluded ? "rgba(56, 189, 248, 0.12)" : "rgba(255,255,255,0.03)",
+                border: isSolarIncluded
+                  ? "2.5px solid #a855f7"
+                  : "1.5px solid rgba(255,255,255,0.14)",
+                background: isSolarIncluded
+                  ? "linear-gradient(135deg, rgba(168, 85, 247, 0.22) 0%, rgba(15, 23, 42, 0.95) 100%)"
+                  : "rgba(255,255,255,0.03)",
                 color: "#ffffff",
                 textAlign: "left",
                 cursor: "pointer",
-                transition: "all 0.15s ease",
+                transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                boxShadow: isSolarIncluded
+                  ? "0 0 24px rgba(168, 85, 247, 0.45), inset 0 0 15px rgba(168, 85, 247, 0.15)"
+                  : "none",
               }}
             >
               <div
                 style={{
                   fontSize: 14,
-                  fontWeight: 800,
-                  color: isSolarIncluded ? "#38bdf8" : "#ffffff",
+                  fontWeight: 900,
+                  color: isSolarIncluded ? "#f3e8ff" : "#ffffff",
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
@@ -943,18 +950,26 @@ export function Step3V8({ state, actions }: Props) {
                 <span
                   style={{
                     fontSize: 11,
-                    padding: "2px 8px",
+                    padding: "3px 10px",
                     borderRadius: 12,
-                    background: "rgba(56,189,248,0.20)",
-                    color: "#38bdf8",
-                    fontWeight: 700,
+                    background: "rgba(168, 85, 247, 0.30)",
+                    border: "1px solid #d8b4fe",
+                    color: "#f3e8ff",
+                    fontWeight: 800,
                   }}
                 >
-                  ~{recommendedSolarKW} kW
+                  RECOMMENDED · ~{recommendedSolarKW} kW
                 </span>
               </div>
-              <div style={{ fontSize: 12, color: "rgba(203, 213, 225, 0.75)", marginTop: 4 }}>
-                Auto-added to energy stack for max financial ROI &amp; 30% ITC
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "rgba(233, 213, 255, 0.85)",
+                  marginTop: 6,
+                  lineHeight: 1.4,
+                }}
+              >
+                Auto-added to energy stack for max financial ROI &amp; 30% ITC tax credit
               </div>
             </button>
 
@@ -964,14 +979,17 @@ export function Step3V8({ state, actions }: Props) {
               style={{
                 padding: "14px 18px",
                 borderRadius: 12,
-                border: !isSolarIncluded ? "2px solid #94a3b8" : "1px solid rgba(255,255,255,0.12)",
+                border: !isSolarIncluded
+                  ? "2.5px solid #94a3b8"
+                  : "1.5px solid rgba(255,255,255,0.14)",
                 background: !isSolarIncluded
-                  ? "rgba(148, 163, 184, 0.12)"
+                  ? "rgba(148, 163, 184, 0.16)"
                   : "rgba(255,255,255,0.03)",
                 color: "#ffffff",
                 textAlign: "left",
                 cursor: "pointer",
-                transition: "all 0.15s ease",
+                transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                boxShadow: !isSolarIncluded ? "0 0 18px rgba(148, 163, 184, 0.25)" : "none",
               }}
             >
               <div
@@ -983,7 +1001,14 @@ export function Step3V8({ state, actions }: Props) {
               >
                 {!isSolarIncluded ? "✓ No Solar" : "No Solar"}
               </div>
-              <div style={{ fontSize: 12, color: "rgba(203, 213, 225, 0.75)", marginTop: 4 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "rgba(203, 213, 225, 0.75)",
+                  marginTop: 6,
+                  lineHeight: 1.4,
+                }}
+              >
                 Battery Storage (BESS) peak-shaving stack only
               </div>
             </button>
@@ -1007,15 +1032,16 @@ export function Step3V8({ state, actions }: Props) {
                   type="button"
                   onClick={handleGetEnergyQuote}
                   style={{
-                    padding: "12px 24px",
-                    borderRadius: 10,
-                    border: "none",
-                    background: "linear-gradient(135deg, #10b981 0%, #06b6d4 100%)",
+                    padding: "14px 28px",
+                    borderRadius: 12,
+                    border: "1.5px solid #d8b4fe",
+                    background: "linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)",
                     color: "#ffffff",
-                    fontSize: 14,
-                    fontWeight: 800,
+                    fontSize: 15,
+                    fontWeight: 900,
                     cursor: "pointer",
-                    boxShadow: "0 0 20px rgba(16,185,129,0.4)",
+                    boxShadow: "0 0 28px rgba(168, 85, 247, 0.55)",
+                    transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                   }}
                 >
                   Get Energy Quote →
@@ -1031,10 +1057,10 @@ export function Step3V8({ state, actions }: Props) {
             style={{
               padding: 28,
               borderRadius: 16,
-              background: "linear-gradient(145deg, rgba(16,185,129,0.10), rgba(15,23,42,0.85))",
-              border: "1.5px solid rgba(16,185,129,0.30)",
+              background: "linear-gradient(145deg, rgba(168,85,247,0.12), rgba(15,23,42,0.85))",
+              border: "1.5px solid rgba(168,85,247,0.35)",
               marginBottom: 24,
-              boxShadow: "0 0 28px rgba(16,185,129,0.12)",
+              boxShadow: "0 0 28px rgba(168,85,247,0.15)",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
@@ -1045,7 +1071,7 @@ export function Step3V8({ state, actions }: Props) {
                 </h3>
                 <p style={{ fontSize: 13, color: "rgba(203,213,225,0.80)", margin: "4px 0 0" }}>
                   Estimated Peak Load:{" "}
-                  <strong style={{ color: "#34d399" }}>
+                  <strong style={{ color: "#c084fc" }}>
                     ~
                     {Math.round(
                       state.peakLoadKW > 0 ? state.peakLoadKW : state.baseLoadKW || 150
@@ -1061,16 +1087,16 @@ export function Step3V8({ state, actions }: Props) {
                 type="button"
                 onClick={handleGetEnergyQuote}
                 style={{
-                  padding: "13px 26px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "linear-gradient(135deg, #10b981 0%, #06b6d4 100%)",
+                  padding: "14px 28px",
+                  borderRadius: 12,
+                  border: "1.5px solid #d8b4fe",
+                  background: "linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)",
                   color: "#ffffff",
                   fontSize: 15,
-                  fontWeight: 800,
+                  fontWeight: 900,
                   cursor: "pointer",
-                  boxShadow: "0 0 20px rgba(16,185,129,0.4)",
-                  transition: "all 0.15s ease",
+                  boxShadow: "0 0 28px rgba(168, 85, 247, 0.55)",
+                  transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
               >
                 Get Energy Quote →

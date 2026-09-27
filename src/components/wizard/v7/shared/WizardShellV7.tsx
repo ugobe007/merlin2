@@ -1000,6 +1000,7 @@ export default function WizardShellV7({
               {/* Next — vibrant solid fill CTA button */}
               {(() => {
                 const isActive = canGoNext && !isNextLoading;
+                const isPurpleCTA = Boolean(nextLabel?.includes("Energy Quote"));
                 return (
                   <button
                     onClick={onNext}
@@ -1012,34 +1013,48 @@ export default function WizardShellV7({
                       borderRadius: 12,
                       minHeight: 52,
                       background: isActive
-                        ? "linear-gradient(135deg, #10b981 0%, #0284c7 100%)"
+                        ? isPurpleCTA
+                          ? "linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)"
+                          : "linear-gradient(135deg, #10b981 0%, #0284c7 100%)"
                         : "rgba(30, 41, 59, 0.5)",
-                      border: isActive ? "2px solid #34d399" : "1.5px solid rgba(255,255,255,0.12)",
+                      border: isActive
+                        ? isPurpleCTA
+                          ? "2px solid #d8b4fe"
+                          : "2px solid #34d399"
+                        : "1.5px solid rgba(255,255,255,0.12)",
                       color: isActive ? "#ffffff" : "rgba(148,163,184,0.6)",
                       cursor: isActive ? "pointer" : "not-allowed",
                       fontSize: 16,
-                      fontWeight: 800,
+                      fontWeight: 900,
                       letterSpacing: "0.02em",
                       boxShadow: isActive
-                        ? "0 0 24px rgba(16,185,129,0.45), 0 4px 14px rgba(0,0,0,0.3)"
+                        ? isPurpleCTA
+                          ? "0 0 28px rgba(168, 85, 247, 0.55), 0 4px 14px rgba(0,0,0,0.3)"
+                          : "0 0 24px rgba(16,185,129,0.45), 0 4px 14px rgba(0,0,0,0.3)"
                         : "none",
                       transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                     }}
                     onMouseEnter={(e) => {
                       if (isActive) {
-                        e.currentTarget.style.background =
-                          "linear-gradient(135deg, #059669 0%, #0369a1 100%)";
-                        e.currentTarget.style.boxShadow =
-                          "0 0 34px rgba(16,185,129,0.65), 0 6px 20px rgba(0,0,0,0.4)";
+                        e.currentTarget.style.background = isPurpleCTA
+                          ? "linear-gradient(135deg, #c084fc 0%, #9333ea 100%)"
+                          : "linear-gradient(135deg, #059669 0%, #0369a1 100%)";
+                        e.currentTarget.style.boxShadow = isPurpleCTA
+                          ? "0 0 36px rgba(168, 85, 247, 0.75), 0 6px 20px rgba(0,0,0,0.4)"
+                          : "0 0 34px rgba(16,185,129,0.65), 0 6px 20px rgba(0,0,0,0.4)";
                         e.currentTarget.style.transform = "translateY(-2px)";
                       }
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = isActive
-                        ? "linear-gradient(135deg, #10b981 0%, #0284c7 100%)"
+                        ? isPurpleCTA
+                          ? "linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)"
+                          : "linear-gradient(135deg, #10b981 0%, #0284c7 100%)"
                         : "rgba(30, 41, 59, 0.5)";
                       e.currentTarget.style.boxShadow = isActive
-                        ? "0 0 24px rgba(16,185,129,0.45), 0 4px 14px rgba(0,0,0,0.3)"
+                        ? isPurpleCTA
+                          ? "0 0 28px rgba(168, 85, 247, 0.55), 0 4px 14px rgba(0,0,0,0.3)"
+                          : "0 0 24px rgba(16,185,129,0.45), 0 4px 14px rgba(0,0,0,0.3)"
                         : "none";
                       e.currentTarget.style.transform = "translateY(0)";
                     }}
