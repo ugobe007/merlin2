@@ -556,28 +556,32 @@ export default function WizardShellV7({
                       type="button"
                       onClick={onSwitchToProStack}
                       style={{
-                        padding: "8px 12px",
+                        padding: "8px 14px",
                         borderRadius: 8,
-                        border: "1.5px solid #fef3c7",
-                        background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                        color: "#ffffff",
+                        border: "2px solid #38bdf8",
+                        background: "transparent",
+                        color: "#38bdf8",
                         fontSize: 12,
                         fontWeight: 900,
                         cursor: "pointer",
                         textAlign: "center",
-                        boxShadow: "0 0 14px rgba(245,158,11,0.35)",
+                        boxShadow: "0 0 14px rgba(56, 189, 248, 0.25)",
                         transition: "all 0.15s ease",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background =
-                          "linear-gradient(135deg, #fbbf24 0%, #b45309 100%)";
+                        e.currentTarget.style.background = "rgba(56, 189, 248, 0.12)";
+                        e.currentTarget.style.borderColor = "#7dd3fc";
+                        e.currentTarget.style.color = "#7dd3fc";
+                        e.currentTarget.style.boxShadow = "0 0 22px rgba(56, 189, 248, 0.45)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background =
-                          "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.borderColor = "#38bdf8";
+                        e.currentTarget.style.color = "#38bdf8";
+                        e.currentTarget.style.boxShadow = "0 0 14px rgba(56, 189, 248, 0.25)";
                       }}
                     >
-                      Open ProStack Builder →
+                      ProStack Builder →
                     </button>
                   </div>
                 )}
@@ -731,7 +735,7 @@ export default function WizardShellV7({
                 })}
               </div>
 
-              {/* ProStack button — top-right, highly prominent */}
+              {/* ProStack button — top-right, radiant blue outline */}
               {onSwitchToProStack ? (
                 <button
                   type="button"
@@ -744,27 +748,29 @@ export default function WizardShellV7({
                     gap: 7,
                     padding: "8px 16px",
                     borderRadius: 10,
-                    border: "1.5px solid #fef3c7",
-                    background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                    color: "#ffffff",
+                    border: "2px solid #38bdf8",
+                    background: "transparent",
+                    color: "#38bdf8",
                     fontSize: 13,
                     fontWeight: 900,
                     cursor: "pointer",
                     letterSpacing: "0.03em",
-                    boxShadow: "0 0 20px rgba(245, 158, 11, 0.45)",
+                    boxShadow: "0 0 16px rgba(56, 189, 248, 0.25)",
                     transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                     whiteSpace: "nowrap",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background =
-                      "linear-gradient(135deg, #fbbf24 0%, #b45309 100%)";
-                    e.currentTarget.style.boxShadow = "0 0 28px rgba(245, 158, 11, 0.65)";
+                    e.currentTarget.style.background = "rgba(56, 189, 248, 0.12)";
+                    e.currentTarget.style.borderColor = "#7dd3fc";
+                    e.currentTarget.style.color = "#7dd3fc";
+                    e.currentTarget.style.boxShadow = "0 0 26px rgba(56, 189, 248, 0.50)";
                     e.currentTarget.style.transform = "translateY(-1.5px)";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background =
-                      "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
-                    e.currentTarget.style.boxShadow = "0 0 20px rgba(245, 158, 11, 0.45)";
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.borderColor = "#38bdf8";
+                    e.currentTarget.style.color = "#38bdf8";
+                    e.currentTarget.style.boxShadow = "0 0 16px rgba(56, 189, 248, 0.25)";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                 >
@@ -776,10 +782,10 @@ export default function WizardShellV7({
                       height: 18,
                       borderRadius: "50%",
                       objectFit: "cover",
-                      border: "1px solid #ffffff",
+                      border: "1px solid #38bdf8",
                     }}
                   />
-                  <span>⚡ ProStack™ Mode</span>
+                  <span>ProStack Builder</span>
                 </button>
               ) : (
                 <div style={{ width: 138, flexShrink: 0 }} />

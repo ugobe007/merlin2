@@ -394,30 +394,34 @@ export function Step2V8({ state, actions }: Props) {
               window.location.href = "/quote-builder?from=wizard";
             }}
             style={{
-              padding: "12px 22px",
+              padding: "11px 20px",
               borderRadius: 12,
-              border: "1.5px solid #fef3c7",
-              background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-              color: "#ffffff",
+              border: "2px solid #38bdf8",
+              background: "transparent",
+              color: "#38bdf8",
               fontSize: 14,
               fontWeight: 900,
               cursor: "pointer",
-              boxShadow: "0 0 20px rgba(245, 158, 11, 0.45)",
+              boxShadow: "0 0 18px rgba(56, 189, 248, 0.25)",
               whiteSpace: "nowrap",
               transition: "all 0.2s ease",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background =
-                "linear-gradient(135deg, #fbbf24 0%, #b45309 100%)";
+              e.currentTarget.style.background = "rgba(56, 189, 248, 0.12)";
+              e.currentTarget.style.borderColor = "#7dd3fc";
+              e.currentTarget.style.color = "#7dd3fc";
+              e.currentTarget.style.boxShadow = "0 0 26px rgba(56, 189, 248, 0.50)";
               e.currentTarget.style.transform = "translateY(-1px)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background =
-                "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.borderColor = "#38bdf8";
+              e.currentTarget.style.color = "#38bdf8";
+              e.currentTarget.style.boxShadow = "0 0 18px rgba(56, 189, 248, 0.25)";
               e.currentTarget.style.transform = "translateY(0)";
             }}
           >
-            Open ProStack Builder →
+            ProStack Builder →
           </button>
         </div>
       </div>
