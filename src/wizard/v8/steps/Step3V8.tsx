@@ -965,28 +965,28 @@ export function Step3V8({ state, actions }: Props) {
               type="button"
               onClick={() => handleToggleSolar(true)}
               style={{
-                padding: "16px 20px",
+                padding: "18px 22px",
                 borderRadius: 14,
                 border: isSolarIncluded
-                  ? "3px solid #a855f7"
+                  ? "3px solid #10b981"
                   : "1.5px solid rgba(255,255,255,0.14)",
                 background: isSolarIncluded
-                  ? "linear-gradient(135deg, rgba(168, 85, 247, 0.32) 0%, rgba(15, 23, 42, 0.95) 100%)"
+                  ? "linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(15, 23, 42, 0.95) 100%)"
                   : "rgba(255,255,255,0.03)",
                 color: "#ffffff",
                 textAlign: "left",
                 cursor: "pointer",
                 transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                 boxShadow: isSolarIncluded
-                  ? "0 0 28px rgba(168, 85, 247, 0.55), inset 0 0 18px rgba(168, 85, 247, 0.20)"
+                  ? "0 0 30px rgba(16, 185, 129, 0.55), inset 0 0 18px rgba(16, 185, 129, 0.20)"
                   : "none",
               }}
             >
               <div
                 style={{
-                  fontSize: 15,
+                  fontSize: 18,
                   fontWeight: 900,
-                  color: isSolarIncluded ? "#f3e8ff" : "#ffffff",
+                  color: isSolarIncluded ? "#34d399" : "#ffffff",
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
@@ -996,9 +996,9 @@ export function Step3V8({ state, actions }: Props) {
               </div>
               <div
                 style={{
-                  fontSize: 12.5,
+                  fontSize: 13,
                   color: isSolarIncluded
-                    ? "rgba(243, 232, 255, 0.90)"
+                    ? "rgba(167, 243, 208, 0.90)"
                     : "rgba(203, 213, 225, 0.75)",
                   marginTop: 6,
                   lineHeight: 1.45,
@@ -1013,7 +1013,7 @@ export function Step3V8({ state, actions }: Props) {
               type="button"
               onClick={() => handleToggleSolar(false)}
               style={{
-                padding: "16px 20px",
+                padding: "18px 22px",
                 borderRadius: 14,
                 border: !isSolarIncluded
                   ? "3px solid #94a3b8"
@@ -1030,7 +1030,7 @@ export function Step3V8({ state, actions }: Props) {
             >
               <div
                 style={{
-                  fontSize: 15,
+                  fontSize: 16,
                   fontWeight: 800,
                   color: !isSolarIncluded ? "#cbd5e1" : "rgba(255,255,255,0.70)",
                 }}
@@ -1039,7 +1039,7 @@ export function Step3V8({ state, actions }: Props) {
               </div>
               <div
                 style={{
-                  fontSize: 12.5,
+                  fontSize: 13,
                   color: "rgba(203, 213, 225, 0.75)",
                   marginTop: 6,
                   lineHeight: 1.45,
@@ -1062,28 +1062,6 @@ export function Step3V8({ state, actions }: Props) {
                 setFacilityMode("defaults");
               }}
             />
-            {state.uploadedBillData && (
-              <div style={{ marginTop: 16, textAlign: "right" }}>
-                <button
-                  type="button"
-                  onClick={handleGetEnergyQuote}
-                  style={{
-                    padding: "14px 28px",
-                    borderRadius: 12,
-                    border: "1.5px solid #d8b4fe",
-                    background: "linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)",
-                    color: "#ffffff",
-                    fontSize: 15,
-                    fontWeight: 900,
-                    cursor: "pointer",
-                    boxShadow: "0 0 28px rgba(168, 85, 247, 0.55)",
-                    transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
-                  }}
-                >
-                  Get Energy Quote →
-                </button>
-              </div>
-            )}
           </div>
         )}
 
@@ -1118,37 +1096,20 @@ export function Step3V8({ state, actions }: Props) {
                 </p>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 12, marginTop: 20, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={handleGetEnergyQuote}
-                style={{
-                  padding: "14px 28px",
-                  borderRadius: 12,
-                  border: "1.5px solid #d8b4fe",
-                  background: "linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)",
-                  color: "#ffffff",
-                  fontSize: 15,
-                  fontWeight: 900,
-                  cursor: "pointer",
-                  boxShadow: "0 0 28px rgba(168, 85, 247, 0.55)",
-                  transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
-                }}
-              >
-                Get Energy Quote →
-              </button>
+            <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
               <button
                 type="button"
                 onClick={() => setFacilityMode("details")}
                 style={{
-                  padding: "13px 20px",
+                  padding: "12px 20px",
                   borderRadius: 10,
-                  border: "1.5px solid rgba(255,255,255,0.20)",
+                  border: "1.5px solid rgba(255,255,255,0.22)",
                   background: "rgba(15,23,42,0.60)",
-                  color: "rgba(232,235,243,0.90)",
+                  color: "#f1f5f9",
                   fontSize: 14,
                   fontWeight: 700,
                   cursor: "pointer",
+                  transition: "all 0.15s ease",
                 }}
               >
                 Customize details instead →

@@ -525,12 +525,12 @@ export default function WizardShellV7({
                       padding: 14,
                       borderRadius: 12,
                       background:
-                        "linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(15,23,42,0.95) 100%)",
-                      border: "1.5px solid rgba(245,158,11,0.40)",
+                        "linear-gradient(135deg, rgba(56,189,248,0.08) 0%, rgba(15,23,42,0.95) 100%)",
+                      border: "1.5px solid #38bdf8",
                       display: "flex",
                       flexDirection: "column",
                       gap: 8,
-                      boxShadow: "0 0 18px rgba(245,158,11,0.10)",
+                      boxShadow: "0 0 18px rgba(56,189,248,0.18)",
                     }}
                   >
                     <div
@@ -540,7 +540,7 @@ export default function WizardShellV7({
                         gap: 6,
                         fontSize: 11,
                         fontWeight: 900,
-                        color: "#fbbf24",
+                        color: "#3b82f6",
                         letterSpacing: "0.05em",
                         textTransform: "uppercase",
                       }}

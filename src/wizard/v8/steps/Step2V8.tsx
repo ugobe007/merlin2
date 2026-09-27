@@ -338,14 +338,14 @@ export function Step2V8({ state, actions }: Props) {
             padding: "18px 24px",
             borderRadius: 16,
             background:
-              "linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(15, 23, 42, 0.90) 100%)",
-            border: "1.5px solid rgba(245, 158, 11, 0.40)",
+              "linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(15, 23, 42, 0.90) 100%)",
+            border: "1.5px solid #38bdf8",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             flexWrap: "wrap",
             gap: 14,
-            boxShadow: "0 0 24px rgba(245, 158, 11, 0.12)",
+            boxShadow: "0 0 24px rgba(56, 189, 248, 0.15)",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 12, flex: "1 1 300px" }}>
@@ -354,8 +354,8 @@ export function Step2V8({ state, actions }: Props) {
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                background: "rgba(245, 158, 11, 0.20)",
-                border: "1px solid #f59e0b",
+                background: "rgba(56, 189, 248, 0.14)",
+                border: "1px solid #38bdf8",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -366,7 +366,7 @@ export function Step2V8({ state, actions }: Props) {
               ⚡
             </div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: "#fbbf24", marginBottom: 2 }}>
+              <div style={{ fontSize: 15, fontWeight: 900, color: "#3b82f6", marginBottom: 2 }}>
                 Need a Full Engineering &amp; EPC Quote?
               </div>
               <div style={{ fontSize: 13, color: "rgba(226, 232, 240, 0.85)", lineHeight: 1.45 }}>
