@@ -885,24 +885,70 @@ export function Step3V8({ state, actions }: Props) {
         {/* ── Solar PV Coverage Section ── */}
         <div
           style={{
-            padding: 24,
-            borderRadius: 16,
-            background: "rgba(15, 23, 42, 0.75)",
-            border: "2px solid rgba(168, 85, 247, 0.45)",
+            padding: 26,
+            borderRadius: 18,
+            background:
+              "linear-gradient(135deg, rgba(168, 85, 247, 0.18) 0%, rgba(15, 23, 42, 0.92) 100%)",
+            border: "2.5px solid #a855f7",
             marginBottom: 24,
-            boxShadow: "0 0 28px rgba(168, 85, 247, 0.15)",
+            boxShadow: "0 0 35px rgba(168, 85, 247, 0.30), inset 0 0 20px rgba(168, 85, 247, 0.10)",
+            position: "relative",
+            overflow: "hidden",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-            <span style={{ fontSize: 24 }}>☀️</span>
+          {/* Decorative glowing accent line on top */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 3,
+              background: "linear-gradient(90deg, #a855f7, #38bdf8, #a855f7)",
+            }}
+          />
+
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+            <div
+              style={{
+                width: 46,
+                height: 46,
+                borderRadius: 12,
+                background: "rgba(168, 85, 247, 0.25)",
+                border: "1.5px solid #d8b4fe",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 24,
+                boxShadow: "0 0 16px rgba(168, 85, 247, 0.40)",
+                flexShrink: 0,
+              }}
+            >
+              ☀️
+            </div>
             <div>
-              <h3 style={{ fontSize: 17, fontWeight: 800, color: "#ffffff", margin: 0 }}>
-                Solar PV Coverage Option
+              <h3
+                style={{
+                  fontSize: 20,
+                  fontWeight: 900,
+                  color: "#ffffff",
+                  margin: 0,
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                Recommended Solar: {recommendedSolarKW} kW
               </h3>
-              <p style={{ fontSize: 13, color: "rgba(203,213,225,0.80)", margin: "3px 0 0" }}>
-                Merlin recommends adding{" "}
-                <strong style={{ color: "#c084fc" }}>~{recommendedSolarKW} kW solar</strong> to
-                lower peak energy costs and maximize 30% Federal ITC tax savings.
+              <p
+                style={{
+                  fontSize: 13.5,
+                  color: "rgba(233, 213, 255, 0.90)",
+                  margin: "4px 0 0",
+                  lineHeight: 1.45,
+                }}
+              >
+                Merlin auto-sized{" "}
+                <strong style={{ color: "#d8b4fe" }}>{recommendedSolarKW} kW</strong> of solar for
+                your facility to minimize utility bills and capture 30% Federal ITC tax savings.
               </p>
             </div>
           </div>
@@ -911,34 +957,34 @@ export function Step3V8({ state, actions }: Props) {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: 12,
-              marginTop: 16,
+              gap: 14,
+              marginTop: 18,
             }}
           >
             <button
               type="button"
               onClick={() => handleToggleSolar(true)}
               style={{
-                padding: "14px 18px",
-                borderRadius: 12,
+                padding: "16px 20px",
+                borderRadius: 14,
                 border: isSolarIncluded
-                  ? "2.5px solid #a855f7"
+                  ? "3px solid #a855f7"
                   : "1.5px solid rgba(255,255,255,0.14)",
                 background: isSolarIncluded
-                  ? "linear-gradient(135deg, rgba(168, 85, 247, 0.22) 0%, rgba(15, 23, 42, 0.95) 100%)"
+                  ? "linear-gradient(135deg, rgba(168, 85, 247, 0.32) 0%, rgba(15, 23, 42, 0.95) 100%)"
                   : "rgba(255,255,255,0.03)",
                 color: "#ffffff",
                 textAlign: "left",
                 cursor: "pointer",
                 transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                 boxShadow: isSolarIncluded
-                  ? "0 0 24px rgba(168, 85, 247, 0.45), inset 0 0 15px rgba(168, 85, 247, 0.15)"
+                  ? "0 0 28px rgba(168, 85, 247, 0.55), inset 0 0 18px rgba(168, 85, 247, 0.20)"
                   : "none",
               }}
             >
               <div
                 style={{
-                  fontSize: 14,
+                  fontSize: 15,
                   fontWeight: 900,
                   color: isSolarIncluded ? "#f3e8ff" : "#ffffff",
                   display: "flex",
@@ -946,30 +992,20 @@ export function Step3V8({ state, actions }: Props) {
                   gap: 8,
                 }}
               >
-                {isSolarIncluded ? "✓ Include Recommended Solar" : "Include Recommended Solar"}
-                <span
-                  style={{
-                    fontSize: 11,
-                    padding: "3px 10px",
-                    borderRadius: 12,
-                    background: "rgba(168, 85, 247, 0.30)",
-                    border: "1px solid #d8b4fe",
-                    color: "#f3e8ff",
-                    fontWeight: 800,
-                  }}
-                >
-                  RECOMMENDED · ~{recommendedSolarKW} kW
-                </span>
+                {isSolarIncluded ? "✓ Recommended Solar" : "Recommended Solar"}
               </div>
               <div
                 style={{
-                  fontSize: 12,
-                  color: "rgba(233, 213, 255, 0.85)",
+                  fontSize: 12.5,
+                  color: isSolarIncluded
+                    ? "rgba(243, 232, 255, 0.90)"
+                    : "rgba(203, 213, 225, 0.75)",
                   marginTop: 6,
-                  lineHeight: 1.4,
+                  lineHeight: 1.45,
                 }}
               >
-                Auto-added to energy stack for max financial ROI &amp; 30% ITC tax credit
+                Auto-added to energy stack ({recommendedSolarKW} kW) for max ROI &amp; 30% ITC tax
+                credit
               </div>
             </button>
 
@@ -977,24 +1013,24 @@ export function Step3V8({ state, actions }: Props) {
               type="button"
               onClick={() => handleToggleSolar(false)}
               style={{
-                padding: "14px 18px",
-                borderRadius: 12,
+                padding: "16px 20px",
+                borderRadius: 14,
                 border: !isSolarIncluded
-                  ? "2.5px solid #94a3b8"
+                  ? "3px solid #94a3b8"
                   : "1.5px solid rgba(255,255,255,0.14)",
                 background: !isSolarIncluded
-                  ? "rgba(148, 163, 184, 0.16)"
+                  ? "rgba(148, 163, 184, 0.20)"
                   : "rgba(255,255,255,0.03)",
                 color: "#ffffff",
                 textAlign: "left",
                 cursor: "pointer",
                 transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
-                boxShadow: !isSolarIncluded ? "0 0 18px rgba(148, 163, 184, 0.25)" : "none",
+                boxShadow: !isSolarIncluded ? "0 0 20px rgba(148, 163, 184, 0.30)" : "none",
               }}
             >
               <div
                 style={{
-                  fontSize: 14,
+                  fontSize: 15,
                   fontWeight: 800,
                   color: !isSolarIncluded ? "#cbd5e1" : "rgba(255,255,255,0.70)",
                 }}
@@ -1003,10 +1039,10 @@ export function Step3V8({ state, actions }: Props) {
               </div>
               <div
                 style={{
-                  fontSize: 12,
+                  fontSize: 12.5,
                   color: "rgba(203, 213, 225, 0.75)",
                   marginTop: 6,
-                  lineHeight: 1.4,
+                  lineHeight: 1.45,
                 }}
               >
                 Battery Storage (BESS) peak-shaving stack only
