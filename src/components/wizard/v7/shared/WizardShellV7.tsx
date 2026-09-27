@@ -351,11 +351,10 @@ export default function WizardShellV7({
                     src={badgeGoldIcon}
                     alt="StackQuote"
                     style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      boxShadow: "0 0 10px rgba(245,158,11,0.5)",
+                      width: 24,
+                      height: 26,
+                      objectFit: "contain",
+                      filter: "drop-shadow(0 0 8px rgba(245,158,11,0.5))",
                     }}
                   />
                   <span

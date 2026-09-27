@@ -218,7 +218,7 @@ const Step6ResultsV7 = React.memo(function Step6ResultsV7({ state, actions }: Pr
           <img
             src={badgeGoldIcon}
             alt="StackQuote Verified"
-            className="w-16 h-16 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
+            className="w-20 h-24 object-contain filter drop-shadow-xl group-hover:scale-110 transition-transform duration-300"
           />
         </div>
         <div className="flex-1 text-left">

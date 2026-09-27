@@ -39,7 +39,7 @@ export function QuickQuotePanel({ onStartExpress, onStartGuided }: QuickQuotePan
             <img
               src={badgeGoldIcon}
               alt="StackQuote Verified"
-              className="w-10 h-10 object-contain"
+              className="w-12 h-14 object-contain filter drop-shadow-md"
             />
             <span className="text-sm font-semibold text-amber-400">Powered by StackQuote™</span>
           </div>

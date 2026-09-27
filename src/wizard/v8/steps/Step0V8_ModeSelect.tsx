@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from "react";
-import { ArrowRight, Zap, Wrench, Upload, CheckCircle2, Clock3, Shield } from "lucide-react";
+import { ArrowRight, Upload, CheckCircle2, Clock3 } from "lucide-react";
 import badgeProQuoteIcon from "@/assets/images/badge_icon.jpg";
 import badgeGoldIcon from "@/assets/images/badge_gold_icon.jpg";
 
@@ -60,7 +60,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
             <img
               src={badgeGoldIcon}
               alt="StackQuote"
-              className="w-4 h-4 rounded-full object-cover"
+              className="w-5 h-5 object-contain filter drop-shadow-sm"
             />
             <span
               className="text-[11px] font-semibold tracking-widest uppercase"
@@ -141,7 +141,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
                 <img
                   src={badgeGoldIcon}
                   alt="StackQuote"
-                  className="w-10 h-10 object-contain rounded-lg"
+                  className="w-11 h-12 object-contain filter drop-shadow-md"
                 />
               </div>
 
@@ -176,7 +176,7 @@ export function Step0V8_ModeSelect({ onSelectMode }: Step0V8Props) {
                       border: "1px solid rgba(245,158,11,0.25)",
                     }}
                   >
-                    <img src={badgeGoldIcon} alt="" className="w-3 h-3 rounded-full" />
+                    <img src={badgeGoldIcon} alt="" className="w-4 h-4 object-contain" />
                     StackQuote™
                   </span>
                 </div>

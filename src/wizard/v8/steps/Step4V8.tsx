@@ -478,7 +478,7 @@ export function Step4V8({ state, actions }: Props) {
           <img
             src={badgeGoldIcon}
             alt="StackQuote"
-            style={{ width: 15, height: 15, borderRadius: "50%", objectFit: "cover" }}
+            style={{ width: 18, height: 20, objectFit: "contain" }}
           />
           <span>Energy Stack</span>
         </div>
@@ -539,7 +539,7 @@ export function Step4V8({ state, actions }: Props) {
                 <img
                   src={badgeGoldIcon}
                   alt="StackQuote"
-                  style={{ width: 14, height: 14, borderRadius: "50%", objectFit: "cover" }}
+                  style={{ width: 16, height: 18, objectFit: "contain" }}
                 />
                 <span
                   style={{
