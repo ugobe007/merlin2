@@ -347,51 +347,41 @@ export default function WizardShellV7({
                 </a>
               </div>
 
-              {/* Tools Column (Enforced Admin Access) */}
+              {/* Tools Column */}
               <div className="space-y-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-blue-400 flex items-center justify-between">
-                  <span>Platforms & Tools</span>
-                  {!isAdmin && (
-                    <span className="text-[9px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 flex items-center gap-0.5">
-                      <Lock size={9} /> Admin Only
-                    </span>
-                  )}
+                <div className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                  Platforms & Tools
                 </div>
+                <a
+                  href="/wizard"
+                  className="block px-3 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg"
+                  onClick={() => setNavMenuOpen(false)}
+                >
+                  ⚡ StackQuote Wizard
+                </a>
+                {onSwitchToProStack && (
+                  <button
+                    onClick={() => {
+                      setNavMenuOpen(false);
+                      onSwitchToProStack();
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-xs font-semibold text-blue-300 hover:bg-blue-900/40 rounded-lg flex items-center justify-between"
+                  >
+                    <span>⚡ ProStack Builder</span>
+                  </button>
+                )}
                 <a
                   href="/campaign"
                   onClick={(e) => handleProtectedToolClick(e, "/campaign")}
                   className={`px-3 py-1.5 text-xs rounded-lg flex items-center justify-between ${
                     isAdmin
-                      ? "text-slate-200 hover:text-white hover:bg-slate-800"
+                      ? "text-amber-300 hover:text-amber-200 hover:bg-slate-800"
                       : "text-slate-400 hover:text-amber-300 hover:bg-slate-800/50"
                   }`}
                 >
                   <span>🎯 Outbound Sales Panel</span>
-                  {!isAdmin && <Lock size={12} className="text-slate-500" />}
+                  {!isAdmin && <Lock size={12} className="text-amber-400/80" />}
                 </a>
-                {onSwitchToProStack && (
-                  <button
-                    onClick={(e) => {
-                      if (!isAdmin) {
-                        e.preventDefault();
-                        alert("Administrator access required for ProStack Builder.");
-                        setAuthMode("login");
-                        setShowAuthModal(true);
-                      } else {
-                        setNavMenuOpen(false);
-                        onSwitchToProStack();
-                      }
-                    }}
-                    className={`w-full text-left px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center justify-between ${
-                      isAdmin
-                        ? "text-blue-300 hover:bg-blue-900/40"
-                        : "text-slate-400 hover:text-amber-300 hover:bg-slate-800/50"
-                    }`}
-                  >
-                    <span>⚡ ProStack Builder</span>
-                    {!isAdmin && <Lock size={12} className="text-slate-500" />}
-                  </button>
-                )}
               </div>
             </div>
           </div>

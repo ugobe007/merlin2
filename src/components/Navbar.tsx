@@ -253,52 +253,44 @@ export default function Navbar() {
                 </div>
               </div>
 
-              {/* Column 3: Platform & Tools (Enforced Permissions) */}
+              {/* Column 3: Platform & Tools */}
               <div>
-                <div className="text-[11px] font-extrabold uppercase tracking-wider text-blue-400 mb-2 flex items-center justify-between">
-                  <span>Platforms & Tools</span>
-                  {!isAdmin && (
-                    <span className="text-[10px] text-amber-400 font-bold flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
-                      <Lock size={10} /> Admin Only
-                    </span>
-                  )}
+                <div className="text-[11px] font-extrabold uppercase tracking-wider text-blue-400 mb-2">
+                  Platforms & Tools
                 </div>
                 <div className="flex flex-col gap-1">
                   <a
                     href="/wizard"
-                    onClick={(e) => handleProtectedToolClick(e, "/wizard")}
-                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${
-                      isAdmin
-                        ? "text-slate-200 hover:text-white hover:bg-slate-800/60"
-                        : "text-slate-400 hover:text-amber-300 hover:bg-slate-800/40"
-                    }`}
+                    className="py-2 px-3 text-slate-200 hover:text-white hover:bg-slate-800/60 rounded-lg text-sm font-medium transition-colors"
+                    onClick={() => setMobileOpen(false)}
                   >
-                    <span>⚡ StackQuote Wizard</span>
-                    {!isAdmin && <Lock size={12} className="text-slate-500" />}
+                    ⚡ StackQuote Wizard
+                  </a>
+                  <a
+                    href="/quote-builder"
+                    className="py-2 px-3 text-blue-300 hover:text-blue-200 hover:bg-blue-900/30 rounded-lg text-sm font-medium transition-colors"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    ⚡ ProStack Builder
+                  </a>
+                  <a
+                    href="/workflow"
+                    className="py-2 px-3 text-slate-200 hover:text-white hover:bg-slate-800/60 rounded-lg text-sm font-medium transition-colors"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    📊 Merlin Energy OS
                   </a>
                   <a
                     href="/campaign"
                     onClick={(e) => handleProtectedToolClick(e, "/campaign")}
                     className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${
                       isAdmin
-                        ? "text-slate-200 hover:text-white hover:bg-slate-800/60"
+                        ? "text-amber-300 hover:text-amber-200 hover:bg-slate-800/60"
                         : "text-slate-400 hover:text-amber-300 hover:bg-slate-800/40"
                     }`}
                   >
                     <span>🎯 Outbound Sales Panel</span>
-                    {!isAdmin && <Lock size={12} className="text-slate-500" />}
-                  </a>
-                  <a
-                    href="/workflow"
-                    onClick={(e) => handleProtectedToolClick(e, "/workflow")}
-                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${
-                      isAdmin
-                        ? "text-slate-200 hover:text-white hover:bg-slate-800/60"
-                        : "text-slate-400 hover:text-amber-300 hover:bg-slate-800/40"
-                    }`}
-                  >
-                    <span>📊 Merlin Energy OS</span>
-                    {!isAdmin && <Lock size={12} className="text-slate-500" />}
+                    {!isAdmin && <Lock size={12} className="text-amber-400/80" />}
                   </a>
                 </div>
               </div>
@@ -314,20 +306,16 @@ export default function Navbar() {
                   </div>
                   <p className="text-[11px]">
                     {isAdmin
-                      ? "Full permissions unlocked for all Merlin platforms & tools."
-                      : "Admin login required for Platform & Tools and Admin Panel."}
+                      ? "Full administrative rights unlocked across all tools."
+                      : "Admin Panel & Sales Outreach require administrator login."}
                   </p>
                 </div>
                 <a
                   href="/wizard"
-                  onClick={(e) => handleProtectedToolClick(e, "/wizard")}
-                  className={`rounded-xl p-3 text-center text-sm font-bold transition-colors shadow-lg flex items-center justify-center gap-2 ${
-                    isAdmin
-                      ? "border border-blue-400/70 bg-blue-600/30 text-blue-200 hover:bg-blue-600/50"
-                      : "border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
-                  }`}
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-xl p-3 text-center text-sm font-bold border border-blue-400/70 bg-blue-600/30 text-blue-200 hover:bg-blue-600/50 transition-colors shadow-lg flex items-center justify-center gap-2"
                 >
-                  {isAdmin ? "🚀 Launch Merlin Agent" : "🔒 Log In as Admin to Access"}
+                  🚀 Launch Merlin Agent
                 </a>
               </div>
             </div>
