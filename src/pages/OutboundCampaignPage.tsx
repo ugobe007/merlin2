@@ -34,6 +34,7 @@ import {
   Filter,
   MapPin,
   CheckCircle2,
+  Send,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -251,6 +252,25 @@ function EmailPreviewModal({ html, onClose }: { html: string; onClose: () => voi
   );
 }
 
+function guessLeadEmail(lead: OutboundTargetLead): string {
+  if (lead.notes && lead.notes.includes("@")) {
+    const match = lead.notes.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+    if (match) return match[0];
+  }
+  const cleanCompany = lead.company.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const cleanName = lead.decisionMaker
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, "")
+    .split(" ")
+    .filter(Boolean);
+  if (cleanName.length >= 2) {
+    const firstInitial = cleanName[0][0];
+    const lastName = cleanName[cleanName.length - 1];
+    return `${firstInitial}${lastName}@${cleanCompany}.com`;
+  }
+  return `contact@${cleanCompany}.com`;
+}
+
 // ─── AI Email Drafter & Trainer Modal ─────────────────────────────────────────
 function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onClose: () => void }) {
   type AngleType =
@@ -273,6 +293,12 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
   const [rules, setRules] = useState<string[]>(getTrainedAIRules());
   const [newRule, setNewRule] = useState("");
   const [draftSaved, setDraftSaved] = useState(false);
+
+  // Direct email delivery state
+  const [recipientEmail, setRecipientEmail] = useState(() => guessLeadEmail(lead));
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [sendSuccess, setSendSuccess] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   // Auto-generate initial draft on open
   useEffect(() => {
@@ -306,6 +332,46 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
     });
     setDraftSaved(true);
     setTimeout(() => setDraftSaved(false), 2500);
+  };
+
+  const handleSendDirectEmail = async () => {
+    if (!pitch || !recipientEmail.trim()) return;
+    setSendingEmail(true);
+    setSendError(null);
+    setSendSuccess(false);
+
+    try {
+      const resp = await fetch("/api/sales-agent/send-direct-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipientEmail: recipientEmail.trim(),
+          recipientName: lead.decisionMaker,
+          company: lead.company,
+          subject: pitch.subject,
+          body: pitch.body,
+        }),
+      });
+
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) {
+        throw new Error(data.error || "Failed to deliver email via Resend");
+      }
+
+      setSendSuccess(true);
+      saveLeadDraft({
+        leadId: lead.id,
+        company: lead.company,
+        subject: pitch.subject,
+        body: pitch.body,
+        updatedAt: new Date().toISOString(),
+      });
+      setTimeout(() => setSendSuccess(false), 5000);
+    } catch (err: unknown) {
+      setSendError(err instanceof Error ? err.message : "Email delivery failed");
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   const handleAddRule = () => {
@@ -501,6 +567,75 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
                     ✓ {h}
                   </span>
                 ))}
+              </div>
+
+              {/* Direct Email Recipient & Delivery Bar */}
+              <div className="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-xl space-y-3 mt-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex-1 space-y-1">
+                    <label className="block text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Send className="w-3.5 h-3.5" /> Target Recipient Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={recipientEmail}
+                      onChange={(e) => setRecipientEmail(e.target.value)}
+                      placeholder="e.g. contact@company.com"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
+                    />
+                  </div>
+
+                  <div className="sm:self-end">
+                    <button
+                      onClick={handleSendDirectEmail}
+                      disabled={sendingEmail || !recipientEmail.trim()}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 disabled:opacity-50 text-slate-950 font-black text-xs shadow-lg transition-all flex items-center justify-center gap-2"
+                    >
+                      {sendingEmail ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                          Delivering Email...
+                        </>
+                      ) : sendSuccess ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                          Sent Directly!
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          Send Email Direct (Resend API)
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {sendSuccess && (
+                  <div className="p-2.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center gap-2 animate-in fade-in duration-200">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>
+                      Outreach email delivered directly to{" "}
+                      <strong className="text-white">{recipientEmail}</strong> from{" "}
+                      <span className="underline">hello@merlin.energy</span> (BCC:
+                      sales@merlinenergy.net)!
+                    </span>
+                  </div>
+                )}
+
+                {sendError && (
+                  <div className="p-2.5 rounded-lg bg-red-900/40 border border-red-700 text-red-300 text-xs font-semibold flex items-center justify-between gap-2">
+                    <span>⚠ {sendError}</span>
+                    <a
+                      href={`mailto:${recipientEmail}?subject=${encodeURIComponent(pitch.subject)}&body=${encodeURIComponent(pitch.body)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2.5 py-1 bg-red-950 hover:bg-red-900 border border-red-600 text-white rounded text-[11px] font-bold underline transition-colors shrink-0"
+                    >
+                      Open in Mail App
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -900,6 +900,68 @@ router.post('/email/:leadId', async (req, res) => {
 });
 
 /**
+ * POST /api/sales-agent/send-direct-email
+ * Send custom outreach pitch directly via Resend
+ */
+router.post('/send-direct-email', async (req, res) => {
+  const { recipientEmail, recipientName, company, subject, body } = req.body || {};
+
+  if (!recipientEmail || !subject || !body) {
+    return res.status(400).json({ error: 'Recipient email, subject, and body are required.' });
+  }
+
+  // Format HTML body with Merlin branding
+  const formattedHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background:#060D1F;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;padding:32px 24px;">
+    <div style="border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:20px;margin-bottom:28px;">
+      <span style="font-size:18px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">
+        Merlin Energy
+        <span style="font-size:12px;color:#38bdf8;font-weight:600;margin-left:6px;background:rgba(56,189,248,0.1);padding:3px 8px;border-radius:4px;">Energy Stacking™</span>
+      </span>
+    </div>
+    <div style="color:#e2e8f0;font-size:15px;line-height:1.65;white-space:pre-wrap;">${body.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</div>
+    <div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:40px;padding-top:20px;">
+      <p style="color:#94a3b8;font-size:13px;line-height:1.5;margin:0;">
+        <strong>Bob Christopher</strong><br>
+        Merlin Energy<br>
+        <a href="https://merlinenergy.net" style="color:#38bdf8;text-decoration:none;">merlinenergy.net</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  try {
+    const resend = getResend();
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [recipientEmail],
+      subject: subject,
+      html: formattedHtml,
+      reply_to: REPLY_EMAIL,
+      bcc: [REPLY_EMAIL],
+    });
+
+    if (result.error) {
+      console.error('[SalesAgent] Direct email Resend error:', result.error);
+      return res.status(500).json({ error: result.error.message || 'Resend delivery failed' });
+    }
+
+    return res.json({ ok: true, recipient: recipientEmail, id: result.data?.id });
+  } catch (err) {
+    console.error('[SalesAgent] Direct email exception:', err.message);
+    return res.status(500).json({ error: err.message || 'Direct email failed' });
+  }
+});
+
+/**
  * GET /api/sales-agent/leads
  * List all smb_leads with summary stats
  */
