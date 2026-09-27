@@ -82,12 +82,18 @@ function toIndustrySlug(value: string | null | undefined): IndustrySlug | null {
 
 // Step labels — index 0 = step 0 (Mode Select), index 1 = step 1 (Location), etc.
 // Note: Step 3.5 (Add-ons) is inserted between Profile and MagicFit
-const STEP_LABELS = ["Location & Facility", "Recommended Stack", "Executive Quote"];
+const STEP_LABELS = [
+  "Location & Industry",
+  "Facility Profile",
+  "Recommended Stack",
+  "Executive Quote",
+];
 
 function wizardStepToDisplayIndex(step: number): number {
-  if (step <= 3) return 0; // Location & Facility
-  if (step === 3.5 || step === 4 || step === 5) return 1; // Recommended Stack
-  return 2; // Executive Quote
+  if (step <= 2) return 0; // Location & Industry
+  if (step === 3) return 1; // Facility Profile
+  if (step === 3.5 || step === 4) return 2; // Recommended Stack
+  return 3; // Executive Quote
 }
 
 // ── Accent helpers ────────────────────────────────────────────────────────────

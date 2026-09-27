@@ -601,6 +601,7 @@ export type WizardIntent =
   | { type: "SET_BILL_DATA"; data: ExtractedSpecsData }
   | { type: "CLEAR_BILL_DATA" }
   | { type: "SET_ANSWER"; key: string; value: unknown }
+  | { type: "SET_ANSWERS"; answers: Record<string, unknown> }
   | { type: "SET_DETAIL_LEVEL"; level: Step3DetailLevel }
   | { type: "SET_EV_CHARGERS"; chargers: WizardState["evChargers"] }
   | { type: "SET_ADDON_PREFERENCE"; addon: "solar" | "ev" | "generator"; value: boolean }
@@ -898,6 +899,12 @@ export function reducer(state: WizardState, intent: WizardIntent): WizardState {
       return {
         ...state,
         step3Answers: { ...state.step3Answers, [intent.key]: intent.value },
+      };
+
+    case "SET_ANSWERS":
+      return {
+        ...state,
+        step3Answers: { ...state.step3Answers, ...intent.answers },
       };
 
     case "SET_DETAIL_LEVEL":

@@ -74,6 +74,7 @@ export const DEFAULT_INDUSTRY_LOAD_KW: Record<string, number> = {
 // utility-rate-service fallback. No dependency on V7's backend /api/location/resolve.
 import { fetchUtility, fetchSolar, fetchWeather } from "@/wizard/v7/api/wizardAPI";
 import { fetchGoogleSolarByZip } from "@/services/solarSizingIntegrationService";
+import { resolveStep3Schema } from "@/wizard/v7/schema/curatedFieldsResolver";
 
 import {
   getFacilityConstraints,
@@ -1271,6 +1272,27 @@ export function useWizardV8(): { state: WizardState; actions: WizardActions } {
         solarPhysicalCapKW,
         criticalLoadPct,
       });
+
+      // Pre-populate smart default answers for the selected industry so base/peak load are never 0
+      try {
+        const schema = resolveStep3Schema(slug);
+        const defaultAnswers: Record<string, unknown> = {};
+        const rawQuestions =
+          (schema as unknown as Record<string, unknown>)?.questions ??
+          (schema as unknown as Record<string, unknown>)?.fields ??
+          [];
+        for (const q of rawQuestions as Array<Record<string, unknown>>) {
+          const id = q?.id ?? q?.key ?? q?.fieldId ?? q?.name;
+          if (id && q?.smartDefault !== undefined && q?.smartDefault !== null) {
+            defaultAnswers[String(id)] = q.smartDefault;
+          }
+        }
+        if (Object.keys(defaultAnswers).length > 0) {
+          dispatch({ type: "SET_ANSWERS", answers: defaultAnswers });
+        }
+      } catch (err) {
+        devWarn("[setIndustry] Failed to populate smart defaults:", err);
+      }
     },
     [state.intel?.googleSolarRoofSqFt, state.step3Answers?.roofArea]
   );
