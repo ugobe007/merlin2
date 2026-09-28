@@ -86,11 +86,11 @@ Thank you for reaching out! We ran the preliminary StackQuote™ BESS + Solar fi
 Here is the executive summary of your pre-built financial model:
 
 • Facility: WOW Carwash — Spring Mountain Rd, Las Vegas, NV
-• Recommended BESS System: 180 kW / 360 kWh Battery Storage + 150 kW Rooftop Solar
-• Peak Demand Charge Savings: $48,240 / year (clamping blower & conveyor motor demand spikes during NV Energy peak hours)
-• Net Investment (after 30% IRA Tax Credit): $184,500
-• Simple Payback Period: 3.8 Years (Well under your 5-year target threshold!)
-• 25-Year Cumulative Net Savings (NPV): $642,000
+• Recommended System: 180 kW / 360 kWh BESS + 45 kW Solar PV (Rooftop & Canopy Array)
+• Annual Savings: $57,780 / year ($47,520 demand charge peak shaving + $10,260 solar offset)
+• Net Investment (after 30% IRA Tax Credit): $173,250
+• Simple Payback Period: 3.0 Years (Well under your 5-year target threshold!)
+• 25-Year Cumulative Net Savings (NPV): $685,000
 
 You can review the full interactive StackQuote™ financial breakdown and 25-year ROI model for your site here:
 https://merlinenergy.net/quote/wow-carwash-spring-mountain

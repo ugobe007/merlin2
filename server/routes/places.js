@@ -9,7 +9,15 @@
 
 import express from "express";
 
-const router = express.Router();
+/**
+ * GET /api/places/config
+ * Returns client configuration for Google Maps JS API
+ */
+router.get("/config", (_req, res) => {
+  const key = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY || "";
+  const isValid = key && !key.includes("your-google-maps");
+  return res.json({ apiKey: isValid ? key : "" });
+});
 
 /**
  * POST /api/places/lookup-business

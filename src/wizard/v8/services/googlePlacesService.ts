@@ -1,7 +1,3 @@
-// Google Maps API key — must be set via VITE_GOOGLE_MAPS_API_KEY env var
-// Never hardcode API keys: use .env (local) or Fly.io secrets (production)
-const GOOGLE_MAPS_API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) ?? "";
-
 export type GooglePlacesLibrary = {
   Place?: new (options: { id: string }) => GooglePlace;
   AutocompleteSuggestion: {
@@ -60,6 +56,33 @@ export type PlaceDetails = {
   lng?: number;
 };
 
+let cachedApiKey: string | null = null;
+
+export async function getGoogleMapsApiKey(): Promise<string> {
+  if (cachedApiKey) return cachedApiKey;
+
+  const envKey = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string) ?? "";
+  if (envKey && !envKey.includes("your-google-maps")) {
+    cachedApiKey = envKey;
+    return envKey;
+  }
+
+  try {
+    const res = await fetch("/api/places/config");
+    if (res.ok) {
+      const data = (await res.json()) as { apiKey?: string };
+      if (data.apiKey) {
+        cachedApiKey = data.apiKey;
+        return data.apiKey;
+      }
+    }
+  } catch (err) {
+    console.warn("[googlePlacesService] Could not fetch Google Maps key from server:", err);
+  }
+
+  return "";
+}
+
 let googleMapsPromise: Promise<void> | null = null;
 let placesLibraryPromise: Promise<GooglePlacesLibrary | null> | null = null;
 
@@ -93,13 +116,9 @@ function waitForGoogleMapsImportLibrary(timeoutMs = 5000): Promise<void> {
   });
 }
 
-export function loadGoogleMapsScript(): Promise<void> {
+export async function loadGoogleMapsScript(): Promise<void> {
   if (typeof window === "undefined") {
     return Promise.reject(new Error("Google Maps unavailable during SSR"));
-  }
-
-  if (!GOOGLE_MAPS_API_KEY) {
-    return Promise.reject(new Error("Missing VITE_GOOGLE_MAPS_API_KEY"));
   }
 
   if (hasGoogleMapsImportLibrary()) {
@@ -108,6 +127,11 @@ export function loadGoogleMapsScript(): Promise<void> {
 
   if (googleMapsPromise) {
     return googleMapsPromise;
+  }
+
+  const apiKey = await getGoogleMapsApiKey();
+  if (!apiKey) {
+    return Promise.reject(new Error("Missing Google Maps API key"));
   }
 
   googleMapsPromise = new Promise((resolve, reject) => {
@@ -143,7 +167,7 @@ export function loadGoogleMapsScript(): Promise<void> {
     script.id = "merlin-v8-google-maps";
     script.async = true;
     script.src =
-      `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}` +
+      `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}` +
       "&libraries=places&loading=async&v=weekly";
     script.onload = () => void waitForGoogleMapsImportLibrary().then(resolve, reject);
     script.onerror = () => reject(new Error("Failed to load Google Maps script (network error)"));
@@ -271,7 +295,7 @@ export async function fetchBusinessSuggestions({
   lat,
   lng,
   city,
-  _state,
+  state,
   zip,
 }: {
   input: string;
@@ -281,7 +305,7 @@ export async function fetchBusinessSuggestions({
   lat?: number;
   lng?: number;
   city?: string;
-  _state?: string;
+  state?: string;
   zip?: string;
 }): Promise<BusinessSuggestion[]> {
   if (!input.trim()) return [];
@@ -415,14 +439,46 @@ export async function fetchBusinessSuggestions({
     }
   }
 
-  // Fallback 2: Target business database lookup (matches query or zip/city/state context)
+  // Fallback 2: Server-side Places Text Search proxy (/api/places/lookup-business)
+  try {
+    const res = await fetch("/api/places/lookup-business", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: zip ? `${input.trim()} ${zip}` : input.trim() }),
+    });
+    if (res.ok) {
+      const data = (await res.json()) as {
+        results?: Array<{ placeId: string; name: string; formattedAddress: string }>;
+      };
+      if (data.results && data.results.length > 0) {
+        return data.results.slice(0, limit).map((r) => ({
+          placeId: r.placeId,
+          label: `${r.name}, ${r.formattedAddress}`,
+          primaryText: r.name,
+          secondaryText: r.formattedAddress,
+          prediction: {
+            placeId: r.placeId,
+            text: { text: `${r.name}, ${r.formattedAddress}` },
+            mainText: { text: r.name },
+            secondaryText: { text: r.formattedAddress },
+            toPlace: () => ({ fetchFields: async () => {}, id: r.placeId }) as GooglePlace,
+          },
+        }));
+      }
+    }
+  } catch (err) {
+    console.warn("[googlePlacesService] Server lookup-business proxy notice:", err);
+  }
+
+  // Fallback 3: Target business database lookup (matches query or zip/city/state context)
   const q = input.trim().toLowerCase();
   const matched = TARGET_BUSINESS_DATABASE.filter(
     (b) =>
       b.name.toLowerCase().includes(q) ||
       b.address.toLowerCase().includes(q) ||
       (zip && b.address.includes(zip)) ||
-      (city && b.address.toLowerCase().includes(city.toLowerCase()))
+      (city && b.address.toLowerCase().includes(city.toLowerCase())) ||
+      (state && b.address.toLowerCase().includes(state.toLowerCase()))
   );
 
   return matched.slice(0, limit).map((b) => ({

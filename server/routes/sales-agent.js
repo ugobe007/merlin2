@@ -721,25 +721,25 @@ router.get('/shared-quote/:token', async (req, res) => {
   if (token === 'wow-carwash-spring-mountain' || token === 'wow-carwash') {
     const wowQuoteData = {
       recommended: {
-        annualSavings: 48240,
-        paybackYears: 3.8,
-        npv25Year: 642000,
-        netInvestment: 184500,
+        annualSavings: 57780,
+        paybackYears: 3.0,
+        npv25Year: 685000,
+        netInvestment: 173250,
         bessKW: 180,
         bessKWh: 360,
-        solarKW: 150,
+        solarKW: 45,
         bessVendor: 'Tesla Megapack Commercial / Dynapower',
         bessModel: '360 kWh Commercial BESS',
       },
       tiers: {
         recommended: {
-          annualSavings: 48240,
-          paybackYears: 3.8,
-          npv25Year: 642000,
-          netInvestment: 184500,
+          annualSavings: 57780,
+          paybackYears: 3.0,
+          npv25Year: 685000,
+          netInvestment: 173250,
           bessKW: 180,
           bessKWh: 360,
-          solarKW: 150,
+          solarKW: 45,
           bessVendor: 'Tesla Megapack Commercial / Dynapower',
           bessModel: '360 kWh Commercial BESS',
         }
@@ -754,12 +754,12 @@ router.get('/shared-quote/:token', async (req, res) => {
         createdAt: new Date().toISOString(),
         expiresAt: null,
         highlights: {
-          annualSavings: '$48,240/yr',
-          payback: '3.8 years',
-          npv25: '$642,000',
-          solarKW: '150 kW',
+          annualSavings: '$57,780/yr',
+          payback: '3.0 years',
+          npv25: '$685,000',
+          solarKW: '45 kW',
           bessKW: '180 kW / 360 kWh',
-          netInvestment: '$184,500',
+          netInvestment: '$173,250',
           bessVendor: 'Tesla / Dynapower',
           bessModel: '360 kWh BESS',
         }
