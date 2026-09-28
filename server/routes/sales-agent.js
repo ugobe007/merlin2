@@ -743,6 +743,42 @@ router.get('/shared-quote/:token', async (req, res) => {
           bessVendor: 'Tesla Megapack Commercial / Dynapower',
           bessModel: '360 kWh Commercial BESS',
         }
+      },
+      systemBreakdown: [
+        {
+          category: "Rooftop & Vacuum Canopy Solar PV",
+          size: "45 kW DC",
+          specs: "112 × 400W Monocrystalline PV Modules (Flat Metal Vacuum Canopy + Express Tunnel Roof)",
+          annualOutput: "85,500 kWh / year (5.8 Peak Sun Hours, Las Vegas, NV)",
+          savings: "$10,260 / year (Energy Rate Offset @ $0.12/kWh)",
+          capexGross: "$67,500"
+        },
+        {
+          category: "Commercial BESS Battery Storage",
+          size: "180 kW / 360 kWh",
+          specs: "Tesla Megapack Commercial / Dynapower C&I PCS Inverter (Outdoor IP65 LFP Liquid-Cooled Enclosure)",
+          purpose: "Clamps 400–600 kW afternoon rush-hour peak demand spikes from blowers & conveyor motors",
+          savings: "$47,520 / year ($22/kW/mo NV Energy LGS-1 Demand Charge Shaving)",
+          capexGross: "$180,000"
+        },
+        {
+          category: "Balance of System & Engineering",
+          size: "Site Engineering",
+          specs: "Interconnection, Structural Engineering, Switchgear & Smart Microgrid Controller",
+          savings: "Integrated Automated Dispatch",
+          capexGross: "$20,000"
+        }
+      ],
+      financialBreakdown: {
+        grossProjectCost: 267500,
+        federalITC30: 80250,
+        macrsTaxShieldYear1: 14000,
+        netEffectiveCost: 173250,
+        annualDemandSavings: 47520,
+        annualSolarSavings: 10260,
+        totalAnnualSavings: 57780,
+        paybackYears: 3.0,
+        npv25Year: 685000
       }
     };
     return res.json({
