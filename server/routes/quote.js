@@ -72,8 +72,8 @@ const INDUSTRY_DEFAULTS = {
   retail:        { peakLoadKW: 300,  solarCapKW: 100,  criticalLoadPct: 0.35, electricityRate: 0.12, demandCharge: 15 },
   // car_wash: solarCapKW scales with peakLoadKW (canopy ~27% of peak kW)
   // demandCharge $20/kW reflects real commercial rates (EIA 2024 C&I median)
-  car_wash:      { peakLoadKW: 450,  solarCapKW: 120,  criticalLoadPct: 0.80, electricityRate: 0.13, demandCharge: 20 },
-  carwash:       { peakLoadKW: 450,  solarCapKW: 120,  criticalLoadPct: 0.80, electricityRate: 0.13, demandCharge: 20 },
+  car_wash:      { peakLoadKW: 450,  solarCapKW: 55,   criticalLoadPct: 0.80, electricityRate: 0.13, demandCharge: 20 },
+  carwash:       { peakLoadKW: 450,  solarCapKW: 55,   criticalLoadPct: 0.80, electricityRate: 0.13, demandCharge: 20 },
   warehouse:     { peakLoadKW: 400,  solarCapKW: 819,  criticalLoadPct: 0.30, electricityRate: 0.10, demandCharge: 12 },
   office:        { peakLoadKW: 200,  solarCapKW: 150,  criticalLoadPct: 0.40, electricityRate: 0.12, demandCharge: 15 },
   gym:           { peakLoadKW: 150,  solarCapKW: 60,   criticalLoadPct: 0.30, electricityRate: 0.13, demandCharge: 15 },
