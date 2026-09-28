@@ -1223,6 +1223,7 @@ function HeroIntakeCard() {
           countryCode: countryMode === "US" ? "US" : selectedCountryCode,
           sessionToken: sessionTokenRef.current,
           limit: 4,
+          zip: normalizedZip,
         });
 
         if (suggestionRequestIdRef.current !== requestId) return;
@@ -1585,7 +1586,7 @@ export default function HeroSection() {
     }, HERO_HEADLINE_ROTATION_MS);
 
     return () => window.clearInterval(rotationTimer);
-  }, []);
+  }, [heroAccents.length]);
 
   useEffect(() => {
     setTypedAccent("");

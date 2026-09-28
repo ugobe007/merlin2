@@ -268,11 +268,21 @@ export async function fetchBusinessSuggestions({
   countryCode = "US",
   sessionToken,
   limit = 5,
+  lat,
+  lng,
+  city,
+  _state,
+  zip,
 }: {
   input: string;
   countryCode?: string;
   sessionToken?: unknown;
   limit?: number;
+  lat?: number;
+  lng?: number;
+  city?: string;
+  _state?: string;
+  zip?: string;
 }): Promise<BusinessSuggestion[]> {
   if (!input.trim()) return [];
 
@@ -280,12 +290,22 @@ export async function fetchBusinessSuggestions({
   try {
     const placesLibrary = await importGooglePlacesLibrary();
     if (placesLibrary?.AutocompleteSuggestion) {
+      const requestOptions: Record<string, unknown> = {
+        input: input.trim(),
+        includedRegionCodes: countryCode ? [countryCode] : undefined,
+        sessionToken,
+      };
+
+      if (typeof lat === "number" && typeof lng === "number") {
+        requestOptions.locationBias = {
+          center: { lat, lng },
+          radius: 50000,
+        };
+        requestOptions.origin = { lat, lng };
+      }
+
       const { suggestions = [] } =
-        await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-          input: input.trim(),
-          includedRegionCodes: countryCode ? [countryCode] : undefined,
-          sessionToken,
-        });
+        await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions(requestOptions);
 
       if (suggestions.length > 0) {
         const results: BusinessSuggestion[] = [];
@@ -319,7 +339,12 @@ export async function fetchBusinessSuggestions({
 
   interface ClassicAutocompleteService {
     getPlacePredictions: (
-      request: { input: string; componentRestrictions?: { country: string } },
+      request: {
+        input: string;
+        componentRestrictions?: { country: string };
+        location?: unknown;
+        radius?: number;
+      },
       callback: (results: ClassicPrediction[] | null, status: string) => void
     ) => void;
   }
@@ -330,6 +355,7 @@ export async function fetchBusinessSuggestions({
       ? (window as unknown as {
           google?: {
             maps?: {
+              LatLng?: new (lat: number, lng: number) => unknown;
               places?: {
                 AutocompleteService?: new () => ClassicAutocompleteService;
               };
@@ -342,20 +368,29 @@ export async function fetchBusinessSuggestions({
     try {
       const ServiceClass = win.google.maps.places.AutocompleteService;
       const service = new ServiceClass();
+      const requestPayload: {
+        input: string;
+        componentRestrictions?: { country: string };
+        location?: unknown;
+        radius?: number;
+      } = {
+        input: input.trim(),
+        componentRestrictions: countryCode ? { country: countryCode } : undefined,
+      };
+
+      if (typeof lat === "number" && typeof lng === "number" && win.google?.maps?.LatLng) {
+        requestPayload.location = new win.google.maps.LatLng(lat, lng);
+        requestPayload.radius = 50000;
+      }
+
       const predictions = await new Promise<ClassicPrediction[]>((resolve) => {
-        service.getPlacePredictions(
-          {
-            input: input.trim(),
-            componentRestrictions: countryCode ? { country: countryCode } : undefined,
-          },
-          (results, status) => {
-            if (status === "OK" && results) {
-              resolve(results);
-            } else {
-              resolve([]);
-            }
+        service.getPlacePredictions(requestPayload, (results, status) => {
+          if (status === "OK" && results) {
+            resolve(results);
+          } else {
+            resolve([]);
           }
-        );
+        });
       });
 
       if (predictions.length > 0) {
@@ -368,7 +403,9 @@ export async function fetchBusinessSuggestions({
             placeId: p.place_id,
             text: { text: p.description },
             mainText: { text: p.structured_formatting?.main_text || p.description },
-            secondaryText: { text: p.structured_formatting?.secondary_text },
+            secondaryText: p.structured_formatting?.secondary_text
+              ? { text: p.structured_formatting.secondary_text }
+              : undefined,
             toPlace: () => ({ fetchFields: async () => {}, id: p.place_id }) as GooglePlace,
           },
         }));
@@ -378,10 +415,14 @@ export async function fetchBusinessSuggestions({
     }
   }
 
-  // Fallback 2: Target business database lookup
+  // Fallback 2: Target business database lookup (matches query or zip/city/state context)
   const q = input.trim().toLowerCase();
   const matched = TARGET_BUSINESS_DATABASE.filter(
-    (b) => b.name.toLowerCase().includes(q) || b.address.toLowerCase().includes(q)
+    (b) =>
+      b.name.toLowerCase().includes(q) ||
+      b.address.toLowerCase().includes(q) ||
+      (zip && b.address.includes(zip)) ||
+      (city && b.address.toLowerCase().includes(city.toLowerCase()))
   );
 
   return matched.slice(0, limit).map((b) => ({

@@ -290,6 +290,11 @@ export function Step1V8({ state, actions }: Step1Props) {
           countryCode: selectedCountryCode || undefined,
           sessionToken: sessionTokenRef.current,
           limit: 5,
+          lat: location?.lat,
+          lng: location?.lng,
+          city: location?.city,
+          state: location?.state,
+          zip: location?.zip || (country === "US" ? normalizedZip : undefined),
         });
 
         if (suggestionRequestIdRef.current !== requestId) return;
@@ -310,7 +315,7 @@ export function Step1V8({ state, actions }: Step1Props) {
 
     return () => globalThis.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [businessName, country, ensurePlacesLibrary, selectedSuggestion]);
+  }, [businessName, country, ensurePlacesLibrary, location, selectedSuggestion]);
 
   const handleZipChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const raw = event.target.value;
