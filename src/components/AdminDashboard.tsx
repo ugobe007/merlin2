@@ -24,6 +24,7 @@ import {
   RefreshCw,
   Lightbulb,
   Mail,
+  Send,
 } from "lucide-react";
 import { PricingAdminDashboard } from "./PricingAdminDashboard";
 import UseCaseConfigManager from "./admin/UseCaseConfigManager";
@@ -48,6 +49,7 @@ import AdminSuggestionsTab from "./admin/tabs/AdminSuggestionsTab";
 import AdminInboxTab from "./admin/tabs/AdminInboxTab";
 import MetaCalculationsPage from "@/pages/MetaCalculationsPage";
 import OpportunitiesDashboard from "@/pages/OpportunitiesDashboard";
+import OutboundCampaignPage from "@/pages/OutboundCampaignPage";
 
 /**
  * System Administrator Dashboard
@@ -90,6 +92,20 @@ const AdminDashboard: React.FC = () => {
     | "users"
     | "analytics"
     | "settings"
+    | "dashboard"
+    | "inbox"
+    | "campaign"
+    | "marketIntelligence"
+    | "systemHealth"
+    | "godSettings"
+    | "matching"
+    | "premium"
+    | "realtime"
+    | "workflows"
+    | "health"
+    | "users"
+    | "analytics"
+    | "settings"
     | "useCases"
     | "pricing"
     | "pricingHealth"
@@ -107,6 +123,7 @@ const AdminDashboard: React.FC = () => {
       const valid = [
         "dashboard",
         "inbox",
+        "campaign",
         "marketIntelligence",
         "systemHealth",
         "godSettings",
@@ -132,6 +149,7 @@ const AdminDashboard: React.FC = () => {
       return (p && valid.includes(p) ? p : "dashboard") as
         | "dashboard"
         | "inbox"
+        | "campaign"
         | "marketIntelligence"
         | "systemHealth"
         | "godSettings"
@@ -283,6 +301,13 @@ const AdminDashboard: React.FC = () => {
           label: "Sales Inbox (bob@merlinenergy.net)",
           icon: Mail,
           description: "Prospect replies & inquiries for bob@merlinenergy.net",
+          highlight: true,
+        },
+        {
+          key: "campaign",
+          label: "Outbound Sales Panel (/campaign)",
+          icon: Send,
+          description: "Target account matrix (78 leads), AI pitch drafter & scraper",
           highlight: true,
         },
         {
@@ -576,6 +601,9 @@ const AdminDashboard: React.FC = () => {
       <div className="relative max-w-7xl mx-auto px-6 py-6">
         {/* Sales Inbox Tab */}
         {activeTab === "inbox" && <AdminInboxTab />}
+
+        {/* Outbound Campaign Panel Tab */}
+        {activeTab === "campaign" && <OutboundCampaignPage />}
 
         {/* Market Intelligence Tab */}
         {activeTab === "marketIntelligence" && <MarketIntelligenceDashboard />}

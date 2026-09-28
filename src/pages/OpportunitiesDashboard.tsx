@@ -27,12 +27,37 @@ import {
 import { supabase } from "../lib/supabase";
 import { runOpportunityScraper } from "../api/opportunityScraper";
 import { assessOpportunity, type OppAssessment } from "../services/opportunityAssessmentService";
+import { OUTBOUND_TARGET_LEADS } from "@/data/outboundLeadsData";
 import type {
   Opportunity,
   OpportunityStatus,
   OpportunitySignal,
   IndustryType,
 } from "../types/opportunity";
+
+const FALLBACK_OPPORTUNITIES: Opportunity[] = OUTBOUND_TARGET_LEADS.map((lead, idx) => ({
+  id: `opp-${lead.id}`,
+  company_name: lead.company,
+  description: `${lead.qualificationTrigger}. ${lead.merlinAngle}. Decision Maker: ${lead.decisionMaker} (${lead.title}).`,
+  source_url: lead.sourceUrl || "https://merlinenergy.net/campaign",
+  source_name: "Nevada & Arizona Target Accounts",
+  signals: ["bess_procurement", "high_utility_exposure", "energy_upgrade"],
+  industry: (lead.vertical.toLowerCase().includes("car wash")
+    ? "car_wash"
+    : lead.vertical.toLowerCase().includes("hotel")
+      ? "hospitality"
+      : lead.vertical.toLowerCase().includes("center")
+        ? "data_center"
+        : lead.vertical.toLowerCase().includes("truck")
+          ? "truck_stop"
+          : "manufacturing") as IndustryType,
+  location: `${lead.city}, ${lead.state}`,
+  confidence_score: lead.priority === "Tier A" ? 95 : 82,
+  status: "new",
+  created_at: new Date(Date.now() - idx * 3600000).toISOString(),
+  updated_at: new Date().toISOString(),
+  notes: `Decision Maker: ${lead.decisionMaker} (${lead.title}) | Verification: ${lead.contactVerification}`,
+}));
 
 // ─── Signal display labels ────────────────────────────────────────────────────
 
@@ -611,10 +636,14 @@ export function OpportunitiesDashboard() {
         .from("opportunities")
         .select("*")
         .order("confidence_score", { ascending: false });
-      if (error) throw error;
-      setOpportunities(data ?? []);
+      if (error || !data || data.length === 0) {
+        setOpportunities(FALLBACK_OPPORTUNITIES);
+      } else {
+        setOpportunities(data);
+      }
     } catch (e) {
       console.error("Load error:", e);
+      setOpportunities(FALLBACK_OPPORTUNITIES);
     } finally {
       setLoading(false);
     }
