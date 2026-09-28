@@ -20,6 +20,7 @@ import {
   saveLeadDraft,
 } from "@/services/aiOutreachTrainerService";
 import type { GeneratedEmailPitch, SavedLeadDraft } from "@/services/aiOutreachTrainerService";
+import { AdminInboxTab } from "@/components/admin/tabs/AdminInboxTab";
 import {
   Search,
   ExternalLink,
@@ -718,7 +719,7 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function OutboundCampaignPage() {
-  const [mode, setMode] = useState<"targets" | "news" | "places">("targets");
+  const [mode, setMode] = useState<"targets" | "inbox" | "news" | "places">("targets");
 
   // Target Accounts State
   const [cityFilter, setCityFilter] = useState<"all" | "Las Vegas" | "Phoenix">("all");
@@ -924,6 +925,7 @@ export default function OutboundCampaignPage() {
             {(
               [
                 ["targets", "🎯 NV & AZ Target Matrix (78)"],
+                ["inbox", "📬 Inbound Inbox (bob@merlinenergy.net)"],
                 ["news", "📰 Energy Projects (News Scraper)"],
                 ["places", "📍 Industry Sites (Google Places)"],
               ] as const
@@ -951,6 +953,9 @@ export default function OutboundCampaignPage() {
             </div>
           )}
         </div>
+
+        {/* ── MODE 0: INBOUND SALES INBOX ───────────────────────────────────────── */}
+        {mode === "inbox" && <AdminInboxTab />}
 
         {/* ── MODE 1: TARGET ACCOUNTS MATRIX ───────────────────────────────────── */}
         {mode === "targets" && (
@@ -991,7 +996,9 @@ export default function OutboundCampaignPage() {
                 <div>
                   <select
                     value={cityFilter}
-                    onChange={(e) => setCityFilter(e.target.value as any)}
+                    onChange={(e) =>
+                      setCityFilter(e.target.value as "all" | "Las Vegas" | "Phoenix")
+                    }
                     className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
                   >
                     <option value="all">📍 All Cities (Las Vegas & Phoenix)</option>

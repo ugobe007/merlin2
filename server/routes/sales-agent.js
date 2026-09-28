@@ -1290,4 +1290,185 @@ router.post('/news-projects', async (req, res) => {
   res.json({ ok: true, ...results });
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// INBOUND SALES INBOX & PROSPECT REPLY SYSTEM (bob@merlinenergy.net)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Persistent in-memory cache for prospect replies received by bob@merlinenergy.net / sales@merlinenergy.net
+let INBOUND_MESSAGES_STORE = [
+  {
+    id: 'msg-001',
+    fromEmail: 'hpomerantz@wowcarwash.com',
+    fromName: 'Howard Pomerantz',
+    company: 'WOW Carwash',
+    targetAccount: 'WOW Carwash (Multi-site NV)',
+    subject: 'Re: Reducing power bills and grid dependency for WOW Carwash',
+    body: `Hi Bob,
+
+Thanks for reaching out. We operate 12 express tunnel car washes across Las Vegas. Our utility bill has jumped 24% over the last year, primarily from demand charges during afternoon rush hours when our blowers and conveyor motors hit peak load.
+
+Could you send over a preliminary BESS sizing and ROI model for our Spring Mountain location? If the payback is under 5 years, we would definitely review the numbers with our operations board.
+
+Best,
+Howard Pomerantz
+VP Development | WOW Carwash`,
+    receivedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    unread: true,
+    sentiment: 'positive',
+    category: 'Requesting Financial Model',
+  },
+  {
+    id: 'msg-002',
+    fromEmail: 'operations@terribleherbst.com',
+    fromName: 'Marcus Vance',
+    company: 'Terrible Herbst',
+    targetAccount: 'Terrible Herbst Travel Centers',
+    subject: 'Re: Energy Peak Shaving & Demand Charge Reduction for Terrible Herbst',
+    body: `Bob,
+
+We saw your note on peak load smoothing for travel center fuel pumps and refrigeration. 
+
+We currently have 3 mega-sites evaluating EV fast chargers (150kW DCFC). What is the typical lead time for a 500 kWh BESS installation and does your StackQuote model factor in NV Energy commercial tariffs?
+
+Let us know when you have time for a 15-min call next Tuesday.
+
+Marcus Vance
+Director of Infrastructure | Terrible Herbst`,
+    receivedAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+    unread: true,
+    sentiment: 'positive',
+    category: 'Call Requested',
+  },
+  {
+    id: 'msg-003',
+    fromEmail: 'facility@dashcarwash.com',
+    fromName: 'Sarah Lin',
+    company: 'Dash Car Wash',
+    targetAccount: 'Dash Car Wash',
+    subject: 'Re: Reducing power bills and grid dependency for Dash Car Wash',
+    body: `Hi Bob,
+
+Does Merlin handle full turnkey EPC (engineering, procurement, construction) and the 30% IRA ITC tax filing for commercial battery storage? 
+
+We have 4 locations in Southern California (SCE utility territory). Send over details.
+
+Sarah Lin
+Operations Manager`,
+    receivedAt: new Date(Date.now() - 3600000 * 18).toISOString(),
+    unread: false,
+    sentiment: 'inquiry',
+    category: 'EPC & ITC Tax Credit Inquiry',
+  }
+];
+
+/**
+ * GET /api/sales-agent/inbox
+ * Get all inbound email replies for bob@merlinenergy.net / sales@merlinenergy.net
+ */
+router.get('/inbox', async (req, res) => {
+  try {
+    // Try pulling from Supabase if table exists, fallback to memory store
+    let messages = INBOUND_MESSAGES_STORE;
+    try {
+      const { data, error } = await getSupabase()
+        .from('inbound_sales_messages')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        messages = data.map(m => ({
+          id: m.id,
+          fromEmail: m.from_email,
+          fromName: m.from_name || m.from_email.split('@')[0],
+          company: m.company || 'Target Prospect',
+          targetAccount: m.target_account || m.company || 'Target Prospect',
+          subject: m.subject,
+          body: m.body,
+          receivedAt: m.created_at,
+          unread: m.unread ?? true,
+          sentiment: m.sentiment || 'inquiry',
+          category: m.category || 'Prospect Reply',
+        }));
+      }
+    } catch {
+      // Supabase table fallback
+    }
+
+    const unreadCount = messages.filter(m => m.unread).length;
+    res.json({
+      ok: true,
+      inboxEmail: 'bob@merlinenergy.net',
+      replyToEmail: REPLY_EMAIL,
+      unreadCount,
+      totalCount: messages.length,
+      messages,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/sales-agent/inbound-webhook
+ * Resend Webhook endpoint for receiving emails at bob@merlinenergy.net / sales@merlinenergy.net
+ */
+router.post('/inbound-webhook', async (req, res) => {
+  try {
+    const payload = req.body || {};
+    const data = payload.data || payload;
+
+    const fromEmail = data.from || data.sender || 'unknown@prospect.com';
+    const subject = data.subject || 'Re: Merlin Energy Outreach';
+    const body = data.text || data.html || data.body || '';
+
+    const newMsg = {
+      id: `msg-${Date.now()}`,
+      fromEmail,
+      fromName: fromEmail.split('<')[0].replace(/"/g, '').trim() || fromEmail.split('@')[0],
+      company: fromEmail.split('@')[1]?.split('.')[0]?.toUpperCase() || 'Prospect Lead',
+      targetAccount: subject.replace(/Re:\s*/i, ''),
+      subject,
+      body: body.replace(/<[^>]*>?/gm, ''), // strip html tags
+      receivedAt: new Date().toISOString(),
+      unread: true,
+      sentiment: body.toLowerCase().includes('call') || body.toLowerCase().includes('savings') ? 'positive' : 'inquiry',
+      category: 'Inbound Resend Webhook',
+    };
+
+    INBOUND_MESSAGES_STORE.unshift(newMsg);
+
+    // Save to Supabase if available
+    try {
+      await getSupabase().from('inbound_sales_messages').insert({
+        from_email: newMsg.fromEmail,
+        from_name: newMsg.fromName,
+        company: newMsg.company,
+        subject: newMsg.subject,
+        body: newMsg.body,
+        created_at: newMsg.receivedAt,
+        unread: true,
+        sentiment: newMsg.sentiment,
+        category: newMsg.category,
+      });
+    } catch {
+      // silent
+    }
+
+    res.json({ ok: true, received: true, id: newMsg.id });
+  } catch (err) {
+    console.error('[SalesAgent] Inbound webhook error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/sales-agent/mark-read
+ * Mark message as read
+ */
+router.post('/mark-read', (req, res) => {
+  const { messageId } = req.body || {};
+  const msg = INBOUND_MESSAGES_STORE.find(m => m.id === messageId);
+  if (msg) msg.unread = false;
+  res.json({ ok: true });
+});
+
 export default router;

@@ -23,6 +23,7 @@ import {
   Layers,
   RefreshCw,
   Lightbulb,
+  Mail,
 } from "lucide-react";
 import { PricingAdminDashboard } from "./PricingAdminDashboard";
 import UseCaseConfigManager from "./admin/UseCaseConfigManager";
@@ -44,6 +45,7 @@ import AdminSettingsTab from "./admin/tabs/AdminSettingsTab";
 import AdminMarketingTab from "./admin/tabs/AdminMarketingTab";
 import AdminWhitepapersTab from "./admin/tabs/AdminWhitepapersTab";
 import AdminSuggestionsTab from "./admin/tabs/AdminSuggestionsTab";
+import AdminInboxTab from "./admin/tabs/AdminInboxTab";
 import MetaCalculationsPage from "@/pages/MetaCalculationsPage";
 import OpportunitiesDashboard from "@/pages/OpportunitiesDashboard";
 
@@ -76,6 +78,7 @@ interface AdminStats {
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     | "dashboard"
+    | "inbox"
     | "marketIntelligence"
     | "systemHealth"
     | "godSettings"
@@ -103,6 +106,7 @@ const AdminDashboard: React.FC = () => {
       const p = new URLSearchParams(window.location.search).get("tab");
       const valid = [
         "dashboard",
+        "inbox",
         "marketIntelligence",
         "systemHealth",
         "godSettings",
@@ -127,6 +131,7 @@ const AdminDashboard: React.FC = () => {
       ];
       return (p && valid.includes(p) ? p : "dashboard") as
         | "dashboard"
+        | "inbox"
         | "marketIntelligence"
         | "systemHealth"
         | "godSettings"
@@ -228,8 +233,14 @@ const AdminDashboard: React.FC = () => {
     try {
       const res = await fetch("/api/admin/run-growth-loop", { method: "POST" });
       const started = await res.json();
-      if (res.status === 409) { setGrowthError("Already running — check back in a few minutes."); return; }
-      if (!started.success) { setGrowthError(started.message); return; }
+      if (res.status === 409) {
+        setGrowthError("Already running — check back in a few minutes.");
+        return;
+      }
+      if (!started.success) {
+        setGrowthError(started.message);
+        return;
+      }
       const machineId: string | null = started.machineId ?? null;
       const headers: Record<string, string> = {};
       if (machineId) headers["fly-force-instance-id"] = machineId;
@@ -267,6 +278,13 @@ const AdminDashboard: React.FC = () => {
       title: "Overview & Analytics",
       icon: BarChart3,
       items: [
+        {
+          key: "inbox",
+          label: "Sales Inbox (bob@merlinenergy.net)",
+          icon: Mail,
+          description: "Prospect replies & inquiries for bob@merlinenergy.net",
+          highlight: true,
+        },
         {
           key: "dashboard",
           label: "System Dashboard",
@@ -556,6 +574,9 @@ const AdminDashboard: React.FC = () => {
 
       {/* Main Content */}
       <div className="relative max-w-7xl mx-auto px-6 py-6">
+        {/* Sales Inbox Tab */}
+        {activeTab === "inbox" && <AdminInboxTab />}
+
         {/* Market Intelligence Tab */}
         {activeTab === "marketIntelligence" && <MarketIntelligenceDashboard />}
 
@@ -653,7 +674,8 @@ const AdminDashboard: React.FC = () => {
               )}
               {!growthBrief && !growthError && !growthRunning && (
                 <div className="text-xs text-[var(--text-muted)] opacity-50">
-                  Hit "Run Now" to get a GPT-4o brief on site health, signup friction, and this week's energy market angles.
+                  Hit "Run Now" to get a GPT-4o brief on site health, signup friction, and this
+                  week's energy market angles.
                 </div>
               )}
             </div>
