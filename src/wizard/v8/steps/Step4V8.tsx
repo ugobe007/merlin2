@@ -503,11 +503,67 @@ export function Step4V8({ state, actions }: Props) {
         </p>
       </div>
 
+      {/* ── Mobile Hero Financial Card (Prominent Top Savings Card on Mobile Screens) ── */}
+      <div className="mobile-savings-hero p-4 rounded-xl mb-4 bg-gradient-to-r from-emerald-950/80 via-slate-900 to-emerald-950/80 border-2 border-emerald-500/50 shadow-xl shadow-emerald-950/40 sm:hidden">
+        <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2 mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-base">💰</span>
+            <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+              {tier.label} Strategy Financials
+            </span>
+          </div>
+          <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">
+            StackQuote™ Verified
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2.5 text-center">
+          <div className="bg-slate-950/70 p-2.5 rounded-lg border border-emerald-500/30">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+              Annual Savings
+            </div>
+            <div className="text-xl font-black text-emerald-400 tabular-nums">
+              {fmt$(tier.annualSavings)}/yr
+            </div>
+            <div className="text-[9px] text-emerald-300/80 font-medium">Estimated Net</div>
+          </div>
+          <div className="bg-slate-950/70 p-2.5 rounded-lg border border-slate-700/60">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+              Net Cost
+            </div>
+            <div className="text-lg font-extrabold text-white tabular-nums">
+              {fmt$(tier.netCost)}
+            </div>
+            <div className="text-[9px] text-slate-400">
+              after {Math.round(tier.itcRate * 100)}% ITC
+            </div>
+          </div>
+          <div className="bg-slate-950/70 p-2 rounded-lg border border-slate-700/60">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+              Payback Period
+            </div>
+            <div className="text-base font-bold text-emerald-400 tabular-nums">
+              {tier.paybackYears.toFixed(1)} yrs
+            </div>
+          </div>
+          <div className="bg-slate-950/70 p-2 rounded-lg border border-slate-700/60">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+              10-Year Return
+            </div>
+            <div className="text-base font-bold text-emerald-400 tabular-nums">
+              +{Math.round(tier.roi10Year)}%
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div
         style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}
         className="stack-builder-grid"
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div
+          className="stack-config-col"
+          style={{ display: "flex", flexDirection: "column", gap: 16 }}
+        >
           {/* 1. STACK STRATEGY PANEL (Prominent, Top of Column 1, Above the fold) */}
           <Panel
             style={{
@@ -789,6 +845,7 @@ export function Step4V8({ state, actions }: Props) {
         </div>
 
         <div
+          className="stack-summary-col"
           style={{
             display: "flex",
             flexDirection: "column",
@@ -1049,7 +1106,26 @@ export function Step4V8({ state, actions }: Props) {
       )}
 
       <style>{`
-        @media (max-width: 720px) { .stack-builder-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 768px) {
+          .stack-builder-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 16px !important;
+          }
+          .stack-summary-col {
+            order: 1 !important;
+            position: static !important;
+            top: auto !important;
+            width: 100% !important;
+          }
+          .stack-config-col {
+            order: 2 !important;
+            width: 100% !important;
+          }
+          .wiz-step-title {
+            font-size: 1.65rem !important;
+          }
+        }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes chip-flash { 0% { box-shadow: 0 0 0 0 rgba(79,138,255,0.48); background: rgba(79,138,255,0.14); } 60% { box-shadow: 0 0 0 6px rgba(79,138,255,0); } 100% { background: rgba(255,255,255,0.03); box-shadow: none; } }
         .tier-chip-animate { animation: chip-flash 0.55s ease-out forwards; }
