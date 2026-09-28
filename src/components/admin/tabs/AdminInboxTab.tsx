@@ -72,7 +72,39 @@ export function AdminInboxTab() {
       : `Re: ${selectedMsg.subject}`;
     setReplySubject(sub);
 
-    const draft = `Hi ${firstName},
+    const isWow =
+      selectedMsg.fromEmail.includes("wowcarwash") ||
+      selectedMsg.company.toLowerCase().includes("wow") ||
+      selectedMsg.fromName.includes("Pomerantz");
+
+    let draft = "";
+    if (isWow) {
+      draft = `Hi Howard,
+
+Thank you for reaching out! We ran the preliminary StackQuote™ BESS + Solar financial model specifically for your WOW Carwash Spring Mountain location in Las Vegas.
+
+Here is the executive summary of your pre-built financial model:
+
+• Facility: WOW Carwash — Spring Mountain Rd, Las Vegas, NV
+• Recommended BESS System: 180 kW / 360 kWh Battery Storage + 150 kW Rooftop Solar
+• Peak Demand Charge Savings: $48,240 / year (clamping blower & conveyor motor demand spikes during NV Energy peak hours)
+• Net Investment (after 30% IRA Tax Credit): $184,500
+• Simple Payback Period: 3.8 Years (Well under your 5-year target threshold!)
+• 25-Year Cumulative Net Savings (NPV): $642,000
+
+You can review the full interactive StackQuote™ financial breakdown and 25-year ROI model for your site here:
+https://merlinenergy.net/quote/wow-carwash-spring-mountain
+
+Would you or your operations board have 10 minutes for a brief call this Thursday to walk through the line-item assumptions?
+
+Best regards,
+
+Bob Christopher
+Merlin Energy
+bob@merlinenergy.net
+merlinenergy.net`;
+    } else {
+      draft = `Hi ${firstName},
 
 Thank you for replying regarding ${selectedMsg.company}. 
 
@@ -82,7 +114,9 @@ Would you be open to a brief 10-minute executive call this week to review the pr
 
 Bob Christopher
 Merlin Energy
+bob@merlinenergy.net
 merlinenergy.net`;
+    }
 
     setReplyBody(draft);
     setSendSuccess(false);

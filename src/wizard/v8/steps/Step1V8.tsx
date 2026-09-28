@@ -172,7 +172,8 @@ export function Step1V8({ state, actions }: Step1Props) {
     if (state.locationRaw) return; // already seeded — don't override
 
     const params = new URLSearchParams(window.location.search);
-    const urlAddress = params.get("address") || params.get("location") || params.get("zip") || params.get("q");
+    const urlAddress =
+      params.get("address") || params.get("location") || params.get("zip") || params.get("q");
     if (urlAddress) {
       actions.setLocationRaw(urlAddress.trim());
       return;
@@ -265,7 +266,7 @@ export function Step1V8({ state, actions }: Step1Props) {
   );
 
   useEffect(() => {
-    if (!locationConfirmed || !businessName.trim() || selectedSuggestion) {
+    if (!businessName.trim() || selectedSuggestion) {
       setBusinessSuggestions([]);
       setIsSuggestionsLoading(false);
       return;
@@ -276,9 +277,8 @@ export function Step1V8({ state, actions }: Step1Props) {
 
     const timer = globalThis.setTimeout(async () => {
       const placesLibrary = await ensurePlacesLibrary();
-      if (!placesLibrary) return;
 
-      if (!sessionTokenRef.current) {
+      if (placesLibrary && !sessionTokenRef.current) {
         sessionTokenRef.current = new placesLibrary.AutocompleteSessionToken();
       }
 
@@ -297,7 +297,6 @@ export function Step1V8({ state, actions }: Step1Props) {
         setBusinessSuggestions(validSuggestions);
       } catch (error) {
         console.error("❌ Autocomplete API error:", error);
-        console.error("Error details:", JSON.stringify(error, null, 2));
 
         if (suggestionRequestIdRef.current === requestId) {
           setBusinessSuggestions([]);
@@ -311,7 +310,7 @@ export function Step1V8({ state, actions }: Step1Props) {
 
     return () => globalThis.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [businessName, country, ensurePlacesLibrary, locationConfirmed, selectedSuggestion]);
+  }, [businessName, country, ensurePlacesLibrary, selectedSuggestion]);
 
   const handleZipChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const raw = event.target.value;
@@ -740,7 +739,12 @@ export function Step1V8({ state, actions }: Step1Props) {
                 {icon}
               </div>
               <div style={{ fontSize: 11, fontWeight: 700, color: T.textPrimary }}>{label}</div>
-              <div className="step1-journey-grid-sub" style={{ fontSize: 10, color: T.textMuted, marginTop: -2 }}>{sub}</div>
+              <div
+                className="step1-journey-grid-sub"
+                style={{ fontSize: 10, color: T.textMuted, marginTop: -2 }}
+              >
+                {sub}
+              </div>
             </div>
           ))}
         </div>
@@ -1333,7 +1337,9 @@ export function Step1V8({ state, actions }: Step1Props) {
                       border: "1px solid rgba(255,255,255,0.08)",
                     }}
                   >
-                    <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, marginBottom: 2 }}>
+                    <div
+                      style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, marginBottom: 2 }}
+                    >
                       Est. Annual Savings
                     </div>
                     <div style={{ fontSize: 17, fontWeight: 800, color: "#34d399" }}>
@@ -1352,7 +1358,9 @@ export function Step1V8({ state, actions }: Step1Props) {
                       border: "1px solid rgba(255,255,255,0.08)",
                     }}
                   >
-                    <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, marginBottom: 2 }}>
+                    <div
+                      style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, marginBottom: 2 }}
+                    >
                       Recommended BESS
                     </div>
                     <div style={{ fontSize: 15, fontWeight: 800, color: "#a78bfa" }}>
@@ -1367,7 +1375,9 @@ export function Step1V8({ state, actions }: Step1Props) {
                       border: "1px solid rgba(255,255,255,0.08)",
                     }}
                   >
-                    <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, marginBottom: 2 }}>
+                    <div
+                      style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, marginBottom: 2 }}
+                    >
                       Simple Payback
                     </div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: "#fbbf24" }}>3.7 Years</div>
@@ -1380,7 +1390,9 @@ export function Step1V8({ state, actions }: Step1Props) {
                       border: "1px solid rgba(255,255,255,0.08)",
                     }}
                   >
-                    <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, marginBottom: 2 }}>
+                    <div
+                      style={{ fontSize: 10, color: "#94a3b8", fontWeight: 600, marginBottom: 2 }}
+                    >
                       25-Yr Net NPV
                     </div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: "#38bdf8" }}>+$342,000</div>
@@ -1950,7 +1962,10 @@ export function Step1V8({ state, actions }: Step1Props) {
                 >
                   ⚡ How reliable is your grid?
                 </div>
-                <div className="step1-grid-reliability" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+                <div
+                  className="step1-grid-reliability"
+                  style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}
+                >
                   {[
                     { value: "reliable", label: "Reliable", subtitle: "Rare outages" },
                     {
