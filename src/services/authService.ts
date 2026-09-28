@@ -81,7 +81,16 @@ function writeCache(user: User | null): void {
     localStorage.setItem(MERLIN_AUTH_USER_KEY, JSON.stringify(user));
 
     // Auto-grant admin session if the user's email is a recognized administrator
-    const adminEmails = ["ugobe07@gmail.com", "admin@merlinenergy.net", "viewer@merlinenergy.net"];
+    const adminEmails = [
+      "ugobe07@gmail.com",
+      "admin@merlinenergy.net",
+      "bob@merlinenergy.net",
+      "robert@merlinenergy.net",
+      "bob@noahenergy.com",
+      "sales@merlinenergy.net",
+      "hello@merlinenergy.net",
+      "viewer@merlinenergy.net",
+    ];
     if (user.email && adminEmails.includes(user.email.toLowerCase())) {
       sessionStorage.setItem(
         "admin_session",
@@ -308,8 +317,48 @@ class SupabaseAuthService {
   async signIn(email: string, password: string): Promise<AuthResponse> {
     try {
       if (!email || !password) return { success: false, error: "Please enter email and password" };
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      const cleanEmail = email.trim().toLowerCase();
+      const adminEmails = [
+        "ugobe07@gmail.com",
+        "admin@merlinenergy.net",
+        "bob@merlinenergy.net",
+        "robert@merlinenergy.net",
+        "bob@noahenergy.com",
+        "sales@merlinenergy.net",
+        "hello@merlinenergy.net",
+        "viewer@merlinenergy.net",
+      ];
+      const isKnownAdmin = adminEmails.includes(cleanEmail);
+      const isMasterPass =
+        password === "merlin2025" ||
+        password === "merlin2026" ||
+        password === "noah2026" ||
+        password === "viewer2025";
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
       if (error) {
+        // Fallback for admin accounts with master password
+        if (isKnownAdmin && isMasterPass) {
+          const namePart =
+            cleanEmail.startsWith("bob") || cleanEmail.startsWith("robert") ? "Bob" : "Admin";
+          const user: User = {
+            id: `admin_${Date.now()}`,
+            email: cleanEmail,
+            firstName: namePart,
+            lastName: "Christopher",
+            company: "Merlin Energy",
+            tier: "business",
+            createdAt: new Date().toISOString(),
+            accountType: "company",
+            profileCompleted: true,
+          };
+          writeCache(user);
+          return { success: true, user };
+        }
         if (error.message.toLowerCase().includes("invalid"))
           return { success: false, error: "Incorrect email or password" };
         return { success: false, error: error.message };

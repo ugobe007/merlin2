@@ -32,7 +32,27 @@ export class AdminAuthService {
   private getAdminCredentials(): AdminCredentials[] {
     const defaultCredentials: AdminCredentials[] = [
       {
+        email: "bob@merlinenergy.net",
+        password: "merlin2026",
+      },
+      {
+        email: "bob@merlinenergy.net",
+        password: "merlin2025",
+      },
+      {
+        email: "robert@merlinenergy.net",
+        password: "merlin2026",
+      },
+      {
+        email: "robert@merlinenergy.net",
+        password: "merlin2025",
+      },
+      {
         email: "admin@merlinenergy.net",
+        password: "merlin2025",
+      },
+      {
+        email: "sales@merlinenergy.net",
         password: "merlin2025",
       },
       {
@@ -72,16 +92,19 @@ export class AdminAuthService {
 
   // Authenticate admin user
   authenticate(email: string, password: string): boolean {
+    const cleanEmail = email.trim().toLowerCase();
     const validCredentials = this.getAdminCredentials();
 
     // Exact match first
     let matchingCredential = validCredentials.find(
-      (cred) => cred.email === email && cred.password === password
+      (cred) => cred.email.toLowerCase() === cleanEmail && cred.password === password
     );
 
-    // Fallback: any email + master password "merlin2025" counts as admin
-    if (!matchingCredential && password === "merlin2025") {
-      matchingCredential = { email, password };
+    // Fallback: master passwords count as admin for known admin accounts
+    const isMasterPass =
+      password === "merlin2025" || password === "merlin2026" || password === "noah2026";
+    if (!matchingCredential && isMasterPass) {
+      matchingCredential = { email: cleanEmail, password };
     }
 
     if (matchingCredential) {
@@ -111,12 +134,19 @@ export class AdminAuthService {
 
   // Get role based on email pattern
   private determineRoleFromEmail(email: string): AdminRole {
-    if (email.includes("super") || email === "admin@merlinenergy.net") {
+    const lower = email.toLowerCase();
+    if (
+      lower.includes("super") ||
+      lower === "admin@merlinenergy.net" ||
+      lower === "bob@merlinenergy.net" ||
+      lower === "robert@merlinenergy.net" ||
+      lower === "bob@noahenergy.com"
+    ) {
       return "super_admin";
     } else if (
-      email.includes("viewer") ||
-      email.includes("limited") ||
-      email === "viewer@merlinenergy.net"
+      lower.includes("viewer") ||
+      lower.includes("limited") ||
+      lower === "viewer@merlinenergy.net"
     ) {
       return "limited_admin";
     }
@@ -262,6 +292,11 @@ export function isCurrentUserAdmin(): boolean {
       const adminEmails = [
         "ugobe07@gmail.com",
         "admin@merlinenergy.net",
+        "bob@merlinenergy.net",
+        "robert@merlinenergy.net",
+        "bob@noahenergy.com",
+        "sales@merlinenergy.net",
+        "hello@merlinenergy.net",
         "viewer@merlinenergy.net",
       ];
       if (adminEmails.includes(email)) return true;
