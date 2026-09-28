@@ -288,6 +288,8 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
   const [tone, setTone] = useState<ToneType>("executive");
   const [customNotes, setCustomNotes] = useState("");
   const [pitch, setPitch] = useState<GeneratedEmailPitch | null>(null);
+  const [editableSubject, setEditableSubject] = useState("");
+  const [editableBody, setEditableBody] = useState("");
   const [copied, setCopied] = useState(false);
   const [showTrainer, setShowTrainer] = useState(false);
   const [rules, setRules] = useState<string[]>(getTrainedAIRules());
@@ -300,7 +302,7 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
   const [sendSuccess, setSendSuccess] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
 
-  // Auto-generate initial draft on open
+  // Auto-generate initial draft on open or dropdown changes
   useEffect(() => {
     const generated = generateAIOutreachPitch({
       lead,
@@ -310,24 +312,24 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
       customTrainingRules: rules,
     });
     setPitch(generated);
+    setEditableSubject(generated.subject);
+    setEditableBody(generated.body);
     setDraftSaved(false);
   }, [lead, angle, tone, customNotes, rules]);
 
   const handleCopy = () => {
-    if (!pitch) return;
-    const textToCopy = `Subject: ${pitch.subject}\n\n${pitch.body}`;
+    const textToCopy = `Subject: ${editableSubject}\n\n${editableBody}`;
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleSaveDraft = () => {
-    if (!pitch) return;
     saveLeadDraft({
       leadId: lead.id,
       company: lead.company,
-      subject: pitch.subject,
-      body: pitch.body,
+      subject: editableSubject,
+      body: editableBody,
       updatedAt: new Date().toISOString(),
     });
     setDraftSaved(true);
@@ -335,7 +337,7 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
   };
 
   const handleSendDirectEmail = async () => {
-    if (!pitch || !recipientEmail.trim()) return;
+    if (!editableSubject.trim() || !editableBody.trim() || !recipientEmail.trim()) return;
     setSendingEmail(true);
     setSendError(null);
     setSendSuccess(false);
@@ -348,8 +350,8 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
           recipientEmail: recipientEmail.trim(),
           recipientName: lead.decisionMaker,
           company: lead.company,
-          subject: pitch.subject,
-          body: pitch.body,
+          subject: editableSubject.trim(),
+          body: editableBody,
         }),
       });
 
@@ -362,8 +364,8 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
       saveLeadDraft({
         leadId: lead.id,
         company: lead.company,
-        subject: pitch.subject,
-        body: pitch.body,
+        subject: editableSubject.trim(),
+        body: editableBody,
         updatedAt: new Date().toISOString(),
       });
       setTimeout(() => setSendSuccess(false), 5000);
@@ -542,19 +544,40 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
                 </div>
               </div>
 
-              {/* Subject Line */}
-              <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl">
-                <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider block mb-1">
-                  Subject Line:
-                </span>
-                <span className="text-sm font-semibold text-white">{pitch.subject}</span>
+              {/* Subject Line (Editable) */}
+              <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-amber-400 font-bold uppercase tracking-wider block">
+                    Subject Line (Editable):
+                  </span>
+                  <span className="text-[11px] text-slate-400">✏️ Click to customize subject</span>
+                </div>
+                <input
+                  type="text"
+                  value={editableSubject}
+                  onChange={(e) => setEditableSubject(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-2 text-sm font-semibold text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                  placeholder="Email Subject Line"
+                />
               </div>
 
-              {/* Body */}
-              <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl">
-                <pre className="whitespace-pre-wrap font-sans text-sm text-slate-200 leading-relaxed">
-                  {pitch.body}
-                </pre>
+              {/* Body (Editable) */}
+              <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-amber-400 font-bold uppercase tracking-wider block">
+                    Email Pitch Body (Editable):
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    ✏️ Edit email copy directly below
+                  </span>
+                </div>
+                <textarea
+                  rows={13}
+                  value={editableBody}
+                  onChange={(e) => setEditableBody(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-3 text-sm text-slate-200 leading-relaxed font-sans focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 resize-y transition-colors"
+                  placeholder="Personalized pitch body..."
+                />
               </div>
 
               {/* Highlights */}
