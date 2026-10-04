@@ -54,6 +54,14 @@ const SITE_WORK_TOTAL         = 25800;  // Structural eng, monitoring, interconn
 const CONTINGENCY_RATE        = 0.075;  // 7.5% construction contingency
 const FEDERAL_ITC_RATE        = 0.30;   // 30% IRA 2022 (solar + BESS eligible)
 const SOLAR_PR                = 0.77;   // NREL Performance Ratio (DC wiring, inverter, soiling, temp)
+// CALIBRATE ME. Credited peak shave cannot exceed this share of site peak.
+// A battery cannot save more demand than it shaves, and it cannot shave more than the peak.
+// Sweep of which tier has the shortest payback (car wash, indexed price, 120 kW solar cap, 4.5 sun hours):
+//   0.30 Starter · 0.35–0.50 Recommended · 0.55+ Complete.
+// 0.45 is inside that band, just above BESS_RATIO.peak_shaving (0.40), and off the 0.50 edge.
+// Set it from metered peak-shaving performance and re-run the sweep. It is not chosen to make a tier win.
+const MAX_SHAVE_FRACTION       = 0.45;
+const PEAK_SHAVE_EFFECTIVENESS = 0.75;
 
 // NREL PVWatts key — confirmed working 2025-12-11
 const NREL_API_KEY_FALLBACK = 'G9sYxfv89Vr9mjHD5zThWpBntyYkKJjP6iF8i3He';
@@ -72,8 +80,12 @@ const INDUSTRY_DEFAULTS = {
   retail:        { peakLoadKW: 300,  solarCapKW: 100,  criticalLoadPct: 0.35, electricityRate: 0.12, demandCharge: 15 },
   // car_wash: solarCapKW scales with peakLoadKW (canopy ~27% of peak kW)
   // demandCharge $20/kW reflects real commercial rates (EIA 2024 C&I median)
-  car_wash:      { peakLoadKW: 450,  solarCapKW: 55,   criticalLoadPct: 0.80, electricityRate: 0.13, demandCharge: 20 },
-  carwash:       { peakLoadKW: 450,  solarCapKW: 55,   criticalLoadPct: 0.80, electricityRate: 0.13, demandCharge: 20 },
+  // criticalLoadPct 0.20 is lighting, controllers and freeze protection.
+  // The tunnel is not backup-critical. 0.80 was sizing a generator that
+  // calcTierSavings does not credit, and sizeGenerator() already returns
+  // 0 below 0.50.
+  car_wash:      { peakLoadKW: 450,  solarCapKW: 55,   criticalLoadPct: 0.20, electricityRate: 0.13, demandCharge: 20 },
+  carwash:       { peakLoadKW: 450,  solarCapKW: 55,   criticalLoadPct: 0.20, electricityRate: 0.13, demandCharge: 20 },
   warehouse:     { peakLoadKW: 400,  solarCapKW: 819,  criticalLoadPct: 0.30, electricityRate: 0.10, demandCharge: 12 },
   office:        { peakLoadKW: 200,  solarCapKW: 150,  criticalLoadPct: 0.40, electricityRate: 0.12, demandCharge: 15 },
   gym:           { peakLoadKW: 150,  solarCapKW: 60,   criticalLoadPct: 0.30, electricityRate: 0.13, demandCharge: 15 },
@@ -221,7 +233,7 @@ function computeConfidenceScore({ peakSource, rateSource, locationResolved, pshL
 // then samples 500 draws. P10 = conservative, P50 = underwriting base,
 // P90 = upside. Matches v34.2.0 methodology.
 // ============================================================================
-function computeMonteCarlo(netInvestment, baseSavings, electricityRate, demandCharge, bessKW, solarKW, psh, n = 500) {
+function computeMonteCarlo(netInvestment, baseSavings, electricityRate, demandCharge, bessKW, solarKW, psh, peakLoadKW = 0, n = 500) {
   const results = [];
   for (let i = 0; i < n; i++) {
     // Gaussian-like via sum of uniforms (Box-Muller approximation)
@@ -232,17 +244,22 @@ function computeMonteCarlo(netInvestment, baseSavings, electricityRate, demandCh
     const adjRate   = electricityRate * (1 + rateVar);
     const adjDemand = demandCharge    * (1 + demandVar);
     const adjSolar  = solarKW * psh * 365 * SOLAR_PR * (1 + solarVar) * adjRate;
-    const adjDemandSav = bessKW * adjDemand * 12 * bessEff;
+    const shaveCeiling = peakLoadKW > 0 ? Math.round(peakLoadKW * MAX_SHAVE_FRACTION) : bessKW;
+    const adjDemandSav = Math.min(bessKW, shaveCeiling) * adjDemand * 12 * bessEff;
     const totalSav  = adjSolar + adjDemandSav;
-    const pb        = netInvestment / Math.max(1, totalSav);
+    const pb        = netInvestment <= 0 ? 0 : netInvestment / Math.max(1, totalSav);
     // 5-year IRR approximation: (savings*5 - investment) / investment / 5 * 100
-    const irr5      = ((totalSav * 5 - netInvestment) / netInvestment) / 5 * 100;
+    const irr5      = netInvestment <= 0 ? 0 : ((totalSav * 5 - netInvestment) / netInvestment) / 5 * 100;
     results.push({ payback: pb, irr5, annualSavings: totalSav });
   }
   results.sort((a, b) => a.payback - b.payback);
-  const p10 = results[Math.floor(n * 0.10)];
+  // Ascending payback puts the short (optimistic) paybacks first.
+  // p10 is the downside, so it takes the long-payback tail.
+  const upside = results[Math.floor(n * 0.10)];
   const p50 = results[Math.floor(n * 0.50)];
-  const p90 = results[Math.floor(n * 0.90)];
+  const downside = results[Math.floor(n * 0.90)];
+  const p10 = downside;
+  const p90 = upside;
   const fmt1 = v => Math.round(v * 10) / 10;
   const fmtK = v => `$${Math.round(v / 1000)}K`;
   return {
@@ -278,43 +295,85 @@ function calculateMerlinFees(equipmentSubtotal) {
 }
 
 /** Annual operating reserves (pricingServiceV45.ts ANNUAL_RESERVES) */
-function calcAnnualReserves(solarKW, bessKWh) {
+function calcAnnualReserves(solarKW, bessKWh, bessPerKwh = BESS_PRICE_PER_KWH) {
   return Math.round(
     1250                          // insurance rider
     + solarKW  * 1000 * 0.01     // inverter reserve ($10/kW/yr)
-    + bessKWh  * BESS_PRICE_PER_KWH * 0.02  // BESS degradation reserve (2% pack/yr)
+    + bessKWh  * bessPerKwh * 0.02  // same $/kWh as the capital line
   );
 }
 
 // ── Vendor pricing lookup (queries equipment_pricing via Supabase REST) ───────
 /**
- * Returns the lowest approved vendor BESS price from equipment_pricing,
- * or null if none is found or Supabase is not configured.
- * Uses fetch() — no extra dependency needed.
+ * Price the battery selectBessVendor() already named.
+ * A global minimum can return a different product (multi-day iron-air at
+ * $25/kWh against a 2-hour lithium nameplate). No row for this unit means
+ * the index price, not the cheapest row in the table.
  */
-async function getVendorBessPrice() {
+async function getVendorBessPrice(selection) {
   const sbUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-  if (!sbUrl || !sbKey) return null;
+  if (!sbUrl || !sbKey || !selection?.vendor || selection.vendor === 'Custom / multi-unit') return null;
+
+  const params = new URLSearchParams({
+    equipment_type: 'eq.battery',
+    manufacturer: `eq.${selection.vendor}`,
+    select: 'price_per_kwh,price_per_kw,manufacturer,model,source,override_below_index,override_reason,override_by,override_at',
+    limit: '1',
+  });
+  if (selection.model) params.set('model', `eq.${selection.model}`);
 
   try {
-    const res = await fetch(
-      `${sbUrl}/rest/v1/equipment_pricing?equipment_type=eq.battery&order=price_per_kwh.asc&limit=1` +
-        `&select=price_per_kwh,price_per_kw,manufacturer,model`,
-      {
-        headers: {
-          apikey: sbKey,
-          Authorization: `Bearer ${sbKey}`,
-          Accept: 'application/json',
-        },
-      }
-    );
+    const res = await fetch(`${sbUrl}/rest/v1/equipment_pricing?${params}`, {
+      headers: {
+        apikey: sbKey,
+        Authorization: `Bearer ${sbKey}`,
+        Accept: 'application/json',
+      },
+    });
     if (!res.ok) return null;
     const rows = await res.json();
-    return rows?.[0] ?? null; // { price_per_kwh, price_per_kw, manufacturer, model }
+    return rows?.[0] ?? null;
   } catch {
     return null;
   }
+}
+
+/**
+ * One decision for the battery price and the citation that describes it.
+ * Below half the index is rejected unless the row carries a reasoned override.
+ * No row, or a rejected row, falls back to the index so price and citation agree.
+ */
+function admitVendorBessPrice(row) {
+  const indexed = {
+    admitted: false,
+    perKwh: BESS_PRICE_PER_KWH,
+    perKw: null,
+    belowIndex: false,
+    provenance: { ...PRICE_PROVENANCE.bess },
+  };
+  const perKwh = Number(row?.price_per_kwh);
+  if (!row || !(perKwh > 0)) return indexed;
+
+  const floor = BESS_PRICE_PER_KWH * 0.5;
+  const reason = typeof row.override_reason === 'string' ? row.override_reason.trim() : '';
+  const reasoned = row.override_below_index === true && reason.length >= 10 && Boolean(row.override_by);
+  if (perKwh < floor && !reasoned) {
+    console.log(`[/api/quote] Rejected ${row.manufacturer ?? ''} ${row.model ?? ''} at $${perKwh}/kWh — below $${floor}/kWh without a reasoned override`);
+    return indexed;
+  }
+
+  const who = [row.manufacturer, row.model].filter(Boolean).join(' ');
+  const source = perKwh < floor
+    ? `${who} $${perKwh}/kWh — below the $${BESS_PRICE_PER_KWH}/kWh index. Override by ${row.override_by}: ${reason}`
+    : `${who} $${perKwh}/kWh${row.source ? ` (${row.source})` : ''}`;
+  return {
+    admitted: true,
+    perKwh,
+    perKw: row.price_per_kw != null ? Number(row.price_per_kw) : null,
+    belowIndex: perKwh < floor,
+    provenance: { tag: perKwh < floor ? 'estimate' : 'verified', source },
+  };
 }
 
 // ── Tier sizing helpers (ported from step4Logic.ts) ──────────────────────────
@@ -370,6 +429,17 @@ function calcTierCosts(eq, priceOverrides = {}) {
   const merlinFees  = calculateMerlinFees(equipTotal);
   const totalInv    = subTotal + merlinFees.totalFee;
   const itc         = Math.round((solarCost + bessCost) * FEDERAL_ITC_RATE);
+  const netInvestment = Math.round(totalInv - itc);
+  // Battery, solar and EV earn the savings. A generator is compliance capital:
+  // it keeps the site up and calcTierSavings does not credit it. Soft costs
+  // follow the equipment they sit on. The ITC reduces return capital only.
+  const returnEquip = solarCost + bessCost + evCost;
+  const complianceEquip = genCost;
+  const softCosts = SITE_WORK_TOTAL + contingency + merlinFees.totalFee;
+  const returnShare = equipTotal > 0 ? returnEquip / equipTotal : 1;
+  let returnInvestment = Math.round(returnEquip + softCosts * returnShare - itc);
+  let complianceInvestment = Math.round(complianceEquip + softCosts * (1 - returnShare));
+  returnInvestment += netInvestment - (returnInvestment + complianceInvestment);
   return {
     solarCost:               Math.round(solarCost),
     bessCost:                Math.round(bessCost),
@@ -381,16 +451,21 @@ function calcTierCosts(eq, priceOverrides = {}) {
     merlinFees,
     totalInvestment:         Math.round(totalInv),
     federalITC:              itc,
-    netInvestment:           Math.round(totalInv - itc),
-    annualReserves:          calcAnnualReserves(solarKW, bessKWh),
+    netInvestment,
+    returnCapital:           { investment: returnInvestment },
+    complianceCapital:       { investment: complianceInvestment },
+    annualReserves:          calcAnnualReserves(solarKW, bessKWh, bessPerKwh),
   };
 }
 
-function calcTierSavings(eq, electricityRate, demandCharge, psh) {
+function calcTierSavings(eq, electricityRate, demandCharge, psh, bessPerKwh = BESS_PRICE_PER_KWH, peakLoadKW = 0) {
   const { bessKW, bessKWh, solarKW,
           l2Chargers = 0, dcfcChargers = 0, hpcChargers = 0,
           truckStopCabinets = 0 } = eq;
-  const demandChargeSavings = bessKW * demandCharge * 12 * 0.75;
+  const shaveCeilingKW = peakLoadKW > 0 ? Math.round(peakLoadKW * MAX_SHAVE_FRACTION) : bessKW;
+  const creditedShaveKW = Math.min(bessKW, shaveCeilingKW);
+  const uncreditedShaveKW = Math.max(0, bessKW - creditedShaveKW);
+  const demandChargeSavings = creditedShaveKW * demandCharge * 12 * PEAK_SHAVE_EFFECTIVENESS;
   const solarKWhProduced    = solarKW * psh * 365 * SOLAR_PR;
   const solarSavings        = solarKWhProduced * electricityRate;
   // Truck stop DockChain cabinet: ~$90K/yr gross revenue per cabinet
@@ -398,9 +473,13 @@ function calcTierSavings(eq, electricityRate, demandCharge, psh) {
   const truckCabinetRevenue = truckStopCabinets * 90000;
   const evRevenue           = l2Chargers * 1350 + dcfcChargers * 18000 + hpcChargers * 60000 + truckCabinetRevenue;
   const gross               = demandChargeSavings + solarSavings + evRevenue;
-  const reserves            = calcAnnualReserves(solarKW, bessKWh);
+  const reserves            = calcAnnualReserves(solarKW, bessKWh, bessPerKwh);
   return {
     demandChargeSavings: Math.round(demandChargeSavings),
+    shaveCeilingKW,
+    creditedShaveKW,
+    uncreditedShaveKW,
+    shaveCapped: uncreditedShaveKW > 0,
     solarKWhProduced:    Math.round(solarKWhProduced),
     solarSavings:        Math.round(solarSavings),
     evChargingRevenue:   Math.round(evRevenue),
@@ -411,8 +490,14 @@ function calcTierSavings(eq, electricityRate, demandCharge, psh) {
 }
 
 function calcROI(netInvestment, netAnnualSavings) {
-  if (netInvestment <= 0 || netAnnualSavings <= 0) {
-    return { paybackYears: 999, year1ROI: 0, roi10Year: 0, roi25Year: 0, npv25Year: Math.round(-netInvestment) };
+  if (netAnnualSavings <= 0) {
+    return { paybackYears: 999, year1ROI: 0, roi10Year: 0, roi25Year: 0, npv25Year: Math.round(-Math.max(netInvestment, 0)) };
+  }
+  // A system that costs nothing has already paid back. 999 would rank it as the worst option.
+  if (netInvestment <= 0) {
+    let npv = -netInvestment;
+    for (let yr = 1; yr <= 25; yr++) npv += netAnnualSavings / Math.pow(1.05, yr);
+    return { paybackYears: 0, year1ROI: null, roi10Year: null, roi25Year: null, npv25Year: Math.round(npv) };
   }
   const payback = Math.round((netInvestment / netAnnualSavings) * 10) / 10;
   let npv = -netInvestment;
@@ -440,8 +525,13 @@ function buildTier(tierLabel, p, priceOverrides = {}) {
     truckStopCabinets: p.truckStopCabinets ?? 0,
   };
   const costs   = calcTierCosts(eq, priceOverrides);
-  const savings = calcTierSavings(eq, p.electricityRate, p.demandCharge, p.psh);
-  const roi     = calcROI(costs.netInvestment, savings.netAnnualSavings);
+  const savings = calcTierSavings(
+    eq, p.electricityRate, p.demandCharge, p.psh,
+    priceOverrides.bessPerKwh ?? BESS_PRICE_PER_KWH,
+    p.peakLoadKW,
+  );
+  const roi        = calcROI(costs.returnCapital.investment, savings.netAnnualSavings);
+  const blendedRoi = calcROI(costs.netInvestment, savings.netAnnualSavings);
   return {
     label: tierLabel,
     equipment: { solarKW, bessKW, bessKWh, durationHrs, generatorKW,
@@ -450,6 +540,7 @@ function buildTier(tierLabel, p, priceOverrides = {}) {
     costs,
     savings,
     roi,
+    blendedRoi,
   };
 }
 
@@ -555,37 +646,18 @@ router.post('/', async (req, res) => {
     const googleKey = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
     const nrelKey   = process.env.VITE_NREL_API_KEY || process.env.NREL_API_KEY || NREL_API_KEY_FALLBACK;
 
-    if (!googleKey) {
-      return res.status(500).json({ ok: false, error: 'Location service not configured' });
-    }
-
-    // ── 0. Fetch vendor BESS pricing (non-blocking — falls back to constants) ──
-    const vendorBess = await getVendorBessPrice();
-    const priceOverrides = {};
-    if (vendorBess?.price_per_kwh) {
-      const vendorPerKwh = Number(vendorBess.price_per_kwh);
-      // Only apply if vendor price is cheaper than our default constant
-      if (vendorPerKwh > 0 && vendorPerKwh < BESS_PRICE_PER_KWH) {
-        priceOverrides.bessPerKwh = vendorPerKwh;
-        if (vendorBess.price_per_kw) priceOverrides.bessPerKw = Number(vendorBess.price_per_kw);
-        console.log(
-          `[/api/quote] 🏷️  Using vendor BESS price: $${vendorPerKwh}/kWh` +
-          ` from ${vendorBess.manufacturer ?? 'vendor'} (default: $${BESS_PRICE_PER_KWH}/kWh)`
-        );
-      }
-    }
-
     // ── 1. Geocode location ────────────────────────────────────────────────
-    const geo = await geocode(location, googleKey);
-    if (!geo) {
-      return res.status(400).json({
-        ok: false,
-        error: `Could not geocode "${location}". Try a city+state or ZIP code.`,
-      });
-    }
+    // A failed geocode used to withhold the quote. Sun hours fall back to the
+    // US average inside fetchSolarPSH; the price and the savings still print.
+    const geo = (googleKey && await geocode(location, googleKey)) || {
+      lat: null,
+      lon: null,
+      stateCode: null,
+      formattedAddress: location.trim(),
+    };
 
     // ── 2. Fetch solar resource (NREL PVWatts) ─────────────────────────────
-    const psh = await fetchSolarPSH(geo.lat, geo.lon, nrelKey);
+    const psh = geo.lat == null ? 4.5 : await fetchSolarPSH(geo.lat, geo.lon, nrelKey);
 
     // ── 3. Resolve industry + facility parameters ──────────────────────────
     const industryKey = (industry || 'default').toLowerCase().replace(/[\s-]+/g, '_');
@@ -612,9 +684,17 @@ router.post('/', async (req, res) => {
       psh,
     };
 
-    // ── Fitness-first BESS vendor selection (runs on Recommended sizing) ──
+    // ── Fitness-first BESS vendor selection, then price THAT unit ──
     const recBessSizing = sizeBESS(p.peakLoadKW, 'Recommended', p.bessApplication, p.industryKey);
     const bessSelection = selectBessVendor(recBessSizing.bessKWh);
+    const vendorBess = await getVendorBessPrice(bessSelection);
+    const admitted = admitVendorBessPrice(vendorBess);
+    const priceOverrides = {};
+    if (admitted.admitted) {
+      priceOverrides.bessPerKwh = admitted.perKwh;
+      if (admitted.perKw != null) priceOverrides.bessPerKw = admitted.perKw;
+      console.log(`[/api/quote] BESS price $${admitted.perKwh}/kWh — ${admitted.provenance.source}`);
+    }
 
     // ── 4. Build three tiers ───────────────────────────────────────────────
     const tiers = {
@@ -632,18 +712,19 @@ router.post('/', async (req, res) => {
       rateSource:       p.rateSource,
       locationResolved: !!geo,
       pshLive:          psh !== 4.5,
-      vendorBess:       !!vendorBess,
+      vendorBess:       Boolean(bessSelection?.vendor) && bessSelection.vendor !== 'Custom / multi-unit',
     });
 
     // ── 6. Monte Carlo P10/P50/P90 ───────────────────────────────────────
     const monteCarlo = computeMonteCarlo(
-      rec.costs.netInvestment,
+      rec.costs.returnCapital.investment,
       rec.savings.netAnnualSavings,
       p.electricityRate,
       p.demandCharge,
       rec.equipment.bessKW,
       rec.equipment.solarKW,
       psh,
+      p.peakLoadKW,
     );
 
     console.log(`[/api/quote] ✅ ${elapsed}ms — ${geo.formattedAddress} PSH=${psh}h | Rec: $${rec.costs.netInvestment.toLocaleString()} net, ${rec.roi.paybackYears}yr payback | Confidence: ${confidence.score} (${confidence.tier}) | BESS: ${bessSelection.vendor} ${bessSelection.model}`);
@@ -696,7 +777,10 @@ router.post('/', async (req, res) => {
         bess: bessSelection,
         note: `${bessSelection.vendor} ${bessSelection.model} selected (score ${bessSelection.scoreBase ?? '—'}, fitness-first). ${bessSelection.disqualified?.length ? bessSelection.disqualified.length + ' unit(s) disqualified.' : 'All catalog units eligible.'}`,
       },
-      provenance: PRICE_PROVENANCE,
+      provenance: {
+        ...PRICE_PROVENANCE,
+        bess: admitted.provenance,
+      },
       installer: installerBlock,
       meta: {
         methodology:   'Merlin TrueQuote™ v4.5 + v34.3.0 enhancements',
