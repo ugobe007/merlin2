@@ -73,6 +73,77 @@ const FALLBACK_CONSTANTS: Record<string, { value: number; source: string }> = {
   backup_hours_minimum: { value: 2, source: "Industry standard" },
   backup_hours_recommended: { value: 4, source: "Industry standard" },
   solar_to_storage_ratio: { value: 0.25, source: "NREL guidance" },
+
+  // Industry Specialized Savings & Downtime Protection (SSOT)
+  // Citation for CAR_WASH_SHAVE_EFFECTIVENESS in pricing/peakShave.ts.
+  // Public quotes and the wizard both read that constant.
+  car_wash_demand_effectiveness: {
+    value: 0.95,
+    source: "LADWP / IEEE 4538388 (15-min motor startup peak shaving)",
+  },
+  car_wash_demand_savings_per_mw: {
+    value: 160000,
+    source: "NREL/EPRI C&I Demand Savings Benchmark ($160k/MW-yr)",
+  },
+  car_wash_spike_savings_per_mw: {
+    value: 120000,
+    source: "NREL/EPRI C&I Surge Management Benchmark ($120k/MW-yr)",
+  },
+  ev_demand_charge_reduction_per_mw: {
+    value: 180000,
+    source: "NREL/EVI EV Fleet Benchmark ($180k/MW-yr)",
+  },
+  ev_peak_management_per_mw: {
+    value: 250000,
+    source: "BloombergNEF EV Infrastructure 2024 ($250k/MW-yr)",
+  },
+  ev_demand_response_per_mw: { value: 50000, source: "EPRI Grid Integration ($50k/MW-yr)" },
+  data_center_ups_displacement_per_mw: {
+    value: 250000,
+    source: "Uptime Institute 2024 Benchmark ($250k/MW-yr)",
+  },
+  hospital_downtime_avoidance_per_mw: {
+    value: 150000,
+    source: "ASHE / NEC 517 Healthcare Benchmark ($150k/MW-yr)",
+  },
+  hospital_downtime_hourly_rate: {
+    value: 7500,
+    source: "ASHE Risk Studies ($7,500/hr avoided downtime)",
+  },
+  hotel_peak_management_per_mw: {
+    value: 80000,
+    source: "CBECS 2018 / Marriott Energy Benchmark ($80k/MW-yr)",
+  },
+  manufacturing_motor_spike_savings_per_mw: {
+    value: 140000,
+    source: "IEEE 446 Manufacturing Benchmark ($140k/MW-yr)",
+  },
+  cold_storage_thermal_savings_per_mw: {
+    value: 120000,
+    source: "GCCA Cold Storage Benchmark ($120k/MW-yr)",
+  },
+  max_target_payback_years: {
+    value: 5.0,
+    source: "Merlin Sales Target SSOT (≤ 5.0 yr simple payback)",
+  },
+
+  // Industry Load Calculation Factors (SSOT)
+  hotel_kw_per_room: { value: 2.5, source: "CBECS 2018 / ASHRAE 90.1 (Hotel peak demand)" },
+  hotel_load_factor: { value: 0.45, source: "Marriott Energy Benchmarks" },
+  datacenter_kw_per_sqft: { value: 150, source: "Uptime Institute Tier Benchmark" },
+  datacenter_load_factor: { value: 0.85, source: "Uptime Institute (high 24/7 utilization)" },
+  hospital_kw_per_bed: { value: 8.0, source: "ASHRAE Healthcare / NFPA 99" },
+  hospital_load_factor: { value: 0.65, source: "ASHRAE Healthcare Facilities" },
+  ev_charging_load_factor: { value: 0.25, source: "SAE J1772 / CHAdeMO / CCS Standards" },
+  truck_stop_load_factor: { value: 0.65, source: "Logistics & Fleet Charging Benchmark" },
+  car_wash_load_factor: { value: 0.35, source: "LADWP / Car Wash Equipment Benchmark" },
+  manufacturing_watts_per_sqft: { value: 30, source: "CBECS 2018 Industrial" },
+  manufacturing_load_factor: { value: 0.55, source: "IEEE 446 Industrial" },
+  retail_watts_per_sqft: { value: 15, source: "CBECS 2018 Retail" },
+  office_watts_per_sqft: { value: 12, source: "CBECS 2018 Commercial Office" },
+  warehouse_watts_per_sqft: { value: 8, source: "CBECS 2018 Logistics Warehouse" },
+  apartment_kw_per_unit: { value: 1.5, source: "ASHRAE Residential Multi-family" },
+  cold_storage_watts_per_sqft: { value: 45, source: "GCCA Industrial Refrigeration" },
 };
 
 // ============================================
@@ -181,6 +252,21 @@ export async function getConstant(key: string): Promise<number | null> {
   }
 
   return null;
+}
+
+/**
+ * Synchronous constant getter (reads from cache or TypeScript SSOT fallback)
+ */
+export function getConstantSync(key: string, defaultFallback: number): number {
+  const dbConstant = constantsCache.data.get(key);
+  if (dbConstant?.value_numeric !== null && dbConstant?.value_numeric !== undefined) {
+    return dbConstant.value_numeric;
+  }
+  const fallback = FALLBACK_CONSTANTS[key];
+  if (fallback) {
+    return fallback.value;
+  }
+  return defaultFallback;
 }
 
 /**
