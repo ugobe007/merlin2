@@ -266,7 +266,7 @@ function App() {
     );
   }
 
-  // carwashenergy.com serves the 4-step diagnostic. merlinenergy.net keeps the routes below.
+  // carwashenergy.net serves the 4-step diagnostic. merlinenergy.net keeps the routes below.
   if (isCarWashEnergyHost(window.location.hostname) && isCarWashPublicPath(pathname)) {
     return (
       <Suspense fallback={<PageLoader />}>

@@ -1,8 +1,10 @@
-/** carwashenergy.com is the 4-step diagnostic. merlinenergy.net keeps its own pages. */
+/** carwashenergy.net is the 4-step diagnostic. merlinenergy.net keeps its own pages. */
+const CAR_WASH_HOSTS = new Set(["carwashenergy.net", "carwashenergy.com", "carwash.localhost"]);
+
 export function isCarWashEnergyHost(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/\.$/, "");
   const bare = host.startsWith("www.") ? host.slice(4) : host;
-  return bare === "carwashenergy.com" || bare === "carwash.localhost";
+  return CAR_WASH_HOSTS.has(bare);
 }
 
 export function isCarWashPublicPath(pathname: string): boolean {
