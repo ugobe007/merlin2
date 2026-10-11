@@ -96,3 +96,8 @@ src/components/archive_legacy_nov_2025/
 
 # Misc
 *.snippet
+
+# Lead intake audit log — written before email, never committed
+server/data/leads.jsonl
+server/data/uploads/
+server/data/sales-inbox.json

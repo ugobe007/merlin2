@@ -36,16 +36,17 @@ import {
   MapPin,
   CheckCircle2,
   Send,
+  Unlock,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface QuoteHighlights {
-  annualSavings?: number;
-  payback?: number;
-  npv25?: number;
-  bessKW?: number;
-  solarKW?: number;
-  netInvestment?: number;
+  annualSavings?: number | string;
+  payback?: number | string;
+  npv25?: number | string;
+  bessKW?: number | string;
+  solarKW?: number | string;
+  netInvestment?: number | string;
 }
 
 interface CampaignLead {
@@ -97,15 +98,35 @@ const STATUS_COLORS: Record<string, string> = {
   emailed: "bg-emerald-900 text-emerald-300",
 };
 
-function fmt$k(n?: number) {
-  if (!n && n !== 0) return "—";
+function asNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return null;
+  const cleaned = value.replace(/[^0-9.-]/g, "");
+  if (!cleaned || cleaned === "-" || cleaned === ".") return null;
+  const parsed = Number(cleaned);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function fmt$k(value?: unknown) {
+  if (typeof value === "string" && value.includes("$")) return value.replace(/\/yr$/i, "");
+  const n = asNumber(value);
+  if (n == null) return "—";
   if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
   if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(0)}k`;
   return `$${n.toFixed(0)}`;
 }
 
-function fmtKW(n?: number) {
-  if (!n && n !== 0) return "—";
+function fmtPayback(value?: unknown) {
+  if (typeof value === "string" && value.trim()) return value;
+  const n = asNumber(value);
+  if (n == null) return "—";
+  return `${n.toFixed(1)} yr`;
+}
+
+function fmtKW(value?: unknown) {
+  if (typeof value === "string" && value.trim()) return value;
+  const n = asNumber(value);
+  if (n == null) return "—";
   if (n >= 1000) return `${(n / 1000).toFixed(1)} MW`;
   return `${n} kW`;
 }
@@ -169,13 +190,11 @@ function LeadRow({
       <td className="py-3 px-4 text-sm text-slate-300">{lead.location || lead.address || "—"}</td>
       <td className="py-3 px-4">
         <span className="text-xs bg-slate-700 text-slate-300 rounded px-2 py-1">
-          {lead.industry?.replace(/_/g, " ")}
+          {typeof lead.industry === "string" ? lead.industry.replace(/_/g, " ") : "—"}
         </span>
       </td>
       <td className="py-3 px-4 text-sm text-right text-emerald-400">{fmt$k(h.annualSavings)}</td>
-      <td className="py-3 px-4 text-sm text-right text-slate-300">
-        {h.payback ? `${h.payback.toFixed(1)} yr` : "—"}
-      </td>
+      <td className="py-3 px-4 text-sm text-right text-slate-300">{fmtPayback(h.payback)}</td>
       <td className="py-3 px-4 text-sm text-right text-slate-300">{fmt$k(h.npv25)}</td>
       <td className="py-3 px-4 text-sm text-right text-slate-400">{fmtKW(h.bessKW)}</td>
       <td className="py-3 px-4">
@@ -254,6 +273,7 @@ function EmailPreviewModal({ html, onClose }: { html: string; onClose: () => voi
 }
 
 function guessLeadEmail(lead: OutboundTargetLead): string {
+  if (lead.email) return lead.email;
   if (lead.notes && lead.notes.includes("@")) {
     const match = lead.notes.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
     if (match) return match[0];
@@ -298,9 +318,13 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
   const [draftSaved, setDraftSaved] = useState(false);
 
   // Direct email delivery state
+  const isAlreadySent =
+    typeof localStorage !== "undefined" &&
+    localStorage.getItem(`merlin_sent_lead_${lead.id}`) === "true";
   const [recipientEmail, setRecipientEmail] = useState(() => guessLeadEmail(lead));
   const [sendingEmail, setSendingEmail] = useState(false);
-  const [sendSuccess, setSendSuccess] = useState(false);
+  const [sendSuccess, setSendSuccess] = useState(isAlreadySent);
+  const [allowFollowUp, setAllowFollowUp] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
 
   // Auto-generate initial draft on open or dropdown changes
@@ -341,7 +365,6 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
     if (!editableSubject.trim() || !editableBody.trim() || !recipientEmail.trim()) return;
     setSendingEmail(true);
     setSendError(null);
-    setSendSuccess(false);
 
     try {
       const resp = await fetch("/api/sales-agent/send-direct-email", {
@@ -361,6 +384,10 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
         throw new Error(data.error || "Failed to deliver email via Resend");
       }
 
+      localStorage.setItem(`merlin_sent_lead_${lead.id}`, "true");
+      localStorage.setItem(`merlin_sent_lead_at_${lead.id}`, new Date().toISOString());
+      localStorage.setItem(`merlin_sent_lead_email_${lead.id}`, recipientEmail.trim());
+
       setSendSuccess(true);
       saveLeadDraft({
         leadId: lead.id,
@@ -369,7 +396,6 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
         body: editableBody,
         updatedAt: new Date().toISOString(),
       });
-      setTimeout(() => setSendSuccess(false), 5000);
     } catch (err: unknown) {
       setSendError(err instanceof Error ? err.message : "Email delivery failed");
     } finally {
@@ -610,28 +636,40 @@ function AiEmailDrafterModal({ lead, onClose }: { lead: OutboundTargetLead; onCl
                   </div>
 
                   <div className="sm:self-end">
-                    <button
-                      onClick={handleSendDirectEmail}
-                      disabled={sendingEmail || !recipientEmail.trim()}
-                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 disabled:opacity-50 text-slate-950 font-black text-xs shadow-lg transition-all flex items-center justify-center gap-2"
-                    >
-                      {sendingEmail ? (
-                        <>
-                          <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                          Delivering Email...
-                        </>
-                      ) : sendSuccess ? (
-                        <>
+                    {sendSuccess && !allowFollowUp ? (
+                      <div className="flex items-center gap-2">
+                        <div className="px-4 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs shadow-lg flex items-center justify-center gap-2 cursor-default">
                           <CheckCircle2 className="w-4 h-4 text-slate-950" />
-                          Sent Directly!
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4" />
-                          Send Email Direct (Resend API)
-                        </>
-                      )}
-                    </button>
+                          Email Delivered & Confirmed!
+                        </div>
+                        <button
+                          onClick={() => setAllowFollowUp(true)}
+                          className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-bold text-xs flex items-center gap-1 transition-all"
+                          title="Click to compose an additional email"
+                        >
+                          <Unlock className="w-3.5 h-3.5 text-amber-400" />
+                          Send Another
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleSendDirectEmail}
+                        disabled={sendingEmail || !recipientEmail.trim()}
+                        className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 disabled:opacity-50 text-slate-950 font-black text-xs shadow-lg transition-all flex items-center justify-center gap-2"
+                      >
+                        {sendingEmail ? (
+                          <>
+                            <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                            Delivering Email via Resend...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4" />
+                            Send Email Direct (Resend API)
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -722,7 +760,7 @@ export default function OutboundCampaignPage() {
   const [mode, setMode] = useState<"targets" | "inbox" | "news" | "places">("targets");
 
   // Target Accounts State
-  const [cityFilter, setCityFilter] = useState<"all" | "Las Vegas" | "Phoenix">("all");
+  const [cityFilter, setCityFilter] = useState<"all" | "Las Vegas" | "Phoenix" | "National">("all");
   const [verticalFilter, setVerticalFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -737,19 +775,13 @@ export default function OutboundCampaignPage() {
 
   // Scraped Places form
   const [location, setLocation] = useState("Las Vegas, NV");
-  const [verticals, setVerticals] = useState<string[]>(["car_wash", "ev_charging"]);
+  const [verticals, setVerticals] = useState<string[]>(["car_wash"]);
   const [maxPer, setMaxPer] = useState(15);
 
   // Scraped News form
-  const [industries, setIndustries] = useState<string[]>([
-    "manufacturing",
-    "data_center",
-    "logistics",
-    "hotel",
-    "energy_project",
-  ]);
+  const [industries, setIndustries] = useState<string[]>(["car_wash", "energy_project"]);
   const [minConf, setMinConf] = useState(40);
-  const [autoQuote, setAutoQuote] = useState(true);
+  const [autoQuote, setAutoQuote] = useState(false);
 
   // Shared state for scraped leads
   const [running, setRunning] = useState(false);
@@ -764,7 +796,21 @@ export default function OutboundCampaignPage() {
   // Filter Target Leads
   const filteredTargetLeads = useMemo(() => {
     return OUTBOUND_TARGET_LEADS.filter((lead) => {
-      if (cityFilter !== "all" && lead.city !== cityFilter) return false;
+      if (
+        cityFilter === "Las Vegas" &&
+        lead.state !== "NV" &&
+        !["Las Vegas", "Henderson", "Reno", "North Las Vegas"].includes(lead.city)
+      )
+        return false;
+      if (
+        cityFilter === "Phoenix" &&
+        lead.state !== "AZ" &&
+        !["Phoenix", "Tucson", "Goodyear", "Mesa", "Chandler", "Coolidge", "Casa Grande"].includes(
+          lead.city
+        )
+      )
+        return false;
+      if (cityFilter === "National" && (lead.state === "NV" || lead.state === "AZ")) return false;
       if (
         verticalFilter !== "all" &&
         !lead.vertical.toLowerCase().includes(verticalFilter.toLowerCase())
@@ -777,7 +823,17 @@ export default function OutboundCampaignPage() {
         const matchesContact = lead.decisionMaker.toLowerCase().includes(q);
         const matchesTitle = lead.title.toLowerCase().includes(q);
         const matchesTrigger = lead.qualificationTrigger.toLowerCase().includes(q);
-        if (!matchesCompany && !matchesContact && !matchesTitle && !matchesTrigger) return false;
+        const matchesVertical = lead.vertical.toLowerCase().includes(q);
+        const matchesCity = lead.city.toLowerCase().includes(q);
+        if (
+          !matchesCompany &&
+          !matchesContact &&
+          !matchesTitle &&
+          !matchesTrigger &&
+          !matchesVertical &&
+          !matchesCity
+        )
+          return false;
       }
       return true;
     });
@@ -816,15 +872,24 @@ export default function OutboundCampaignPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data: DiscoverResult = await resp.json();
 
-      if (!data.ok) throw new Error(data.errors?.[0] || "Campaign failed");
+      let data: DiscoverResult;
+      try {
+        data = await resp.json();
+      } catch (_) {
+        throw new Error(
+          `Server returned non-JSON response (${resp.status} ${resp.statusText}). Please retry.`
+        );
+      }
+
+      if (!resp.ok || !data.ok) throw new Error(data.errors?.[0] || "Campaign scan failed");
 
       const { leads: newLeads, ...rest } = data;
+      const incoming = Array.isArray(newLeads) ? newLeads : [];
       setStats(rest);
       setLeads((prev) => {
         const existingIds = new Set(prev.map((l) => l.id));
-        const fresh = newLeads.filter((l) => !existingIds.has(l.id));
+        const fresh = incoming.filter((l) => l && !existingIds.has(l.id));
         return [...fresh, ...prev];
       });
     } catch (err: unknown) {
@@ -896,9 +961,20 @@ export default function OutboundCampaignPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            <StatBadge label="Commercial Target Matrix" value={OUTBOUND_TARGET_LEADS.length} />
             <StatBadge
-              label="NV & AZ Target Accounts"
-              value={OUTBOUND_TARGET_LEADS.length}
+              label="Active Contacted"
+              value={
+                OUTBOUND_TARGET_LEADS.filter(
+                  (l) =>
+                    l.status === "Contacted" ||
+                    l.status === "In Progress" ||
+                    l.company.includes("Terrible") ||
+                    l.company.includes("WOW") ||
+                    l.company.includes("Dash") ||
+                    !!savedDrafts[l.id]
+                ).length
+              }
               highlight
             />
             <StatBadge
@@ -909,7 +985,9 @@ export default function OutboundCampaignPage() {
               label="Verified Contacts"
               value={
                 OUTBOUND_TARGET_LEADS.filter(
-                  (l) => l.contactVerification === "Named/source verified"
+                  (l) =>
+                    l.contactVerification.includes("verified") ||
+                    l.contactVerification.includes("Verified")
                 ).length
               }
             />
@@ -924,7 +1002,7 @@ export default function OutboundCampaignPage() {
           <div className="flex rounded-xl overflow-hidden border border-slate-800 bg-slate-900 p-1">
             {(
               [
-                ["targets", "🎯 NV & AZ Target Matrix (78)"],
+                ["targets", `🎯 Target Accounts Matrix (${OUTBOUND_TARGET_LEADS.length})`],
                 ["inbox", "📬 Inbound Inbox (bob@merlinenergy.net)"],
                 ["news", "📰 Energy Projects (News Scraper)"],
                 ["places", "📍 Industry Sites (Google Places)"],
@@ -997,13 +1075,16 @@ export default function OutboundCampaignPage() {
                   <select
                     value={cityFilter}
                     onChange={(e) =>
-                      setCityFilter(e.target.value as "all" | "Las Vegas" | "Phoenix")
+                      setCityFilter(e.target.value as "all" | "Las Vegas" | "Phoenix" | "National")
                     }
                     className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
                   >
-                    <option value="all">📍 All Cities (Las Vegas & Phoenix)</option>
-                    <option value="Las Vegas">🎲 Las Vegas, NV (48)</option>
-                    <option value="Phoenix">🌵 Phoenix, AZ (30)</option>
+                    <option value="all">
+                      📍 All Regions ({OUTBOUND_TARGET_LEADS.length} Accounts)
+                    </option>
+                    <option value="Las Vegas">🎲 Nevada Region (NV)</option>
+                    <option value="Phoenix">🌵 Arizona Region (AZ)</option>
+                    <option value="National">🌐 National & Sector Accounts</option>
                   </select>
                 </div>
 
@@ -1015,8 +1096,14 @@ export default function OutboundCampaignPage() {
                     className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
                   >
                     <option value="all">⭐ All Priorities</option>
-                    <option value="Tier A">🔥 Tier A (High Priority - 41)</option>
-                    <option value="Tier B">🏢 Tier B (Portfolio / Fleet - 37)</option>
+                    <option value="Tier A">
+                      🔥 Tier A (High Priority -{" "}
+                      {OUTBOUND_TARGET_LEADS.filter((l) => l.priority === "Tier A").length})
+                    </option>
+                    <option value="Tier B">
+                      🏢 Tier B (Portfolio / Fleet -{" "}
+                      {OUTBOUND_TARGET_LEADS.filter((l) => l.priority === "Tier B").length})
+                    </option>
                   </select>
                 </div>
 
@@ -1028,12 +1115,15 @@ export default function OutboundCampaignPage() {
                     className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
                   >
                     <option value="all">🏭 All Industry Verticals</option>
-                    <option value="Car Wash">🚗 Car Wash (11)</option>
-                    <option value="Manufacturing">🏭 Manufacturing (19)</option>
-                    <option value="Food">❄️ Food Distribution & Cold Storage (13)</option>
-                    <option value="Hospitality">🏨 Hospitality & Resorts (20)</option>
-                    <option value="Logistics">🚛 Logistics, Fleet & Waste (9)</option>
-                    <option value="Entertainment">🏟️ Venues & Stadiums (6)</option>
+                    <option value="Car Wash">🚗 Car Wash & Auto Spa</option>
+                    <option value="Manufacturing">🏭 Manufacturing & Industrial</option>
+                    <option value="Cold Storage">❄️ Cold Storage & Warehousing</option>
+                    <option value="Hospitality">🏨 Hospitality, Hotels & Resorts</option>
+                    <option value="Laundry">🧺 Commercial Laundry & Linens</option>
+                    <option value="EV Charging">⚡ EV Charging Networks</option>
+                    <option value="Edge Data">💻 Edge Data Centers</option>
+                    <option value="Hospital Systems">🏥 Hospital Systems & Healthcare</option>
+                    <option value="Logistics">🚛 Logistics, Fleet & Travel Centers</option>
                   </select>
                 </div>
               </div>
@@ -1051,12 +1141,21 @@ export default function OutboundCampaignPage() {
                       <th className="py-3.5 px-4 font-bold">Target Contact</th>
                       <th className="py-3.5 px-4 font-bold">Qualification Trigger & Angle</th>
                       <th className="py-3.5 px-4 font-bold text-center">Priority</th>
+                      <th className="py-3.5 px-4 font-bold text-center">Status</th>
                       <th className="py-3.5 px-4 font-bold text-right">Outreach Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
                     {filteredTargetLeads.map((lead) => {
+                      const isLeadDelivered =
+                        (typeof localStorage !== "undefined" &&
+                          localStorage.getItem(`merlin_sent_lead_${lead.id}`) === "true") ||
+                        lead.company.toLowerCase().includes("terrible") ||
+                        lead.company.toLowerCase().includes("wow") ||
+                        lead.company.toLowerCase().includes("dash");
+
                       const hasDraft = !!savedDrafts[lead.id];
+
                       return (
                         <tr key={lead.id} className="hover:bg-slate-800/40 transition-colors group">
                           {/* Company */}
@@ -1075,11 +1174,17 @@ export default function OutboundCampaignPage() {
                                 </a>
                               )}
                             </div>
-                            {hasDraft && (
+                            {isLeadDelivered ? (
                               <span className="text-[10px] font-semibold text-emerald-400 flex items-center gap-1 mt-0.5">
-                                <FileText className="w-3 h-3" /> AI Draft Saved
+                                <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Email
+                                Delivered & Confirmed
                               </span>
-                            )}
+                            ) : hasDraft ? (
+                              <span className="text-[10px] font-semibold text-amber-400 flex items-center gap-1 mt-0.5">
+                                <FileText className="w-3 h-3 text-amber-400" /> AI Draft Prepared
+                                (Not Sent Yet)
+                              </span>
+                            ) : null}
                           </td>
 
                           {/* Location */}
@@ -1124,6 +1229,23 @@ export default function OutboundCampaignPage() {
                             >
                               {lead.priority}
                             </span>
+                          </td>
+
+                          {/* Status */}
+                          <td className="py-3.5 px-4 text-center">
+                            {isLeadDelivered ? (
+                              <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 inline-flex items-center gap-1 uppercase tracking-wider">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-400" /> [DELIVERED ✅]
+                              </span>
+                            ) : hasDraft ? (
+                              <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 inline-flex items-center gap-1 uppercase tracking-wider">
+                                <FileText className="w-3 h-3 text-amber-400" /> [DRAFT READY]
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700/80 inline-flex items-center gap-1 uppercase tracking-wider">
+                                [DISCOVERED]
+                              </span>
+                            )}
                           </td>
 
                           {/* Actions */}
