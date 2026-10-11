@@ -1,0 +1,1257 @@
+/* Homepage, and the diagnostic's first step. Later diagnostic steps and the quote stay green. */
+.merlin-cw.home {
+  --ink: #08201a;
+  --body: #43584f;
+  --muted: #5e6890;
+  --accent: #6d48e5;
+  --accent-deep: #5730c9;
+  --verified: #0fa968;
+  --spike: #f0a72e;
+  --spike-deep: #b4700b;
+  --bg: #f4f8f6;
+  --line: #dce6e1;
+  --line-soft: #edf3f0;
+  --violet: #6d48e5;
+  --violet-deep: #5730c9;
+  --violet-soft: #efeefe;
+  --violet-line: #ded6fa;
+  --sky-line: #c7e7f8;
+  --brand-ink: #1a1450;
+  --brand-body: #4e5786;
+  --brand-mute: #5e6890;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  background: var(--bg);
+  color: var(--brand-body);
+}
+.merlin-cw.home p {
+  color: inherit;
+}
+.merlin-cw.home h1,
+.merlin-cw.home h2,
+.merlin-cw.home h3 {
+  color: var(--ink);
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.06;
+}
+.merlin-cw.home .wrap {
+  max-width: 1200px;
+  padding: 0 32px;
+}
+.merlin-cw.home .eyebrow {
+  color: var(--accent-deep);
+}
+
+.merlin-cw.home nav {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(93, 72, 229, 0.1);
+}
+.merlin-cw.home nav .wrap {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  height: 66px;
+}
+.merlin-cw.home .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--brand-ink);
+  font-weight: 800;
+  font-size: 16.5px;
+  letter-spacing: -0.02em;
+}
+.merlin-cw.home .brand i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: block;
+  background: linear-gradient(135deg, var(--violet), #1b84c9);
+  box-shadow: 0 0 0 5px rgba(109, 72, 229, 0.1);
+}
+.merlin-cw.home nav .links {
+  display: flex;
+  gap: 26px;
+  margin-left: 12px;
+  font-size: 14.5px;
+  font-weight: 550;
+  color: var(--brand-body);
+}
+.merlin-cw.home nav .links a:hover {
+  color: var(--violet-deep);
+}
+.merlin-cw.home nav .end {
+  margin-left: auto;
+}
+.merlin-cw.home .nbtn {
+  background: linear-gradient(135deg, var(--violet), var(--violet-deep));
+  color: #fff;
+  border-radius: 9px;
+  padding: 11px 20px;
+  font-weight: 700;
+  font-size: 14.5px;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(93, 72, 229, 0.28);
+}
+
+.merlin-cw.home header.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  background:
+    radial-gradient(1150px 640px at 90% -14%, rgba(47, 168, 232, 0.34), transparent 62%),
+    radial-gradient(1020px 600px at 2% 112%, rgba(109, 72, 229, 0.24), transparent 62%),
+    linear-gradient(128deg, #f7f4ff 0%, #eff5ff 44%, #e4f5fe 100%);
+}
+.merlin-cw.home .hero .blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(46px);
+  pointer-events: none;
+}
+.merlin-cw.home .hero .b1 {
+  width: 420px;
+  height: 420px;
+  right: -90px;
+  top: -120px;
+  background: rgba(47, 168, 232, 0.3);
+}
+.merlin-cw.home .hero .b2 {
+  width: 380px;
+  height: 380px;
+  left: -120px;
+  bottom: -150px;
+  background: rgba(109, 72, 229, 0.2);
+}
+.merlin-cw.home .hero .b3 {
+  width: 230px;
+  height: 230px;
+  left: 44%;
+  top: 6%;
+  background: rgba(186, 160, 255, 0.34);
+}
+.merlin-cw.home .hero .wrap {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1.04fr 0.96fr;
+  gap: 58px;
+  align-items: center;
+}
+.merlin-cw.home .hero .inner {
+  padding: 78px 0 74px;
+}
+.merlin-cw.home .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: #fff;
+  border: 1px solid var(--violet-line);
+  color: var(--violet-deep);
+  border-radius: 99px;
+  padding: 7px 15px 7px 11px;
+  font-size: 12.5px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 14px rgba(93, 72, 229, 0.1);
+  margin: 0;
+}
+.merlin-cw.home .pill svg {
+  width: 14px;
+  height: 14px;
+  color: var(--violet);
+}
+.merlin-cw.home .hero h1 {
+  color: var(--brand-ink);
+  font-size: 60px;
+  margin: 24px 0 0;
+  max-width: 15ch;
+}
+.merlin-cw.home .hero h1 em {
+  font-style: normal;
+  white-space: nowrap;
+  background: linear-gradient(100deg, #6d48e5 6%, #1b84c9 94%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.merlin-cw.home .hero .lede {
+  color: var(--brand-body);
+  font-size: 18px;
+  margin-top: 22px;
+  max-width: 47ch;
+  line-height: 1.6;
+}
+.merlin-cw.home .hero .lede b {
+  color: var(--brand-ink);
+  font-weight: 680;
+}
+.merlin-cw.home .ctas {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+.merlin-cw.home .btn {
+  border-radius: 11px;
+  padding: 15px 24px;
+  font-weight: 750;
+  font-size: 15.5px;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+}
+.merlin-cw.home .btn.primary {
+  background: linear-gradient(135deg, var(--violet), var(--violet-deep));
+  color: #fff;
+  box-shadow: 0 10px 26px rgba(93, 72, 229, 0.3);
+}
+.merlin-cw.home .btn.ghost {
+  background: #fff;
+  color: var(--violet-deep);
+  border-color: var(--violet-line);
+  box-shadow: 0 4px 14px rgba(93, 72, 229, 0.08);
+}
+.merlin-cw.home .trust {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 22px;
+  font-size: 13.5px;
+  color: var(--brand-mute);
+}
+.merlin-cw.home .trust svg {
+  width: 15px;
+  height: 15px;
+  color: var(--verified);
+  flex: none;
+}
+
+.merlin-cw.home .card {
+  background: #fff;
+  border-radius: 22px;
+  padding: 28px 30px 26px;
+  border: 1px solid #e7e2fc;
+  box-shadow:
+    0 30px 66px rgba(43, 27, 107, 0.17),
+    0 2px 0 rgba(255, 255, 255, 0.8) inset;
+}
+.merlin-cw.home .card h3 {
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  color: var(--brand-ink);
+}
+.merlin-cw.home .card .sub {
+  font-size: 13.5px;
+  color: var(--brand-mute);
+  margin-top: 7px;
+}
+.merlin-cw.home .fstep {
+  margin-top: 19px;
+}
+.merlin-cw.home .fstep label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 750;
+  color: var(--brand-ink);
+  margin-bottom: 7px;
+}
+.merlin-cw.home .ord {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--violet-soft);
+  color: var(--violet-deep);
+  display: grid;
+  place-items: center;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+.merlin-cw.home .optlab {
+  margin-left: auto;
+  color: var(--brand-mute);
+  font-weight: 650;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.merlin-cw.home .fstep input,
+.merlin-cw.home .fstep select {
+  width: 100%;
+  border: 1px solid #e2e5f0;
+  border-radius: 11px;
+  padding: 13px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--brand-ink);
+  background: #fff;
+  outline: none;
+}
+.merlin-cw.home .fstep input:focus,
+.merlin-cw.home .fstep select:focus {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px rgba(109, 72, 229, 0.14);
+}
+.merlin-cw.home .fstep input::placeholder {
+  color: #a9b0c9;
+}
+.merlin-cw.home .ziprow input {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  font-weight: 650;
+}
+.merlin-cw.home .resolved {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 9px;
+  padding: 10px 13px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f3fbff, #f5f1fe);
+  border: 1px solid var(--sky-line);
+  font-size: 13px;
+  color: var(--brand-body);
+}
+.merlin-cw.home .resolved svg {
+  width: 15px;
+  height: 15px;
+  color: var(--verified);
+  flex: none;
+}
+.merlin-cw.home .resolved b {
+  color: var(--brand-ink);
+  font-weight: 700;
+}
+.merlin-cw.home .resolved .rt {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--violet-deep);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.merlin-cw.home .confirm {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--brand-mute);
+  line-height: 1.45;
+}
+.merlin-cw.home .cands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.merlin-cw.home .cands button {
+  border: 1px solid var(--violet-line);
+  background: #fff;
+  color: var(--violet-deep);
+  border-radius: 9px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.merlin-cw.home .pi {
+  position: relative;
+}
+.merlin-cw.home .pi .powered {
+  position: absolute;
+  right: 12px;
+  top: 15px;
+  font-size: 10.5px;
+  color: #a9b0c9;
+  font-weight: 650;
+  pointer-events: none;
+}
+.merlin-cw.home .pi input {
+  padding-right: 108px;
+}
+.merlin-cw.home .suggest {
+  margin-top: 7px;
+  border: 1px solid #e2e5f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 14px 30px rgba(43, 27, 107, 0.1);
+}
+.merlin-cw.home .suggest button {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  padding: 11px 13px;
+  background: #fff;
+  border: 0;
+  border-bottom: 1px solid #f1f3f9;
+  font: inherit;
+  cursor: pointer;
+}
+.merlin-cw.home .suggest button:last-child {
+  border-bottom: 0;
+}
+.merlin-cw.home .suggest button:hover,
+.merlin-cw.home .suggest button.on {
+  background: var(--violet-soft);
+}
+.merlin-cw.home .suggest svg {
+  width: 15px;
+  height: 15px;
+  color: var(--violet);
+  flex: none;
+  margin-top: 2px;
+}
+.merlin-cw.home .suggest b {
+  display: block;
+  font-size: 13.5px;
+  color: var(--brand-ink);
+  font-weight: 680;
+}
+.merlin-cw.home .suggest span {
+  display: block;
+  font-size: 12px;
+  color: var(--brand-mute);
+  margin-top: 1px;
+}
+.merlin-cw.home .selwrap {
+  position: relative;
+}
+.merlin-cw.home .selwrap svg {
+  position: absolute;
+  right: 14px;
+  top: 15px;
+  width: 15px;
+  height: 15px;
+  color: var(--brand-mute);
+  pointer-events: none;
+}
+.merlin-cw.home .selwrap select {
+  cursor: pointer;
+  appearance: none;
+  padding-right: 36px;
+}
+.merlin-cw.home .optrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: #fafbff;
+  border: 1px solid #eceff8;
+  cursor: pointer;
+}
+.merlin-cw.home .optrow .ic {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--violet-soft);
+  color: var(--violet-deep);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.merlin-cw.home .optrow .ic svg {
+  width: 16px;
+  height: 16px;
+}
+.merlin-cw.home .optrow b {
+  display: block;
+  font-size: 13.5px;
+  color: var(--brand-ink);
+  font-weight: 680;
+}
+.merlin-cw.home .optrow span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--brand-mute);
+  margin-top: 2px;
+}
+.merlin-cw.home .pill2 {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 750;
+  color: var(--violet-deep);
+  background: var(--violet-soft);
+  border-radius: 99px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+.merlin-cw.home .card .go {
+  width: 100%;
+  margin-top: 20px;
+  justify-content: center;
+  padding: 16px 24px;
+  font-size: 16px;
+}
+.merlin-cw.home .fine {
+  font-size: 11.5px;
+  color: var(--brand-mute);
+  line-height: 1.5;
+  margin-top: 14px;
+  text-align: center;
+}
+.merlin-cw.home .fine b {
+  color: var(--brand-body);
+}
+.merlin-cw.home .form-error {
+  text-align: left;
+}
+
+.merlin-cw.home .ribbon {
+  padding: 0 0 20px;
+  background: linear-gradient(180deg, #e4f5fe 0%, #f4f8f6 92%);
+}
+.merlin-cw.home .ribbon .shot {
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(93, 72, 229, 0.12);
+  box-shadow: 0 22px 54px rgba(43, 27, 107, 0.16);
+  position: relative;
+  min-height: 180px;
+  background: #241552;
+}
+.merlin-cw.home .ribbon picture {
+  display: block;
+}
+.merlin-cw.home .ribbon img {
+  display: block;
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  object-position: center 58%;
+}
+.merlin-cw.home .ribbon .cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 34px 30px 20px;
+  background: linear-gradient(180deg, transparent, rgba(20, 12, 52, 0.72));
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.merlin-cw.home .ribbon .cap b {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+.merlin-cw.home .ribbon .cap span {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.merlin-cw.home .insight {
+  background: #fff;
+  padding: 88px 0 76px;
+  border-bottom: 1px solid var(--line);
+}
+.merlin-cw.home .insight h2 {
+  font-size: 44px;
+  margin-top: 14px;
+}
+.merlin-cw.home .insight h2 em {
+  font-style: normal;
+  color: var(--accent-deep);
+}
+.merlin-cw.home .insight .lede {
+  font-size: 17.5px;
+  margin-top: 20px;
+  color: var(--body);
+  max-width: 70ch;
+}
+.merlin-cw.home .insight .lede b {
+  color: var(--ink);
+  font-weight: 650;
+}
+.merlin-cw.home .chartbox {
+  margin-top: 44px;
+  background: #fbfdfc;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 26px 28px 18px;
+}
+.merlin-cw.home .chartbox .cap {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  flex-wrap: wrap;
+  position: static;
+  background: none;
+  color: inherit;
+  padding: 0;
+}
+.merlin-cw.home .chartbox .cap h3 {
+  font-size: 16px;
+}
+.merlin-cw.home .chartbox .cap p {
+  font-size: 13px;
+  color: #6c8078;
+}
+.merlin-cw.home .legend {
+  display: flex;
+  gap: 18px;
+  font-size: 12.5px;
+  font-weight: 650;
+  color: #6c8078;
+  flex-wrap: wrap;
+  margin: 0;
+}
+.merlin-cw.home .legend i {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+.merlin-cw.home .lg-load i {
+  background: #93d8bb;
+}
+.merlin-cw.home .lg-bill i {
+  background: var(--spike);
+}
+.merlin-cw.home svg.plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 12px;
+}
+.merlin-cw.home .draw {
+  stroke-dasharray: 1400;
+  stroke-dashoffset: 1400;
+  animation: cw-draw 1.7s 0.25s cubic-bezier(0.5, 0, 0.2, 1) forwards;
+}
+@keyframes cw-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.merlin-cw.home .billline {
+  opacity: 0;
+  animation: cw-fade 0.5s 1.65s forwards;
+}
+.merlin-cw.home .spikemark {
+  opacity: 0;
+  animation: cw-fade 0.5s 1.8s forwards;
+}
+@keyframes cw-fade {
+  to {
+    opacity: 1;
+  }
+}
+.merlin-cw.home .chartnote {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-top: 8px;
+  padding: 14px 16px;
+  background: #fff9ee;
+  border: 1px solid #f3dfb8;
+  border-radius: 12px;
+}
+.merlin-cw.home .chartnote .amt {
+  font-family: var(--mono);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--spike-deep);
+  white-space: nowrap;
+}
+.merlin-cw.home .chartnote p {
+  font-size: 13.5px;
+  color: #6b4a12;
+  line-height: 1.5;
+}
+.merlin-cw.home .chartnote b {
+  color: #4a3208;
+}
+
+.merlin-cw.home .band {
+  background: #191046;
+  color: rgba(255, 255, 255, 0.62);
+  padding: 52px 0;
+}
+.merlin-cw.home .band .grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 34px;
+}
+.merlin-cw.home .band .v {
+  font-size: 36px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  font-variant-numeric: tabular-nums;
+}
+.merlin-cw.home .band .v small {
+  font-size: 19px;
+  font-weight: 700;
+  color: #7fc4f5;
+}
+.merlin-cw.home .band .k {
+  font-size: 13px;
+  margin-top: 9px;
+  line-height: 1.5;
+}
+.merlin-cw.home .band .k b {
+  color: rgba(255, 255, 255, 0.94);
+  font-weight: 650;
+}
+.merlin-cw.home .band .rule {
+  height: 2px;
+  width: 34px;
+  background: linear-gradient(90deg, var(--violet), #1b84c9);
+  margin-bottom: 16px;
+  border-radius: 2px;
+}
+
+.merlin-cw.home section.pad {
+  padding: 84px 0;
+}
+.merlin-cw.home .split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 58px;
+  align-items: center;
+}
+.merlin-cw.home .split:not(:has(.art)) {
+  grid-template-columns: 1fr;
+}
+.merlin-cw.home .split.flip .art {
+  order: 2;
+}
+.merlin-cw.home .art {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #e8efeb;
+  box-shadow: 0 20px 48px rgba(8, 32, 26, 0.13);
+  min-height: 240px;
+}
+.merlin-cw.home .art picture {
+  display: block;
+}
+.merlin-cw.home .art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  aspect-ratio: 4 / 3;
+}
+.merlin-cw.home .split h2 {
+  font-size: 38px;
+  margin-top: 12px;
+}
+.merlin-cw.home .split .lede {
+  font-size: 16.5px;
+  margin-top: 18px;
+  color: var(--body);
+}
+.merlin-cw.home .tick {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+.merlin-cw.home .tick div {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 15px;
+  color: var(--body);
+}
+.merlin-cw.home .tick svg {
+  width: 19px;
+  height: 19px;
+  color: var(--verified);
+  flex: none;
+  margin-top: 2px;
+}
+.merlin-cw.home .tick b {
+  color: var(--ink);
+  font-weight: 680;
+}
+
+.merlin-cw.home .verdicts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 44px;
+}
+.merlin-cw.home .vc {
+  border-radius: 17px;
+  padding: 28px 30px;
+  border: 1px solid;
+}
+.merlin-cw.home .vc.win {
+  background: #f2fbf7;
+  border-color: #c4e8d5;
+}
+.merlin-cw.home .vc.lose {
+  background: #fdf6f1;
+  border-color: #efdcce;
+}
+.merlin-cw.home .vc .tag {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 11px;
+  border-radius: 99px;
+  margin-bottom: 15px;
+}
+.merlin-cw.home .vc.win .tag {
+  background: #d8f2e4;
+  color: #0a6b41;
+}
+.merlin-cw.home .vc.lose .tag {
+  background: #f7e3d4;
+  color: #8c4a16;
+}
+.merlin-cw.home .vc h3 {
+  font-size: 23px;
+}
+.merlin-cw.home .vc .city {
+  font-size: 14px;
+  color: #6c8078;
+  margin-top: 5px;
+  font-weight: 600;
+}
+.merlin-cw.home .vc .row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  font-size: 14.5px;
+  margin-top: 16px;
+  color: var(--body);
+}
+.merlin-cw.home .vc .row + .row {
+  margin-top: 0;
+}
+.merlin-cw.home .vc .row b {
+  color: var(--ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.merlin-cw.home .vc p {
+  margin-top: 18px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--body);
+}
+
+.merlin-cw.home .paths {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  margin-top: 46px;
+}
+.merlin-cw.home .path {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: 28px 26px;
+  transition: 0.2s;
+}
+.merlin-cw.home .path:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(8, 32, 26, 0.1);
+}
+.merlin-cw.home .path .pin {
+  font-size: 11.5px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-deep);
+}
+.merlin-cw.home .path h3 {
+  font-size: 20px;
+  margin-top: 11px;
+}
+.merlin-cw.home .path p {
+  font-size: 14.5px;
+  margin-top: 12px;
+  color: var(--body);
+}
+.merlin-cw.home .path .who {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 13px;
+  color: #6c8078;
+}
+.merlin-cw.home .path .who b {
+  color: var(--ink);
+  font-weight: 680;
+}
+
+.merlin-cw.home .steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  margin-top: 46px;
+}
+.merlin-cw.home .step {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: 30px 26px;
+}
+.merlin-cw.home .step .n {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: #191046;
+  color: #b3a6f7;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 16px;
+  margin-bottom: 18px;
+}
+.merlin-cw.home .step h3 {
+  font-size: 19px;
+}
+.merlin-cw.home .step p {
+  font-size: 14.5px;
+  margin-top: 11px;
+  color: var(--body);
+}
+.merlin-cw.home .step .t {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--accent-deep);
+  font-weight: 700;
+  margin-top: 15px;
+}
+
+.merlin-cw.home .faq {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 40px;
+  margin-top: 42px;
+}
+.merlin-cw.home .qa {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.merlin-cw.home .qa h3 {
+  font-size: 16.5px;
+}
+.merlin-cw.home .qa p {
+  font-size: 14.5px;
+  margin-top: 9px;
+  color: var(--body);
+}
+.merlin-cw.home .qa a {
+  color: var(--accent-deep);
+  font-weight: 650;
+}
+
+.merlin-cw.home .closing {
+  background: linear-gradient(158deg, #2a1b6b 0%, #3b2a96 46%, #2e7fc4 100%);
+  color: rgba(255, 255, 255, 0.74);
+  padding: 88px 0;
+  text-align: left;
+}
+.merlin-cw.home .closing .in {
+  max-width: 760px;
+}
+.merlin-cw.home .closing .eyebrow {
+  color: #a9c8ff;
+}
+.merlin-cw.home .closing h2 {
+  color: #fff;
+  font-size: 46px;
+  margin-top: 14px;
+  max-width: none;
+}
+.merlin-cw.home .closing h2 em {
+  font-style: normal;
+  background: linear-gradient(100deg, #c4b5fd 6%, #8fd4fa 94%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.merlin-cw.home .closing p {
+  font-size: 17px;
+  margin-top: 20px;
+  max-width: 58ch;
+  color: rgba(255, 255, 255, 0.74);
+}
+.merlin-cw.home footer {
+  background: #120b33;
+  color: rgba(255, 255, 255, 0.42);
+  padding: 34px 0;
+  font-size: 13.5px;
+  border-top: 0;
+}
+.merlin-cw.home footer .wrap {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 980px) {
+  .merlin-cw.home .hero .wrap,
+  .merlin-cw.home .band .grid,
+  .merlin-cw.home .split,
+  .merlin-cw.home .verdicts,
+  .merlin-cw.home .paths,
+  .merlin-cw.home .steps,
+  .merlin-cw.home .faq {
+    grid-template-columns: 1fr;
+  }
+  .merlin-cw.home .hero h1 {
+    font-size: 42px;
+  }
+  .merlin-cw.home .hero h1 em {
+    white-space: normal;
+  }
+  .merlin-cw.home .insight h2,
+  .merlin-cw.home .closing h2 {
+    font-size: 34px;
+  }
+  .merlin-cw.home nav .links {
+    display: none;
+  }
+  .merlin-cw.home .hero .inner {
+    padding: 48px 0 36px;
+  }
+}
+
+/* Diagnostic step 1 — same violet as the homepage. */
+.merlin-cw.find {
+  --ink: #1a1450;
+  --accent: #6d48e5;
+  --accent2: #5730c9;
+  --muted: #4e5786;
+  --line: #ded6fa;
+  --bg: #f7f4ff;
+  --warn: #b4700b;
+  background:
+    radial-gradient(900px 420px at 100% -10%, rgba(47, 168, 232, 0.22), transparent 60%),
+    radial-gradient(700px 380px at 0% 100%, rgba(109, 72, 229, 0.16), transparent 62%),
+    linear-gradient(160deg, #f7f4ff 0%, #f4f7ff 48%, #eef6fd 100%);
+  color: #4e5786;
+}
+.merlin-cw.find nav {
+  background: rgba(255, 255, 255, 0.86);
+  border-bottom-color: rgba(93, 72, 229, 0.12);
+}
+.merlin-cw.find .dot {
+  background: linear-gradient(135deg, #6d48e5, #1b84c9);
+  box-shadow: 0 0 0 5px rgba(109, 72, 229, 0.12);
+}
+.merlin-cw.find .logo {
+  color: #1a1450;
+}
+.merlin-cw.find .prog {
+  background: transparent;
+  border-bottom-color: rgba(93, 72, 229, 0.12);
+}
+.merlin-cw.find .pstep {
+  color: #8b93b8;
+}
+.merlin-cw.find .pnum {
+  background: #efeefe;
+  color: #5730c9;
+}
+.merlin-cw.find .pstep.done,
+.merlin-cw.find .pstep.active {
+  color: #1a1450;
+}
+.merlin-cw.find .pstep.done .pnum,
+.merlin-cw.find .pstep.active .pnum {
+  background: #6d48e5;
+  color: #fff;
+}
+.merlin-cw.find section {
+  padding: 32px 0 72px;
+}
+.merlin-cw.find .step-card {
+  max-width: 680px;
+  border-color: #ded6fa;
+  box-shadow: 0 18px 44px rgba(93, 72, 229, 0.08);
+}
+.merlin-cw.find h2 {
+  color: #1a1450;
+  font-size: 32px;
+}
+.merlin-cw.find .eyebrow {
+  color: #5730c9;
+}
+.merlin-cw.find .btn-p {
+  background: linear-gradient(135deg, #6d48e5, #5730c9);
+  box-shadow: 0 8px 18px rgba(93, 72, 229, 0.24);
+}
+.merlin-cw.find .btn-s {
+  border-color: #ded6fa;
+  color: #1a1450;
+}
+.merlin-cw.find .field input {
+  border-color: #ded6fa;
+  background: #fff;
+  color: #1a1450;
+}
+.merlin-cw.find .field input:focus {
+  outline: 2px solid rgba(109, 72, 229, 0.35);
+  border-color: #6d48e5;
+}
+.merlin-cw.find .zip-entry {
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+.merlin-cw.find .wash-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+.merlin-cw.find .wash-hit {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid #ded6fa;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.merlin-cw.find .wash-hit:hover,
+.merlin-cw.find .wash-hit.on {
+  border-color: #6d48e5;
+  background: #f7f4ff;
+}
+.merlin-cw.find .wash-hit b {
+  display: block;
+  color: #1a1450;
+  font-size: 15px;
+}
+.merlin-cw.find .wash-hit span {
+  display: block;
+  color: #5e6890;
+  font-size: 13px;
+  margin-top: 2px;
+}
+.merlin-cw.find .picked {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+  margin-top: 8px;
+}
+.merlin-cw.find .picked b {
+  color: #1a1450;
+}
+.merlin-cw.find .linkish {
+  background: none;
+  border: 0;
+  color: #5730c9;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+}
+.merlin-cw.find .resolved {
+  margin-top: 16px;
+  border: 1px solid #ded6fa;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+}
+.merlin-cw.find .resolved.weak {
+  border-color: #f3dfb8;
+  background: #fff9ee;
+}
+.merlin-cw.find .res-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+.merlin-cw.find .res-top b {
+  color: #1a1450;
+}
+.merlin-cw.find .pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #efeefe;
+  font-size: 14px;
+}
+.merlin-cw.find .pick .num {
+  margin-left: auto;
+  font-weight: 700;
+  color: #1a1450;
+  width: auto;
+  height: auto;
+  background: none;
+}
+.merlin-cw.find .v-go {
+  background: #e9f7f0;
+  color: #0a784a;
+}
+.merlin-cw.find .picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.merlin-cw.find .pick-card {
+  border: 1px solid #ded6fa;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  color: #1a1450;
+}
+.merlin-cw.find .pick-card.on {
+  border-color: #6d48e5;
+  background: #f7f4ff;
+  color: #5730c9;
+}
+.merlin-cw.find .drop {
+  border: 1.5px dashed #ded6fa;
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+  background: #f7f4ff;
+  margin-bottom: 16px;
+  cursor: pointer;
+  display: block;
+}
+.merlin-cw.find .drop b {
+  color: #1a1450;
+}
+.merlin-cw.find .btn-p:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}

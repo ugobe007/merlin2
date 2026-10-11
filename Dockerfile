@@ -93,6 +93,10 @@ RUN npx esbuild agents/growth-loop.ts \
     --packages=external \
     --outfile=dist-agents/growth-loop.mjs
 
+# Quote engine modules are TypeScript. The API process is plain Node 20.
+RUN npx esbuild pricing/orchestrationFee.ts --platform=node --format=esm --outfile=server/lib/orchestrationFee.js \
+ && npx esbuild pricing/peakShave.ts --platform=node --format=esm --outfile=server/lib/peakShave.js
+
 # Production stage - Multi-service (nginx + Node.js API)
 FROM node:20-alpine
 
@@ -108,8 +112,12 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copy server code
+# Copy server code, then the quote modules built above (Node 20 cannot import the .ts sources).
 COPY server/ /app/server/
+COPY --from=builder /app/server/lib/orchestrationFee.js /app/server/lib/orchestrationFee.js
+COPY --from=builder /app/server/lib/peakShave.js /app/server/lib/peakShave.js
+COPY src/data/utility_zip_lookup.json /app/src/data/utility_zip_lookup.json
+COPY src/services/carwashUtilityResolve.js /app/src/services/carwashUtilityResolve.js
 
 # Copy pre-compiled agent bundles (built in the builder stage — no tsx required)
 COPY --from=builder /app/dist-agents /app/server/agents/

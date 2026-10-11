@@ -7,8 +7,18 @@
  * Geocodes location, fetches NREL solar PSH, sizes system from industry
  * defaults (or caller overrides), then runs the full v4.5 pricing stack.
  *
- * Mirrors pricingServiceV45.ts logic server-side so the REST API always
- * produces numbers identical to the in-browser wizard.
+ * The Merlin fee and the peak-shave ceiling are shared with the wizard
+ * (pricing/orchestrationFee.ts, pricing/peakShave.ts). Car-wash quotes on
+ * both sites use this route, so the solar price here is the car-wash price:
+ * $1.51/W with labor inside the fee base. The wizard still prices other
+ * industries at $1.00/W equipment and $0.51/W labor outside the fee.
+ *   - Payback: this route shows a 5-year, a 10-year, and a 20-year battery
+ *     warranty. The install recommendation is the 10-year term. Clearing
+ *     only the 20-year term is not a recommendation.
+ *     The wizard guardrail still cuts a tier that misses 5 years.
+ *   - Shave effectiveness is shared: car wash 0.95, every other industry 0.75.
+ *     Both are clamped to nameplate and to 45% of peak.
+ * A missing or rejected geocode still returns a quote. Sun hours fall back to 4.5.
  *
  * Input (all fields except `location` are optional):
  * {
@@ -33,14 +43,17 @@
 
 import express from 'express';
 import { findInstallerForState } from './epc.js';
+import { calculateMerlinFees } from '../lib/orchestrationFee.js';
+import { MAX_SHAVE_FRACTION, PEAK_SHAVE_EFFECTIVENESS, demandShaveKW, creditedShaveKW, shaveEffectivenessForIndustry } from '../lib/peakShave.js';
+
+export { calculateMerlinFees };
 
 const router = express.Router();
 
-// ============================================================================
-// PRICING CONSTANTS (mirrored from src/services/pricingServiceV45.ts)
-// ============================================================================
-
-const SOLAR_PRICE_PER_WATT    = 1.51;   // $/W net (inverter excluded)
+// Fee and shave ceiling are shared. Solar $/W is not.
+// $1.51 here includes the $0.51/W labor the wizard keeps out of the fee base.
+// Leave it until the fee-base decision: equipment, or equipment plus labor.
+const SOLAR_PRICE_PER_WATT    = 1.51;
 const BESS_PRICE_PER_KWH      = 350;    // $/kWh — pack only
 const BESS_PRICE_PER_KW       = 150;    // $/kW  — PCS / hybrid inverter
 const GEN_PRICE_PER_KW_DIESEL = 690;    // $/kW diesel
@@ -54,15 +67,6 @@ const SITE_WORK_TOTAL         = 25800;  // Structural eng, monitoring, interconn
 const CONTINGENCY_RATE        = 0.075;  // 7.5% construction contingency
 const FEDERAL_ITC_RATE        = 0.30;   // 30% IRA 2022 (solar + BESS eligible)
 const SOLAR_PR                = 0.77;   // NREL Performance Ratio (DC wiring, inverter, soiling, temp)
-// CALIBRATE ME. Credited peak shave cannot exceed this share of site peak.
-// A battery cannot save more demand than it shaves, and it cannot shave more than the peak.
-// Sweep of which tier has the shortest payback (car wash, indexed price, 120 kW solar cap, 4.5 sun hours):
-//   0.30 Starter · 0.35–0.50 Recommended · 0.55+ Complete.
-// 0.45 is inside that band, just above BESS_RATIO.peak_shaving (0.40), and off the 0.50 edge.
-// Set it from metered peak-shaving performance and re-run the sweep. It is not chosen to make a tier win.
-const MAX_SHAVE_FRACTION       = 0.45;
-const PEAK_SHAVE_EFFECTIVENESS = 0.75;
-
 // NREL PVWatts key — confirmed working 2025-12-11
 const NREL_API_KEY_FALLBACK = 'G9sYxfv89Vr9mjHD5zThWpBntyYkKJjP6iF8i3He';
 
@@ -78,7 +82,14 @@ const INDUSTRY_DEFAULTS = {
   hotel:         { peakLoadKW: 500,  solarCapKW: 225,  criticalLoadPct: 0.45, electricityRate: 0.13, demandCharge: 18 },
   restaurant:    { peakLoadKW: 80,   solarCapKW: 30,   criticalLoadPct: 0.60, electricityRate: 0.14, demandCharge: 16 },
   retail:        { peakLoadKW: 300,  solarCapKW: 100,  criticalLoadPct: 0.35, electricityRate: 0.12, demandCharge: 15 },
-  // car_wash: solarCapKW scales with peakLoadKW (canopy ~27% of peak kW)
+  // car_wash solarCapKW is a canopy cap, not a share of the default peak.
+  // CHOICE: 55 kW. An older comment said "~27% of peak kW". 27% of the 450 kW
+  // default is ~120 kW, and 55 / 450 is 12%. Those are different systems:
+  // on the live Brooklyn case, 55 kW of cap is a 47 kW canopy, $212,956 net,
+  // $4,117 a month; 120 kW of cap is 102 kW, $277,549, $4,825 a month.
+  // Either is buildable, and neither changes which tier wins. 55 is the
+  // number the checked Brooklyn quote is built on. Do not raise it to make
+  // the comment true.
   // demandCharge $20/kW reflects real commercial rates (EIA 2024 C&I median)
   // criticalLoadPct 0.20 is lighting, controllers and freeze protection.
   // The tunnel is not backup-critical. 0.80 was sizing a generator that
@@ -220,10 +231,10 @@ function computeConfidenceScore({ peakSource, rateSource, locationResolved, pshL
   const rounded = Math.min(100, Math.round(score));
   const tier = rounded >= 75 ? 'HIGH CONFIDENCE' : rounded >= 50 ? 'MEDIUM CONFIDENCE' : 'PROVISIONAL';
   const description = rounded >= 75
-    ? 'All key inputs from live sources — suitable for PE underwriting'
+    ? "Built from your own bill and your utility's filed rates. Nothing here is a guess."
     : rounded >= 50
-    ? 'Mix of live and default fallbacks — upload utility bill to lift to HIGH'
-    : 'Significant defaults used — provisional estimate only';
+    ? "Most of this is confirmed. Send your bill and we'll make the rest exact."
+    : "Typical numbers for your area — send a bill and we'll price your site.";
   return { score: rounded, tier, description };
 }
 
@@ -233,19 +244,20 @@ function computeConfidenceScore({ peakSource, rateSource, locationResolved, pshL
 // then samples 500 draws. P10 = conservative, P50 = underwriting base,
 // P90 = upside. Matches v34.2.0 methodology.
 // ============================================================================
-function computeMonteCarlo(netInvestment, baseSavings, electricityRate, demandCharge, bessKW, solarKW, psh, peakLoadKW = 0, n = 500) {
+function computeMonteCarlo(netInvestment, baseSavings, electricityRate, demandCharge, bessKW, solarKW, psh, peakLoadKW = 0, effectiveness = PEAK_SHAVE_EFFECTIVENESS, n = 500) {
+  const effLow = Math.max(0.5, Math.round((effectiveness - 0.10) * 100) / 100);
+  const effHigh = Math.min(1, Math.round((effectiveness + 0.10) * 100) / 100);
   const results = [];
   for (let i = 0; i < n; i++) {
     // Gaussian-like via sum of uniforms (Box-Muller approximation)
     const rateVar   = (Math.random() - 0.5) * 0.30;   // ±15% electricity rate
     const demandVar = (Math.random() - 0.5) * 0.40;   // ±20% demand charge
     const solarVar  = (Math.random() - 0.5) * 0.20;   // ±10% solar production
-    const bessEff   = 0.65 + Math.random() * 0.20;     // 65–85% demand shave effectiveness
+    const bessEff   = effLow + Math.random() * (effHigh - effLow);
     const adjRate   = electricityRate * (1 + rateVar);
     const adjDemand = demandCharge    * (1 + demandVar);
     const adjSolar  = solarKW * psh * 365 * SOLAR_PR * (1 + solarVar) * adjRate;
-    const shaveCeiling = peakLoadKW > 0 ? Math.round(peakLoadKW * MAX_SHAVE_FRACTION) : bessKW;
-    const adjDemandSav = Math.min(bessKW, shaveCeiling) * adjDemand * 12 * bessEff;
+    const adjDemandSav = demandShaveKW(bessKW, peakLoadKW, bessEff) * adjDemand * 12;
     const totalSav  = adjSolar + adjDemandSav;
     const pb        = netInvestment <= 0 ? 0 : netInvestment / Math.max(1, totalSav);
     // 5-year IRR approximation: (savings*5 - investment) / investment / 5 * 100
@@ -266,33 +278,18 @@ function computeMonteCarlo(netInvestment, baseSavings, electricityRate, demandCh
     p10: { paybackYears: fmt1(p10.payback), irr5Pct: fmt1(p10.irr5), annualSavings: fmtK(p10.annualSavings), label: 'Conservative (downside)' },
     p50: { paybackYears: fmt1(p50.payback), irr5Pct: fmt1(p50.irr5), annualSavings: fmtK(p50.annualSavings), label: 'Base case (PE underwriting)' },
     p90: { paybackYears: fmt1(p90.payback), irr5Pct: fmt1(p90.irr5), annualSavings: fmtK(p90.annualSavings), label: 'Upside' },
-    note: 'Monte Carlo n=500 · varies electricity rate ±15%, demand charge ±20%, solar yield ±10%, BESS effectiveness 65–85%',
+    note: `Monte Carlo n=500 · varies electricity rate ±15%, demand charge ±20%, solar yield ±10%, BESS effectiveness ${Math.round(effLow * 100)}–${Math.round(effHigh * 100)}%`,
   };
 }
 const NEC_GEN_MARGIN         = 1.25;  // NEC/LADWP reserve margin
 const BESS_COMMERCIAL_FLOOR  = 75;   // kW — minimum commercial BESS
+// BESS warranties we price, in the order the page shows them.
+// A payback that misses all three is not a slow payback.
+const BESS_WARRANTY_TERMS    = [5, 10, 20];
 
 // ============================================================================
 // HELPERS
 // ============================================================================
-
-/** Tiered Merlin service fee (mirrored from calculateMerlinFees in pricingServiceV45.ts) */
-function calculateMerlinFees(equipmentSubtotal) {
-  let marginRate;
-  if (equipmentSubtotal < 200000)      marginRate = 0.20;
-  else if (equipmentSubtotal < 800000) marginRate = 0.14;
-  else                                  marginRate = 0.13;
-  const totalFee = equipmentSubtotal * marginRate;
-  return {
-    designIntelligence:  Math.round(totalFee * 0.14),
-    procurementSourcing: Math.round(totalFee * 0.65),
-    pmConstruction:      Math.round(totalFee * 0.16),
-    incentiveFiling:     Math.round(totalFee * 0.05),
-    totalFee:            Math.round(totalFee),
-    effectiveMargin:     marginRate,
-    annualMonitoring:    580,
-  };
-}
 
 /** Annual operating reserves (pricingServiceV45.ts ANNUAL_RESERVES) */
 function calcAnnualReserves(solarKW, bessKWh, bessPerKwh = BESS_PRICE_PER_KWH) {
@@ -458,14 +455,16 @@ function calcTierCosts(eq, priceOverrides = {}) {
   };
 }
 
-function calcTierSavings(eq, electricityRate, demandCharge, psh, bessPerKwh = BESS_PRICE_PER_KWH, peakLoadKW = 0) {
+function calcTierSavings(eq, electricityRate, demandCharge, psh, bessPerKwh = BESS_PRICE_PER_KWH, peakLoadKW = 0, industryKey = '') {
   const { bessKW, bessKWh, solarKW,
           l2Chargers = 0, dcfcChargers = 0, hpcChargers = 0,
           truckStopCabinets = 0 } = eq;
   const shaveCeilingKW = peakLoadKW > 0 ? Math.round(peakLoadKW * MAX_SHAVE_FRACTION) : bessKW;
-  const creditedShaveKW = Math.min(bessKW, shaveCeilingKW);
-  const uncreditedShaveKW = Math.max(0, bessKW - creditedShaveKW);
-  const demandChargeSavings = creditedShaveKW * demandCharge * 12 * PEAK_SHAVE_EFFECTIVENESS;
+  const creditedKW = creditedShaveKW(bessKW, peakLoadKW);
+  const uncreditedShaveKW = Math.max(0, bessKW - creditedKW);
+  const shaveEffectiveness = shaveEffectivenessForIndustry(industryKey);
+  const effectiveShaveKW = demandShaveKW(bessKW, peakLoadKW, shaveEffectiveness);
+  const demandChargeSavings = effectiveShaveKW * demandCharge * 12;
   const solarKWhProduced    = solarKW * psh * 365 * SOLAR_PR;
   const solarSavings        = solarKWhProduced * electricityRate;
   // Truck stop DockChain cabinet: ~$90K/yr gross revenue per cabinet
@@ -477,7 +476,9 @@ function calcTierSavings(eq, electricityRate, demandCharge, psh, bessPerKwh = BE
   return {
     demandChargeSavings: Math.round(demandChargeSavings),
     shaveCeilingKW,
-    creditedShaveKW,
+    shaveEffectiveness,
+    effectiveShaveKW: Math.round(effectiveShaveKW * 10) / 10,
+    creditedShaveKW: creditedKW,
     uncreditedShaveKW,
     shaveCapped: uncreditedShaveKW > 0,
     solarKWhProduced:    Math.round(solarKWhProduced),
@@ -489,21 +490,66 @@ function calcTierSavings(eq, electricityRate, demandCharge, psh, bessPerKwh = BE
   };
 }
 
+function cashBack(netInvestment, netAnnualSavings) {
+  return {
+    monthlySavings: Math.round(netAnnualSavings / 12),
+    netBack5Year:   Math.round(netAnnualSavings * 5 - netInvestment),
+    netBack10Year:  Math.round(netAnnualSavings * 10 - netInvestment),
+    netBack20Year:  Math.round(netAnnualSavings * 20 - netInvestment),
+    netBack25Year:  Math.round(netAnnualSavings * 25 - netInvestment),
+  };
+}
+
+function warrantyLadder(netInvestment, netAnnualSavings, paybackYears) {
+  return BESS_WARRANTY_TERMS.map((years) => ({
+    years,
+    netBack: Math.round(netAnnualSavings * years - netInvestment),
+    paidOff: netAnnualSavings > 0 && paybackYears <= years,
+  }));
+}
+
 function calcROI(netInvestment, netAnnualSavings) {
+  const cash = cashBack(netInvestment, netAnnualSavings);
+  const life = { warrantyYears: BESS_WARRANTY_TERMS[BESS_WARRANTY_TERMS.length - 1], ...cash };
   if (netAnnualSavings <= 0) {
-    return { paybackYears: 999, year1ROI: 0, roi10Year: 0, roi25Year: 0, npv25Year: Math.round(-Math.max(netInvestment, 0)) };
+    return {
+      paybackYears: 999,
+      paysBackInLife: false,
+      warrantyTerms: warrantyLadder(netInvestment, netAnnualSavings, 999),
+      ...life,
+      year1ROI: 0,
+      roi10Year: 0,
+      roi25Year: 0,
+      npv25Year: Math.round(-Math.max(netInvestment, 0)),
+    };
   }
   // A system that costs nothing has already paid back. 999 would rank it as the worst option.
   if (netInvestment <= 0) {
     let npv = -netInvestment;
     for (let yr = 1; yr <= 25; yr++) npv += netAnnualSavings / Math.pow(1.05, yr);
-    return { paybackYears: 0, year1ROI: null, roi10Year: null, roi25Year: null, npv25Year: Math.round(npv) };
+    return {
+      paybackYears: 0,
+      paysBackInLife: true,
+      warrantyTerms: warrantyLadder(netInvestment, netAnnualSavings, 0),
+      ...life,
+      year1ROI: null,
+      roi10Year: null,
+      roi25Year: null,
+      npv25Year: Math.round(npv),
+    };
   }
   const payback = Math.round((netInvestment / netAnnualSavings) * 10) / 10;
+  const warrantyTerms = warrantyLadder(netInvestment, netAnnualSavings, payback);
+  // The install button follows the 10-year term. Year 5 and year 20 are shown
+  // beside it. Clearing only the 20-year term is not a recommendation.
+  const clearsTen = warrantyTerms.some((term) => term.years === 10 && term.paidOff);
   let npv = -netInvestment;
   for (let yr = 1; yr <= 25; yr++) npv += netAnnualSavings / Math.pow(1.05, yr);
   return {
     paybackYears: payback,
+    paysBackInLife: clearsTen,
+    warrantyTerms,
+    ...life,
     year1ROI:     Math.round((netAnnualSavings / netInvestment) * 100),
     roi10Year:    Math.round(((netAnnualSavings * 10  - netInvestment) / netInvestment) * 100),
     roi25Year:    Math.round(((netAnnualSavings * 25  - netInvestment) / netInvestment) * 100),
@@ -529,6 +575,7 @@ function buildTier(tierLabel, p, priceOverrides = {}) {
     eq, p.electricityRate, p.demandCharge, p.psh,
     priceOverrides.bessPerKwh ?? BESS_PRICE_PER_KWH,
     p.peakLoadKW,
+    p.industryKey,
   );
   const roi        = calcROI(costs.returnCapital.investment, savings.netAnnualSavings);
   const blendedRoi = calcROI(costs.netInvestment, savings.netAnnualSavings);
@@ -725,6 +772,7 @@ router.post('/', async (req, res) => {
       rec.equipment.solarKW,
       psh,
       p.peakLoadKW,
+      rec.savings.shaveEffectiveness,
     );
 
     console.log(`[/api/quote] ✅ ${elapsed}ms — ${geo.formattedAddress} PSH=${psh}h | Rec: $${rec.costs.netInvestment.toLocaleString()} net, ${rec.roi.paybackYears}yr payback | Confidence: ${confidence.score} (${confidence.tier}) | BESS: ${bessSelection.vendor} ${bessSelection.model}`);

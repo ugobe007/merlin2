@@ -16,6 +16,7 @@ import wizardWorkflowRouter from './routes/wizard-workflow.js';
 import opportunitiesRouter from './routes/opportunities.js';
 import adminRouter from './routes/admin.js';
 import marketNewsRouter from './routes/market-news.js';
+import facilityLeadsRouter from './routes/facility-leads.js';
 
 // Load environment variables from server/.env, then root .env for local scripts
 const __filename = fileURLToPath(import.meta.url);
@@ -56,6 +57,7 @@ app.use('/api', opportunitiesRouter);
 app.use('/api', adminRouter);
 app.use('/api', demoRouter);
 app.use('/api', marketNewsRouter);
+app.use('/api', facilityLeadsRouter);
 
 // Health check — used by smoke tests and uptime monitors
 app.get('/api/health', async (req, res) => {
@@ -97,6 +99,20 @@ app.get('/api/health', async (req, res) => {
 
 // Legacy health path (keep for Railway/Fly health checks)
 app.get('/health', (_req, res) => res.redirect('/api/health'));
+
+// A browser opened on this port has no page. Express answers with
+// "Cannot GET /" under a CSP that renders as a blank document.
+app.get('/', (req, res) => {
+  const host = req.hostname;
+  const local = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+  if (local) return res.redirect(302, 'http://localhost:5184/');
+  res.type('html').send(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Merlin Energy</title></head>
+<body style="font-family:system-ui,sans-serif;padding:32px;color:#0A1F17">
+<h1>Merlin API</h1>
+<p>This port serves the API. <a href="/api/health">Health</a></p>
+</body></html>`);
+});
 
 if (process.env.VERCEL !== '1') {
   app.listen(PORT, () => {

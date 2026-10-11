@@ -9,7 +9,7 @@
  * - Added site engineering & construction costs ($25,800 baseline)
  * - Added 7.5% construction contingency
  * - Added annual operating reserves (insurance, inverter, BESS degradation)
- * - Implemented tiered margin structure (22% → 17% → 15%, equipment-only quote basis)
+ * - Merlin fee reads pricing/orchestrationFee.ts (the same schedule as /api/quote)
  * - Honest financial projections (4.5yr payback vs fabricated 4.0yr)
  * - v4.5.1: Added EV electrical infrastructure cost (480V service, transformer, panel)
  *   as a separate line item — DCFC/HPC charger unit prices do NOT cover service upgrades.
@@ -26,6 +26,11 @@
  */
 
 import { computeEVInfrastructureRequirements } from "./addonGuardrails";
+import { getConstantSync } from "./calculationConstantsService";
+import { calculateMerlinFees } from "../../pricing/orchestrationFee";
+import { demandShaveKW, shaveEffectivenessForIndustry } from "../../pricing/peakShave";
+
+export { calculateMerlinFees };
 
 // ============================================================================
 // EQUIPMENT UNIT PRICING ($/unit)
@@ -34,6 +39,8 @@ import { computeEVInfrastructureRequirements } from "./addonGuardrails";
 export const EQUIPMENT_UNIT_COSTS = {
   // Solar PV — equipment-only (NO field labor)
   solar: {
+    // Fee base is open. $1.00 is equipment only; $0.51/W labor is outside the fee.
+    // /api/quote uses $1.51/W with that labor inside the fee base. Do not merge them here.
     pricePerWatt: 1.0, // $/W equipment-only: modules, racking, BOS wiring, basic permits. NO field labor.
     laborPerWatt: 0.51, // $/W field installation labor — shown as Additional Costs, NOT in equipment quote.
     inverterDeduction: 0.19, // $/W (inverter now in BESS hybrid system)
@@ -165,54 +172,6 @@ export const ANNUAL_RESERVES = {
     );
   },
 } as const;
-
-// ============================================================================
-// MERLIN AI SERVICES - TIERED MARGIN STRUCTURE
-// ============================================================================
-
-/**
- * Calculate Merlin service fees based on equipment subtotal
- * Implements tiered margin: 20% (small) → 14% (medium) → 13% (large)
- */
-export function calculateMerlinFees(equipmentSubtotal: number): {
-  designIntelligence: number;
-  procurementSourcing: number;
-  pmConstruction: number;
-  incentiveFiling: number;
-  totalFee: number;
-  annualMonitoring: number;
-  effectiveMargin: number;
-} {
-  // Rates calibrated for equipment-only quote basis (labor excluded from quote).
-  // Higher vs. EPC model: Merlin provides design intelligence, procurement,
-  // software platform, and incentive filing; field labor is a separate cost center.
-  let marginRate: number;
-  if (equipmentSubtotal < 200000) {
-    marginRate = 0.22; // 22% for small projects (<$200K)
-  } else if (equipmentSubtotal < 800000) {
-    marginRate = 0.17; // 17% for medium projects ($200K–$800K)
-  } else {
-    marginRate = 0.15; // 15% for large projects (>$800K)
-  }
-
-  const totalFee = equipmentSubtotal * marginRate;
-
-  // Breakdown of fees (approximate distribution)
-  const designIntelligence = totalFee * 0.14; // ~14% of total fee
-  const procurementSourcing = totalFee * 0.65; // ~65% of total fee (largest component)
-  const pmConstruction = totalFee * 0.16; // ~16% of total fee
-  const incentiveFiling = totalFee * 0.05; // ~5% of total fee
-
-  return {
-    designIntelligence: Math.round(designIntelligence),
-    procurementSourcing: Math.round(procurementSourcing),
-    pmConstruction: Math.round(pmConstruction),
-    incentiveFiling: Math.round(incentiveFiling),
-    totalFee: Math.round(totalFee),
-    annualMonitoring: 580, // Fixed annual monitoring fee
-    effectiveMargin: marginRate,
-  };
-}
 
 // ============================================================================
 // FINANCIAL CALCULATIONS
@@ -499,6 +458,8 @@ export interface SavingsInputs {
 
   // Facility context (used for industry-specific savings, e.g. hospital downtime avoidance)
   industry?: string;
+  /** Site peak. When set, credited shave cannot exceed 45% of it. */
+  peakLoadKW?: number;
 }
 
 export interface SavingsBreakdown {
@@ -556,11 +517,13 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
     );
   }
 
-  // BESS Demand Charge Savings
-  // Commercial BESS demand management effectiveness: 75% (NREL/EPRI benchmark
-  // for purpose-built demand-charge BESS — reflects months where peak is
-  // successfully clipped vs. months where SOC or dispatch timing falls short)
-  const demandChargeSavings = inputs.bessKW * inputs.demandCharge * 12 * 0.75;
+  // Effectiveness is an assumption about how much of the allowed shave shows up.
+  // It is applied inside demandShaveKW, which then clamps to nameplate and to
+  // 45% of peak. Nothing after this line may multiply the shave back up.
+  // Car wash is 0.95. Every other industry is 0.75. Same constants as /api/quote.
+  const effectiveness = shaveEffectivenessForIndustry(inputs.industry ?? "");
+  const shavedKW = demandShaveKW(inputs.bessKW, inputs.peakLoadKW ?? 0, effectiveness);
+  const demandChargeSavings = shavedKW * inputs.demandCharge * 12;
 
   // BESS TOU Arbitrage (if applicable)
   let touArbitrageSavings = 0;
@@ -653,9 +616,10 @@ export function calculateAnnualSavings(inputs: SavingsInputs, solarKW: number): 
   // Estimate: 2 avoided outage events/yr × 4 hrs × $7,500/hr avoided cost = $60K/yr.
   // Source: ASHE (American Society for Healthcare Engineering) facility risk studies.
   // For all other industries, generator backup value remains $0 (hard to quantify generally).
+  const hospitalHourlyRate = getConstantSync("hospital_downtime_hourly_rate", 7500);
   const generatorBackupValue =
     inputs.industry === "hospital" && inputs.generatorKW > 0
-      ? 2 * 4 * 7500 // 2 events/yr × 4 hr/event × $7,500/hr = $60,000/yr
+      ? 2 * 4 * hospitalHourlyRate // 2 events/yr × 4 hr/event × $7,500/hr = $60,000/yr (SSOT)
       : 0;
 
   // Energy cost-reduction subtotal — utility-bill savings only, EV revenue excluded.

@@ -59,6 +59,8 @@ const VendorLeadsMarketingPage = lazy(() => import("./pages/VendorLeadsMarketing
 const OutboundCampaignPage = lazy(() => import("./pages/OutboundCampaignPage"));
 import { trackPageView } from "./services/analyticsService";
 import { syncApprovedVendorProducts } from "./services/vendorPricingIntegrationService";
+import { isCarWashEnergyHost, isCarWashPublicPath } from "./pages/carwash/host";
+import CarWashEnergySite from "./pages/carwash/CarWashEnergySite";
 
 // Test calculations temporarily disabled for production build
 // import { testCalculations } from './utils/testCalculations';
@@ -260,6 +262,15 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <VendorPortal />
+      </Suspense>
+    );
+  }
+
+  // carwashenergy.com serves the 4-step diagnostic. merlinenergy.net keeps the routes below.
+  if (isCarWashEnergyHost(window.location.hostname) && isCarWashPublicPath(pathname)) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <CarWashEnergySite pathname={pathname} />
       </Suspense>
     );
   }
@@ -716,6 +727,14 @@ function App() {
     return (
       <Suspense fallback={<PageLoader />}>
         <ProQuoteConfigurationPage />
+      </Suspense>
+    );
+  }
+
+  if (isCarWashEnergyHost(window.location.hostname)) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <CarWashEnergySite pathname="/" />
       </Suspense>
     );
   }

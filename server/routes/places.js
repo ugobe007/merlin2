@@ -5,35 +5,176 @@
  * and prevent quota abuse from client-side calls.
  * 
  * Created: January 22, 2026
+ * Updated: September 2026 for Instant Business Autocomplete & TextSearch
  */
 
 import express from "express";
+
+const router = express.Router();
+const zipCenter = new Map();
+
+function mapsKey() {
+  return process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY || "";
+}
+
+async function centerForZip(postalCode, key) {
+  if (zipCenter.has(postalCode)) return zipCenter.get(postalCode);
+  const url = new URL("https://maps.googleapis.com/maps/api/geocode/json");
+  url.searchParams.set("components", `country:US|postal_code:${postalCode}`);
+  url.searchParams.set("key", key);
+  const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  const data = await response.json();
+  const loc = data.results?.[0]?.geometry?.location;
+  const center = loc && typeof loc.lat === "number" && typeof loc.lng === "number"
+    ? { lat: loc.lat, lng: loc.lng }
+    : null;
+  zipCenter.set(postalCode, center);
+  return center;
+}
 
 /**
  * GET /api/places/config
  * Returns client configuration for Google Maps JS API
  */
 router.get("/config", (_req, res) => {
-  const key = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY || "";
+  const key = mapsKey();
   const isValid = key && !key.includes("your-google-maps");
   return res.json({ apiKey: isValid ? key : "" });
+});
+
+/**
+ * POST /api/places/autocomplete
+ * Fast server proxy for Google Places Autocomplete API
+ */
+router.post("/autocomplete", async (req, res) => {
+  try {
+    const { input, lat, lng, country = "us", types, postalCode } = req.body || {};
+    if (!input || input.trim().length < 2) {
+      return res.json({ predictions: [] });
+    }
+
+    const key = mapsKey();
+    if (!key) {
+      console.error("GOOGLE_MAPS_API_KEY not set in environment");
+      return res.status(500).json({ error: "API key not configured" });
+    }
+
+    const url = new URL("https://maps.googleapis.com/maps/api/place/autocomplete/json");
+    url.searchParams.set("input", input.trim());
+    url.searchParams.set("key", key);
+    if (country) {
+      url.searchParams.set("components", `country:${country}`);
+    }
+    if (types === "establishment") {
+      url.searchParams.set("types", "establishment");
+    }
+    const postal = typeof postalCode === "string" && /^\d{5}$/.test(postalCode) ? postalCode : "";
+    const center = postal ? await centerForZip(postal, key) : null;
+    if (center) {
+      url.searchParams.set("location", `${center.lat},${center.lng}`);
+      url.searchParams.set("radius", "12000");
+    } else if (typeof lat === "number" && typeof lng === "number") {
+      url.searchParams.set("location", `${lat},${lng}`);
+      url.searchParams.set("radius", "50000");
+    }
+
+    const response = await fetch(url.toString());
+    const data = await response.json();
+
+    if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
+      console.warn("Places Autocomplete API warning:", data.status, data.error_message);
+      return res.json({ predictions: [] });
+    }
+
+    const predictions = (data.predictions || []).map((p) => ({
+      placeId: p.place_id,
+      label: p.description,
+      primaryText: p.structured_formatting?.main_text || p.description.split(",")[0],
+      secondaryText: p.structured_formatting?.secondary_text || p.description,
+    }));
+
+    return res.json({ predictions });
+  } catch (error) {
+    console.error("Autocomplete proxy error:", error);
+    return res.status(500).json({ error: "Autocomplete failed" });
+  }
+});
+
+/**
+ * POST /api/places/car-washes
+ * Text-search car washes around a ZIP. A bad or missing key returns an empty
+ * list with reason "unavailable" so the form can keep going on a typed name.
+ */
+router.post("/car-washes", async (req, res) => {
+  try {
+    const postal = typeof req.body?.postalCode === "string" && /^\d{5}$/.test(req.body.postalCode)
+      ? req.body.postalCode
+      : "";
+    if (!postal) return res.status(400).json({ ok: false, reason: "zip", results: [] });
+
+    const key = mapsKey();
+    if (!key || key.startsWith("your")) {
+      return res.json({ ok: false, reason: "unavailable", results: [] });
+    }
+
+    const center = await centerForZip(postal, key);
+    if (!center) return res.json({ ok: false, reason: "zip", results: [] });
+
+    const url = new URL("https://maps.googleapis.com/maps/api/place/textsearch/json");
+    url.searchParams.set("query", `car wash ${postal}`);
+    url.searchParams.set("location", `${center.lat},${center.lng}`);
+    url.searchParams.set("radius", "12000");
+    url.searchParams.set("key", key);
+
+    const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const data = await response.json();
+    if (data.status === "REQUEST_DENIED" || data.status === "INVALID_REQUEST") {
+      console.warn("Places car-wash search unavailable:", data.status);
+      return res.json({ ok: false, reason: "unavailable", results: [] });
+    }
+    if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
+      console.warn("Places car-wash search:", data.status);
+      return res.json({ ok: false, reason: "unavailable", results: [] });
+    }
+
+    const mapped = (data.results || []).map((place) => ({
+      placeId: place.place_id,
+      name: place.name,
+      formattedAddress: place.formatted_address,
+      types: place.types || [],
+    }));
+    const washes = mapped.filter((place) =>
+      place.types.includes("car_wash") || /wash|tunnel|express/i.test(place.name)
+    );
+    const pool = washes.length ? washes : mapped;
+    const inZip = pool.filter((place) => place.formattedAddress?.includes(postal));
+    const results = (inZip.length ? inZip : pool).slice(0, 12).map(({ placeId, name, formattedAddress }) => ({
+      placeId,
+      name,
+      formattedAddress,
+    }));
+    return res.json({ ok: true, results });
+  } catch (error) {
+    console.error("Car-wash search error:", error.message);
+    return res.json({ ok: false, reason: "unavailable", results: [] });
+  }
 });
 
 /**
  * POST /api/places/lookup-business
  * 
  * Search for businesses using Google Places Text Search
- * Returns top 5 candidates for user confirmation
+ * Returns candidates for user confirmation
  */
 router.post("/lookup-business", async (req, res) => {
   try {
-    const { query } = req.body;
+    const { query, lat, lng } = req.body;
     
-    if (!query || query.length < 3) {
-      return res.status(400).json({ error: "Query must be at least 3 characters" });
+    if (!query || query.length < 2) {
+      return res.status(400).json({ error: "Query must be at least 2 characters" });
     }
 
-    const key = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
+    const key = mapsKey();
     if (!key) {
       console.error("GOOGLE_MAPS_API_KEY not set in environment");
       return res.status(500).json({ error: "API key not configured" });
@@ -43,6 +184,10 @@ router.post("/lookup-business", async (req, res) => {
     const url = new URL("https://maps.googleapis.com/maps/api/place/textsearch/json");
     url.searchParams.set("query", query);
     url.searchParams.set("key", key);
+    if (typeof lat === "number" && typeof lng === "number") {
+      url.searchParams.set("location", `${lat},${lng}`);
+      url.searchParams.set("radius", "50000");
+    }
 
     const response = await fetch(url.toString());
     const data = await response.json();
@@ -59,7 +204,7 @@ router.post("/lookup-business", async (req, res) => {
     }
 
     // Map to simplified candidate format
-    const results = (data.results || []).slice(0, 5).map((place) => ({
+    const results = (data.results || []).slice(0, 20).map((place) => ({
       placeId: place.place_id,
       name: place.name,
       formattedAddress: place.formatted_address,
@@ -67,6 +212,8 @@ router.post("/lookup-business", async (req, res) => {
       userRatingsTotal: place.user_ratings_total,
       types: place.types,
       photoRef: place.photos?.[0]?.photo_reference || null,
+      lat: place.geometry?.location?.lat,
+      lng: place.geometry?.location?.lng,
     }));
 
     return res.json({ results });
@@ -90,7 +237,7 @@ router.post("/place-details", async (req, res) => {
       return res.status(400).json({ error: "Missing placeId" });
     }
 
-    const key = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
+    const key = mapsKey();
     if (!key) {
       return res.status(500).json({ error: "API key not configured" });
     }
@@ -129,6 +276,11 @@ router.post("/place-details", async (req, res) => {
       }
     }
 
+    let photoUrl = null;
+    if (place.photos?.[0]?.photo_reference) {
+      photoUrl = `/api/places/photo/${place.photos[0].photo_reference}`;
+    }
+
     return res.json({
       placeId,
       name: place.name,
@@ -137,6 +289,7 @@ router.post("/place-details", async (req, res) => {
       phone: place.formatted_phone_number || null,
       types: place.types || [],
       photoRef: place.photos?.[0]?.photo_reference || null,
+      photoUrl,
       lat: place.geometry?.location?.lat,
       lng: place.geometry?.location?.lng,
       city,
@@ -164,7 +317,7 @@ router.get("/photo/:photoReference", async (req, res) => {
       return res.status(400).json({ error: "Missing photo reference" });
     }
 
-    const key = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
+    const key = mapsKey();
     if (!key) {
       return res.status(500).json({ error: "API key not configured" });
     }

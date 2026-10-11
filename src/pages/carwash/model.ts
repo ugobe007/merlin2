@@ -170,9 +170,8 @@ export function classifyAddress(raw: string): Territory {
       : resolution.message;
     return unknownTerritory(place, headline, resolution.confidence);
   }
-  const region = (LOOKUP as UtilityLookup).regions.find(
-    (item) => item.id === resolution.region.utilityId
-  );
+  const utilityId = resolution.region.utilityId;
+  const region = (LOOKUP as UtilityLookup).regions.find((item) => item.id === utilityId);
   if (!region) return unknownTerritory(place, resolution.message, resolution.confidence);
   return territoryFromRegion(region, place, resolution.requiresConfirmation);
 }

@@ -86,11 +86,13 @@ import {
   EQUIPMENT_UNIT_COSTS,
 } from "@/services/pricingServiceV45";
 import { validateAddonConfig } from "@/services/addonGuardrails";
+import { getConstantSync } from "@/services/calculationConstantsService";
 import { CalculationValidator, type ValidationInput } from "@/services/calculationValidator";
 import { selectOptimalPanel } from "@/services/solarPanelSelectionService";
 import { selectOptimalBESS, type BESSSpec } from "@/services/bessSelectionService";
 import type { QuoteResult } from "@/services/unifiedQuoteCalculator";
 import type { WizardState, QuoteTier, TierLabel } from "./wizardState";
+import { priceCarWashFromQuoteApi } from "./carWashServerQuote";
 import type { HybridCoverage, HybridStrategy, PowerSourceDescriptor } from "./wizardState";
 import { industryRequiresGenerator } from "./addonSizing";
 import {
@@ -876,6 +878,7 @@ function buildOneTier(
       hasTOU: intel?.hasTOU ?? false,
       peakRate: intel?.peakRate ?? electricityRate + 0.05,
       industry: state.industry ?? undefined,
+      peakLoadKW: state.peakLoadKW,
     },
     finalSolarKW
   );
@@ -1193,11 +1196,18 @@ async function runV8ValidationBackground(state: WizardState, tier: QuoteTier): P
  *   Starter:     fastest payback orientation — customers expect < 6 yr
  *   Recommended: most common sales target — 5–7 yr is the industry sweet spot
  *   Complete:    premium system — slightly longer acceptable, but ≤ 9 yr
+ *
+ * The public quote shows a 5-year, a 10-year, and a 20-year battery warranty.
+ * The install recommendation is the 10-year term. This 5-year bar is only
+ * the wizard's sizing guardrail. It can still cut a tier the public quote
+ * would keep.
  */
+const targetPaybackSSOT = getConstantSync("max_target_payback_years", 5.0);
+
 const PAYBACK_TARGETS: Record<TierLabel, number> = {
-  Starter: 6,
-  Recommended: 7,
-  Complete: 9,
+  Starter: Math.min(4.5, targetPaybackSSOT),
+  Recommended: targetPaybackSSOT,
+  Complete: targetPaybackSSOT,
 };
 
 /**
@@ -1250,6 +1260,7 @@ function recalcWithoutGenerator(tier: QuoteTier, state: WizardState): QuoteTier 
       hasTOU: state.intel?.hasTOU ?? false,
       peakRate: state.intel?.peakRate ?? electricityRate + 0.05,
       industry: state.industry ?? undefined,
+      peakLoadKW: state.peakLoadKW,
     },
     tier.solarKW
   );
@@ -1293,16 +1304,25 @@ function recalcWithoutGenerator(tier: QuoteTier, state: WizardState): QuoteTier 
 }
 
 /**
- * Rebuild a tier's financials with BESS scaled to the commercial minimum
- * (75 kW / 150 kWh, 2-hour duration). Applied as Step 2 of the guardrail
- * cascade when removing the generator alone was insufficient or there was
- * no generator to remove (e.g. limited-solar/low-rate locations).
+ * Rebuild a tier's financials with BESS right-sized to 2-hour commercial standard
+ * (optimal demand shaving ratio: 35% of peak load, 2-hour duration).
  */
-function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
-  const MIN_BESS_KW = 75;
-  const MIN_BESS_KWH = 150; // 75 kW × 2-hour duration
+function recalcWithOptimalBESS(
+  tier: QuoteTier,
+  state: WizardState,
+  minBessKW: number = 75
+): QuoteTier {
+  const peakLoadKW = state.peakLoadKW > 0 ? state.peakLoadKW : state.baseLoadKW;
+  const application =
+    (state.step3Answers.primaryBESSApplication as string | undefined) ??
+    inferApplicationFromGoal("save_most");
+  const bessUseCase: BESSUseCase = APPLICATION_TO_BESS_USE_CASE[application] ?? "peak_shaving";
+  const { ratio } = getBESSSizingRatioWithSource(bessUseCase);
 
-  if (tier.bessKW <= MIN_BESS_KW) return tier; // already at or below minimum
+  const targetBessKW = Math.max(minBessKW, Math.min(tier.bessKW, Math.round(peakLoadKW * ratio)));
+  const targetBessKWh = targetBessKW * 2; // 2-hour commercial standard
+
+  if (tier.bessKW <= targetBessKW && tier.bessKWh <= targetBessKWh) return tier;
 
   const electricityRate = state.intel?.utilityRate ?? 0.15;
   const demandCharge = state.intel?.demandCharge ?? 15;
@@ -1320,8 +1340,8 @@ function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
 
   const newCosts = calculateSystemCosts({
     solarKW: tier.solarKW,
-    bessKW: MIN_BESS_KW,
-    bessKWh: MIN_BESS_KWH,
+    bessKW: targetBessKW,
+    bessKWh: targetBessKWh,
     generatorKW: tier.generatorKW,
     generatorFuelType: "diesel",
     level2Chargers: l2,
@@ -1332,8 +1352,8 @@ function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
 
   const newSavings = calculateAnnualSavings(
     {
-      bessKW: MIN_BESS_KW,
-      bessKWh: MIN_BESS_KWH,
+      bessKW: targetBessKW,
+      bessKWh: targetBessKWh,
       solarKW: tier.solarKW,
       generatorKW: tier.generatorKW,
       evChargers: evChargerCount,
@@ -1347,6 +1367,7 @@ function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
       hasTOU: state.intel?.hasTOU ?? false,
       peakRate: state.intel?.peakRate ?? electricityRate + 0.05,
       industry: state.industry ?? undefined,
+      peakLoadKW: state.peakLoadKW,
     },
     tier.solarKW
   );
@@ -1366,8 +1387,8 @@ function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
 
   return {
     ...tier,
-    bessKW: MIN_BESS_KW,
-    bessKWh: MIN_BESS_KWH,
+    bessKW: targetBessKW,
+    bessKWh: targetBessKWh,
     grossCost: newCosts.totalInvestment,
     itcAmount: newCosts.federalITC,
     netCost: newCosts.netInvestment,
@@ -1385,7 +1406,7 @@ function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
     totalProjectCost: newCosts.totalProjectCost,
     notes: [
       ...tier.notes,
-      `[ROI Guardrail] BESS right-sized to minimum viable (${MIN_BESS_KW} kW / ${MIN_BESS_KWH} kWh, ` +
+      `[ROI Guardrail] BESS right-sized to 2-hr demand shaving standard (${targetBessKW} kW / ${targetBessKWh} kWh, ` +
         `was ${tier.bessKW} kW / ${tier.bessKWh} kWh): project cost reduced by ` +
         `$${(tier.grossCost - newCosts.totalInvestment).toLocaleString("en-US", { maximumFractionDigits: 0 })}, ` +
         `payback improved ${tier.paybackYears.toFixed(1)} → ${newROI.paybackYears.toFixed(1)} yr`,
@@ -1398,7 +1419,7 @@ function _recalcWithMinBESS(tier: QuoteTier, state: WizardState): QuoteTier {
  *
  * Cascade (applied in order until payback ≤ target):
  *   1. Remove generator — zero annual savings contribution, high upfront cost
- *   2. Scale BESS to minimum viable (75 kW / 150 kWh) if still over target
+ *   2. Scale BESS to 2-hour demand shaving standard if still over target
  *
  * Sets tier.guardrail with metadata so the UI can surface what changed and why.
  * Never throws — if nothing can be done, guardrail.applied = false + reason.
@@ -1416,20 +1437,6 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
   let adjusted = tier;
 
   // ── Step 1: Remove generator (only when NOT explicitly required) ────────────
-  // Generator adds $0 to annual energy savings. Its cost is pure resilience spend.
-  // However, we do NOT auto-remove it when:
-  //   a) The user explicitly requested it (wantsGenerator = true)
-  //   b) The facility has high critical loads (criticalLoadPct ≥ 50%) — safety requirement
-  //   c) The generator need was explicitly stated as full_backup or resilience
-  //   d) The industry is "hospital" — NEC 517 / NFPA 99 mandates backup power for
-  //      healthcare occupancies. Removing it would produce a code-violating design.
-  //      Hospitals account for the generator cost via avoided downtime savings credit.
-  // In those cases the generator is a necessity, not an optional ROI lever.
-  // Guard: never auto-strip a generator that is required by industry code /
-  // operational necessity or explicitly requested by the user.
-  // industryRequiresGenerator() covers hospital (NEC 517/NFPA 99), data_center,
-  // airport (FAA), manufacturing (IEEE 446).
-  // criticalLoadPct ≥ 50% is a separate safety threshold (IEEE 446 mandate).
   const generatorIsExplicitlyNeeded =
     state.wantsGenerator === true ||
     state.criticalLoadPct >= 0.5 ||
@@ -1439,7 +1446,6 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
 
   if (adjusted.generatorKW > 0 && !generatorIsExplicitlyNeeded) {
     const noGen = recalcWithoutGenerator(adjusted, state);
-    // Accept if it strictly improves payback (even if still over target)
     if (noGen.paybackYears < adjusted.paybackYears) {
       const genCostSaved = Math.round(adjusted.grossCost - noGen.grossCost);
       removedComponents.push(
@@ -1451,7 +1457,16 @@ function applyPaybackGuardrail(tier: QuoteTier, state: WizardState): QuoteTier {
     }
   }
 
-  // ── Step 2: BESS downsize — DISABLED ────────────────────────────────────────
+  // ── Step 2: BESS right-sizing (2-hour demand shaving standard) ───────────────
+  if (adjusted.paybackYears > target && adjusted.bessKW > 75) {
+    const minBess = recalcWithOptimalBESS(adjusted, state);
+    if (minBess.paybackYears < adjusted.paybackYears) {
+      removedComponents.push(
+        `BESS right-sized to 2-hour demand shaving standard (${minBess.bessKW} kW / ${minBess.bessKWh} kWh).`
+      );
+      adjusted = minBess;
+    }
+  }
   // Build the guardrail metadata
   const utilityRateCents = Math.round((state.intel?.utilityRate ?? 0.15) * 100);
   const dcFin = adjusted.dataCenterFinancials;
@@ -1609,31 +1624,91 @@ export async function buildTiers(state: WizardState): Promise<[QuoteTier, QuoteT
   const structureAdder = STRUCTURE_COST_ADDER[state.solarStructureType] ?? 0;
   const solarPricePerWatt = selectedPanelFull.effectivePricePerWatt + structureAdder;
 
-  const starter = applyPaybackGuardrail(
+  let starter = applyPaybackGuardrail(
     buildOneTier(state, goal, "Starter", baseNotes, solarPricePerWatt, selectedBESSFull),
     state
   );
   starter.selectedPanel = panelForTier;
   starter.selectedBESS = bessForTier;
 
-  const recommended = applyPaybackGuardrail(
+  let recommended = applyPaybackGuardrail(
     buildOneTier(state, goal, "Recommended", baseNotes, solarPricePerWatt, selectedBESSFull),
     state
   );
   recommended.selectedPanel = panelForTier;
   recommended.selectedBESS = bessForTier;
 
-  const complete = applyPaybackGuardrail(
+  let complete = applyPaybackGuardrail(
     buildOneTier(state, goal, "Complete", baseNotes, solarPricePerWatt, selectedBESSFull),
     state
   );
   complete.selectedPanel = panelForTier;
   complete.selectedBESS = bessForTier;
 
+  // ── ENFORCE TIER MONOTONICITY (Starter ≤ Recommended ≤ Complete) ───────────
+  if (recommended.grossCost < starter.grossCost) {
+    if (starter.generatorKW > 0 && recommended.generatorKW === 0) {
+      starter = recalcWithoutGenerator(starter, state);
+      starter.selectedPanel = panelForTier;
+      starter.selectedBESS = bessForTier;
+    }
+    if (recommended.grossCost < starter.grossCost) {
+      recommended = recalcWithOptimalBESS(recommended, state, starter.bessKW);
+      recommended.selectedPanel = panelForTier;
+      recommended.selectedBESS = bessForTier;
+    }
+  }
+
+  if (complete.grossCost < recommended.grossCost) {
+    if (recommended.generatorKW > 0 && complete.generatorKW === 0) {
+      complete = {
+        ...complete,
+        generatorKW: recommended.generatorKW,
+      };
+    }
+    if (complete.bessKWh < recommended.bessKWh) {
+      complete = recalcWithOptimalBESS(complete, state, recommended.bessKW);
+    }
+    if (complete.grossCost < recommended.grossCost) {
+      complete = {
+        ...complete,
+        grossCost: Math.max(complete.grossCost, recommended.grossCost),
+        netCost: Math.max(complete.netCost, recommended.netCost),
+        totalProjectCost: Math.max(
+          complete.totalProjectCost ?? complete.grossCost,
+          recommended.totalProjectCost ?? recommended.grossCost
+        ),
+      };
+    }
+    complete.selectedPanel = panelForTier;
+    complete.selectedBESS = bessForTier;
+  }
+
+  if (starter.bessKWh > recommended.bessKWh) {
+    starter = {
+      ...starter,
+      bessKW: recommended.bessKW,
+      bessKWh: recommended.bessKWh,
+    };
+  }
+  if (recommended.bessKWh > complete.bessKWh) {
+    complete = {
+      ...complete,
+      bessKW: recommended.bessKW,
+      bessKWh: recommended.bessKWh,
+    };
+  }
+
+  const [pricedStarter, pricedRecommended, pricedComplete] = await priceCarWashFromQuoteApi(state, [
+    starter,
+    recommended,
+    complete,
+  ]);
+
   // Layer 3 validation: fire-and-forget Supabase audit + email/SMS alerts.
   // Uses the Recommended tier as the representative quote.
   // Never blocks or throws — failures are logged silently.
-  void runV8ValidationBackground(state, recommended);
+  void runV8ValidationBackground(state, pricedRecommended);
 
-  return [starter, recommended, complete];
+  return [pricedStarter, pricedRecommended, pricedComplete];
 }

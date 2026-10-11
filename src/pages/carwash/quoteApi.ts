@@ -49,6 +49,8 @@ export interface ApiQuoteTier {
   };
   savings: {
     demandChargeSavings: number;
+    shaveEffectiveness?: number;
+    effectiveShaveKW?: number;
     creditedShaveKW?: number;
     uncreditedShaveKW?: number;
     shaveCapped?: boolean;
@@ -61,6 +63,14 @@ export interface ApiQuoteTier {
   };
   roi: {
     paybackYears: number;
+    paysBackInLife: boolean;
+    warrantyYears: number;
+    warrantyTerms: { years: number; netBack: number; paidOff: boolean }[];
+    monthlySavings: number;
+    netBack5Year: number;
+    netBack10Year: number;
+    netBack20Year: number;
+    netBack25Year: number;
     year1ROI: number | null;
     roi10Year: number | null;
     roi25Year: number | null;
@@ -108,6 +118,9 @@ export interface ApiQuote {
     notes?: string[];
   };
 }
+
+/** Con Edison SC-9 demand charge when the bill has not certified the rate. */
+export const CONED_UNCERTIFIED_DEMAND_PER_KW = 36;
 
 const WASH_PEAK: Record<WashType, number> = {
   tunnel: 350,
@@ -174,7 +187,7 @@ export function buildQuoteRequest(input: {
   ) {
     demand =
       territory.id === "coned"
-        ? 36
+        ? CONED_UNCERTIFIED_DEMAND_PER_KW
         : Math.round(((territory.demandLow + territory.demandHigh) / 2) * 100) / 100;
     rateStatus = "estimated";
     rateSourceText =

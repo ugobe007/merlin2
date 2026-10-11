@@ -1,0 +1,589 @@
+{
+  "schemaVersion": "1.0.0",
+  "updated": "2026-10-03",
+  "disclaimer": "3-digit ZIP prefix is a CANDIDATE FILTER, not authority. Some ZIPs straddle utility boundaries and many California/Arizona metros contain municipal utilities. Resolution must never fail silently — when confidence is not 'high', return requiresConfirmation:true and ask the customer to read the utility name off their bill. The bill is the only authoritative source, and it is the only thing that may be marked certified.",
+  "verificationNote": "Before production, validate every prefix against each utility's published service-territory boundary file (most IOUs publish GIS shapefiles in their tariff/regulatory filings). Treat this table as a curated starting point requiring sign-off, not as settled fact.",
+  "verdicts": {
+    "strong": {
+      "label": "Strong",
+      "meaning": "Demand charges are high enough that storage typically pencils. Proceed to full diagnostic."
+    },
+    "moderate": {
+      "label": "Moderate",
+      "meaning": "Real opportunity, materially smaller number. Do not inherit another utility's rate."
+    },
+    "weak": {
+      "label": "Weak",
+      "meaning": "Demand charges too low for storage. Say so at step 1 and route to demand response."
+    },
+    "unknown": {
+      "label": "Unknown",
+      "meaning": "Utility not resolved. Ask the customer to confirm from their bill before producing any number."
+    }
+  },
+  "regions": [
+    {
+      "id": "coned",
+      "utility": "Con Edison",
+      "shortName": "Con Edison",
+      "state": "NY",
+      "isMunicipal": false,
+      "defaultRateSchedule": "Large Business (Service Classification 9), standard delivery",
+      "demandCharge": {
+        "low": 33.5,
+        "high": 42.8,
+        "unit": "USD/kW/month",
+        "detail": "$42.80/kW Jun 1–Sep 30; $33.50/kW all other months (standard delivery periods).",
+        "source": "coned.com — Time-of-Use Rates, Large Business Rate",
+        "asOf": "2026-10"
+      },
+      "verdict": "strong",
+      "prefixes": {
+        "high": [
+          "100",
+          "101",
+          "102",
+          "103",
+          "104",
+          "112",
+          "113",
+          "114",
+          "105",
+          "106",
+          "107",
+          "108"
+        ],
+        "medium": ["111", "116"],
+        "ambiguous": []
+      },
+      "notes": [
+        "Manhattan 100-102, Bronx 104, Staten Island 103, Brooklyn 112, Queens 111/113/114/116, Westchester 105-108.",
+        "ZIP 109xx is Rockland County — Orange & Rockland, with different rates. Do not map 109 to Con Edison."
+      ],
+      "standardExclusions": ["109"],
+      "errorToAvoid": "Do not extend Con Edison's rate into Nassau or Suffolk County. See pseg_li."
+    },
+    {
+      "id": "pseg_li",
+      "utility": "PSEG Long Island",
+      "shortName": "PSEG Long Island",
+      "state": "NY",
+      "isMunicipal": false,
+      "defaultRateSchedule": "Large General Use (Rate 281/285)",
+      "demandCharge": {
+        "low": 14.65,
+        "high": 22.22,
+        "unit": "USD/kW/month",
+        "detail": "≈$14.65–$20.19/kW on the common commercial schedules; $20.38–$22.22/kW on Large General Use (Rate 281).",
+        "source": "psegliny.com — Common Commercial Electric Rates 2026",
+        "asOf": "2026-10"
+      },
+      "verdict": "moderate",
+      "prefixes": { "high": ["110", "115", "118", "119"], "medium": ["117"], "ambiguous": [] },
+      "notes": [
+        "Nassau and Suffolk. 117 straddles both counties; both are PSEG Long Island.",
+        "Roughly half Con Edison's demand charge. Massapequa is this utility, not Con Edison."
+      ],
+      "standardExclusions": [],
+      "errorToAvoid": "Never apply Con Edison's $33.50–$42.80/kW here."
+    },
+    {
+      "id": "evs_ct",
+      "utility": "Eversource Energy (Connecticut)",
+      "shortName": "Eversource CT",
+      "state": "CT",
+      "isMunicipal": false,
+      "defaultRateSchedule": "Rate 30 / Rate 35 (LGS)",
+      "demandCharge": {
+        "low": 12,
+        "high": 18,
+        "unit": "USD/kW/month",
+        "detail": "Indicative range.",
+        "source": "Eversource CT tariff summaries",
+        "asOf": "2026-10",
+        "confidence": "indicative"
+      },
+      "verdict": "strong",
+      "prefixes": {
+        "high": ["060", "061", "062", "063", "067", "068"],
+        "medium": ["064", "069"],
+        "ambiguous": ["065", "066"]
+      },
+      "notes": [
+        "065/066 are New Haven and Bridgeport, served wholly or partly by United Illuminating."
+      ],
+      "standardExclusions": [],
+      "errorToAvoid": "Do not assume Eversource for 065/066 without confirmation."
+    },
+    {
+      "id": "ui_ct",
+      "utility": "United Illuminating",
+      "shortName": "UI (CT)",
+      "state": "CT",
+      "isMunicipal": false,
+      "defaultRateSchedule": "Rate LGS",
+      "demandCharge": {
+        "low": 12,
+        "high": 18,
+        "unit": "USD/kW/month",
+        "detail": "Indicative.",
+        "source": "UI tariff",
+        "asOf": "2026-10",
+        "confidence": "indicative"
+      },
+      "verdict": "strong",
+      "prefixes": { "high": [], "medium": ["065", "066"], "ambiguous": [] },
+      "notes": ["Bridgeport and New Haven. Overlaps Eversource prefixes."],
+      "standardExclusions": [],
+      "errorToAvoid": "Never resolve 065/066 to a single utility without confirmation."
+    },
+    {
+      "id": "ngrid_ma",
+      "utility": "National Grid (Massachusetts)",
+      "shortName": "National Grid MA",
+      "state": "MA",
+      "isMunicipal": false,
+      "defaultRateSchedule": "Rate G-2 / G-3",
+      "demandCharge": {
+        "low": 11.74,
+        "high": 13.39,
+        "unit": "USD/kW/month",
+        "detail": "As-used peak demand $11.74/kW; $13.39/kW over 200 kW.",
+        "source": "nationalgridus.com — MA Business Service Rates",
+        "asOf": "2026-10"
+      },
+      "verdict": "strong",
+      "prefixes": {
+        "high": ["014", "015", "016", "017", "018", "019", "023", "024", "025", "026", "027"],
+        "medium": ["020", "021", "022"],
+        "ambiguous": ["010", "011", "012", "013"]
+      },
+      "notes": [
+        "Greater Boston is predominantly Eversource. Western MA may be Eversource or a municipal light plant."
+      ],
+      "standardExclusions": [],
+      "errorToAvoid": "Do not resolve greater Boston to National Grid."
+    },
+    {
+      "id": "evs_ma",
+      "utility": "Eversource Energy (Massachusetts)",
+      "shortName": "Eversource MA",
+      "state": "MA",
+      "isMunicipal": false,
+      "defaultRateSchedule": "Rate G-2 / G-3",
+      "demandCharge": {
+        "low": 11,
+        "high": 16,
+        "unit": "USD/kW/month",
+        "detail": "Indicative.",
+        "source": "Eversource MA tariff",
+        "asOf": "2026-10",
+        "confidence": "indicative"
+      },
+      "verdict": "strong",
+      "prefixes": {
+        "high": ["020", "021", "022"],
+        "medium": [],
+        "ambiguous": ["010", "011", "012", "013"]
+      },
+      "notes": ["Boston metro and parts of western MA."],
+      "standardExclusions": [],
+      "errorToAvoid": "Greater Boston and National Grid prefixes overlap — confirm where it matters."
+    },
+    {
+      "id": "pge",
+      "utility": "Pacific Gas & Electric",
+      "shortName": "PG&E",
+      "state": "CA",
+      "isMunicipal": false,
+      "defaultRateSchedule": "E-19",
+      "demandCharge": {
+        "low": 20,
+        "high": 27,
+        "unit": "USD/kW/month",
+        "detail": "Indicative commercial demand.",
+        "source": "PG&E E-19 tariff",
+        "asOf": "2026-10",
+        "confidence": "indicative"
+      },
+      "verdict": "strong",
+      "prefixes": {
+        "high": [
+          "936",
+          "937",
+          "939",
+          "950",
+          "951",
+          "952",
+          "953",
+          "954",
+          "955",
+          "956",
+          "957",
+          "958",
+          "959",
+          "960",
+          "961"
+        ],
+        "medium": ["940", "941", "943", "944", "945", "946", "947", "948", "949", "932", "933"],
+        "ambiguous": ["942", "943", "945", "950", "958"]
+      },
+      "notes": [
+        "Overlaps SMUD (942/958), Silicon Valley Power (950), Palo Alto (943), Alameda Municipal (945)."
+      ],
+      "standardExclusions": [],
+      "errorToAvoid": "Sacramento is often SMUD, not PG&E."
+    },
+    {
+      "id": "sce",
+      "utility": "Southern California Edison",
+      "shortName": "SCE",
+      "state": "CA",
+      "isMunicipal": false,
+      "defaultRateSchedule": "TOU-8",
+      "demandCharge": {
+        "low": 15,
+        "high": 25,
+        "unit": "USD/kW/month",
+        "detail": "Indicative. TOU-8 applies above 500 kW where SCE serves the site.",
+        "source": "SCE TOU-8 rate fact sheet",
+        "asOf": "2026-10",
+        "confidence": "indicative"
+      },
+      "verdict": "strong",
+      "prefixes": {
+        "high": [
+          "900",
+          "901",
+          "902",
+          "903",
+          "906",
+          "907",
+          "908",
+          "910",
+          "911",
+          "912",
+          "913",
+          "914",
+          "915",
+          "916",
+          "917",
+          "918",
+          "922",
+          "923",
+          "924",
+          "925",
+          "926",
+          "927",
+          "928"
+        ],
+        "medium": [],
+        "ambiguous": [
+          "900",
+          "901",
+          "902",
+          "903",
+          "904",
+          "905",
+          "906",
+          "907",
+          "908",
+          "910",
+          "911",
+          "912",
+          "913",
+          "917"
+        ]
+      },
+      "notes": ["Los Angeles County overlaps LADWP and several municipal utilities."],
+      "standardExclusions": [],
+      "errorToAvoid": "The City of Los Angeles is LADWP, not SCE."
+    },
+    {
+      "id": "ladwp",
+      "utility": "Los Angeles Department of Water and Power",
+      "shortName": "LADWP",
+      "state": "CA",
+      "isMunicipal": true,
+      "defaultRateSchedule": "Rate A2 / A3",
+      "demandCharge": {
+        "low": null,
+        "high": null,
+        "unit": "USD/kW/month",
+        "detail": "Not modelled. Do not estimate.",
+        "source": "n/a",
+        "asOf": "n/a",
+        "confidence": "unresearched"
+      },
+      "verdict": "unknown",
+      "prefixes": {
+        "high": ["900", "901", "902", "903", "904", "905", "906", "907", "908"],
+        "medium": [],
+        "ambiguous": []
+      },
+      "notes": ["Listed so the resolver flags City of Los Angeles instead of returning SCE."],
+      "standardExclusions": [],
+      "errorToAvoid": "Never fall back to SCE pricing for a City of Los Angeles address."
+    },
+    {
+      "id": "sdge",
+      "utility": "San Diego Gas & Electric",
+      "shortName": "SDG&E",
+      "state": "CA",
+      "isMunicipal": false,
+      "defaultRateSchedule": "AL-TOU",
+      "demandCharge": {
+        "low": 20,
+        "high": 28,
+        "unit": "USD/kW/month",
+        "detail": "Demand charges exceed $20/kW, plus a wide TOU spread.",
+        "source": "SDG&E published TOU pricing",
+        "asOf": "2026-10",
+        "confidence": "indicative"
+      },
+      "verdict": "strong",
+      "prefixes": { "high": ["919", "920", "921"], "medium": [], "ambiguous": [] },
+      "notes": ["San Diego County."],
+      "standardExclusions": [],
+      "errorToAvoid": "Do not extend SDG&E into Orange County."
+    },
+    {
+      "id": "pseg_nj",
+      "utility": "PSE&G (New Jersey)",
+      "shortName": "PSE&G",
+      "state": "NJ",
+      "isMunicipal": false,
+      "defaultRateSchedule": "Large Power / LPLS",
+      "demandCharge": {
+        "low": 10,
+        "high": 15,
+        "unit": "USD/kW/month",
+        "detail": "Indicative.",
+        "source": "PSE&G tariff summaries",
+        "asOf": "2026-10",
+        "confidence": "indicative"
+      },
+      "verdict": "moderate",
+      "prefixes": {
+        "high": ["070", "071", "072", "073", "074", "075", "076", "077", "078", "079"],
+        "medium": ["080", "081", "082", "083", "084", "085", "086", "087", "088", "089"],
+        "ambiguous": []
+      },
+      "notes": ["Southern NJ is largely Atlantic City Electric or JCP&L."],
+      "standardExclusions": [],
+      "errorToAvoid": "Do not assume PSE&G for all of New Jersey."
+    },
+    {
+      "id": "aps",
+      "utility": "Arizona Public Service",
+      "shortName": "APS",
+      "state": "AZ",
+      "isMunicipal": false,
+      "defaultRateSchedule": "E-32 / Large General Service",
+      "demandCharge": {
+        "low": 9,
+        "high": 15,
+        "unit": "USD/kW/month",
+        "detail": "Indicative. Phoenix metro is split with SRP.",
+        "source": "APS tariff",
+        "asOf": "2026-10",
+        "confidence": "indicative"
+      },
+      "verdict": "moderate",
+      "prefixes": {
+        "high": ["859", "860", "863", "864", "865", "855", "856", "858"],
+        "medium": ["850", "851", "852", "853", "857"],
+        "ambiguous": ["850", "851", "852", "853", "856", "857"]
+      },
+      "notes": ["Phoenix 850-853 is split between APS and SRP."],
+      "standardExclusions": [],
+      "errorToAvoid": "Do not resolve the Phoenix metro to APS without confirmation."
+    },
+    {
+      "id": "srp",
+      "utility": "Salt River Project",
+      "shortName": "SRP",
+      "state": "AZ",
+      "isMunicipal": true,
+      "defaultRateSchedule": "General Service",
+      "demandCharge": {
+        "low": 4.73,
+        "high": 9.16,
+        "unit": "USD/kW/month",
+        "detail": "Lower than APS. Confirm before using.",
+        "source": "srpnet.com — General Service price plan",
+        "asOf": "2026-10"
+      },
+      "verdict": "moderate",
+      "prefixes": {
+        "high": [],
+        "medium": ["850", "851", "852", "853"],
+        "ambiguous": ["850", "851", "852", "853"]
+      },
+      "notes": ["Public power serving much of the Phoenix metro."],
+      "standardExclusions": [],
+      "errorToAvoid": "SRP demand charges are markedly lower than APS."
+    },
+    {
+      "id": "bge",
+      "utility": "Baltimore Gas & Electric",
+      "shortName": "BGE",
+      "state": "MD",
+      "isMunicipal": false,
+      "defaultRateSchedule": "Schedule GL",
+      "demandCharge": {
+        "low": 10,
+        "high": 16,
+        "unit": "USD/kW/month",
+        "detail": "Indicative.",
+        "source": "BGE tariff summaries",
+        "asOf": "2026-10",
+        "confidence": "indicative"
+      },
+      "verdict": "moderate",
+      "prefixes": {
+        "high": ["212", "210", "211"],
+        "medium": ["207", "208", "209"],
+        "ambiguous": ["207", "208", "209"]
+      },
+      "notes": ["207/208/209 overlap Pepco."],
+      "standardExclusions": [],
+      "errorToAvoid": "Do not resolve suburban Maryland to BGE without confirmation."
+    },
+    {
+      "id": "pepco",
+      "utility": "Pepco",
+      "shortName": "Pepco",
+      "state": "DC/MD",
+      "isMunicipal": false,
+      "defaultRateSchedule": "Schedule GT / GS",
+      "demandCharge": {
+        "low": 10,
+        "high": 16,
+        "unit": "USD/kW/month",
+        "detail": "Indicative.",
+        "source": "Pepco tariff summaries",
+        "asOf": "2026-10",
+        "confidence": "indicative"
+      },
+      "verdict": "moderate",
+      "prefixes": {
+        "high": ["200", "201", "202", "203", "204", "205", "206"],
+        "medium": ["207", "208", "209"],
+        "ambiguous": ["207", "208", "209"]
+      },
+      "notes": ["District of Columbia and parts of Maryland."],
+      "standardExclusions": [],
+      "errorToAvoid": "Overlaps BGE in suburban Maryland."
+    },
+    {
+      "id": "comed",
+      "utility": "Commonwealth Edison",
+      "shortName": "ComEd",
+      "state": "IL",
+      "isMunicipal": false,
+      "defaultRateSchedule": "Rate G / Large Load",
+      "demandCharge": {
+        "low": 8,
+        "high": 14,
+        "unit": "USD/kW/month",
+        "detail": "Indicative. Roughly a third of Con Edison.",
+        "source": "ComEd tariff summaries",
+        "asOf": "2026-10",
+        "confidence": "indicative"
+      },
+      "verdict": "moderate",
+      "prefixes": {
+        "high": ["606", "607", "608", "601", "602", "603", "604", "605", "600", "610", "611"],
+        "medium": ["612", "613", "614", "615", "616", "617", "618", "619", "620"],
+        "ambiguous": []
+      },
+      "notes": ["Northern Illinois. Marginal for storage."],
+      "standardExclusions": [],
+      "errorToAvoid": "Do not treat Chicago like Brooklyn."
+    },
+    {
+      "id": "centerpoint",
+      "utility": "CenterPoint Energy (Houston)",
+      "shortName": "CenterPoint / ERCOT",
+      "state": "TX",
+      "isMunicipal": false,
+      "defaultRateSchedule": "ERCOT energy-only market",
+      "demandCharge": {
+        "low": 0,
+        "high": 10,
+        "unit": "USD/kW/month",
+        "detail": "Energy-only market. The classic peak-shave case does not apply.",
+        "source": "ERCOT market structure",
+        "asOf": "2026-10"
+      },
+      "verdict": "weak",
+      "prefixes": {
+        "high": ["770", "771", "772", "773", "774", "775", "776", "777", "778", "779"],
+        "medium": [],
+        "ambiguous": []
+      },
+      "notes": ["Houston. Demand response usually wins."],
+      "standardExclusions": [],
+      "errorToAvoid": "Never run the Brooklyn storage case for a Houston address."
+    },
+    {
+      "id": "oncor",
+      "utility": "Oncor (Dallas–Fort Worth)",
+      "shortName": "Oncor / ERCOT",
+      "state": "TX",
+      "isMunicipal": false,
+      "defaultRateSchedule": "ERCOT energy-only market",
+      "demandCharge": {
+        "low": 0,
+        "high": 10,
+        "unit": "USD/kW/month",
+        "detail": "Energy-only market.",
+        "source": "ERCOT market structure",
+        "asOf": "2026-10"
+      },
+      "verdict": "weak",
+      "prefixes": {
+        "high": [
+          "750",
+          "751",
+          "752",
+          "753",
+          "754",
+          "755",
+          "760",
+          "761",
+          "762",
+          "763",
+          "764",
+          "765"
+        ],
+        "medium": [],
+        "ambiguous": []
+      },
+      "notes": ["Dallas–Fort Worth. Same verdict as Houston."],
+      "standardExclusions": [],
+      "errorToAvoid": "Do not apply a demand-charge model as if this were Con Edison."
+    }
+  ],
+  "resolutionPolicy": {
+    "order": ["overrides_zip5", "high", "medium", "ambiguous_then_confirm", "unknown_then_ask"],
+    "hardRule": "A ZIP-derived utility may ONLY be used to produce an ESTIMATE. A CERTIFIED result must take its utility and rate schedule from the customer's actual bill. If the bill names a different utility than the ZIP resolved to, the bill wins and the discrepancy is logged."
+  },
+  "overrides": [
+    {
+      "zip5": "11004",
+      "utilityId": "coned",
+      "reason": "Edge of Queens/Nassau boundary — verify before production."
+    },
+    {
+      "zip5": "11691",
+      "utilityId": "coned",
+      "reason": "Far Rockaway — Con Edison, not PSEG Long Island."
+    },
+    { "zip5": "11692", "utilityId": "coned", "reason": "Far Rockaway — Con Edison." },
+    { "zip5": "11693", "utilityId": "coned", "reason": "Rockaway Park — Con Edison." },
+    { "zip5": "11694", "utilityId": "coned", "reason": "Rockaway Park — Con Edison." },
+    { "zip5": "11697", "utilityId": "coned", "reason": "Breezy Point — Con Edison." }
+  ]
+}
